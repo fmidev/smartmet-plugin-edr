@@ -23,6 +23,7 @@
 #include <spine/Reactor.h>
 #include <spine/SmartMetPlugin.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <json/json.h>
 #include <map>
 #include <queue>
 #include <string>
@@ -118,6 +119,11 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                                               Query& masterquery,
                                               const QueryServer::QueryStreamer_sptr& queryStreamer,
                                               size_t& product_hash);
+
+  void processEDRMetaDataQuery(Query& query, Spine::Table& table);
+  Json::Value getEDRMetaDataQD(Query& query, const std::string& producer);
+  Json::Value getEDRMetaDataObs(Query& query, const std::string& producer);
+  void processEDRQuery(Query& query, Spine::Table& table);
 
   void processQEngineQuery(const State& state,
                            Query& query,

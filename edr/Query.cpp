@@ -37,22 +37,21 @@ namespace Plugin
 {
 namespace EDR
 {
-const char* default_timezone = "localtime";
 
-namespace
+std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ)
 {
-std::ostream& operator<<(std::ostream& out, const EDRMetaDataQuery& edrQ)
-{
-  out << "EDR Meta Data Query:\ncollection_id: " << edrQ.collection_id 
+  out << "EDR query:\ncollection_id: " << edrQ.collection_id 
 	  << "\ninstance_id: " << edrQ.instance_id
 	  << "\nquery_type: " << edrQ.query_type
-	  << "\ncollections: " << edrQ.collections
-	  << "\nitems: " << edrQ.items
-	  << "\ninstances: " << edrQ.instances << std::endl;
+	  << "\nmeta_data_query: " << edrQ.meta_data_query << std::endl;
 
   return out;
 }
 
+const char* default_timezone = "localtime";
+
+namespace
+{
 void add_sql_data_filter(const Spine::HTTP::Request& req,
                          const std::string& param_name,
                          TS::DataFilter& dataFilter)
@@ -97,44 +96,110 @@ Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request& req)
  */
 // ----------------------------------------------------------------------
 
-Query::Query(const State& state, const Spine::HTTP::Request& req, Config& config)
-    : valueformatter(valueformatter_params(req)), timeAggregationRequested(false)
+Query::Query(const State& state, const Spine::HTTP::Request& request, Config& config)
+    : valueformatter(valueformatter_params(request)), timeAggregationRequested(false)
 {
   try
   {
+	Spine::HTTP::Request req = request;
 	auto resource = req.getResource();	
-	vector<string> resource_parts;
+	std::vector<std::string> resource_parts;
 	boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
+	if(resource_parts.size() > 1 && resource_parts.at(0).empty())
+	  resource_parts.erase(resource_parts.begin());
+
+	std::cout << "RES size: " << resource_parts.size() << std::endl;
+
+	for(auto item : resource_parts)
+	  std::cout << "RES: " << item << std::endl;
+
 	if(resource_parts.size() > 0)
 	  {
-		if(resource_parts.at(1) == "edr")
+		if(resource_parts.at(0) == "edr")
 		  {
-			if(resource_parts.size() > 1 && resource_parts.at(2) == "collections")
+			if(resource_parts.size() > 1 && resource_parts.at(1) == "collections")
 			  {
-				itsEDRMetaDataQuery.collections = true;
-				if(resource_parts.size() > 2)
+				if(resource_parts.size() > 2 && !resource_parts.at(2).empty())
 				  {
-					itsEDRMetaDataQuery.collection_id = resource_parts.at(3);
-					if(resource_parts.size() > 3)
-					  {
-						if(resource_parts.at(4) == "items")
-						  itsEDRMetaDataQuery.items = true;
-						else if(resource_parts.at(4) == "instances")
+					itsEDRQuery.collection_id = resource_parts.at(2);
+					if(resource_parts.size() > 3 && !resource_parts.at(3).empty())
+					  {					
+						if(resource_parts.at(3) == "instances")
 						  {
-							itsEDRMetaDataQuery.instances = true;
 							if(resource_parts.size() > 4)
-							  itsEDRMetaDataQuery.instance_id = resource_parts.at(5);
+							  itsEDRQuery.instance_id = resource_parts.at(4);
 						  }
 						else
-						  itsEDRMetaDataQuery.query_type = resource_parts.at(4);
+						  itsEDRQuery.query_type = resource_parts.at(3);
 					  }
 				  }
 			  }
 		  }
 	  }
 
-	std::cout << itsEDRMetaDataQuery << std::endl;
+	itsEDRQuery.meta_data_query = itsEDRQuery.query_type.empty();
 
+	/*
+	std::cout << "getResource: " << req.getResource() << std::endl;
+	std::cout << "getMethodString: " << req.getMethodString() << std::endl;
+	std::cout << "getURI: " << req.getURI() << std::endl;
+	std::cout << "getQueryString: " << req.getQueryString() << std::endl;
+	std::cout << "itsEDRQuery.meta_data_query: " << itsEDRQuery.meta_data_query << std::endl;
+	*/
+	if(itsEDRQuery.meta_data_query)
+	  return;
+
+	req.addParameter("producer", itsEDRQuery.collection_id);
+
+	// Check mandatory EDR parameters
+	if(itsEDRQuery.query_type == "position")
+	  {
+		auto coords = Spine::optional_string(req.getParameter("coords"), "");
+		if(coords.empty())
+          throw Fmi::Exception(BCP, "Missing coords option!");
+
+		req.addParameter("wkt", coords);
+	  }
+
+	auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
+
+	if(datetime.empty())
+	  throw Fmi::Exception(BCP, "Missing datetime option!");
+
+	if(datetime.find("/") != std::string::npos)
+	  {
+		std::vector<std::string> datetime_parts;
+		boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
+		req.addParameter("starttime", datetime_parts.at(0));
+		req.addParameter("endtime", datetime_parts.at(1));
+		
+	  }
+	else
+	  {
+		if(boost::algorithm::ends_with(datetime, ".."))
+		  {
+			datetime.resize(datetime.size() - 2);
+			req.addParameter("starttime", datetime);			
+		  }
+		else if(boost::algorithm::starts_with(datetime, ".."))
+		  {
+			datetime = datetime.substr(2);
+			req.addParameter("endtime", datetime);			
+		  }
+		else
+		  {
+			req.addParameter("starttime", datetime);			
+			req.addParameter("endtime", datetime);			
+		  }
+	  }
+
+	auto parameter_name = Spine::optional_string(req.getParameter("parameter-name"), "");
+
+	if(parameter_name.empty())
+	  throw Fmi::Exception(BCP, "Missing parameter-name option!");
+
+	req.addParameter("param", parameter_name);			
+	
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));
     report_unsupported_option("width", req.getParameter("width"));
     report_unsupported_option("fill", req.getParameter("fill"));
@@ -155,6 +220,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& req, Config& config
     forecastSource = Spine::optional_string(req.getParameter("source"), "");
 
     // ### Attribute list ( attr=name1:value1,name2:value2,name3:$(alias1) )
+
+	std::cout << "QUERY_5" << std::endl;
 
     string attr = Spine::optional_string(req.getParameter("attr"), "");
     if (!attr.empty())
@@ -191,6 +258,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& req, Config& config
         }
       }
     }
+
+	std::cout << "QUERY_6" << std::endl;
 
     // attributeList.print(std::cout,0,0);
 
@@ -250,6 +319,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& req, Config& config
             new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
       }
     }
+
+	std::cout << "QUERY_7" << std::endl;
 
     // Store WKT-geometries
     wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
@@ -312,6 +383,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& req, Config& config
       }
     }
 
+	std::cout << "QUERY_8" << std::endl;
+
     findnearestvalidpoint = Spine::optional_bool(req.getParameter("findnearestvalid"), false);
 
     boost::optional<std::string> tmp = req.getParameter("origintime");
@@ -354,6 +427,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& req, Config& config
       poptions.add(TS::ParameterFactory::instance().parse("longitude"));
       poptions.add(TS::ParameterFactory::instance().parse("latitude"));
     }
+
+	std::cout << "QUERY_9" << std::endl;
 
     // This must be done after params is no longer being modified
     // by the above wxml code!
@@ -487,6 +562,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& req, Config& config
         this->weekdays.push_back(h);
       }
     }
+
+	std::cout << "QUERY_10" << std::endl;
 
     startrow = Spine::optional_size(req.getParameter("startrow"), 0);
     maxresults = Spine::optional_size(req.getParameter("maxresults"), 0);

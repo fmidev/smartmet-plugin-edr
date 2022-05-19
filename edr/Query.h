@@ -50,14 +50,17 @@ class Config;
  */
 // ----------------------------------------------------------------------
 
-struct EDRMetaDataQuery
+struct EDRQuery
 {
   std::string collection_id;
   std::string instance_id;
   std::string query_type;
+  bool meta_data_query{false};
+  /*
   bool collections{false};
   bool items{false};
   bool instances{false};
+  */
 };
 
 struct Query
@@ -163,7 +166,9 @@ struct Query
   double maxdistance_kilometers() const;
   double maxdistance_meters() const;
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
-
+  
+  const EDRQuery& edrQuery() const { return itsEDRQuery; }
+  bool isEDRMetaDataQuery() const { return itsEDRQuery.meta_data_query; }
  private:
   Query();
 
@@ -188,8 +193,10 @@ struct Query
   QueryServer::AliasFileCollection* itsAliasFileCollectionPtr;
 
   std::string maxdistance;
-  EDRMetaDataQuery itsEDRMetaDataQuery;
+  EDRQuery itsEDRQuery;
 };
+
+std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ);
 
 }  // namespace EDR
 }  // namespace Plugin
