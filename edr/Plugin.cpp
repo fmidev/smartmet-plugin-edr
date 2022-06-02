@@ -11,6 +11,7 @@
 #include "LocationTools.h"
 #include "State.h"
 #include "UtilityFunctions.h"
+#include "CoverageJson.h"
 #include <engines/gis/Engine.h>
 #include <engines/observation/Keywords.h>
 #include <engines/observation/ObservableProperty.h>
@@ -84,7 +85,6 @@ void print_settings(const Engine::Observation::Settings& settings)
   std::cout << "settings.wktArea: " << wktString << std::endl;
 }
 #endif
-
 
 Spine::Parameter get_query_param(const Spine::Parameter& parameter)
 {
@@ -359,307 +359,6 @@ void fill_table(Query& query, TS::OutputData& outputData, Spine::Table& table)
 
       add_data_to_table(query.poptions.parameters(), tf, outputData, locationId, startRow);
     }
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-
-
-void fill_table_coverage(Query& query, TS::OutputData& outputData,
-						 Spine::Table& table, Engine::Observation::Engine* obsEngine,
-						 const std::map<std::string, Engine::Querydata::ModelParameter>& model_parameters)
-{
-  try
-  {
-    if (outputData.empty())
-      return;
-	/*
-    TS::TableFeeder tf(table, query.valueformatter, query.precisions);
-    int startRow = tf.getCurrentRow();
-
-    std::string locationName(outputData[0].first);
-
-    // if observations exists they are first in the result set
-    if (locationName == "_obs_")
-      add_data_to_table(query.poptions.parameters(), tf, outputData, "_obs_", startRow);
-	*/
-
-	Json::Value coverage;
-	coverage["type"] = Json::Value("Coverage");
-	auto domain = Json::Value(Json::ValueType::objectValue);
-	domain["type"] = Json::Value("Domain");
-	domain["domainType"] = Json::Value("PointSeries");
-	domain["axes"] = Json::Value(Json::ValueType::objectValue);
-	domain["axes"]["x"] = Json::Value(Json::ValueType::objectValue);
-	domain["axes"]["x"]["values"] = Json::Value(Json::ValueType::arrayValue);
-	auto& x_array = domain["axes"]["x"]["values"];
-	x_array[0] = Json::Value(0.0);
-	domain["axes"]["y"] = Json::Value(Json::ValueType::objectValue);
-	domain["axes"]["y"]["values"] = Json::Value(Json::ValueType::arrayValue);
-	auto& y_array = domain["axes"]["y"]["values"];
-	y_array[0] = Json::Value(0.0);
-	domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
-	domain["axes"]["z"]["values"] = Json::Value(Json::ValueType::arrayValue);
-	auto& z_array = domain["axes"]["z"]["values"];
-	z_array[0] = Json::Value(0.0);
-	domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
-	domain["axes"]["t"]["values"] = Json::Value(Json::ValueType::arrayValue);
-	auto& time_array = domain["axes"]["t"]["values"];
-	auto referencing = Json::Value(Json::ValueType::arrayValue);
-	auto referencing_3D = Json::Value(Json::ValueType::objectValue);
-	referencing_3D["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-	referencing_3D["coordinates"][0] = Json::Value("x");
-	referencing_3D["coordinates"][1] = Json::Value("y");
-	referencing_3D["coordinates"][2] = Json::Value("z");
-	referencing_3D["system"] = Json::Value(Json::ValueType::objectValue);
-	referencing_3D["system"]["type"] = Json::Value("GeographicCRS");
-	referencing_3D["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/EPSG/0/4979");
-	auto referencing_time = Json::Value(Json::ValueType::objectValue);
-	referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-	referencing_time["coordinates"][0] = Json::Value("t");
-	referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
-	referencing_time["system"]["type"] = Json::Value("TemporalCRS");
-	referencing_time["system"]["calendar"] = Json::Value("Georgian");
-	referencing[0] = referencing_3D;
-	referencing[1] = referencing_time;
-
-	domain["referencing"] = referencing;
-	auto parameters = Json::Value(Json::ValueType::objectValue);
-
-	const auto& query_parameters = query.poptions.parameters();
-	for(const auto& p : query_parameters)
-	  {
-		auto parameter_name = p.name();
-		std::vector<std::string> param_vector;
-		param_vector.push_back(parameter_name);
-		auto prop = obsEngine->observablePropertyQuery(param_vector, "en");
-		if(prop->size() > 0)
-		  {
-			std::cout << "Observable property for parameter " << parameter_name << ":\n" << std::endl;
-			const auto& prop_item = prop->at(0);
-			std::cout << prop_item.measurandId << ", "
-					  << prop_item.measurandCode << ", "
-					  << prop_item.observablePropertyId << ", "
-					  << prop_item.observablePropertyLabel << ", "
-					  << prop_item.basePhenomenon << ", "
-					  << prop_item.uom << ", "
-					  << prop_item.statisticalMeasureId << ", "
-					  << prop_item.statisticalFunction << ", "
-					  << prop_item.aggregationTimePeriod << ", "
-					  << prop_item.gmlId << std::endl;
-		  }
-		else
-		  {
-			std::cout << "No observable property for parameter " << parameter_name << ", trying model parameters"<< std::endl;
-			if(model_parameters.find(parameter_name) != model_parameters.end())
-			  {
-				const auto& model_param = model_parameters.at(parameter_name);
-				std::cout << "Parameter: " << parameter_name << ": " 
-						  << model_param.name << ", " << model_param.description << ", "
-						  << model_param.precision << std::endl;
-			  }
-			else
-			  {
-				std::cout << "No observable property FROM MODEL PARAMS either for parameter " << parameter_name << std::endl;
-			  }
-		  }
-		/*
-		std::shared_ptr<std::vector<ObservableProperty>> observablePropertyQuery(
-      std::vector<std::string> &parameters, const std::string language);
-		*/
-
-		auto parameter = Json::Value(Json::ValueType::objectValue);
-		parameter["type"] = Json::Value("Parameter");
-		parameter["description"] = Json::Value(Json::ValueType::objectValue);
-		parameter["description"]["en"] = Json::Value("Description of parameter...");
-		parameter["unit"] = Json::Value(Json::ValueType::objectValue);
-		parameter["unit"]["label"] = Json::Value(Json::ValueType::objectValue);
-		parameter["unit"]["label"]["en"] = Json::Value("Label of parameter...");
-		parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
-		parameter["unit"]["symbol"]["value"] = Json::Value("Symbol of parameter ...");
-		parameter["unit"]["symbol"]["type"] = Json::Value("Type of parameter ...");
-		parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
-		parameter["observedProperty"]["id"] = Json::Value("Id of observed property...");
-		parameter["observedProperty"]["label"] = Json::Value(Json::ValueType::objectValue);
-		parameter["observedProperty"]["label"]["en"] = Json::Value("Lable of observed property..");
-		parameters[parameter_name] = parameter;
-	  }
-
-	auto ranges = Json::Value(Json::ValueType::objectValue);
-
-
-	std::set<std::string> timesteps;
-    for (unsigned int i = 0; i < outputData.size(); i++)
-	  {
-		const auto& outdata = outputData[i].second;
-		// iterate columns (parameters)
-		for (unsigned int j = 0; j < outdata.size(); j++)
-		  {
-			auto param_name = query_parameters[j].name();
-			auto tsdata = outdata.at(j);
-
-			if (boost::get<TS::TimeSeriesPtr>(&tsdata))
-			  {
-				std::cout << "TS::TimeSeriesPtr - Processing" << std::endl;
-				TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-				auto json_param_object = Json::Value(Json::ValueType::objectValue);
-				json_param_object["type"] = Json::Value("NdArray");
-				auto axis_names = Json::Value(Json::ValueType::arrayValue);
-				axis_names[0] = Json::Value("t");
-				axis_names[1] = Json::Value("x");
-				axis_names[2] = Json::Value("y");
-				axis_names[3] = Json::Value("z");
-				json_param_object["axisNames"] = axis_names;
-				auto shape = Json::Value(Json::ValueType::arrayValue);
-				shape[0] = Json::Value(ts->size());
-				shape[1] = Json::Value(1);
-				shape[2] = Json::Value(1);
-				shape[3] = Json::Value(1);
-				json_param_object["shape"] = shape;
-				auto values = Json::Value(Json::ValueType::arrayValue);
-				
-				for(unsigned int k = 0; k < ts->size(); k++)
-				  {
-					const auto& timed_value = ts->at(k);
-					const auto& t = timed_value.time;
-					const auto& val = timed_value.value;
-					if(j == 0)
-					  timesteps.insert(boost::posix_time::to_iso_string(t.utc_time()));
-					
-					if (boost::get<double>(&val) != nullptr)
-					  {
-						if(k == 0)
-						  json_param_object["dataType"] = Json::Value("double");
-						values[k] = Json::Value(*(boost::get<double>(&val)));
-					  }
-					else if (boost::get<int>(&val) != nullptr)
-					  {
-						if(k == 0)
-						  json_param_object["dataType"] = Json::Value("int");
-						values[k] = Json::Value(*(boost::get<int>(&val)));
-					  }
-					else if (boost::get<std::string>(&val) != nullptr)
-					  {
-						if(k == 0)
-						  json_param_object["dataType"] = Json::Value("string");
-						values[k] = Json::Value(*(boost::get<std::string>(&val)));
-					  }
-					else
-					  {
-						if(k == 0)
-						  json_param_object["dataType"] = Json::Value("string");
-						values[k] = Json::Value("missing");
-					  }
-				  }
-				json_param_object["values"] = values;
-				ranges[param_name] = json_param_object;
-			  }
-			else if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
-			  {
-				/*
-				  TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata));
-				  for (unsigned int k = 0; k < tsv->size(); k++)
-				  {
-				  tf.setCurrentColumn(k);
-				  tf.setCurrentRow(startRow);
-				  tf << tsv->at(k);
-				  }
-				  startRow = tf.getCurrentRow();
-				*/
-				std::cout << "TS::TimeSeriesVectorPtr - Can do nothing" << std::endl;
-			  }
-			else if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
-			  {
-				/*
-				  TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-				  tf << *tsg;
-				*/
-				std::cout << "TS::TimeSeriesGroupPtr - Can do nothing" << std::endl;
-			  }		
-		  }
-	  }
-	
-	unsigned int time_index = 0;
-	for(const auto& t : timesteps)
-	  time_array[time_index++] = Json::Value(t);
-
-	coverage["domain"] = domain;
-	coverage["parameters"] = parameters;
-	coverage["ranges"] = ranges;
-
-	std::cout << "CoverageJSON result:\n" << coverage.toStyledString() << std::endl;
-	table.set(0, 0, coverage.toStyledString());
-
-	/*
-
-
-    {
-      const auto& locationName = outputData[i].first;
-      if (locationName != location_name)
-        continue;
-
-      startRow = tf.getCurrentRow();
-
-      std::vector<TS::TimeSeriesData>& outdata = outputData[i].second;
-      // iterate columns (parameters)
-      for (unsigned int j = 0; j < outdata.size(); j++)
-      {
-        TS::TimeSeriesData tsdata = outdata[j];
-        tf.setCurrentRow(startRow);
-        tf.setCurrentColumn(j);
-
-        const auto& paramName = paramlist[j % numberOfParameters].name();
-        if (paramName == LATLON_PARAM || paramName == NEARLATLON_PARAM)
-        {
-          tf << TS::LonLatFormat::LATLON;
-        }
-        else if (paramName == LONLAT_PARAM || paramName == NEARLONLAT_PARAM)
-        {
-          tf << TS::LonLatFormat::LONLAT;
-        }
-
-        if (boost::get<TS::TimeSeriesPtr>(&tsdata))
-        {
-          TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-          tf << *ts;
-        }
-        else if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
-        {
-          TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata));
-          for (unsigned int k = 0; k < tsv->size(); k++)
-          {
-            tf.setCurrentColumn(k);
-            tf.setCurrentRow(startRow);
-            tf << tsv->at(k);
-          }
-          startRow = tf.getCurrentRow();
-        }
-        else if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
-        {
-          TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-          tf << *tsg;
-        }
-
-	 */
-
-
-	/*
-	for(const auto& p : 
-	  std::cout << "name: " << p.name() << std::endl;
-	*/
-
-	/*
-    // iterate locations
-    for (const auto& tloc : query.loptions->locations())
-    {
-      std::string locationId = get_location_id(tloc.loc);
-
-      add_data_to_table(query.poptions.parameters(), tf, outputData, locationId, startRow);
-    }
-	*/
   }
   catch (...)
   {
@@ -3760,296 +3459,23 @@ void Plugin::checkInKeywordLocations(Query& masterquery)
   }
 }
 
-
-  /*
-Table C.1 — EDR Collection Object structore
--------------------------------------------------------
-| Field Name      | Type                | Required	| Description |
--------------------------------------------------------
-| links           |	link Array	        | Yes | Array of Link objects | 
-| id	          | String	            | Yes | Unique identifier string for the collection, used as the value for the collection_id path parameter in all queries on the collection |
-| title	          | String	            | No  | A short text label for the collection |
-| description     | String	            | No  | A text description of the information provided by the collection |
-| keywords	      | String Array	    | No  | Array of words and phrases that define the information that the collection provides |
-| extent	      | extent object	    | Yes | Object describing the spatio-temporal extent of the information provided by the collection |
-| data_queries    | data_queries object	| No  | Object providing query specific information |
-| crs	          | String Array	    | No  | Array of coordinate reference system names, which define the output coordinate systems supported by the collection |
-| output_formats  | String Array	    | No  | Array of data format names, which define the data formats to which information in the collection can be output |
-| parameter_names | parameter_names object | Yes |  Describes the data values available in the collection |
- */
-
-Json::Value Plugin::getEDRMetaDataQD(Query& query, const std::string& producer)
-{
-  std::cout << "Get Query Data metadata" << std::endl;
-  Engine::Querydata::MetaQueryOptions opts;
-  if(!producer.empty())
-	opts.setProducer(producer);
-  auto qd_meta_data = itsQEngine->getEngineMetadata(opts);
-
-  auto collections = Json::Value(Json::ValueType::arrayValue);
-
-  Json::Value nulljson;
-  unsigned int collection_index = 0;
+EDRMetaData Plugin::getProducerMetaData(const std::string& producer)
+{  
+#ifndef WITHOUT_OBSERVATION
+  if(isObsProducer(producer))
+    return CoverageJson::getProducerMetaData(producer, itsObsEngine);
+#endif
   
-  // Iterate QEngine metadata and add item into collection
-  for(const auto& qmd : qd_meta_data)
-	{
-	  auto& value = collections[collection_index];
-	  // Producer is Id
-	  value["id"] = Json::Value(qmd.producer);
-	  /*
-	  // Title (optional
-	  value["title"] = Json::Value(qmd.producer);
-	  // Description (optional
-	  value["description"] = Json::Value(qmd.producer);
-	  // Keywords (optional)
-	  auto keywords = Json::Value(Json::ValueType::arrayValue);
-	  value["kywords"] = keywords;
-	  */
-	  // Array of links (mandatory)
-	  auto link = Json::Value(Json::ValueType::objectValue);
-	  link["href"] = Json::Value(("https://smartmet.fmi.fi/edr/collections/" + qmd.producer));
-	  link["rel"] = Json::Value("data");
-	  link["type"] = Json::Value("application/json");
-	  link["title"] = Json::Value("Collection metadata in JSON");
-	  auto links = Json::Value(Json::ValueType::arrayValue);
-	  links[0] = link;
-	  value["links"] = links;
-	  const auto& rangeLon = qmd.wgs84Envelope.getRangeLon();
-	  const auto& rangeLat = qmd.wgs84Envelope.getRangeLat();
-	  // Extent (mandatory)
-	  auto extent =Json::Value(Json::ValueType::objectValue);
-	  // Spatial (mandatory)
-	  auto spatial = Json::Value(Json::ValueType::objectValue);
-	  // BBOX (mandatory)
-	  auto bbox = Json::Value(Json::ValueType::arrayValue);
-	  bbox[0] = Json::Value(rangeLon.getMin());
-	  bbox[1] = Json::Value(rangeLat.getMin());
-	  bbox[2] = Json::Value(rangeLon.getMax());
-	  bbox[3] = Json::Value(rangeLat.getMax());
-	  spatial["bbox"] = bbox;
-	  // CRS (mandatory)
-	  spatial["crs"] = Json::Value("EPSG:4326");
-	  extent["spatial"] = spatial;
-	  // Temporal (optional)
-	  auto temporal = Json::Value(Json::ValueType::objectValue);
-	  auto interval = Json::Value(Json::ValueType::arrayValue);
-	  auto trs = Json::Value("TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]"); // What this should be
-	  auto interval_string = (boost::posix_time::to_iso_string(qmd.firstTime) + "/" + boost::posix_time::to_iso_string(qmd.lastTime));
-	  if(qmd.timeStep > 0)
-		interval_string += ("/" + Fmi::to_string(qmd.timeStep) + "M");
-	  interval[0] = Json::Value(interval_string);
-	  temporal["interval"] = interval;
-	  temporal["trs"] = trs;
-	  extent["temporal"] = temporal;
-	  // Vertical (optional)
-	  // ...
-	  value["extent"] = extent;
-
-	  // Data queries (optional)
-	  // ...
-
-	  // Parameter names (mandatory)
-	  auto parameter_names =Json::Value(Json::ValueType::objectValue);
-	 
-	  // Parameters:
-	  // Mandatory fields: id, type, observedProperty
-	  // Optional fields: label, description, data-type, unit, extent, measurementType 
-	  for(const auto& p : qmd.parameters)
-		{
-		  auto param = Json::Value(Json::ValueType::objectValue);
-		  param["id"] = Json::Value(p.name);
-		  param["type"] = Json::Value("Parameter");
-		  param["description"] = Json::Value(p.description);
-		  // Observed property: Mandatory: label, Optional: id, description
-		  auto observedProperty = Json::Value(Json::ValueType::objectValue);
-		  observedProperty["label"] = Json::Value(p.description);
-		  //		  observedProperty["id"] = Json::Value("http://....");
-		  //		  observedProperty["description"] = Json::Value("Description of property...");
-		  param["observedProperty"] = observedProperty;
-		  parameter_names[p.name] = param;		  
-		}
-
-	  value["parameter_names"] = parameter_names;
-
-	  collection_index++;
-	}
-
-  if(!producer.empty())
-	return collections[0];
-
-  return collections;
+  return CoverageJson::getProducerMetaData(producer, itsQEngine);
 }
-
-Json::Value Plugin::getEDRMetaDataObs(Query& query, const std::string& producer)
-{
-  std::cout << "Get observation metadata" << std::endl;
-  std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
-
-  std::set<std::string> producers;
-  if(!producer.empty())
-	producers.insert(producer);
-  else
-	producers = itsObsEngine->getValidStationTypes();
-
-  for(const auto& prod : producers)
-	observation_meta_data.insert(std::make_pair(prod, itsObsEngine->metaData(prod)));
-
-  std::cout << "Size of meta data vector: " << observation_meta_data.size() << std::endl;
-
-  auto collections = Json::Value(Json::ValueType::arrayValue);
-
-  Json::Value nulljson;
-  unsigned int collection_index = 0;
   
-  // Iterate Observation engine metadata and add item into collection
-  for(const auto& item : observation_meta_data)
-	{
-	  const auto& obs_producer = item.first;
-	  const auto& omd = item.second;
-	  auto& value = collections[collection_index];
-	  // Producer is Id
-	  value["id"] = Json::Value(obs_producer);
-	  /*
-	  // Title (optional
-	  value["title"] = Json::Value(obs_producer);
-	  // Description (optional
-	  value["description"] = Json::Value(obs_producer);
-	  // Keywords (optional)
-	  auto keywords = Json::Value(Json::ValueType::arrayValue);
-	  value["kywords"] = keywords;
-	  */
-	  // Array of links (mandatory)
-	  auto link = Json::Value(Json::ValueType::objectValue);
-	  link["href"] = Json::Value(("https://smartmet.fmi.fi/edr/collections/" + obs_producer));
-	  link["rel"] = Json::Value("data");
-	  link["type"] = Json::Value("application/json");
-	  link["title"] = Json::Value("Collection metadata in JSON");
-	  auto links = Json::Value(Json::ValueType::arrayValue);
-	  links[0] = link;
-	  value["links"] = links;
-	  // Extent (mandatory)
-	  auto extent =Json::Value(Json::ValueType::objectValue);
-	  // Spatial (mandatory)
-	  auto spatial = Json::Value(Json::ValueType::objectValue);
-	  // BBOX (mandatory)
-	  auto bbox = Json::Value(Json::ValueType::arrayValue);
-	  bbox[0] = Json::Value(omd.bbox.xMin);
-	  bbox[1] = Json::Value(omd.bbox.yMin);
-	  bbox[2] = Json::Value(omd.bbox.xMax);
-	  bbox[3] = Json::Value(omd.bbox.yMax);
-	  spatial["bbox"] = bbox;
-	  // CRS (mandatory)
-	  spatial["crs"] = Json::Value("EPSG:4326");
-	  extent["spatial"] = spatial;
-	  // Temporal (optional)
-	  auto temporal = Json::Value(Json::ValueType::objectValue);
-	  auto interval = Json::Value(Json::ValueType::arrayValue);
-	  auto trs = Json::Value("TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]"); // What this should be
-	  auto interval_string = (boost::posix_time::to_iso_string(omd.period.begin()) + "/" + boost::posix_time::to_iso_string(omd.period.last()));
-	  if(omd.timestep > 0)
-		interval_string += ("/" + Fmi::to_string(omd.timestep) + "M");
-	  interval[0] = Json::Value(interval_string);
-	  temporal["interval"] = interval;
-	  temporal["trs"] = trs;
-	  extent["temporal"] = temporal;
-	  // Vertical (optional)
-	  // ...
-	  value["extent"] = extent;
-
-	  // Data queries (optional)
-	  // ...
-
-	  // Parameter names (mandatory)
-	  auto parameter_names =Json::Value(Json::ValueType::objectValue);
-	 
-	  // Parameters:
-	  // Mandatory fields: id, type, observedProperty
-	  // Optional fields: label, description, data-type, unit, extent, measurementType 
-	  std::vector<std::string> params;
-	  params.push_back("");
-	  for(const auto& p : omd.parameters)
-		{
-		  auto param = Json::Value(Json::ValueType::objectValue);
-		  param["id"] = Json::Value(p);
-		  param["type"] = Json::Value("Parameter");
-		  param["description"] = Json::Value(p);
-		  // Observed property: Mandatory: label, Optional: id, description
-		  auto observedProperty = Json::Value(Json::ValueType::objectValue);
-		  params[0] = p;
-		  auto observedProperties = itsObsEngine->observablePropertyQuery(params, "en");
-
-		  if(observedProperties->size() > 0)
-			{
-			  observedProperty["label"] = Json::Value(observedProperties->at(0).observablePropertyLabel);
-			}
-		  else
-			observedProperty["label"] = Json::Value(p);
-		  param["observedProperty"] = observedProperty;
-		  parameter_names[p] = param;
-		}
-
-	  value["parameter_names"] = parameter_names;
-
-	  collection_index++;
-	}
-
-  if(!producer.empty())
-	return collections[0];
-
-  return collections;
-}
-
-void Plugin::processEDRMetaDataQuery(Query& query, Spine::Table& table)
+Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query)
 {
-  std::cout << "Processing EDR meta data query" << std::endl;
-  std::cout << query.edrQuery() << std::endl;
-
-  std::string edr_json_string;
-  const auto& edr_query = query.edrQuery();
-  auto producer = edr_query.collection_id;
-  Json::Value result;
-  if(producer.empty())
-	{	  
-	  auto collections = getEDRMetaDataQD(query, producer);
-	  // Append observation engine metadata after QEngine metadata
-	  auto obs_collections = getEDRMetaDataObs(query, producer);
-	  for(const auto& item : obs_collections)
-		collections.append(item);
-
-	  // Add main level links
-	  Json::Value meta_data;
-	  auto link =Json::Value(Json::ValueType::objectValue);
-	  link["href"] = Json::Value("https://smartmet.fmi.fi/edr/collections");
-	  link["rel"] = Json::Value("self");
-	  link["type"] = Json::Value("application/json");
-	  link["title"] = Json::Value("Collections metadata in JSON");
-	  auto links =Json::Value(Json::ValueType::arrayValue);
-	  links[0] = link;
-	  result["links"] = links;
-	  result["collections"] = collections;
-	}
-  else
-	{
-	  if(isObsProducer(producer))
-		result = getEDRMetaDataObs(query, producer);
-	  else
-		result = getEDRMetaDataQD(query, producer);
-	}
-
-  table.set(0, 0, result.toStyledString());
-
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief
- */
-// ----------------------------------------------------------------------
-
-void Plugin::processEDRQuery(Query& query, Spine::Table& table)
-{
-
+#ifndef WITHOUT_OBSERVATION
+  return CoverageJson::processEDRMetaDataQuery(edr_query, itsQEngine, itsObsEngine);
+#else
+  return CoverageJson::processEDRMetaDataQuery(edr_query, itsQEngine);
+#endif
 }
 
 boost::shared_ptr<std::string> Plugin::processQuery(
@@ -4061,18 +3487,14 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 {
   try
   {
-	if(masterquery.isEDRMetaDataQuery())
-	  {
-		processEDRMetaDataQuery(masterquery, table);
-		return {};
-	  }
-
-	/*	
-	processEDRQuery(masterquery, table);
-	return {};*/
-	
-	std::cout << "Process EDR Query" << std::endl;
-	
+    if(masterquery.isEDRMetaDataQuery())
+      {
+	const auto& edr_query = masterquery.edrQuery();
+	auto result = processMetaDataQuery(edr_query);
+	table.set(0, 0, result.toStyledString());
+	return {};
+      }
+		
     checkInKeywordLocations(masterquery);
 
     // if only location related parameters queried, use shortcut
@@ -4179,19 +3601,22 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 #ifndef WITHOUT_OBSERVATION
     fix_precisions(masterquery, obsParameters);
 #endif
-
+    /*
 	std::cout << "DATA:\n";
 	for(auto item : outputData)
 	  {
 		std::cout << "item.first: "<< item.first  << " XXX"<< std::endl;;
-		//		std::cout << *(item.second) << std::endl;
-		//		TS::operator<<(std::cout << std::endl, *(item.second)) << std::endl;
+		unsigned int counter = 0;
 		for(auto item2 : item.second)
-		  TS::operator<<(std::cout, item2) << std::endl;
-		//		TS::operator<<(std::cout << std::endl, outputData) << std::endl;
+		  {
+			std::cout << "counter #" << counter++ << std::endl;
+			TS::operator<<(std::cout, item2) << std::endl;
+		  }
 	  }
+    */
+#ifdef OLD_STUFF
 
-    // insert data into the table
+	// insert data into the table
 	fill_table(masterquery, outputData, table);
 
 	const auto& edr_query = masterquery.edrQuery();
@@ -4204,10 +3629,15 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 	for(const auto& item : qd_meta_data)
 	  for(const auto& item2 : item.parameters)
 		model_parameters.insert(std::make_pair(item2.name, item2));	  
-
-    fill_table_coverage(masterquery, outputData, table, itsObsEngine, model_parameters);
-
-    return nullptr;
+#endif
+	
+	const auto& edr_query = masterquery.edrQuery();
+	const auto& producer = edr_query.collection_id;
+	EDRMetaData emd = getProducerMetaData(producer);
+	Json::Value result = CoverageJson::formatOutputData(outputData, emd, masterquery.levels, masterquery.poptions.parameters());
+	table.set(0, 0, result.toStyledString());
+		
+	return nullptr;
   }
   catch (...)
   {
@@ -4261,7 +3691,6 @@ void Plugin::query(const State& state,
 
     // The formatter knows which mimetype to send
 
-	/*
     Spine::TableFormatter* fmt = nullptr;
 
     if (strcasecmp(query.format.c_str(), "IMAGE") == 0)
@@ -4276,9 +3705,6 @@ void Plugin::query(const State& state,
       fmt = Spine::TableFormatterFactory::create("debug");
     else
       fmt = Spine::TableFormatterFactory::create(query.format);
-	*/
-
-	Spine::TableFormatter* fmt = Spine::TableFormatterFactory::create("ascii");
 
     bool gridEnabled = false;
     if (strcasecmp(query.forecastSource.c_str(), "grid") == 0 ||

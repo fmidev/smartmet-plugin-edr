@@ -10,6 +10,7 @@
 
 #include "AggregationInterval.h"
 #include "Producers.h"
+#include "EDRQuery.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/shared_ptr.hpp>
 #include <engines/geonames/Engine.h>
@@ -49,19 +50,6 @@ class Config;
  * \brief Individual precision settings
  */
 // ----------------------------------------------------------------------
-
-struct EDRQuery
-{
-  std::string collection_id;
-  std::string instance_id;
-  std::string query_type;
-  bool meta_data_query{false};
-  /*
-  bool collections{false};
-  bool items{false};
-  bool instances{false};
-  */
-};
 
 struct Query
 {
@@ -168,7 +156,7 @@ struct Query
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
   
   const EDRQuery& edrQuery() const { return itsEDRQuery; }
-  bool isEDRMetaDataQuery() const { return itsEDRQuery.meta_data_query; }
+  bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
  private:
   Query();
 

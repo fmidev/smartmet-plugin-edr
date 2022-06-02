@@ -37,17 +37,6 @@ namespace Plugin
 {
 namespace EDR
 {
-
-std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ)
-{
-  out << "EDR query:\ncollection_id: " << edrQ.collection_id 
-	  << "\ninstance_id: " << edrQ.instance_id
-	  << "\nquery_type: " << edrQ.query_type
-	  << "\nmeta_data_query: " << edrQ.meta_data_query << std::endl;
-
-  return out;
-}
-
 const char* default_timezone = "localtime";
 
 namespace
@@ -100,106 +89,147 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
     : valueformatter(valueformatter_params(request)), timeAggregationRequested(false)
 {
   try
-  {
-	Spine::HTTP::Request req = request;
-	auto resource = req.getResource();	
-	std::vector<std::string> resource_parts;
-	boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
-	if(resource_parts.size() > 1 && resource_parts.at(0).empty())
-	  resource_parts.erase(resource_parts.begin());
+    {
+      format = "ascii";
+      Spine::HTTP::Request req = request;
+      auto resource = req.getResource();	
+      std::vector<std::string> resource_parts;
+      boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
+      if(resource_parts.size() > 1 && resource_parts.at(0).empty())
+	resource_parts.erase(resource_parts.begin());
+      
+      if(resource_parts.size() > 0)
+	{
+	  if(resource_parts.at(0) == "edr")
+	    {
+	      if(resource_parts.size() > 1 && resource_parts.at(1) == "collections")
+		{
+		  itsEDRQuery.query_id = EDRQueryId::AllCollections;
+		  if(resource_parts.size() > 2 && !resource_parts.at(2).empty())
+		    {
+		      itsEDRQuery.collection_id = resource_parts.at(2);
+		      itsEDRQuery.query_id = EDRQueryId::SpecifiedCollection;
+		      if(resource_parts.size() > 3 && !resource_parts.at(3).empty())
+			{					
+			  if(resource_parts.at(3) == "instances")
+			    {
+			      itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
+			      if(resource_parts.size() > 4)
+				{
+				  itsEDRQuery.instance_id = resource_parts.at(4);
+				  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;				  
+				}
+			    }
+			  else
+			    itsEDRQuery.query_type = resource_parts.at(3);
+			}
+		    }
+		}
+	    }
+	}
 
-	std::cout << "RES size: " << resource_parts.size() << std::endl;
-
-	for(auto item : resource_parts)
-	  std::cout << "RES: " << item << std::endl;
-
-	if(resource_parts.size() > 0)
-	  {
-		if(resource_parts.at(0) == "edr")
-		  {
-			if(resource_parts.size() > 1 && resource_parts.at(1) == "collections")
-			  {
-				if(resource_parts.size() > 2 && !resource_parts.at(2).empty())
-				  {
-					itsEDRQuery.collection_id = resource_parts.at(2);
-					if(resource_parts.size() > 3 && !resource_parts.at(3).empty())
-					  {					
-						if(resource_parts.at(3) == "instances")
-						  {
-							if(resource_parts.size() > 4)
-							  itsEDRQuery.instance_id = resource_parts.at(4);
-						  }
-						else
-						  itsEDRQuery.query_type = resource_parts.at(3);
-					  }
-				  }
-			  }
-		  }
-	  }
-
-	itsEDRQuery.meta_data_query = itsEDRQuery.query_type.empty();
-
-	/*
+      if(!req.getQueryString().empty())
+	itsEDRQuery.query_id = EDRQueryId::DataQuery;
+      /*    
 	std::cout << "getResource: " << req.getResource() << std::endl;
 	std::cout << "getMethodString: " << req.getMethodString() << std::endl;
 	std::cout << "getURI: " << req.getURI() << std::endl;
 	std::cout << "getQueryString: " << req.getQueryString() << std::endl;
-	std::cout << "itsEDRQuery.meta_data_query: " << itsEDRQuery.meta_data_query << std::endl;
-	*/
-	if(itsEDRQuery.meta_data_query)
-	  return;
+	std::cout << "itsEDRQuery: " << itsEDRQuery << std::endl;
+      */
+      // If meta data query return from here
+      if(itsEDRQuery.query_id != EDRQueryId::DataQuery)
+	return;
 
-	req.addParameter("producer", itsEDRQuery.collection_id);
+      // From here on EDR data query
+      req.addParameter("producer", itsEDRQuery.collection_id);
+      
+      // Check mandatory EDR parameters
+      if(itsEDRQuery.query_type == "position" || itsEDRQuery.query_type == "area")
+	{
+	  auto coords = Spine::optional_string(req.getParameter("coords"), "");
+	  auto location = Spine::optional_string(req.getParameter("locationId"), "");
+	  if(coords.empty() && location.empty())
+	    throw Fmi::Exception(BCP, "Either 'coords' or 'location' option must be defined!");
 
-	// Check mandatory EDR parameters
-	if(itsEDRQuery.query_type == "position")
-	  {
-		auto coords = Spine::optional_string(req.getParameter("coords"), "");
-		if(coords.empty())
-          throw Fmi::Exception(BCP, "Missing coords option!");
+	  if(itsEDRQuery.query_type == "position" || itsEDRQuery.query_type == "area")
+	    {
+	      if(!coords.empty())
+		{
+		  // EDR within + within-unit
+		  auto within  = Spine::optional_string(req.getParameter("within"), "");
+		  auto within_unit  = Spine::optional_string(req.getParameter("within-unit"), "");
+		  if(!within.empty() && !within_unit.empty())
+		    {
+		      auto radius = Fmi::stod(within);
+		      if(within_unit == "mi")
+			radius = (radius * 1.60934);
+		      else if(within_unit != "km")
+			throw Fmi::Exception(BCP, "Invalid within-unit option, 'km' and 'mi' supported!");
+		      coords += (":"+Fmi::to_string(radius));
+		    }
+		  req.addParameter("wkt", coords);
+		}
+	      else
+		{
+		  if(itsEDRQuery.query_type == "position")
+		    req.addParameter("place", location);
+		  else
+		    req.addParameter("area", location);		
+		}
+	    }
+	}
 
-		req.addParameter("wkt", coords);
-	  }
+      // EDR datetime
+      auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
+      
+      if(datetime.empty())
+	throw Fmi::Exception(BCP, "Missing datetime option!");
+      
+      if(datetime.find("/") != std::string::npos)
+	{
+	  std::vector<std::string> datetime_parts;
+	  boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
+	  req.addParameter("starttime", datetime_parts.at(0));
+	  req.addParameter("endtime", datetime_parts.at(1));	  
+	}
+      else
+	{
+	  if(boost::algorithm::ends_with(datetime, ".."))
+	    {
+	      datetime.resize(datetime.size() - 2);
+	      req.addParameter("starttime", datetime);			
+	    }
+	  else if(boost::algorithm::starts_with(datetime, ".."))
+	    {
+	      datetime = datetime.substr(2);
+	      req.addParameter("endtime", datetime);			
+	    }
+	  else
+	    {
+	      req.addParameter("starttime", datetime);			
+	      req.addParameter("endtime", datetime);			
+	    }
+	}
 
-	auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
+      // EDR parameter-name
+      auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
+      
+      if(parameter_names.empty())
+	throw Fmi::Exception(BCP, "Missing parameter-name option!");
+      
+      parameter_names += ",longitude,latitude";
+      
+      req.addParameter("param", parameter_names);
 
-	if(datetime.empty())
-	  throw Fmi::Exception(BCP, "Missing datetime option!");
+      // EDR z
+      auto levels  = Spine::optional_string(req.getParameter("z"), "");
+      if(!levels.empty())
+	req.addParameter("levels", levels);
 
-	if(datetime.find("/") != std::string::npos)
-	  {
-		std::vector<std::string> datetime_parts;
-		boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
-		req.addParameter("starttime", datetime_parts.at(0));
-		req.addParameter("endtime", datetime_parts.at(1));
-		
-	  }
-	else
-	  {
-		if(boost::algorithm::ends_with(datetime, ".."))
-		  {
-			datetime.resize(datetime.size() - 2);
-			req.addParameter("starttime", datetime);			
-		  }
-		else if(boost::algorithm::starts_with(datetime, ".."))
-		  {
-			datetime = datetime.substr(2);
-			req.addParameter("endtime", datetime);			
-		  }
-		else
-		  {
-			req.addParameter("starttime", datetime);			
-			req.addParameter("endtime", datetime);			
-		  }
-	  }
 
-	auto parameter_name = Spine::optional_string(req.getParameter("parameter-name"), "");
-
-	if(parameter_name.empty())
-	  throw Fmi::Exception(BCP, "Missing parameter-name option!");
-
-	req.addParameter("param", parameter_name);			
-	
+      
+      
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));
     report_unsupported_option("width", req.getParameter("width"));
     report_unsupported_option("fill", req.getParameter("fill"));
@@ -220,8 +250,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
     forecastSource = Spine::optional_string(req.getParameter("source"), "");
 
     // ### Attribute list ( attr=name1:value1,name2:value2,name3:$(alias1) )
-
-	std::cout << "QUERY_5" << std::endl;
 
     string attr = Spine::optional_string(req.getParameter("attr"), "");
     if (!attr.empty())
@@ -258,8 +286,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
         }
       }
     }
-
-	std::cout << "QUERY_6" << std::endl;
 
     // attributeList.print(std::cout,0,0);
 
@@ -319,8 +345,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
             new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
       }
     }
-
-	std::cout << "QUERY_7" << std::endl;
 
     // Store WKT-geometries
     wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
@@ -383,8 +407,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       }
     }
 
-	std::cout << "QUERY_8" << std::endl;
-
     findnearestvalidpoint = Spine::optional_bool(req.getParameter("findnearestvalid"), false);
 
     boost::optional<std::string> tmp = req.getParameter("origintime");
@@ -427,8 +449,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       poptions.add(TS::ParameterFactory::instance().parse("longitude"));
       poptions.add(TS::ParameterFactory::instance().parse("latitude"));
     }
-
-	std::cout << "QUERY_9" << std::endl;
 
     // This must be done after params is no longer being modified
     // by the above wxml code!
@@ -562,8 +582,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
         this->weekdays.push_back(h);
       }
     }
-
-	std::cout << "QUERY_10" << std::endl;
 
     startrow = Spine::optional_size(req.getParameter("startrow"), 0);
     maxresults = Spine::optional_size(req.getParameter("maxresults"), 0);

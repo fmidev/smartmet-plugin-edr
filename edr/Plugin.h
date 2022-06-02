@@ -11,6 +11,8 @@
 #include "ObsParameter.h"
 #include "Query.h"
 #include "QueryLevelDataCache.h"
+#include "EDRMetaData.h"
+#include "EDRQuery.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
@@ -120,10 +122,8 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                                               const QueryServer::QueryStreamer_sptr& queryStreamer,
                                               size_t& product_hash);
 
-  void processEDRMetaDataQuery(Query& query, Spine::Table& table);
-  Json::Value getEDRMetaDataQD(Query& query, const std::string& producer);
-  Json::Value getEDRMetaDataObs(Query& query, const std::string& producer);
-  void processEDRQuery(Query& query, Spine::Table& table);
+  EDRMetaData getProducerMetaData(const std::string& producer);
+  Json::Value processMetaDataQuery(const EDRQuery& edr_query);
 
   void processQEngineQuery(const State& state,
                            Query& query,
