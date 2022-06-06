@@ -456,7 +456,7 @@ Table C.1 — EDR Collection Object structure: https://docs.ogc.org/is/19-086r4/
 	      {
 		edr_vertical_extent eve;
 		producer_emd.vertical_extent.vrs = "TODO: Vertical Reference System...";
-		for(const auto item : qmd.levels)
+		for(const auto& item : qmd.levels)
 		  producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
 	      }
 	    
