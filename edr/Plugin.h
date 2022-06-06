@@ -80,9 +80,9 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   Plugin(Spine::Reactor* theReactor, const char* theConfig);
   virtual ~Plugin();
 
-  const std::string& getPluginName() const;
-  int getRequiredAPIVersion() const;
-  bool queryIsFast(const Spine::HTTP::Request& theRequest) const;
+  const std::string& getPluginName() const override;
+  int getRequiredAPIVersion() const override;
+  bool queryIsFast(const Spine::HTTP::Request& theRequest) const override;
 
   bool ready() const;
 
@@ -99,11 +99,11 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
 #endif
 
  protected:
-  void init();
-  void shutdown();
+  void init() override;
+  void shutdown() override;
   void requestHandler(Spine::Reactor& theReactor,
                       const Spine::HTTP::Request& theRequest,
-                      Spine::HTTP::Response& theResponse);
+                      Spine::HTTP::Response& theResponse) override;
 
  private:
   Plugin();
