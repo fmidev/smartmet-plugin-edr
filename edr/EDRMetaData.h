@@ -39,6 +39,7 @@ namespace EDR
   
   struct edr_vertical_extent
   {
+	std::string level_type;
     std::vector<std::string> levels;
     std::string vrs {"TODO: Vertical Reference System"};
   };

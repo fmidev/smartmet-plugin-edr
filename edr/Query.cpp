@@ -96,138 +96,138 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       std::vector<std::string> resource_parts;
       boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
       if(resource_parts.size() > 1 && resource_parts.at(0).empty())
-	resource_parts.erase(resource_parts.begin());
+		resource_parts.erase(resource_parts.begin());
       
       if(resource_parts.size() > 0)
-	{
-	  if(resource_parts.at(0) == "edr")
-	    {
-	      if(resource_parts.size() > 1 && resource_parts.at(1) == "collections")
 		{
-		  itsEDRQuery.query_id = EDRQueryId::AllCollections;
-		  if(resource_parts.size() > 2 && !resource_parts.at(2).empty())
-		    {
-		      itsEDRQuery.collection_id = resource_parts.at(2);
-		      itsEDRQuery.query_id = EDRQueryId::SpecifiedCollection;
-		      if(resource_parts.size() > 3 && !resource_parts.at(3).empty())
-			{					
-			  if(resource_parts.at(3) == "instances")
-			    {
-			      itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
-			      if(resource_parts.size() > 4)
+		  if(resource_parts.at(0) == "edr")
+			{
+			  if(resource_parts.size() > 1 && resource_parts.at(1) == "collections")
 				{
-				  itsEDRQuery.instance_id = resource_parts.at(4);
-				  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;				  
+				  itsEDRQuery.query_id = EDRQueryId::AllCollections;
+				  if(resource_parts.size() > 2 && !resource_parts.at(2).empty())
+					{
+					  itsEDRQuery.collection_id = resource_parts.at(2);
+					  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollection;
+					  if(resource_parts.size() > 3 && !resource_parts.at(3).empty())
+						{					
+						  if(resource_parts.at(3) == "instances")
+							{
+							  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
+							  if(resource_parts.size() > 4)
+								{
+								  itsEDRQuery.instance_id = resource_parts.at(4);
+								  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;				  
+								}
+							}
+						  else
+							itsEDRQuery.query_type = resource_parts.at(3);
+						}
+					}
 				}
-			    }
-			  else
-			    itsEDRQuery.query_type = resource_parts.at(3);
 			}
-		    }
 		}
-	    }
-	}
-
+	  
       if(!req.getQueryString().empty())
-	itsEDRQuery.query_id = EDRQueryId::DataQuery;
+		itsEDRQuery.query_id = EDRQueryId::DataQuery;
       /*    
-	std::cout << "getResource: " << req.getResource() << std::endl;
-	std::cout << "getMethodString: " << req.getMethodString() << std::endl;
-	std::cout << "getURI: " << req.getURI() << std::endl;
-	std::cout << "getQueryString: " << req.getQueryString() << std::endl;
-	std::cout << "itsEDRQuery: " << itsEDRQuery << std::endl;
+			std::cout << "getResource: " << req.getResource() << std::endl;
+			std::cout << "getMethodString: " << req.getMethodString() << std::endl;
+			std::cout << "getURI: " << req.getURI() << std::endl;
+			std::cout << "getQueryString: " << req.getQueryString() << std::endl;
+			std::cout << "itsEDRQuery: " << itsEDRQuery << std::endl;
       */
       // If meta data query return from here
       if(itsEDRQuery.query_id != EDRQueryId::DataQuery)
-	return;
-
+		return;
+	  
       // From here on EDR data query
       req.addParameter("producer", itsEDRQuery.collection_id);
       
       // Check mandatory EDR parameters
       if(itsEDRQuery.query_type == "position" || itsEDRQuery.query_type == "area")
-	{
-	  auto coords = Spine::optional_string(req.getParameter("coords"), "");
-	  auto location = Spine::optional_string(req.getParameter("locationId"), "");
-	  if(coords.empty() && location.empty())
-	    throw Fmi::Exception(BCP, "Either 'coords' or 'location' option must be defined!");
-
-	  if(itsEDRQuery.query_type == "position" || itsEDRQuery.query_type == "area")
-	    {
-	      if(!coords.empty())
 		{
-		  // EDR within + within-unit
-		  auto within  = Spine::optional_string(req.getParameter("within"), "");
-		  auto within_unit  = Spine::optional_string(req.getParameter("within-unit"), "");
-		  if(!within.empty() && !within_unit.empty())
-		    {
-		      auto radius = Fmi::stod(within);
-		      if(within_unit == "mi")
-			radius = (radius * 1.60934);
-		      else if(within_unit != "km")
-			throw Fmi::Exception(BCP, "Invalid within-unit option, 'km' and 'mi' supported!");
-		      coords += (":"+Fmi::to_string(radius));
-		    }
-		  req.addParameter("wkt", coords);
+		  auto coords = Spine::optional_string(req.getParameter("coords"), "");
+		  auto location = Spine::optional_string(req.getParameter("locationId"), "");
+		  if(coords.empty() && location.empty())
+			throw Fmi::Exception(BCP, "Either 'coords' or 'location' option must be defined!");
+		  
+		  if(itsEDRQuery.query_type == "position" || itsEDRQuery.query_type == "area")
+			{
+			  if(!coords.empty())
+				{
+				  // EDR within + within-unit
+				  auto within  = Spine::optional_string(req.getParameter("within"), "");
+				  auto within_unit  = Spine::optional_string(req.getParameter("within-unit"), "");
+				  if(!within.empty() && !within_unit.empty())
+					{
+					  auto radius = Fmi::stod(within);
+					  if(within_unit == "mi")
+						radius = (radius * 1.60934);
+					  else if(within_unit != "km")
+						throw Fmi::Exception(BCP, "Invalid within-unit option, 'km' and 'mi' supported!");
+					  coords += (":"+Fmi::to_string(radius));
+					}
+				  req.addParameter("wkt", coords);
+				}
+			  else
+				{
+				  if(itsEDRQuery.query_type == "position")
+					req.addParameter("place", location);
+				  else
+					req.addParameter("area", location);		
+				}
+			}
 		}
-	      else
-		{
-		  if(itsEDRQuery.query_type == "position")
-		    req.addParameter("place", location);
-		  else
-		    req.addParameter("area", location);		
-		}
-	    }
-	}
 
       // EDR datetime
       auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
       
       if(datetime.empty())
-	throw Fmi::Exception(BCP, "Missing datetime option!");
+		throw Fmi::Exception(BCP, "Missing datetime option!");
       
       if(datetime.find("/") != std::string::npos)
-	{
-	  std::vector<std::string> datetime_parts;
-	  boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
-	  req.addParameter("starttime", datetime_parts.at(0));
-	  req.addParameter("endtime", datetime_parts.at(1));	  
-	}
+		{
+		  std::vector<std::string> datetime_parts;
+		  boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
+		  req.addParameter("starttime", datetime_parts.at(0));
+		  req.addParameter("endtime", datetime_parts.at(1));	  
+		}
       else
-	{
-	  if(boost::algorithm::ends_with(datetime, ".."))
-	    {
-	      datetime.resize(datetime.size() - 2);
-	      req.addParameter("starttime", datetime);			
-	    }
-	  else if(boost::algorithm::starts_with(datetime, ".."))
-	    {
-	      datetime = datetime.substr(2);
-	      req.addParameter("endtime", datetime);			
-	    }
-	  else
-	    {
-	      req.addParameter("starttime", datetime);			
-	      req.addParameter("endtime", datetime);			
-	    }
-	}
-
+		{
+		  if(boost::algorithm::ends_with(datetime, ".."))
+			{
+			  datetime.resize(datetime.size() - 2);
+			  req.addParameter("starttime", datetime);			
+			}
+		  else if(boost::algorithm::starts_with(datetime, ".."))
+			{
+			  datetime = datetime.substr(2);
+			  req.addParameter("endtime", datetime);			
+			}
+		  else
+			{
+			  req.addParameter("starttime", datetime);			
+			  req.addParameter("endtime", datetime);			
+			}
+		}
+	  
       // EDR parameter-name
       auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
       
       if(parameter_names.empty())
-	throw Fmi::Exception(BCP, "Missing parameter-name option!");
+		throw Fmi::Exception(BCP, "Missing parameter-name option!");
       
       parameter_names += ",longitude,latitude";
       
       req.addParameter("param", parameter_names);
-
+	  
       // EDR z
-      auto levels  = Spine::optional_string(req.getParameter("z"), "");
-      if(!levels.empty())
-	req.addParameter("levels", levels);
-
-
+      auto z  = Spine::optional_string(req.getParameter("z"), "");	  
+      if(!z.empty())
+		req.addParameter("level", z);
+	  
+	  
       
       
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));

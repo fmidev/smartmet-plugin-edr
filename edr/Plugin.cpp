@@ -3489,10 +3489,10 @@ boost::shared_ptr<std::string> Plugin::processQuery(
   {
     if(masterquery.isEDRMetaDataQuery())
       {
-	const auto& edr_query = masterquery.edrQuery();
-	auto result = processMetaDataQuery(edr_query);
-	table.set(0, 0, result.toStyledString());
-	return {};
+		const auto& edr_query = masterquery.edrQuery();
+		auto result = processMetaDataQuery(edr_query);
+		table.set(0, 0, result.toStyledString());
+		return {};
       }
 		
     checkInKeywordLocations(masterquery);
@@ -3601,40 +3601,14 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 #ifndef WITHOUT_OBSERVATION
     fix_precisions(masterquery, obsParameters);
 #endif
-    /*
-	std::cout << "DATA:\n";
-	for(auto item : outputData)
-	  {
-		std::cout << "item.first: "<< item.first  << " XXX"<< std::endl;;
-		unsigned int counter = 0;
-		for(auto item2 : item.second)
-		  {
-			std::cout << "counter #" << counter++ << std::endl;
-			TS::operator<<(std::cout, item2) << std::endl;
-		  }
-	  }
-    */
-#ifdef OLD_STUFF
-
-	// insert data into the table
-	fill_table(masterquery, outputData, table);
-
-	const auto& edr_query = masterquery.edrQuery();
-	auto producer = edr_query.collection_id;
-	Engine::Querydata::MetaQueryOptions opts;
-	if(!producer.empty())
-	  opts.setProducer(producer);
-	auto qd_meta_data = itsQEngine->getEngineMetadata(opts);
-	std::map<std::string, Engine::Querydata::ModelParameter> model_parameters;
-	for(const auto& item : qd_meta_data)
-	  for(const auto& item2 : item.parameters)
-		model_parameters.insert(std::make_pair(item2.name, item2));	  
-#endif
 	
 	const auto& edr_query = masterquery.edrQuery();
 	const auto& producer = edr_query.collection_id;
 	EDRMetaData emd = getProducerMetaData(producer);
-	Json::Value result = CoverageJson::formatOutputData(outputData, emd, masterquery.levels, masterquery.poptions.parameters());
+	boost::optional<int> level;
+	if(masterquery.levels.size() > 0)
+	  level = *(masterquery.levels.begin());
+	Json::Value result = CoverageJson::formatOutputData(outputData, emd, level, masterquery.poptions.parameters());
 	table.set(0, 0, result.toStyledString());
 		
 	return nullptr;
