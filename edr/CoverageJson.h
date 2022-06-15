@@ -33,15 +33,15 @@ namespace CoverageJson
 							   boost::optional<int> level,
 							   const std::vector<Spine::Parameter>& query_parameters);
   
-  EDRMetaData getProducerMetaData(const std::string& producer, Engine::Querydata::Engine* qEngine);
+  EDRMetaData getProducerMetaData(const std::string& producer, const Engine::Querydata::Engine& qEngine);
   Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query,
-									  Engine::Querydata::Engine* qEngine);
+									  const Engine::Querydata::Engine& qEngine);
 
 #ifndef WITHOUT_OBSERVATION
-  EDRMetaData getProducerMetaData(const std::string& producer, Engine::Observation::Engine* obsEngine);
+  EDRMetaData getProducerMetaData(const std::string& producer, const Engine::Observation::Engine& obsEngine);
   Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query,
-									  Engine::Querydata::Engine* qEngine,
-									  Engine::Observation::Engine* obsEngine);
+									  const Engine::Querydata::Engine& qEngine,
+									  Engine::Observation::Engine& obsEngine);
 #endif  
 }  // namespace CoverageJson
 }  // namespace EDR

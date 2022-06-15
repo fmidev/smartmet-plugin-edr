@@ -8,6 +8,7 @@
 #include "Config.h"
 #include "Hash.h"
 #include "State.h"
+#include "CoverageJson.h"
 #include <engines/geonames/Engine.h>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
@@ -215,8 +216,42 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       // EDR parameter-name
       auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
       
+
+	  // Check valid parameters for requested producer
+	  std::list<string> param_names;
+	  boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
+
+	  EDRMetaData emd;
+
+#ifndef WITHOUT_OBSERVATION
+	  auto obs_station_types = state.getObsEngine()->getValidStationTypes();
+	  if(obs_station_types.find(itsEDRQuery.collection_id) != obs_station_types.end())
+		emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getObsEngine()));
+#endif
+	  if(emd.parameters.empty())
+		emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, const_cast<SmartMet::Engine::Querydata::Engine&>(state.getQEngine()));
+
+	  std::string cleaned_param_names;
+	  for(auto p : param_names)
+		{
+		  boost::algorithm::to_lower(p);
+		  if(emd.parameters.find(p) == emd.parameters.end())
+			{
+			  std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p + "' ignored!"
+							ANSI_FG_DEFAULT)
+						<< std::endl;
+			}
+		  if(emd.parameters.find(p) != emd.parameters.end())
+			{
+			  if(!cleaned_param_names.empty())
+				cleaned_param_names += ",";
+			  cleaned_param_names += p;
+			}
+		}
+	  parameter_names = cleaned_param_names;
+
       if(parameter_names.empty())
-		throw Fmi::Exception(BCP, "Missing parameter-name option!");
+		throw Fmi::Exception(BCP, "Missing parameter-name option!");	  
       
       parameter_names += ",longitude,latitude";
       
@@ -225,10 +260,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       // EDR z
       auto z  = Spine::optional_string(req.getParameter("z"), "");	  
       if(!z.empty())
-		req.addParameter("level", z);
-	  
-	  
-      
+		req.addParameter("level", z);	  	        
       
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));
     report_unsupported_option("width", req.getParameter("width"));

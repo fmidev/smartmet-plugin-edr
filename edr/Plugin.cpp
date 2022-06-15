@@ -3463,18 +3463,18 @@ EDRMetaData Plugin::getProducerMetaData(const std::string& producer)
 {  
 #ifndef WITHOUT_OBSERVATION
   if(isObsProducer(producer))
-    return CoverageJson::getProducerMetaData(producer, itsObsEngine);
+    return CoverageJson::getProducerMetaData(producer, *itsObsEngine);
 #endif
   
-  return CoverageJson::getProducerMetaData(producer, itsQEngine);
+  return CoverageJson::getProducerMetaData(producer, *itsQEngine);
 }
   
 Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query)
 {
 #ifndef WITHOUT_OBSERVATION
-  return CoverageJson::processEDRMetaDataQuery(edr_query, itsQEngine, itsObsEngine);
+  return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsObsEngine);
 #else
-  return CoverageJson::processEDRMetaDataQuery(edr_query, itsQEngine);
+  return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine);
 #endif
 }
 
@@ -4247,7 +4247,7 @@ Fmi::Cache::CacheStatistics Plugin::getCacheStats() const
 {
   Fmi::Cache::CacheStatistics ret;
 
-  ret.insert(std::make_pair("Timeseries::timeseries_generator_cache",
+  ret.insert(std::make_pair("EDR::timeseries_generator_cache",
                             itsTimeSeriesCache->getCacheStats()));
 
   return ret;

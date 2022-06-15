@@ -743,14 +743,14 @@ Json::Value parse_edr_metadata(const EDRProducerMetaData& epmd, const EDRQuery& 
 }
 
   
-EDRProducerMetaData get_edr_metadata_qd(const std::string& producer, Engine::Querydata::Engine* qEngine, EDRMetaData* emd = nullptr)
+EDRProducerMetaData get_edr_metadata_qd(const std::string& producer, const Engine::Querydata::Engine& qEngine, EDRMetaData* emd = nullptr)
 {
   try
 	{
 	  Engine::Querydata::MetaQueryOptions opts;
 	  if(!producer.empty())
 		opts.setProducer(producer);
-	  auto qd_meta_data = qEngine->getEngineMetadata(opts);
+	  auto qd_meta_data = qEngine.getEngineMetadata(opts);
 	  
 	  EDRProducerMetaData epmd;
 	  
@@ -811,7 +811,7 @@ EDRProducerMetaData get_edr_metadata_qd(const std::string& producer, Engine::Que
   }
   
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData get_edr_metadata_obs(const std::string& producer, Engine::Observation::Engine* obsEngine, EDRMetaData* emd = nullptr)
+EDRProducerMetaData get_edr_metadata_obs(const std::string& producer, Engine::Observation::Engine& obsEngine, EDRMetaData* emd = nullptr)
 {
   try
 	{
@@ -821,10 +821,10 @@ EDRProducerMetaData get_edr_metadata_obs(const std::string& producer, Engine::Ob
 	  if(!producer.empty())
 		producers.insert(producer);
 	  else
-		producers = obsEngine->getValidStationTypes();
+		producers = obsEngine.getValidStationTypes();
 	  
 	  for(const auto& prod : producers)
-		observation_meta_data.insert(std::make_pair(prod, obsEngine->metaData(prod)));
+		observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
 	  
 	  EDRProducerMetaData epmd;
 	  
@@ -849,7 +849,7 @@ EDRProducerMetaData get_edr_metadata_obs(const std::string& producer, Engine::Ob
 		  for(const auto& p : obs_md.parameters)
 			{
 			  params[0] = p;
-			  auto observedProperties = obsEngine->observablePropertyQuery(params, "en");
+			  auto observedProperties = obsEngine.observablePropertyQuery(params, "en");
 			  std::string description = p;
 			  if(observedProperties->size() > 0)
 				description = observedProperties->at(0).observablePropertyLabel;
@@ -1235,14 +1235,14 @@ Json::Value formatOutputData(TS::OutputData& outputData,
 	}
 }
 
-EDRMetaData getProducerMetaData(const std::string& producer, Engine::Querydata::Engine* qEngine)
+EDRMetaData getProducerMetaData(const std::string& producer, const Engine::Querydata::Engine& qEngine)
 {
   try
     {
       EDRMetaData emd;
 	  
 	  if(!producer.empty())
-		get_edr_metadata_qd(producer, qEngine, &emd);	  
+		get_edr_metadata_qd(producer, qEngine, &emd);
 	  
       return emd;
     }
@@ -1253,7 +1253,7 @@ EDRMetaData getProducerMetaData(const std::string& producer, Engine::Querydata::
 }
 
 #ifndef WITHOUT_OBSERVATION
-EDRMetaData getProducerMetaData(const std::string& producer, Engine::Observation::Engine* obsEngine)
+EDRMetaData getProducerMetaData(const std::string& producer, Engine::Observation::Engine& obsEngine)
 {
   try
     {
@@ -1271,7 +1271,7 @@ EDRMetaData getProducerMetaData(const std::string& producer, Engine::Observation
 }
 #endif
 
-Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query, Engine::Querydata::Engine* qEngine)
+Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query, const Engine::Querydata::Engine& qEngine)
 {
   try
     {
@@ -1309,7 +1309,7 @@ Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query, Engine::Querydata
 }
 
 #ifndef WITHOUT_OBSERVATION
-Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query, Engine::Querydata::Engine* qEngine, Engine::Observation::Engine* obsEngine)
+Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query, const Engine::Querydata::Engine& qEngine, Engine::Observation::Engine& obsEngine)
 {
   try
     {
@@ -1340,7 +1340,7 @@ Json::Value processEDRMetaDataQuery(const EDRQuery& edr_query, Engine::Querydata
 		}
       else
 		{
-		  auto obs_producers = obsEngine->getValidStationTypes();
+		  auto obs_producers = obsEngine.getValidStationTypes();
 		  EDRProducerMetaData epmd;
 		  if(obs_producers.find(producer) != obs_producers.end())
 			epmd = get_edr_metadata_obs(producer, obsEngine);

@@ -1,0 +1,319 @@
+{
+	"instances" : 
+	[
+		{
+			"crs" : 
+			[
+				"EPSG:4326"
+			],
+			"extent" : 
+			{
+				"spatial" : 
+				{
+					"bbox" : 
+					[
+						-9.0987063271781388,
+						51.299999999999997,
+						49.0,
+						72.642084080345256
+					],
+					"crs" : "EPSG:4326"
+				},
+				"temporal" : 
+				{
+					"interval" : 
+					[
+						"20080805T030000/20080809T060000/60M"
+					],
+					"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]"
+				}
+			},
+			"id" : "20080805T063100",
+			"links" : 
+			[
+				{
+					"href" : "https://smartmet.fmi.fi/edr/collections/pal_skandinavia/20080805T063100",
+					"hreflang" : "en",
+					"rel" : "data"
+				}
+			],
+			"output_formats" : 
+			[
+				"CoverageJSON"
+			],
+			"parameter_names" : 
+			{
+				"DewPoint" : 
+				{
+					"description" : "Kastepiste",
+					"id" : "DewPoint",
+					"observedProperty" : 
+					{
+						"label" : "Kastepiste"
+					},
+					"type" : "Parameter"
+				},
+				"FogIntensity" : 
+				{
+					"description" : "Density of Fog",
+					"id" : "FogIntensity",
+					"observedProperty" : 
+					{
+						"label" : "Density of Fog"
+					},
+					"type" : "Parameter"
+				},
+				"HighCloudCover" : 
+				{
+					"description" : "High Cloud Cover",
+					"id" : "HighCloudCover",
+					"observedProperty" : 
+					{
+						"label" : "High Cloud Cover"
+					},
+					"type" : "Parameter"
+				},
+				"HourlyMaximumGust" : 
+				{
+					"description" : "MaxGustMS",
+					"id" : "HourlyMaximumGust",
+					"observedProperty" : 
+					{
+						"label" : "MaxGustMS"
+					},
+					"type" : "Parameter"
+				},
+				"Humidity" : 
+				{
+					"description" : "Suhteellinen kosteus",
+					"id" : "Humidity",
+					"observedProperty" : 
+					{
+						"label" : "Suhteellinen kosteus"
+					},
+					"type" : "Parameter"
+				},
+				"KIndex" : 
+				{
+					"description" : "K-indeksi",
+					"id" : "KIndex",
+					"observedProperty" : 
+					{
+						"label" : "K-indeksi"
+					},
+					"type" : "Parameter"
+				},
+				"LowCloudCover" : 
+				{
+					"description" : "Low Cloud Cover",
+					"id" : "LowCloudCover",
+					"observedProperty" : 
+					{
+						"label" : "Low Cloud Cover"
+					},
+					"type" : "Parameter"
+				},
+				"MediumCloudCover" : 
+				{
+					"description" : "Medium Cloud Cover",
+					"id" : "MediumCloudCover",
+					"observedProperty" : 
+					{
+						"label" : "Medium Cloud Cover"
+					},
+					"type" : "Parameter"
+				},
+				"MiddleAndLowCloudCover" : 
+				{
+					"description" : "Middle+Low Cloud Cover",
+					"id" : "MiddleAndLowCloudCover",
+					"observedProperty" : 
+					{
+						"label" : "Middle+Low Cloud Cover"
+					},
+					"type" : "Parameter"
+				},
+				"PoP" : 
+				{
+					"description" : "PoP",
+					"id" : "PoP",
+					"observedProperty" : 
+					{
+						"label" : "PoP"
+					},
+					"type" : "Parameter"
+				},
+				"Precipitation1h" : 
+				{
+					"description" : "Precipitation mm/h",
+					"id" : "Precipitation1h",
+					"observedProperty" : 
+					{
+						"label" : "Precipitation mm/h"
+					},
+					"type" : "Parameter"
+				},
+				"PrecipitationForm" : 
+				{
+					"description" : "Precipitation Form",
+					"id" : "PrecipitationForm",
+					"observedProperty" : 
+					{
+						"label" : "Precipitation Form"
+					},
+					"type" : "Parameter"
+				},
+				"PrecipitationType" : 
+				{
+					"description" : "Precipitation Type",
+					"id" : "PrecipitationType",
+					"observedProperty" : 
+					{
+						"label" : "Precipitation Type"
+					},
+					"type" : "Parameter"
+				},
+				"Pressure" : 
+				{
+					"description" : "Pintapaine",
+					"id" : "Pressure",
+					"observedProperty" : 
+					{
+						"label" : "Pintapaine"
+					},
+					"type" : "Parameter"
+				},
+				"ProbabilityThunderstorm" : 
+				{
+					"description" : "Probability of Thunder",
+					"id" : "ProbabilityThunderstorm",
+					"observedProperty" : 
+					{
+						"label" : "Probability of Thunder"
+					},
+					"type" : "Parameter"
+				},
+				"RadiationGlobal" : 
+				{
+					"description" : "Auringon s\u4d25ily",
+					"id" : "RadiationGlobal",
+					"observedProperty" : 
+					{
+						"label" : "Auringon s\u4d25ily"
+					},
+					"type" : "Parameter"
+				},
+				"RadiationLW" : 
+				{
+					"description" : "Pitk\u4861ltoinen s\u4d25ily",
+					"id" : "RadiationLW",
+					"observedProperty" : 
+					{
+						"label" : "Pitk\u4861ltoinen s\u4d25ily"
+					},
+					"type" : "Parameter"
+				},
+				"Temperature" : 
+				{
+					"description" : "L\u4b70\u5892\ude6ca",
+					"id" : "Temperature",
+					"observedProperty" : 
+					{
+						"label" : "L\u4b70\u5892\ude6ca"
+					},
+					"type" : "Parameter"
+				},
+				"TotalCloudCover" : 
+				{
+					"description" : "Total Cloud Cover",
+					"id" : "TotalCloudCover",
+					"observedProperty" : 
+					{
+						"label" : "Total Cloud Cover"
+					},
+					"type" : "Parameter"
+				},
+				"WeatherSymbol1" : 
+				{
+					"description" : "Precipitation Symbol",
+					"id" : "WeatherSymbol1",
+					"observedProperty" : 
+					{
+						"label" : "Precipitation Symbol"
+					},
+					"type" : "Parameter"
+				},
+				"WeatherSymbol3" : 
+				{
+					"description" : "Weather Symbol",
+					"id" : "WeatherSymbol3",
+					"observedProperty" : 
+					{
+						"label" : "Weather Symbol"
+					},
+					"type" : "Parameter"
+				},
+				"WindDirection" : 
+				{
+					"description" : "Wind dir",
+					"id" : "WindDirection",
+					"observedProperty" : 
+					{
+						"label" : "Wind dir"
+					},
+					"type" : "Parameter"
+				},
+				"WindSpeedMS" : 
+				{
+					"description" : "Wind speed",
+					"id" : "WindSpeedMS",
+					"observedProperty" : 
+					{
+						"label" : "Wind speed"
+					},
+					"type" : "Parameter"
+				},
+				"WindUMS" : 
+				{
+					"description" : "U",
+					"id" : "WindUMS",
+					"observedProperty" : 
+					{
+						"label" : "U"
+					},
+					"type" : "Parameter"
+				},
+				"WindVMS" : 
+				{
+					"description" : "V",
+					"id" : "WindVMS",
+					"observedProperty" : 
+					{
+						"label" : "V"
+					},
+					"type" : "Parameter"
+				},
+				"WindVectorMS" : 
+				{
+					"description" : "Wind vector",
+					"id" : "WindVectorMS",
+					"observedProperty" : 
+					{
+						"label" : "Wind vector"
+					},
+					"type" : "Parameter"
+				}
+			},
+			"title" : "Origintime: 20080805T063100 Starttime: 20080805T030000 Endtime: 20080809T060000 Timestep: 60"
+		}
+	],
+	"links" : 
+	[
+		{
+			"href" : "https://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances",
+			"rel" : "self",
+			"type" : "application/json"
+		}
+	]
+}
+
