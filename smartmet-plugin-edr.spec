@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.6.15
+Version: 22.6.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,7 +17,6 @@ BuildRequires: boost169-devel
 BuildRequires: fmt-devel >= 7.1.3
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
-BuildRequires: smartmet-library-edr-devel >= 22.5.24
 BuildRequires: smartmet-library-spine-devel >= 22.5.24
 BuildRequires: smartmet-library-locus-devel >= 22.3.28
 BuildRequires: smartmet-library-macgyver-devel >= 22.5.24
@@ -42,7 +41,6 @@ Requires: smartmet-library-locus >= 22.3.28
 Requires: smartmet-library-macgyver >= 22.5.24
 Requires: smartmet-library-newbase >= 22.5.24
 Requires: smartmet-library-spine >= 22.5.24
-Requires: smartmet-library-edr >= 22.5.24
 Requires: smartmet-library-gis >= 22.5.4
 Requires: smartmet-engine-geonames >= 22.5.24
 Requires: smartmet-engine-querydata >= 22.5.31
@@ -95,6 +93,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Mon Jun 20 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.6.20-1.fmi
+- ABI fixes
+
 * Wed Jun 15 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.6.15-1.fmi
 - Testcases added, checking unknown parameters before query.
 
