@@ -3,6 +3,7 @@
 #include <boost/optional.hpp>
 #include <json/json.h>
 #include <spine/Parameter.h>
+#include <spine/Location.h>
 #include <timeseries/TimeSeriesInclude.h>
 
 namespace SmartMet {
@@ -29,6 +30,7 @@ EDRMetaData getProducerMetaData(const std::string &producer,
                                 const Engine::Querydata::Engine &qEngine);
 Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
                                     const Engine::Querydata::Engine &qEngine);
+Json::Value processEDRMetaDataQuery(const Spine::LocationList& locations);
 
 #ifndef WITHOUT_OBSERVATION
 EDRMetaData getProducerMetaData(const std::string &producer,

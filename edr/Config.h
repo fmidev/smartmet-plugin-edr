@@ -24,13 +24,14 @@ namespace Plugin
 namespace EDR
 {
 using Precisions = std::map<std::string, Precision>;
-
+using SupportedQueries = std::map<std::string, std::set<std::string>>; // producer -> queries
 class Config : private boost::noncopyable
 {
  public:
   Config(const std::string& configfile);
   Config() = delete;
 
+  const SupportedQueries& getSupportedQueries() { return itsSupportedQueries; }
   const Precision& getPrecision(const std::string& name) const;
 
   const std::string& defaultPrecision() const { return itsDefaultPrecision; }
@@ -97,6 +98,8 @@ class Config : private boost::noncopyable
   bool itsPreventObsEngineDatabaseQuery;
 
   unsigned long long itsMaxTimeSeriesCacheSize;
+
+  SupportedQueries itsSupportedQueries; // producer->queries
 
  private:
   void add_default_precisions();
