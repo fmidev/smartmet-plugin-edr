@@ -13,6 +13,85 @@ namespace Plugin {
 namespace EDR {
 namespace CoverageJson {
 namespace {
+
+Json::Value get_data_queries(const EDRQuery &edr_query, const std::string& producer)
+{
+  auto data_queries = Json::Value(Json::ValueType::objectValue);
+
+  auto data_query_set = edr_query.data_queries.find(producer) != edr_query.data_queries.end() ? edr_query.data_queries.at(producer) : edr_query.data_queries.at(DEFAULT_DATA_QUERIES);
+  for(const auto& query_type : data_query_set)
+    {
+      auto query_info = Json::Value(Json::ValueType::objectValue);
+      auto query_info_variables = Json::Value(Json::ValueType::objectValue);
+      auto query_info_link = Json::Value(Json::ValueType::objectValue);
+      query_info_link["rel"] = Json::Value("data");
+      query_info_link["templated"] = Json::Value(true);
+      
+	  std::string query_type_string = "";
+      if(query_type == EDRQueryType::Position)
+		{
+		  query_info_link["title"] = Json::Value("Position query");
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/position&coords={coords}"));
+		  query_info_variables["title"] = Json::Value("Position query");
+		  query_info_variables["description"] = Json::Value("Data at point location");
+		  query_info_variables["query_type"] = Json::Value("position");
+		  query_info_variables["coords"] = Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
+		  query_type_string = "position";
+		}
+      else if(query_type == EDRQueryType::Radius)
+		{
+		  query_info_link["title"] = Json::Value("Radius query");
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/radius?coords={coords}"));
+		  query_info_variables["title"] = Json::Value("Radius query");
+		  query_info_variables["description"] = Json::Value("Data at the area specified with a geographic position and radial distance");
+		  query_info_variables["query_type"] = Json::Value("radius");
+		  query_info_variables["coords"] = Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
+		  auto within_units = Json::Value(Json::ValueType::arrayValue);
+		  within_units[0] = Json::Value("km");
+		  within_units[1] = Json::Value("mi");
+		  query_info_variables["within_units"] = within_units;
+		  query_type_string = "radius";
+		}
+      else if(query_type == EDRQueryType::Area)
+		{
+		  query_info_link["title"] = Json::Value("Area query");
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/area?coords={coords}"));
+		  query_info_variables["title"] = Json::Value("Area query");
+		  query_info_variables["description"] = Json::Value("Data at the requested area");
+		  query_info_variables["query_type"] = Json::Value("area");
+		  query_info_variables["coords"] = Json::Value("Well Known Text POLYGON value i.e. POLYGON((24+61,24+61.5,24.5+61.5,24.5+61,24+61))");
+		  query_type_string = "area";
+		}
+      else if(query_type == EDRQueryType::Locations)
+		{
+		  query_info_link["title"] = Json::Value("Locations query");
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/locations"));
+		  query_info_variables["title"] = Json::Value("Locations query");
+		  query_info_variables["description"] = Json::Value("Data at point location defined by a unique identifier");
+		  query_info_variables["query_type"] = Json::Value("locations");
+		  query_type_string = "locations";
+		}
+      auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
+      query_info_output_formats[0] = Json::Value("CoverageJSON");
+      query_info_variables["output_formats"] = query_info_output_formats;
+      query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
+
+      auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
+      auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
+      query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
+      query_info_crs_details_0["wkt"] = Json::Value("GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]");
+
+      query_info_crs_details[0] = query_info_crs_details_0;
+      query_info_variables["crs_details"] = query_info_crs_details;
+
+      query_info_link["variables"] = query_info_variables;
+      query_info["link"] = query_info_link;
+	  data_queries[query_type_string] = query_info;
+    }
+
+  return data_queries;
+}
+  
 std::vector<TS::LonLat>
 get_coordinates(const TS::OutputData &outputData,
                 const std::vector<Spine::Parameter> &query_parameters) {
@@ -421,7 +500,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
     auto links = Json::Value(Json::ValueType::arrayValue);
     auto link_item = Json::Value(Json::ValueType::objectValue);
     link_item["href"] = Json::Value(
-        ("https://smartmet.fmi.fi/edr/collections/" + producer + "/instances"));
+        (edr_query.host + "/collections/" + producer + "/instances"));
     link_item["rel"] = Json::Value("self");
     link_item["type"] = Json::Value("application/json");
     links[0] = link_item;
@@ -459,7 +538,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       auto instance_links = Json::Value(Json::ValueType::arrayValue);
       auto instance_link_item = Json::Value(Json::ValueType::objectValue);
       instance_link_item["href"] =
-          Json::Value(("https://smartmet.fmi.fi/edr/collections/" + producer +
+          Json::Value((edr_query.host + "/collections/" + producer +
                        "/" + instance_id));
       instance_link_item["hreflang"] = Json::Value("en");
       instance_link_item["rel"] = Json::Value("data");
@@ -511,13 +590,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
         extent["vertical"] = vertical;
       }
       instance["extent"] = extent;
-
-      auto output_formats = Json::Value(Json::ValueType::arrayValue);
-      output_formats[0] = Json::Value("CoverageJSON");
-      instance["output_formats"] = output_formats;
-      auto crs = Json::Value(Json::ValueType::arrayValue);
-      crs[0] = Json::Value("EPSG:4326");
-      instance["crs"] = crs;
+      // Optional: data_queries
+	  instance["data_queries"] = get_data_queries(edr_query, producer);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -592,7 +666,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       // Array of links (mandatory)
       auto collection_link = Json::Value(Json::ValueType::objectValue);
       collection_link["href"] =
-          Json::Value(("https://smartmet.fmi.fi/edr/collections/" + producer));
+          Json::Value((edr_query.host + "/collections/" + producer));
       if (edr_query.query_id == EDRQueryId::SpecifiedCollection)
         collection_link["rel"] = Json::Value("self");
       else
@@ -606,7 +680,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       if (emds.size() > 1) {
         auto instance_link = Json::Value(Json::ValueType::objectValue);
         instance_link["href"] =
-            Json::Value(("https://smartmet.fmi.fi/edr/collections/" + producer +
+            Json::Value((edr_query.host + "/collections/" + producer +
                          "/instances"));
         instance_link["rel"] = Json::Value("data");
         instance_link["type"] = Json::Value("application/json");
@@ -618,7 +692,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
           auto instance_link = Json::Value(Json::ValueType::objectValue);
           auto instance_id =
   Fmi::to_iso_string(emd.temporal_extent.origin_time); instance_link["href"] =
-  Json::Value(("https://smartmet.fmi.fi/edr/collections/" + producer + "/" +
+  Json::Value((edr_query.host + "/collections/" + producer + "/" +
   instance_id)); instance_link["rel"] = Json::Value("data");
           instance_link["type"] = Json::Value("application/json");
           instance_link["title"] = Json::Value("Instance metadata in JSON");
@@ -676,9 +750,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         extent["vertical"] = vertical;
       }
       value["extent"] = extent;
-
-      // Data queries (optional)
-      // ...
+      // Optional: data_queries
+	  value["data_queries"] = get_data_queries(edr_query, producer);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -748,6 +821,9 @@ get_edr_metadata_qd(const std::string &producer,
     if (!producer.empty())
       opts.setProducer(producer);
     auto qd_meta_data = qEngine.getEngineMetadata(opts);
+
+	if(qd_meta_data.empty())
+	  throw Fmi::Exception::Trace(BCP, "Failed to get metadata for querydata producer '" + producer + "'!");
 
     EDRProducerMetaData epmd;
 
@@ -1253,7 +1329,7 @@ Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
       // Add main level links
       Json::Value meta_data;
       auto link = Json::Value(Json::ValueType::objectValue);
-      link["href"] = Json::Value("https://smartmet.fmi.fi/edr/collections");
+      link["href"] = Json::Value(edr_query.host + "/collections");
       link["rel"] = Json::Value("self");
       link["type"] = Json::Value("application/json");
       link["title"] = Json::Value("Collections metadata in JSON");
@@ -1291,7 +1367,7 @@ Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
       // Add main level links
       Json::Value meta_data;
       auto link = Json::Value(Json::ValueType::objectValue);
-      link["href"] = Json::Value("https://smartmet.fmi.fi/edr/collections");
+      link["href"] = Json::Value(edr_query.host + "/collections");
       link["rel"] = Json::Value("self");
       link["type"] = Json::Value("application/json");
       link["title"] = Json::Value("Collections metadata in JSON");
@@ -1316,6 +1392,36 @@ Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
   }
 }
 #endif
+
+Json::Value processEDRMetaDataQuery(const Spine::LocationList& locations)
+{
+  try {
+    Json::Value result;
+	
+	result["type"] = Json::Value("FeatureCollection");
+	auto features = Json::Value(Json::ValueType::arrayValue);
+
+	for(const auto& loc : locations)
+	  {
+		auto feature = Json::Value(Json::ValueType::objectValue);
+		feature["type"] = Json::Value("Feature");
+		feature["id"] = Json::Value(loc->geoid);
+		auto geometry = Json::Value(Json::ValueType::objectValue);
+		geometry["type"] = Json::Value("Point");
+		auto coordinates = Json::Value(Json::ValueType::arrayValue);
+		coordinates[0] = Json::Value(loc->longitude);
+		coordinates[1] = Json::Value(loc->latitude);
+		geometry["coordinates"] = coordinates;
+		feature["geometry"] = geometry;
+		features[features.size()] = feature;
+	  }
+	result["features"] = features;
+
+    return result;
+  } catch (...) {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
 } // namespace CoverageJson
 } // namespace EDR

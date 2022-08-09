@@ -1,4 +1,127 @@
 {
+	"data_queries" : 
+	{
+		"area" : 
+		{
+			"link" : 
+			{
+				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area?coords={coords}",
+				"rel" : "data",
+				"templated" : true,
+				"title" : "Area query",
+				"variables" : 
+				{
+					"coords" : "Well Known Text POLYGON value i.e. POLYGON((24+61,24+61.5,24.5+61.5,24.5+61,24+61))",
+					"crs_details" : 
+					[
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"description" : "Data at the requested area",
+					"output_formats" : 
+					[
+						"CoverageJSON"
+					],
+					"query_type" : "area",
+					"title" : "Area query"
+				}
+			}
+		},
+		"locations" : 
+		{
+			"link" : 
+			{
+				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/locations",
+				"rel" : "data",
+				"templated" : true,
+				"title" : "Locations query",
+				"variables" : 
+				{
+					"crs_details" : 
+					[
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"description" : "Data at point location defined by a unique identifier",
+					"output_formats" : 
+					[
+						"CoverageJSON"
+					],
+					"query_type" : "locations",
+					"title" : "Locations query"
+				}
+			}
+		},
+		"position" : 
+		{
+			"link" : 
+			{
+				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position&coords={coords}",
+				"rel" : "data",
+				"templated" : true,
+				"title" : "Position query",
+				"variables" : 
+				{
+					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+					"crs_details" : 
+					[
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"description" : "Data at point location",
+					"output_formats" : 
+					[
+						"CoverageJSON"
+					],
+					"query_type" : "position",
+					"title" : "Position query"
+				}
+			}
+		},
+		"radius" : 
+		{
+			"link" : 
+			{
+				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/radius?coords={coords}",
+				"rel" : "data",
+				"templated" : true,
+				"title" : "Radius query",
+				"variables" : 
+				{
+					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+					"crs_details" : 
+					[
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"description" : "Data at the area specified with a geographic position and radial distance",
+					"output_formats" : 
+					[
+						"CoverageJSON"
+					],
+					"query_type" : "radius",
+					"title" : "Radius query",
+					"within_units" : 
+					[
+						"km",
+						"mi"
+					]
+				}
+			}
+		}
+	},
 	"extent" : 
 	{
 		"spatial" : 
@@ -25,7 +148,7 @@
 	"links" : 
 	[
 		{
-			"href" : "https://smartmet.fmi.fi/edr/collections/pal_skandinavia",
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia",
 			"rel" : "self",
 			"title" : "Collection metadata in JSON",
 			"type" : "application/json"

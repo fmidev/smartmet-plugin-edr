@@ -3460,17 +3460,19 @@ void Plugin::checkInKeywordLocations(Query& masterquery)
 }
 
 EDRMetaData Plugin::getProducerMetaData(const std::string& producer)
-{  
+{
 #ifndef WITHOUT_OBSERVATION
   if(isObsProducer(producer))
     return CoverageJson::getProducerMetaData(producer, *itsObsEngine);
-#endif
-  
+#endif  
   return CoverageJson::getProducerMetaData(producer, *itsQEngine);
 }
   
-Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query)
+Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query, const Spine::LocationList& locations)
 {
+  if(edr_query.query_id == EDRQueryId::SpecifiedCollectionLocations)
+	return CoverageJson::processEDRMetaDataQuery(locations);
+
 #ifndef WITHOUT_OBSERVATION
   return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsObsEngine);
 #else
@@ -3486,11 +3488,11 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     size_t& product_hash)
 {
   try
-  {
+  {	
     if(masterquery.isEDRMetaDataQuery())
       {
 		const auto& edr_query = masterquery.edrQuery();
-		auto result = processMetaDataQuery(edr_query);
+		auto result = processMetaDataQuery(edr_query, masterquery.inKeywordLocations);
 		table.set(0, 0, result.toStyledString());
 		return {};
       }
@@ -3649,8 +3651,10 @@ void Plugin::query(const State& state,
     std::string producer_option =
         Spine::optional_string(request.getParameter(PRODUCER_PARAM),
                                Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
+
     boost::algorithm::to_lower(producer_option);
     // At least one of location specifiers must be set
+
 
 	/*
 #ifndef WITHOUT_OBSERVATION
@@ -3687,7 +3691,7 @@ void Plugin::query(const State& state,
       gridEnabled = true;
 	
     boost::shared_ptr<Spine::TableFormatter> formatter(fmt);
-    std::string mime = formatter->mimetype() + "; charset=UTF-8";
+    std::string mime = "application/json";
     response.setHeader("Content-Type", mime);
 
     // Calculate the hash value for the product.

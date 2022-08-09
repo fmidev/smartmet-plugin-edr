@@ -18,6 +18,8 @@ std::string to_string(const EDRQueryId& id)
     return "EDRQueryId::SpecifiedCollectionAllInstances";
   if(id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
     return "EDRQueryId::SpecifiedCollectionSpecifiedInstance";
+  if(id == EDRQueryId::SpecifiedCollectionLocations)
+    return "EDRQueryId::SpecifiedCollectionLocations";
   if(id == EDRQueryId::DataQuery)
     return "EDRQueryId::DataQuery";
   
@@ -26,9 +28,11 @@ std::string to_string(const EDRQueryId& id)
   
 std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ)
 {
-  out << "EDR query:\ncollection_id: " << edrQ.collection_id 
+  out << "EDR query:"
+      << "\nhost: " << edrQ.host 
+      << "\ncollection_id: " << edrQ.collection_id 
       << "\ninstance_id: " << edrQ.instance_id
-      << to_string(edrQ.query_id) << std::endl;
+      << "\nquery_id: " << to_string(edrQ.query_id) << std::endl;
 
   return out;
 }

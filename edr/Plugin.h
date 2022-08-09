@@ -123,7 +123,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                                               size_t& product_hash);
 
   EDRMetaData getProducerMetaData(const std::string& producer);
-  Json::Value processMetaDataQuery(const EDRQuery& edr_query);
+  Json::Value processMetaDataQuery(const EDRQuery& edr_query, const Spine::LocationList& locations);
 
   void processQEngineQuery(const State& state,
                            Query& query,

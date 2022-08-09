@@ -310,6 +310,51 @@ Config::Config(const string& configfile)
 
     parse_config_precisions();
 
+	if (itsConfig.exists("data_queries"))
+	  {
+		if (itsConfig.exists("data_queries.default"))
+		  {
+			const libconfig::Setting& defaultQueries = itsConfig.lookup("data_queries.default");
+			if (!defaultQueries.isArray())
+			  throw Fmi::Exception(BCP, "Configured value of 'data_queries.default' must be an array");
+			for (int i = 0; i < defaultQueries.getLength(); i++)
+			  itsSupportedQueries[DEFAULT_DATA_QUERIES].insert(defaultQueries[i]);
+		  }
+		
+		if (itsConfig.exists("data_queries.override"))
+		  {
+			const libconfig::Setting& overriddenQueries = itsConfig.lookup("data_queries.override");
+			
+			for (int i = 0; i < overriddenQueries.getLength(); i++)
+			  {
+				std::string producer = overriddenQueries[i].getName();
+				const libconfig::Setting& overriddenQueryArray = itsConfig.lookup("data_queries.override." + producer);
+				if (!overriddenQueryArray.isArray())
+				  throw Fmi::Exception(BCP, "Configured overridden data_queries for producer must be an array");
+				for (int j = 0; j < overriddenQueryArray.getLength(); j++)
+				  itsSupportedQueries[producer].insert(overriddenQueryArray[j]);
+			  }
+		  }
+	  }
+	
+	if(itsSupportedQueries.find(DEFAULT_DATA_QUERIES) == itsSupportedQueries.end())
+	  {
+	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("position");
+	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("radius");
+	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("area");
+	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("locations");
+	  }
+
+	std::cout << "data_queries:\n";
+	for(const auto item : itsSupportedQueries)
+	  {
+		std::cout << item.first << " -> ";
+		for(const auto& query : item.second)
+		  std::cout << query << ",";
+		std::cout << " \n";
+	  }
+	// << item.second << std::endl;
+
     if (itsConfig.exists("geometry_tables"))
     {
       Engine::Gis::postgis_identifier default_postgis_id;
