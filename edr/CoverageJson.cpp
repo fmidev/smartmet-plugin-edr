@@ -1346,7 +1346,7 @@ formatOutputData(TS::OutputData &outputData, const EDRMetaData &emd,
       return format_output_data_one_point(outputData, emd, level,
                                           query_parameters);
     } else if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first)) {
-	  if(outdata_first.size() > 0)
+	  if(outdata_first.size() > 1)
 		std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do nothing -> report error! " << std::endl;
 	  std::vector<TS::TimeSeriesData> tsd;
 	  TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first));
