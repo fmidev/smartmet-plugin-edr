@@ -277,19 +277,19 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       
       if(!coords.empty())
 		{
-		  // EDR within + within-unit
+		  // EDR within + within-units
 		  auto within  = Spine::optional_string(req.getParameter("within"), "");
-		  auto within_unit  = Spine::optional_string(req.getParameter("within-unit"), "");
-		  if(edr_query_type == EDRQueryType::Radius && (within.empty() || within_unit.empty()))
-			throw Fmi::Exception(BCP, "Query parameter 'within' and 'within-unit' must be defined for Radius query");
+		  auto within_units  = Spine::optional_string(req.getParameter("within-units"), "");
+		  if(edr_query_type == EDRQueryType::Radius && (within.empty() || within_units.empty()))
+			throw Fmi::Exception(BCP, "Query parameter 'within' and 'within-units' must be defined for Radius query");
 		  
-		  if(!within.empty() && !within_unit.empty())
+		  if(!within.empty() && !within_units.empty())
 			{
 			  auto radius = Fmi::stod(within);
-			  if(within_unit == "mi")
+			  if(within_units == "mi")
 				radius = (radius * 1.60934);
-			  else if(within_unit != "km")
-				throw Fmi::Exception(BCP, "Invalid within-unit option '" + within_unit + "' used, 'km' and 'mi' supported!");
+			  else if(within_units != "km")
+				throw Fmi::Exception(BCP, "Invalid within-units option '" + within_units + "' used, 'km' and 'mi' supported!");
 			  coords += (":"+Fmi::to_string(radius));
 			}
 		  req.addParameter("wkt", coords);

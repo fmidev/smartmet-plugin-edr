@@ -345,16 +345,6 @@ Config::Config(const string& configfile)
 	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("locations");
 	  }
 
-	std::cout << "data_queries:\n";
-	for(const auto item : itsSupportedQueries)
-	  {
-		std::cout << item.first << " -> ";
-		for(const auto& query : item.second)
-		  std::cout << query << ",";
-		std::cout << " \n";
-	  }
-	// << item.second << std::endl;
-
     if (itsConfig.exists("geometry_tables"))
     {
       Engine::Gis::postgis_identifier default_postgis_id;

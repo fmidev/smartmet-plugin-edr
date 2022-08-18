@@ -33,7 +33,8 @@ namespace EDR
     boost::posix_time::ptime origin_time{boost::posix_time::not_a_date_time};
     boost::posix_time::ptime start_time;
     boost::posix_time::ptime end_time;
-    boost::optional<int> timestep;
+    int timestep;
+    int timesteps;
     std::string trs {"TODO: Temporal Reference System"};
   };
   

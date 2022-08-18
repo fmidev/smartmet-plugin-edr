@@ -3,6 +3,7 @@
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <timeseries/TimeSeriesOutput.h>
+//#include <boost/json/src.hpp>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
@@ -13,6 +14,27 @@ namespace Plugin {
 namespace EDR {
 namespace CoverageJson {
 namespace {
+
+Json::Value parse_temporal_extent(const edr_temporal_extent& temporal_extent)
+{
+  auto temporal = Json::Value(Json::ValueType::objectValue);
+  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+  auto temporal_interval2 = Json::Value(Json::ValueType::arrayValue);
+  temporal_interval2[0] = Json::Value(boost::posix_time::to_iso_extended_string(temporal_extent.start_time) + "Z");
+  temporal_interval[0] = temporal_interval2;
+  
+  auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
+  temporal_interval_values[0] = Json::Value("R" + Fmi::to_string(temporal_extent.timesteps) + "/"+boost::posix_time::to_iso_extended_string(temporal_extent.start_time) + "Z/PT" + Fmi::to_string(temporal_extent.timestep) + "M");
+  auto trs = Json::Value("TIMECRS[\"DateTime\",TDATUM[\"Gregorian "
+						 "Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time "
+						 "(T)\",future]");
+  
+  temporal["interval"] = temporal_interval;
+  temporal["values"] = temporal_interval_values;
+  temporal["trs"] = trs;
+  
+  return temporal;
+}
 
 Json::Value get_data_queries(const EDRQuery &edr_query, const std::string& producer)
 {
@@ -31,7 +53,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query, const std::string& produ
       if(query_type == EDRQueryType::Position)
 		{
 		  query_info_link["title"] = Json::Value("Position query");
-		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/position&coords={coords}"));
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/position"));
 		  query_info_variables["title"] = Json::Value("Position query");
 		  query_info_variables["description"] = Json::Value("Data at point location");
 		  query_info_variables["query_type"] = Json::Value("position");
@@ -41,7 +63,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query, const std::string& produ
       else if(query_type == EDRQueryType::Radius)
 		{
 		  query_info_link["title"] = Json::Value("Radius query");
-		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/radius?coords={coords}"));
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/radius"));
 		  query_info_variables["title"] = Json::Value("Radius query");
 		  query_info_variables["description"] = Json::Value("Data at the area specified with a geographic position and radial distance");
 		  query_info_variables["query_type"] = Json::Value("radius");
@@ -55,11 +77,11 @@ Json::Value get_data_queries(const EDRQuery &edr_query, const std::string& produ
       else if(query_type == EDRQueryType::Area)
 		{
 		  query_info_link["title"] = Json::Value("Area query");
-		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/area?coords={coords}"));
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/area"));
 		  query_info_variables["title"] = Json::Value("Area query");
 		  query_info_variables["description"] = Json::Value("Data at the requested area");
 		  query_info_variables["query_type"] = Json::Value("area");
-		  query_info_variables["coords"] = Json::Value("Well Known Text POLYGON value i.e. POLYGON((24+61,24+61.5,24.5+61.5,24.5+61,24+61))");
+		  query_info_variables["coords"] = Json::Value("Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))");
 		  query_type_string = "area";
 		}
       else if(query_type == EDRQueryType::Locations)
@@ -301,7 +323,7 @@ void add_value(const TS::TimedValue &tv, Json::Value &values_array,
                unsigned int values_index) {
   try {
     const auto &t = tv.time;
-    timesteps.insert(boost::posix_time::to_iso_extended_string(t.utc_time()));
+    timesteps.insert(boost::posix_time::to_iso_extended_string(t.utc_time())+"Z");
     add_value(tv, values_array, data_type, values_index);
   } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
@@ -585,14 +607,14 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       instance["id"] = Json::Value(instance_id);
       std::string title =
           ("Origintime: " +
-           boost::posix_time::to_iso_string(emd.temporal_extent.origin_time));
-      title += (" Starttime: " + boost::posix_time::to_iso_string(
-                                     emd.temporal_extent.start_time));
+           boost::posix_time::to_iso_extended_string(emd.temporal_extent.origin_time)+"Z");
+      title += (" Starttime: " + boost::posix_time::to_iso_extended_string(
+                                     emd.temporal_extent.start_time)+"Z");
       title += (" Endtime: " +
-                boost::posix_time::to_iso_string(emd.temporal_extent.end_time));
+                boost::posix_time::to_iso_extended_string(emd.temporal_extent.end_time)+"Z");
       if (emd.temporal_extent.timestep)
         title +=
-            (" Timestep: " + Fmi::to_string(*emd.temporal_extent.timestep));
+            (" Timestep: " + Fmi::to_string(emd.temporal_extent.timestep));
       instance["title"] = Json::Value(title);
 
       // Links
@@ -621,25 +643,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       spatial["crs"] = Json::Value("EPSG:4326");
       extent["spatial"] = spatial;
       // Temporal (optional)
-      auto temporal = Json::Value(Json::ValueType::objectValue);
-      auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
-      auto trs = Json::Value("TIMECRS[\"DateTime\",TDATUM[\"Gregorian "
-                             "Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time "
-                             "(T)\",future]"); // What
-                                               // this
-                                               // should
-                                               // be
-      auto interval_string =
-          (boost::posix_time::to_iso_string(emd.temporal_extent.start_time) +
-           "/" +
-           boost::posix_time::to_iso_string(emd.temporal_extent.end_time));
-      if (emd.temporal_extent.timestep)
-        interval_string +=
-            ("/" + Fmi::to_string(*emd.temporal_extent.timestep) + "M");
-      temporal_interval[0] = Json::Value(interval_string);
-      temporal["interval"] = temporal_interval;
-      temporal["trs"] = trs;
-      extent["temporal"] = temporal;
+	  extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
       // Vertical (optional)
       if (emd.vertical_extent.levels.size() > 0) {
         auto vertical = Json::Value(Json::ValueType::objectValue);
@@ -746,20 +750,6 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         instance_link["rel"] = Json::Value("data");
         instance_link["type"] = Json::Value("application/json");
         instance_link["title"] = Json::Value("Instance metadata in JSON");
-        links[1] = instance_link;
-        /*
-  for(const auto& emd : emds)
-        {
-          auto instance_link = Json::Value(Json::ValueType::objectValue);
-          auto instance_id =
-  Fmi::to_iso_string(emd.temporal_extent.origin_time); instance_link["href"] =
-  Json::Value((edr_query.host + "/collections/" + producer + "/" +
-  instance_id)); instance_link["rel"] = Json::Value("data");
-          instance_link["type"] = Json::Value("application/json");
-          instance_link["title"] = Json::Value("Instance metadata in JSON");
-          links[links.size()] = instance_link;
-        }
-        */
       }
 
       value["links"] = links;
@@ -778,27 +768,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       spatial["crs"] = Json::Value("EPSG:4326");
       extent["spatial"] = spatial;
       // Temporal (optional)
-      auto temporal = Json::Value(Json::ValueType::objectValue);
-      auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
-      auto trs = Json::Value("TIMECRS[\"DateTime\",TDATUM[\"Gregorian "
-                             "Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time "
-                             "(T)\",future]"); // What
-                                               // this
-                                               // should
-                                               // be
-      auto interval_string = (boost::posix_time::to_iso_string(
-                                  collection_emd.temporal_extent.start_time) +
-                              "/" +
-                              boost::posix_time::to_iso_string(
-                                  collection_emd.temporal_extent.end_time));
-      if (collection_emd.temporal_extent.timestep)
-        interval_string +=
-            ("/" + Fmi::to_string(*collection_emd.temporal_extent.timestep) +
-             "M");
-      temporal_interval[0] = Json::Value(interval_string);
-      temporal["interval"] = temporal_interval;
-      temporal["trs"] = trs;
-      extent["temporal"] = temporal;
+      extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
       // Vertical (optional)
       if (collection_emd.vertical_extent.levels.size() > 0) {
         auto vertical = Json::Value(Json::ValueType::objectValue);
@@ -920,6 +890,7 @@ get_edr_metadata_qd(const std::string &producer,
       producer_emd.temporal_extent.start_time = qmd.firstTime;
       producer_emd.temporal_extent.end_time = qmd.lastTime;
       producer_emd.temporal_extent.timestep = qmd.timeStep;
+      producer_emd.temporal_extent.timesteps= qmd.nTimeSteps;
 
       for (const auto &p : qmd.parameters) {
         auto parameter_name = p.name;
@@ -982,6 +953,7 @@ EDRProducerMetaData get_edr_metadata_obs(const std::string &producer,
       producer_emd.temporal_extent.start_time = obs_md.period.begin();
       producer_emd.temporal_extent.end_time = obs_md.period.last();
       producer_emd.temporal_extent.timestep = obs_md.timestep;
+      producer_emd.temporal_extent.timesteps = (obs_md.period.length().minutes() / obs_md.timestep);
 
       for (const auto &p : obs_md.parameters) {
         params[0] = p;
@@ -1248,7 +1220,7 @@ Json::Value format_output_data_coverage_collection(
             domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
             domain_axes_t["values"][0] =
                 Json::Value(boost::posix_time::to_iso_extended_string(
-                    timed_value.time.utc_time()));
+                    timed_value.time.utc_time())+"Z");
             domain_axes["x"] = domain_axes_x;
             domain_axes["y"] = domain_axes_y;
             if (level) {

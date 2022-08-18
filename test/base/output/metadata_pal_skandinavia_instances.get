@@ -8,13 +8,13 @@
 				{
 					"link" : 
 					{
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area?coords={coords}",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area",
 						"rel" : "data",
 						"templated" : true,
 						"title" : "Area query",
 						"variables" : 
 						{
-							"coords" : "Well Known Text POLYGON value i.e. POLYGON((24+61,24+61.5,24.5+61.5,24.5+61,24+61))",
+							"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
 							"crs_details" : 
 							[
 								{
@@ -65,7 +65,7 @@
 				{
 					"link" : 
 					{
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position&coords={coords}",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position",
 						"rel" : "data",
 						"templated" : true,
 						"title" : "Position query",
@@ -94,7 +94,7 @@
 				{
 					"link" : 
 					{
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/radius?coords={coords}",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/radius",
 						"rel" : "data",
 						"templated" : true,
 						"title" : "Radius query",
@@ -142,9 +142,15 @@
 				{
 					"interval" : 
 					[
-						"20080805T030000/20080809T060000/60M"
+						[
+							"2008-08-05T03:00:00Z"
+						]
 					],
-					"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]"
+					"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+					"values" : 
+					[
+						"R100/2008-08-05T03:00:00Z/PT60M"
+					]
 				}
 			},
 			"id" : "20080805T063100",
@@ -419,7 +425,7 @@
 					"type" : "Parameter"
 				}
 			},
-			"title" : "Origintime: 20080805T063100 Starttime: 20080805T030000 Endtime: 20080809T060000 Timestep: 60"
+			"title" : "Origintime: 2008-08-05T06:31:00Z Starttime: 2008-08-05T03:00:00Z Endtime: 2008-08-09T06:00:00Z Timestep: 60"
 		}
 	],
 	"links" : 
