@@ -11,6 +11,9 @@ namespace Engine {
 namespace Querydata {
 class Engine;
 }
+namespace Grid {
+class Engine;
+}
 #ifndef WITHOUT_OBSERVATION
 namespace Observation {
 class Engine;
@@ -28,8 +31,15 @@ formatOutputData(TS::OutputData &outputData, const EDRMetaData &emd,
 
 EDRMetaData getProducerMetaData(const std::string &producer,
                                 const Engine::Querydata::Engine &qEngine);
+EDRMetaData getProducerMetaData(const std::string &producer,
+                                const Engine::Grid::Engine &gEngine);
 Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
                                     const Engine::Querydata::Engine &qEngine);
+Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
+                                    const Engine::Querydata::Engine &qEngine,
+                                    const Engine::Grid::Engine &gEngine);
+Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
+                                    const Engine::Grid::Engine &gEngine);
 Json::Value processEDRMetaDataQuery(const Spine::LocationList& locations);
 
 #ifndef WITHOUT_OBSERVATION
@@ -37,6 +47,10 @@ EDRMetaData getProducerMetaData(const std::string &producer,
                                 Engine::Observation::Engine &obsEngine);
 Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
                                     const Engine::Querydata::Engine &qEngine,
+                                    Engine::Observation::Engine &obsEngine);
+Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
+                                    const Engine::Querydata::Engine &qEngine,
+                                    const Engine::Grid::Engine &gEngine,
                                     Engine::Observation::Engine &obsEngine);
 #endif
 } // namespace CoverageJson

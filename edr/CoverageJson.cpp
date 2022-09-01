@@ -1,9 +1,9 @@
 #include "CoverageJson.h"
 #include <engines/querydata/Engine.h>
+#include <engines/grid/Engine.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <timeseries/TimeSeriesOutput.h>
-//#include <boost/json/src.hpp>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
@@ -15,6 +15,19 @@ namespace EDR {
 namespace CoverageJson {
 namespace {
 
+std::string parse_parameter_name(const std::string& name)
+{
+  auto parameter_name = name;
+
+  // If ':' exists patameter_name is before first ':'
+  if(parameter_name.find(":") != std::string::npos)
+    parameter_name.resize(parameter_name.find(":"));
+  // Modify to lower case
+  boost::algorithm::to_lower(parameter_name);
+  
+  return parameter_name;
+ }
+  
 Json::Value parse_temporal_extent(const edr_temporal_extent& temporal_extent)
 {
   auto temporal = Json::Value(Json::ValueType::objectValue);
@@ -93,7 +106,17 @@ Json::Value get_data_queries(const EDRQuery &edr_query, const std::string& produ
 		  query_info_variables["query_type"] = Json::Value("locations");
 		  query_type_string = "locations";
 		}
-      auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
+      else if(query_type == EDRQueryType::Trajectory)
+		{
+		  query_info_link["title"] = Json::Value("Trajectory query");
+		  query_info_link["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/trajectory"));
+		  query_info_variables["title"] = Json::Value("Trajectory query");
+		  query_info_variables["description"] = Json::Value("Data along trajectory");
+		  query_info_variables["query_type"] = Json::Value("trajectory");
+		  query_info_variables["coords"] = Json::Value("Well Known Text LINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)");
+		  query_type_string = "trajectory";
+		}
+       auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
       query_info_output_formats[0] = Json::Value("CoverageJSON");
       query_info_variables["output_formats"] = query_info_output_formats;
       query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
@@ -171,7 +194,7 @@ get_coordinates(const TS::OutputData &outputData,
 
 	if(outdata.empty())
       return ret;
-
+	
     const auto &outdata_front = outdata.front();
 	if (boost::get<TS::TimeSeriesVectorPtr>(&outdata_front)) {
         TS::TimeSeriesVectorPtr tsv =
@@ -189,12 +212,13 @@ get_coordinates(const TS::OutputData &outputData,
       auto param_name = query_parameters[i].name();
       if (param_name != "longitude" && param_name != "latitude")
         continue;
-
+	  
       auto tsdata = outdata.at(i);
       if (boost::get<TS::TimeSeriesPtr>(&tsdata)) {
         TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-        if (ts->size() > 0) {
+        if (ts->size() > 0) {	  
           const TS::TimedValue &tv = ts->at(0);
+	  
 		  double value =
 			(boost::get<double>(&tv.value) != nullptr
 			 ? *(boost::get<double>(&tv.value))
@@ -218,7 +242,9 @@ get_coordinates(const TS::OutputData &outputData,
           const auto &ts = llts.timeseries;
 
           if (ts.size() > 0) {
+	    
             const auto &tv = ts.front();
+
             double value =
                 (boost::get<double>(&tv.value) != nullptr
                      ? *(boost::get<double>(&tv.value))
@@ -255,8 +281,8 @@ Json::Value get_edr_series_parameters(
     auto parameters = Json::Value(Json::ValueType::objectValue);
 
     for (const auto &p : query_parameters) {
-      auto parameter_name = p.name();
-      boost::algorithm::to_lower(parameter_name);
+      auto parameter_name = parse_parameter_name(p.name());
+      
       if (parameter_name == "longitude" || parameter_name == "latitude")
         continue;
       const auto &edr_parameter = edr_parameters.at(parameter_name);
@@ -672,7 +698,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
         param["type"] = Json::Value("Parameter");
         param["description"] = Json::Value(p.description);
         // Observed property: Mandatory: label, Optional: id, description
-        auto observedProperty = Json::Value(Json::ValueType::objectValue);
+        auto observedProperty = Json::Value(Json::ValueType::objectValue);	
         observedProperty["label"] = Json::Value(p.description);
         //		  observedProperty["id"] = Json::Value("http://....");
         //		  observedProperty["description"] =
@@ -741,6 +767,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
       auto links = Json::Value(Json::ValueType::arrayValue);
       links[0] = collection_link;
+      /*
       // Add instance links if several present
       if (emds.size() > 1) {
         auto instance_link = Json::Value(Json::ValueType::objectValue);
@@ -750,7 +777,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         instance_link["rel"] = Json::Value("data");
         instance_link["type"] = Json::Value("application/json");
         instance_link["title"] = Json::Value("Instance metadata in JSON");
+	links[1] = instance_link;
       }
+      */
 
       value["links"] = links;
       // Extent (mandatory)
@@ -844,6 +873,117 @@ Json::Value parse_edr_metadata(const EDRProducerMetaData &epmd,
 }
 
 EDRProducerMetaData
+get_edr_metadata_grid(const std::string &producer,
+		      const Engine::Grid::Engine &gEngine,
+		      EDRMetaData *emd = nullptr) {
+  try {    
+    EDRProducerMetaData epmd;
+
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, producer, boost::algorithm::is_any_of("."));
+    
+    auto producerName = parts[0];
+    auto geometryId = (parts.size() > 1 ? parts[1] : "");
+    auto levelId = (parts.size() > 2 ? parts[2] : "");
+
+    auto grid_meta_data = gEngine.getEngineMetadata(producerName.c_str());    
+    
+    /*
+    if(grid_meta_data.empty())
+      throw Fmi::Exception::Trace(BCP, "Failed to get metadata for grid producer '" + producer + "'!");
+    */
+    
+    // Iterate Grid metadata and add items into collection
+    for (const auto &gmd : grid_meta_data) {
+      
+      if(!geometryId.empty())
+	{
+	  if(!boost::iequals(Fmi::to_string(gmd.geometryId), geometryId))
+	    continue;
+	}
+      if(!levelId.empty())
+	{
+	  if(!boost::iequals(Fmi::to_string(gmd.levelId), levelId))
+	    continue;
+	}
+      
+      EDRMetaData producer_emd;
+
+      if (gmd.levels.size() > 1) {
+	producer_emd.vertical_extent.vrs = gmd.levelId+";"+gmd.levelName+";"+gmd.levelDescription;
+	
+	/*
+	  1;GROUND;Ground or water surface;
+	  2;PRESSURE;Pressure level;
+	  3;HYBRID;Hybrid level;
+	  4;ALTITUDE;Altitude;
+	  5;TOP;Top of atmosphere;
+	  6;HEIGHT;Height above ground in meters;
+	  7;MEANSEA;Mean sea level;
+	  8;ENTATM;Entire atmosphere;
+	  9;GROUND_DEPTH;Layer between two depths below land surface;
+	  10;DEPTH;Depth below some surface;
+	  11;PRESSURE_DELTA;Level at specified pressure difference from ground to level;
+	  12;MAXTHETAE;Level where maximum equivalent potential temperature is found;
+	  13;HEIGHT_LAYER;Layer between two metric heights above ground;
+	  14;DEPTH_LAYER;Layer between two depths below land surface;
+	  15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
+	  16;MAXWIND;Maximum wind level;
+	 */
+        producer_emd.vertical_extent.level_type = gmd.levelName;
+        for (const auto &level : gmd.levels)
+          producer_emd.vertical_extent.levels.push_back(
+              Fmi::to_string(level));
+      }
+         
+
+      producer_emd.spatial_extent.bbox_ymin = std::min(gmd.latlon_bottomLeft.y(), gmd.latlon_bottomRight.y());
+      producer_emd.spatial_extent.bbox_xmax = std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
+      producer_emd.spatial_extent.bbox_ymax = std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
+      producer_emd.temporal_extent.origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
+      auto begin_iter = gmd.times.begin();
+      auto end_iter = gmd.times.end();
+      end_iter--;
+      const auto& end_time = *end_iter;
+      const auto& start_time = *begin_iter;
+      begin_iter++;
+      const auto& start_time_plus_one = *begin_iter;
+      auto timestep_duration = (boost::posix_time::from_iso_string(start_time_plus_one) - boost::posix_time::from_iso_string(start_time));
+      
+      producer_emd.temporal_extent.start_time = boost::posix_time::from_iso_string(start_time);
+      producer_emd.temporal_extent.end_time =  boost::posix_time::from_iso_string(end_time);
+      producer_emd.temporal_extent.timestep = (timestep_duration.total_seconds() / 60);
+      producer_emd.temporal_extent.timesteps= gmd.times.size();
+
+      for (const auto &p : gmd.parameters) {
+        auto parameter_name = p.parameterName;
+        boost::algorithm::to_lower(parameter_name);
+        producer_emd.parameter_names.insert(parameter_name);
+        producer_emd.parameters.insert(std::make_pair(
+						      parameter_name, edr_parameter(parameter_name, p.parameterDescription, p.parameterUnits)));
+      }
+      std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." + Fmi::to_string(gmd.levelId));
+      boost::algorithm::to_lower(producerId);
+      
+      epmd[producerId].push_back(producer_emd);      
+    }
+    
+    if (!producer.empty() && emd) {
+      const auto &emds = epmd.begin()->second;
+      for (unsigned int i = 0; i < emds.size(); i++) {
+        if (i == 0 || emd->temporal_extent.origin_time <
+                          emds.at(i).temporal_extent.origin_time)
+          *emd = emds.at(i);
+      }
+    }
+    
+    return epmd;
+  } catch (...) {    
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+EDRProducerMetaData
 get_edr_metadata_qd(const std::string &producer,
                     const Engine::Querydata::Engine &qEngine,
                     EDRMetaData *emd = nullptr) {
@@ -853,17 +993,21 @@ get_edr_metadata_qd(const std::string &producer,
       opts.setProducer(producer);
     auto qd_meta_data = qEngine.getEngineMetadata(opts);
 
-	if(qd_meta_data.empty())
-	  throw Fmi::Exception::Trace(BCP, "Failed to get metadata for querydata producer '" + producer + "'!");
-
+    /*
+    if(qd_meta_data.empty())
+      throw Fmi::Exception::Trace(BCP, "Failed to get metadata for querydata producer '" + producer + "'!");
+    */
+    
     EDRProducerMetaData epmd;
+
+    if(qd_meta_data.empty())
+      return epmd;
 
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data) {
       EDRMetaData producer_emd;
 
       if (qmd.levels.size() > 1) {
-        edr_vertical_extent eve;
         if (qmd.levels.front().type == "PressureLevel")
           producer_emd.vertical_extent.vrs =
               "TODO: PARAMETRICCRS['WMO standard atmosphere layer "
@@ -897,7 +1041,7 @@ get_edr_metadata_qd(const std::string &producer,
         boost::algorithm::to_lower(parameter_name);
         producer_emd.parameter_names.insert(parameter_name);
         producer_emd.parameters.insert(std::make_pair(
-            parameter_name, edr_parameter(p.name, p.description)));
+						      parameter_name, edr_parameter(p.name, p.description)));
       }
       epmd[qmd.producer].push_back(producer_emd);
     }
@@ -1006,8 +1150,8 @@ Json::Value format_output_data_one_point(
       const auto &outdata = outputData[i].second;
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++) {
-        auto parameter_name = query_parameters[j].name();
-        boost::algorithm::to_lower(parameter_name);
+        auto parameter_name = parse_parameter_name(query_parameters[j].name());
+	
         if (parameter_name == "longitude" || parameter_name == "latitude")
           continue;
 
@@ -1079,8 +1223,8 @@ Json::Value format_output_data_multi_point(
       const auto &outdata = outputData[i].second;
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++) {
-        auto parameter_name = query_parameters[j].name();
-        boost::algorithm::to_lower(parameter_name);
+        auto parameter_name = parse_parameter_name(query_parameters[j].name());
+	
         if (parameter_name == "longitude" || parameter_name == "latitude")
           continue;
 
@@ -1161,32 +1305,14 @@ Json::Value format_output_data_coverage_collection(
     auto coverages = Json::Value(Json::ValueType::arrayValue);
     auto coordinates = get_coordinates(outputData, query_parameters);
 
-    /*
-    std::cout << "DATA:\n";
-    for(auto item : outputData)
-          {
-            std::cout << "key, item.first: "<< item.first<< std::endl;
-            unsigned int counter = 0;
-            for(auto item2 : item.second)
-                  {
-                    std::cout << "counter #" << counter++ << std::endl;
-                    TS::operator<<(std::cout, item2) << std::endl;
-                  }
-          }
-
-    std::cout << "COORDINATES:\n";
-    for(const auto c : coordinates)
-          std::cout << c.lon << ", " << c.lat << std::endl;
-*/
-
     std::set<std::string> timesteps;
     unsigned int coverage_index = 0;
     for (unsigned int i = 0; i < outputData.size(); i++) {
       const auto &outdata = outputData[i].second;
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++) {
-        auto parameter_name = query_parameters[j].name();
-        boost::algorithm::to_lower(parameter_name);
+        auto parameter_name = parse_parameter_name(query_parameters[j].name());
+	
         if (parameter_name == "longitude" || parameter_name == "latitude")
           continue;
 
@@ -1304,16 +1430,6 @@ formatOutputData(TS::OutputData &outputData, const EDRMetaData &emd,
 
     const auto &tsdata_first = outdata_first.at(0);
 
-	/*
-	std::cout << "OUTPUTDATA: " << outputData.size() << ", " << outdata_first.size() << std::endl;
-	for(const auto& item : outputData)
-	  {
-		std::cout << item.first << " -> \n";
-		for(const auto& item2 : item.second)
-		  std::cout << item2 << std::endl;
-	  }
-	*/
-
     if (boost::get<TS::TimeSeriesPtr>(&tsdata_first)) {
       return format_output_data_one_point(outputData, emd, level,
                                           query_parameters);
@@ -1338,6 +1454,20 @@ formatOutputData(TS::OutputData &outputData, const EDRMetaData &emd,
     }
 
     return empty_result;
+  } catch (...) {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+EDRMetaData getProducerMetaData(const std::string &producer,
+                                const Engine::Grid::Engine &gEngine) {
+  try {
+    EDRMetaData emd;
+
+    if (!producer.empty())
+      get_edr_metadata_grid(producer, gEngine, &emd);
+
+    return emd;
   } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
@@ -1374,6 +1504,83 @@ EDRMetaData getProducerMetaData(const std::string &producer,
 #endif
 
 Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
+                                    const Engine::Grid::Engine &gEngine) {
+  try {
+    Json::Value result;
+
+    const std::string &producer = edr_query.collection_id;
+    
+    auto grid_metadata = get_edr_metadata_grid(producer, gEngine);
+
+    if (producer.empty()) {
+      auto edr_metadata_grid = parse_edr_metadata(grid_metadata, edr_query);
+
+      // Add main level links
+      Json::Value meta_data;
+      auto link = Json::Value(Json::ValueType::objectValue);
+      link["href"] = Json::Value(edr_query.host + "/collections");
+      link["rel"] = Json::Value("self");
+      link["type"] = Json::Value("application/json");
+      link["title"] = Json::Value("Collections metadata in JSON");
+      auto links = Json::Value(Json::ValueType::arrayValue);
+      links[0] = link;
+      result["links"] = links;
+      result["collections"] = edr_metadata_grid;
+    } else {
+      result = parse_edr_metadata(grid_metadata, edr_query);
+    }
+
+    //    auto grid_metadata = 
+    
+    return result;
+  } catch (...) {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
+                                    const Engine::Querydata::Engine &qEngine,
+                                    const Engine::Grid::Engine &gEngine) {  
+  try {
+    const std::string &producer = edr_query.collection_id;
+
+    Json::Value result;
+    
+    if (producer.empty()) {
+      auto qd_metadata = get_edr_metadata_qd(producer, qEngine);
+      auto grid_metadata = get_edr_metadata_grid(producer, gEngine);
+      auto edr_metadata = parse_edr_metadata(qd_metadata, edr_query);
+      auto edr_metadata_grid = parse_edr_metadata(grid_metadata, edr_query);
+      // Append grid engine metadata after QEngine metadata
+      for (const auto &item : edr_metadata_grid)
+        edr_metadata.append(item);
+
+      // Add main level links
+      Json::Value meta_data;
+      auto link = Json::Value(Json::ValueType::objectValue);
+      link["href"] = Json::Value(edr_query.host + "/collections");
+      link["rel"] = Json::Value("self");
+      link["type"] = Json::Value("application/json");
+      link["title"] = Json::Value("Collections metadata in JSON");
+      auto links = Json::Value(Json::ValueType::arrayValue);
+      links[0] = link;
+      result["links"] = links;
+      result["collections"] = edr_metadata;
+    } else {
+
+      EDRProducerMetaData epmd = get_edr_metadata_qd(producer, qEngine);
+      if(epmd.empty())
+        epmd = get_edr_metadata_grid(producer, gEngine);
+      result = parse_edr_metadata(epmd, edr_query);
+    }
+
+    return result;
+  } catch (...) {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
                                     const Engine::Querydata::Engine &qEngine) {
   try {
     const std::string &producer = edr_query.collection_id;
@@ -1405,6 +1612,58 @@ Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
 }
 
 #ifndef WITHOUT_OBSERVATION
+Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
+                                    const Engine::Querydata::Engine &qEngine,
+                                    const Engine::Grid::Engine &gEngine,
+                                    Engine::Observation::Engine &obsEngine) {
+  try {
+    Json::Value result;
+    const std::string &producer = edr_query.collection_id;
+
+    if (producer.empty()) {
+      auto qd_metadata = get_edr_metadata_qd(producer, qEngine);
+      auto grid_metadata = get_edr_metadata_grid(producer, gEngine);
+      auto obs_metadata = get_edr_metadata_obs(producer, obsEngine);
+      auto edr_metadata = parse_edr_metadata(qd_metadata, edr_query);
+      auto edr_metadata_grid = parse_edr_metadata(grid_metadata, edr_query);
+      auto edr_metadata_obs = parse_edr_metadata(obs_metadata, edr_query);
+      // Append grid engine metadata after QEngine metadata
+      for (const auto &item : edr_metadata_grid)
+        edr_metadata.append(item);
+      // Append observation engine metadata in the end
+      for (const auto &item : edr_metadata_obs)
+        edr_metadata.append(item);
+
+      // Add main level links
+      Json::Value meta_data;
+      auto link = Json::Value(Json::ValueType::objectValue);
+      link["href"] = Json::Value(edr_query.host + "/collections");
+      link["rel"] = Json::Value("self");
+      link["type"] = Json::Value("application/json");
+      link["title"] = Json::Value("Collections metadata in JSON");
+      auto links = Json::Value(Json::ValueType::arrayValue);
+      links[0] = link;
+      result["links"] = links;
+      result["collections"] = edr_metadata;
+    } else {
+      auto obs_producers = obsEngine.getValidStationTypes();
+      EDRProducerMetaData epmd;
+      if (obs_producers.find(producer) != obs_producers.end())
+        epmd = get_edr_metadata_obs(producer, obsEngine);
+      else
+        epmd = get_edr_metadata_qd(producer, qEngine);
+      if(epmd.empty())
+        epmd = get_edr_metadata_grid(producer, gEngine);
+
+      result = parse_edr_metadata(epmd, edr_query);
+    }
+
+    return result;
+  } catch (...) {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 Json::Value processEDRMetaDataQuery(const EDRQuery &edr_query,
                                     const Engine::Querydata::Engine &qEngine,
                                     Engine::Observation::Engine &obsEngine) {

@@ -14,9 +14,10 @@ namespace EDR
 {
   struct edr_parameter
   {
-  edr_parameter(const std::string& n, const std::string& d) : name(n), description(d) {}
+  edr_parameter(const std::string& n, const std::string& d, const std::string& u = "") : name(n), description(d), unit(u) {}
     std::string name;
     std::string description;
+    std::string unit;
   };
   
   struct edr_spatial_extent

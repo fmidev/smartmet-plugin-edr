@@ -185,6 +185,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 		resource_parts.erase(resource_parts.begin());
       EDRQueryType edr_query_type = EDRQueryType::InvalidQueryType;
       std::string data_query_list;
+      
       if(resource_parts.size() > 0)
 		{
 		  if(resource_parts.at(0) == "edr")
@@ -240,9 +241,10 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 	  
       itsEDRQuery.host = resolve_host(req);
 
+      req.removeParameter("f"); // remove f parameter, curretly only JSON is supported
       if(!req.getQueryString().empty() && req.getParameterList("inkeyword").empty())
 		itsEDRQuery.query_id = EDRQueryId::DataQuery;
-    
+
 	  keyword = Spine::optional_string(req.getParameter("keyword"), "");
 	  auto searchName = req.getParameterList("inkeyword");
 	  if (searchName.empty() && itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionLocations)
@@ -264,17 +266,17 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       if(itsEDRQuery.query_id != EDRQueryId::DataQuery)
 		return;
 	
-      // From here on EDR data query
-      req.addParameter("producer", itsEDRQuery.collection_id);
+	  // From here on EDR data query
+	  // Querydata and obervation producers do not have dots (.) in id, but grid producers always do have
+	  bool grid_producer = (itsEDRQuery.collection_id.find(".") != std::string::npos);
+	  if(!grid_producer)
+		req.addParameter("producer", itsEDRQuery.collection_id);
 
       // If query_type is position, radius -> coords is required
       auto coords = Spine::optional_string(req.getParameter("coords"), "");
-      if((edr_query_type == EDRQueryType::Position || edr_query_type == EDRQueryType::Radius) && coords.empty())
-		throw Fmi::Exception(BCP, "Query parameter 'coords' must be defined for Position, Radius query!");
-	  
-      if(edr_query_type == EDRQueryType::Area && coords.empty())
-		throw Fmi::Exception(BCP, "Query parameter 'coords' must be defined for Area query!");
-      
+      if((edr_query_type == EDRQueryType::Position || edr_query_type == EDRQueryType::Radius ||  edr_query_type == EDRQueryType::Trajectory ||edr_query_type == EDRQueryType::Area) && coords.empty())
+		throw Fmi::Exception(BCP, "Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area query!");
+	
       if(!coords.empty())
 		{
 		  // EDR within + within-units
@@ -339,7 +341,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			  req.addParameter("endtime", datetime);			
 			}
 		}
-	  
+	
       // EDR parameter-name
       auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
       
@@ -352,16 +354,43 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 
 #ifndef WITHOUT_OBSERVATION
 	  auto obs_station_types = state.getObsEngine()->getValidStationTypes();
-	  if(obs_station_types.find(itsEDRQuery.collection_id) != obs_station_types.end())
+	  if(!config.obsEngineDisabled() && obs_station_types.find(itsEDRQuery.collection_id) != obs_station_types.end())
 		emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getObsEngine()));
 #endif
 	  if(emd.parameters.empty())
-		emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, const_cast<SmartMet::Engine::Querydata::Engine&>(state.getQEngine()));
+	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, state.getQEngine());
+	  if(!config.gridEngineDisabled() && emd.parameters.empty())
+	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getGridEngine()));
 
+	  std::string producerId = "";
+	  std::string geometryId = "";
+	  std::string levelId = "";
+	  if(grid_producer)
+	    {
+	      std::vector<std::string> producer_parts;
+	      boost::algorithm::split(producer_parts, itsEDRQuery.collection_id, boost::algorithm::is_any_of("."));
+	      
+	      producerId = producer_parts[0];
+	      if(producer_parts.size() > 1)
+			geometryId = producer_parts[1];
+	      if(producer_parts.size() > 2)
+			levelId = producer_parts[2];
+	    }
+
+	  // EDR z
+	  auto z  = Spine::optional_string(req.getParameter("z"), "");
+	  // If no level given get the first one if there are more than one
+	  if(z.empty() && emd.vertical_extent.levels.size() > 1)
+	    z = emd.vertical_extent.levels.at(0);
+	  if(!z.empty() && !grid_producer)
+	    req.addParameter("level", z);     
+	  
 	  std::string cleaned_param_names;
 	  for(auto p : param_names)
 		{
 		  boost::algorithm::to_lower(p);
+		  if(p.find(":") != std::string::npos)
+		    p = p.substr(0, p.find(":"));
 		  if(emd.parameters.find(p) == emd.parameters.end())
 			{
 			  std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p + "' ignored!"
@@ -372,22 +401,33 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			{
 			  if(!cleaned_param_names.empty())
 				cleaned_param_names += ",";
+			  if(grid_producer)
+			    {
+			      p.append(":"+producerId);
+			      if(!geometryId.empty())
+				p.append(":"+geometryId);
+			      if(!levelId.empty())
+				p.append(":"+levelId);
+			      if(!z.empty())
+				p.append(":"+z);
+			    }
 			  cleaned_param_names += p;
 			}
 		}
 	  parameter_names = cleaned_param_names;
 
       if(parameter_names.empty())
-		throw Fmi::Exception(BCP, "Missing parameter-name option!");	  
+	{
+	  if(emd.parameters.empty())
+		throw Fmi::Exception(BCP, "No metadata for " + itsEDRQuery.collection_id + "!");
+	  else
+		throw Fmi::Exception(BCP, "Missing parameter-name option!");
+	}
       
       parameter_names += ",longitude,latitude";
       
       req.addParameter("param", parameter_names);
 	  
-      // EDR z
-      auto z  = Spine::optional_string(req.getParameter("z"), "");	  
-      if(!z.empty())
-		req.addParameter("level", z);	  	        
       
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));
     report_unsupported_option("width", req.getParameter("width"));
@@ -529,7 +569,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 
     timezone = Spine::optional_string(req.getParameter("tz"), default_timezone);
 
-    step = Spine::optional_double(req.getParameter("step"), 1.0);
+    step = Spine::optional_double(req.getParameter("step"), 0.0);
     leveltype = Spine::optional_string(req.getParameter("leveltype"), "");
     format = Spine::optional_string(req.getParameter("format"), "ascii");
     areasource = Spine::optional_string(req.getParameter("areasource"), "");

@@ -1,0 +1,1 @@
+GET /edr/collections/pal_skandinavia/trajectory?coords=LINESTRING(24.4839+60.9723,24.6864+61.0426,24.8562+61.1020,25.0196+61.0436,25.0196+60.9279,24.9738+60.8516)&datetime=200808051200&parameter-name=Temperature HTTP/1.0

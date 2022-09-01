@@ -86,6 +86,18 @@ void print_settings(const Engine::Observation::Settings& settings)
 }
 #endif
 
+std::ostream& operator<<(std::ostream& os, const TimeSeries::OutputData& outputData)
+{
+  std::cout << "OUTPUTDATA: " << outputData.size() << std::endl;
+  for(const auto& item : outputData)
+    {
+      std::cout << item.first << " -> \n";
+      for(const auto& item2 : item.second)
+	std::cout << item2 << std::endl;
+    }
+  return os;
+}
+  
 Spine::Parameter get_query_param(const Spine::Parameter& parameter)
 {
   std::string paramname = parameter.name();
@@ -1372,7 +1384,7 @@ void Plugin::fetchQEngineValues(const State& state,
     std::string levelType(loadDataLevels ? "data:" : "");
     auto itPressure = query.pressures.begin();
     auto itHeight = query.heights.begin();
-
+    
     // Loop over the levels
     for (qi->resetLevel();;)
     {
@@ -1630,6 +1642,7 @@ void Plugin::fetchQEngineValues(const State& state,
                           querydata_param, llist, querydata_tlist, query.maxdistance_kilometers(), *pressure)
                     : qi->valuesAtHeight(
                           querydata_param, llist, querydata_tlist, query.maxdistance_kilometers(), *height);
+	    
             if (querydata_result->size() > 0)
             {
               // if the value is not dependent on location inside area
@@ -1652,6 +1665,7 @@ void Plugin::fetchQEngineValues(const State& state,
                     loc->type == Spine::Location::Area || loc->type == Spine::Location::Place ||
                     loc->type == Spine::Location::CoordinatePoint))
           {
+
             NFmiIndexMask mask;
 
             if (loc->type == Spine::Location::BoundingBox)
@@ -3455,21 +3469,32 @@ void Plugin::checkInKeywordLocations(Query& masterquery)
 EDRMetaData Plugin::getProducerMetaData(const std::string& producer)
 {
 #ifndef WITHOUT_OBSERVATION
-  if(isObsProducer(producer))
+  if(!itsConfig.obsEngineDisabled() && isObsProducer(producer))
     return CoverageJson::getProducerMetaData(producer, *itsObsEngine);
-#endif  
-  return CoverageJson::getProducerMetaData(producer, *itsQEngine);
+#endif
+  EDRMetaData emd = CoverageJson::getProducerMetaData(producer, *itsQEngine);
+  if(!itsConfig.gridEngineDisabled() && emd.parameters.empty())
+    emd = CoverageJson::getProducerMetaData(producer, *itsGridEngine);
+  return emd;
 }
   
 Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query, const Spine::LocationList& locations)
 {
   if(edr_query.query_id == EDRQueryId::SpecifiedCollectionLocations)
-	return CoverageJson::processEDRMetaDataQuery(locations);
-
+    return CoverageJson::processEDRMetaDataQuery(locations);
+    
 #ifndef WITHOUT_OBSERVATION
-  return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsObsEngine);
+  if(!itsConfig.gridEngineDisabled())
+    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsGridEngine, *itsObsEngine);
+  else if(!itsConfig.obsEngineDisabled())
+    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsObsEngine);
+  else
+    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine);
 #else
-  return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine);
+  if(!itsConfig.gridEngineDisabled())
+    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsGridEngine);
+  else
+    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine);
 #endif
 }
 
@@ -3481,7 +3506,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     size_t& product_hash)
 {
   try
-  {	
+  {
     if(masterquery.isEDRMetaDataQuery())
       {
 		const auto& edr_query = masterquery.edrQuery();
@@ -3489,7 +3514,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 		table.set(0, 0, result.toStyledString());
 		return {};
       }
-		
+
     checkInKeywordLocations(masterquery);
 
     // if only location related parameters queried, use shortcut
@@ -3559,7 +3584,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
           //       defined and the primary forecast
           //          source defined in the config file is "grid".
 
-          if (!itsConfig.gridEngineDisabled() && itsGridEngine->isEnabled() &&
+	if (!itsConfig.gridEngineDisabled() && itsGridEngine->isEnabled() &&
               (strcasecmp(masterquery.forecastSource.c_str(), "grid") == 0 ||
                (masterquery.forecastSource == "" &&
                 (((!areaproducers.empty() &&
@@ -3572,13 +3597,13 @@ boost::shared_ptr<std::string> Plugin::processQuery(
             state, query, outputData, queryStreamer, areaproducers, producerDataPeriod);
 
         if (processed)
-        {
+        {	    	  
           // We need different hash calculcations for the grid requests.
           product_hash = Fmi::bad_hash;
         }
         // If the query was not processed then we should call the QEngine instead.
         else
-        {
+        {		
           processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
         }
       }
@@ -3586,7 +3611,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
       {
         processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
       }
-
+	  
       // get the latestTimestep from previous query
       latestTimestep = query.latestTimestep;
       startTimeUTC = query.toptions.startTimeUTC;
@@ -4110,12 +4135,11 @@ void Plugin::init()
       engine = itsReactor->getSingleton("grid", NULL);
       if (!engine)
         throw Fmi::Exception(BCP, "The 'grid-engine' unavailable!");
-
+      
       itsGridEngine = reinterpret_cast<Engine::Grid::Engine*>(engine);
       itsGridEngine->setDem(itsGeoEngine->dem());
       itsGridEngine->setLandCover(itsGeoEngine->landCover());
-
-      itsGridInterface.reset(new GridInterface(itsGridEngine, itsGeoEngine->getTimeZones()));
+      itsGridInterface.reset(new GridInterface(itsGridEngine, itsGeoEngine->getTimeZones()));      
     }
 
 #ifndef WITHOUT_OBSERVATION
