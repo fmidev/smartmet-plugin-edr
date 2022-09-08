@@ -2,3 +2,4 @@
 /input/.testignore
 /tmp-geonames-db*
 /tmp
+/stmp-geonames-db
