@@ -32,7 +32,7 @@ clean:
 
 test:	$(TEST_PREPARE_TARGETS)
 	ok=true; failed=; \
-	for test in $(TEST_TARGTS); do \
+	for test in $(TEST_TARGETS); do \
           if ! $(MAKE) $$test; then ok=false; failed="$$failed $$test"; fi; \
 	done; \
 	if ! $$ok ; then \
