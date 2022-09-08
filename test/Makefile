@@ -46,8 +46,7 @@ test:	$(TEST_PREPARE_TARGETS)
 	  echo "Failed: $$failed"; \
 	  echo "======================================================================="; \
         fi; \
-	rm -f stmp-test-prepare
-	$$ok
+	$$ok \
 
 test-oracle test-postgresql test-sqlite: $(TEST_PREPARE_TARGETS)
 	ok=true; \
