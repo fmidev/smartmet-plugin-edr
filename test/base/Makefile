@@ -1,4 +1,4 @@
-test-oracle:		DBTYPE := oracle
+test-oracle:		DB_TYPE := oracle
 test-postgresql:	DB_TYPE := postgresql
 test-sqlite:		DB_TYPE := sqlite
 
