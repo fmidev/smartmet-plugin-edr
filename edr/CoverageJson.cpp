@@ -910,7 +910,7 @@ get_edr_metadata_grid(const std::string &producer,
       EDRMetaData producer_emd;
 
       if (gmd.levels.size() > 1) {
-	producer_emd.vertical_extent.vrs = gmd.levelId+";"+gmd.levelName+";"+gmd.levelDescription;
+		producer_emd.vertical_extent.vrs = (Fmi::to_string(gmd.levelId)+";"+gmd.levelName+";"+gmd.levelDescription);
 	
 	/*
 	  1;GROUND;Ground or water surface;
