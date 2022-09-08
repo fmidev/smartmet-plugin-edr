@@ -26,14 +26,31 @@ clean:
 	-$(MAKE) $(TEST_FINISH_TARGETS)
 	rm -rf failed-sqlite failed-oracle failed-postgresql
 	rm -rf tmp-geonames-db
+	rm -f stmp-geonames-db
 #	Remove following line later
 	rm -rf conf/grid
 
 test:	$(TEST_PREPARE_TARGETS)
+	ok=true; failed=; \
+	for test in $(TEST_TARGTS); do \
+          if ! $(MAKE) $$test; then ok=false; failed="$$failed $$test"; fi; \
+	done; \
+	if ! $$ok ; then \
+	  echo "======================================================================="; \
+	  echo "Failed: $$failed"; \
+	  echo "======================================================================="; \
+        fi; \
+	rm -f stmp-test-prepare
+	$$ok
+
+test-oracle test-postgresql test-sqlite: $(TEST_PREPARE_TARGETS)
 	ok=true; \
 	if $(MAKE) -C base $@; then ok=true; else ok=false; fi; \
-	-$(MAKE) $(TEST_FINISH_TARGETS); \
+	$(MAKE) $(TEST_FINISH_TARGETS); \
 	$$ok
+
+stmp-geonames-database:
+	date >$@
 
 geonames-database:
 	@-$(MAKE) stop-test-db
@@ -43,7 +60,7 @@ geonames-database:
 	    false; \
 	fi
 
-start-geonames-db: geonames-database
+start-geonames-db: stmp-geonames-db
 	/usr/share/smartmet/test/db/test-db-ctl.sh $(TEST_DB_DIR) start -w
 
 stop-test-db:

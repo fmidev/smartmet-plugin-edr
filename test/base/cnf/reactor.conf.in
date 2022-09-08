@@ -28,6 +28,6 @@ engines:
 	# Must be after geonames
 	observation:
 	{
-	        configfile      = "observation_oracle.conf";
+	        configfile      = "observation_@DB_TYPE@.conf";
 	};
 };
