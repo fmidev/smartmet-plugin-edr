@@ -52,6 +52,9 @@ test-oracle test-postgresql test-sqlite: $(TEST_PREPARE_TARGETS)
 stmp-geonames-database:
 	date >$@
 
+stmp-geonames-db: geonames-database
+	date >$@
+
 geonames-database:
 	@-$(MAKE) stop-test-db
 	rm -rf tmp-geonames-db
