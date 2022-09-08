@@ -58,7 +58,8 @@ test-oracle test-postgresql test-sqlite: $(TEST_PREPARE_TARGETS)
 stmp-geonames-database:
 	date >$@
 
-stmp-geonames-db: geonames-database
+stmp-geonames-db:
+	$(MAKE) geonames-database
 	date >$@
 
 geonames-database:
@@ -70,6 +71,9 @@ geonames-database:
 	fi
 
 start-geonames-db: stmp-geonames-db
+	-if [ -f $(TEST_DB_DIR)/postmaster.pid ] ; then \
+	   $(MAKE) stop-test-db;\
+	fi
 	/usr/share/smartmet/test/db/test-db-ctl.sh $(TEST_DB_DIR) start -w
 
 stop-test-db:
