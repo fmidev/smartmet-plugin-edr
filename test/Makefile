@@ -13,9 +13,15 @@ TEST_FINISH_TARGETS += stop-test-db
 TEST_TARGETS := test-sqlite
 EXTRA_IGNORE := input/.testignore_circle-ci
 else
+ifdef LOCAL_TESTS_ONLY
+GEONAMES_HOST_EDIT := cat
+TEST_TARGETS := test-sqlite
+EXTRA_IGNORE := input/.testignore_circle-ci
+else
 GEONAMES_HOST_EDIT := cat
 TEST_TARGETS := test-sqlite test-oracle test-postgresql
 EXTRA_IGNORE :=
+endif
 endif
 
 TEST_RUNNER :=
