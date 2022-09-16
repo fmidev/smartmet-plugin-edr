@@ -1647,7 +1647,7 @@ void Plugin::fetchQEngineValues(const State& state,
             {
               // if the value is not dependent on location inside area
               // we just need to have the first one
-              if (!TS::parameter_is_arithmetic(paramfunc.parameter))
+              if (!TS::parameter_is_arithmetic(paramfunc.parameter) && paramfunc.parameter.name() != "level")
               {
                 auto dataIndependentValue = querydata_result->at(0);
                 querydata_result->clear();
@@ -1739,7 +1739,7 @@ void Plugin::fetchQEngineValues(const State& state,
             {
               // if the value is not dependent on location inside
               // area we just need to have the first one
-                if (!TS::parameter_is_arithmetic(paramfunc.parameter))
+			  if (!TS::parameter_is_arithmetic(paramfunc.parameter) && paramfunc.parameter.name() != "level")
               {
                 auto dataIndependentValue = querydata_result->at(0);
                 querydata_result->clear();
@@ -3622,13 +3622,13 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     fix_precisions(masterquery, obsParameters);
 #endif
 	
+	//	std::cout << outputData << std::endl;
+
 	const auto& edr_query = masterquery.edrQuery();
 	const auto& producer = edr_query.collection_id;
 	EDRMetaData emd = getProducerMetaData(producer);
-	boost::optional<int> level;
-	if(masterquery.levels.size() > 0)
-	  level = *(masterquery.levels.begin());
-	Json::Value result = CoverageJson::formatOutputData(outputData, emd, level, masterquery.poptions.parameters());
+	Json::Value result = CoverageJson::formatOutputData(outputData, emd, edr_query.query_type, masterquery.levels, masterquery.coordinateFilter(),  masterquery.poptions.parameters());
+
 	table.set(0, 0, result.toStyledString());
 		
 	return nullptr;

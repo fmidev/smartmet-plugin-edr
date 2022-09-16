@@ -1,0 +1,154 @@
+{
+	"coverages" : 
+	[
+		{
+			"domain" : 
+			{
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T12:00:00Z",
+								24.483899999999998,
+								60.972299999999997,
+								1000.0
+							],
+							[
+								"2008-09-09T18:00:00Z",
+								24.856200000000001,
+								61.101999999999997,
+								1000.0
+							],
+							[
+								"2008-09-09T21:00:00Z",
+								25.019600000000001,
+								61.043599999999998,
+								1000.0
+							],
+							[
+								"2008-09-10T00:00:00Z",
+								25.019600000000001,
+								60.927900000000001,
+								1000.0
+							],
+							[
+								"2008-09-10T03:00:00Z",
+								24.973800000000001,
+								60.851599999999998,
+								1000.0
+							]
+						]
+					}
+				},
+				"type" : "Domain"
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						5
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						13.671103477478027,
+						11.623205184936523,
+						9.7459096908569336,
+						9.0682411193847656,
+						8.0449647903442383
+					]
+				}
+			},
+			"type" : "Coverage"
+		}
+	],
+	"domainType" : "Trajectory",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"description" : 
+			{
+				"en" : "L\u4b70\u5892\ude6ca"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Id of observed property...",
+				"label" : 
+				{
+					"en" : "L\u4b70\u5892\ude6ca"
+				}
+			},
+			"type" : "Parameter",
+			"unit" : 
+			{
+				"label" : 
+				{
+					"en" : "Label of parameter..."
+				},
+				"symbol" : 
+				{
+					"type" : "Type of parameter ...",
+					"value" : "Symbol of parameter ..."
+				}
+			}
+		}
+	},
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"y",
+				"x"
+			],
+			"system" : 
+			{
+				"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"id" : "TODO: PressureLevel",
+				"type" : "VerticalCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Georgian",
+				"type" : "TemporalCRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection"
+}
+

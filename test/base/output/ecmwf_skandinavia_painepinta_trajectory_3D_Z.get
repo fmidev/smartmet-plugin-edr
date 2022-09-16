@@ -1,0 +1,376 @@
+{
+	"coverages" : 
+	[
+		{
+			"domain" : 
+			{
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T09:00:00Z",
+								24.483899999999998,
+								60.972299999999997,
+								300.0
+							]
+						]
+					}
+				},
+				"type" : "Domain"
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-42.035030364990234
+					]
+				}
+			},
+			"type" : "Coverage"
+		},
+		{
+			"domain" : 
+			{
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T09:00:00Z",
+								24.686399999999999,
+								61.0426,
+								500.0
+							]
+						]
+					}
+				},
+				"type" : "Domain"
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.686403274536133
+					]
+				}
+			},
+			"type" : "Coverage"
+		},
+		{
+			"domain" : 
+			{
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T09:00:00Z",
+								24.856200000000001,
+								61.101999999999997,
+								700.0
+							]
+						]
+					}
+				},
+				"type" : "Domain"
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						1.2458707094192505
+					]
+				}
+			},
+			"type" : "Coverage"
+		},
+		{
+			"domain" : 
+			{
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T09:00:00Z",
+								25.019600000000001,
+								61.043599999999998,
+								850.0
+							]
+						]
+					}
+				},
+				"type" : "Domain"
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						3.8533504009246826
+					]
+				}
+			},
+			"type" : "Coverage"
+		},
+		{
+			"domain" : 
+			{
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T09:00:00Z",
+								25.019600000000001,
+								60.927900000000001,
+								925.0
+							]
+						]
+					}
+				},
+				"type" : "Domain"
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						6.145350456237793
+					]
+				}
+			},
+			"type" : "Coverage"
+		},
+		{
+			"domain" : 
+			{
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T09:00:00Z",
+								24.973800000000001,
+								60.851599999999998,
+								1000.0
+							]
+						]
+					}
+				},
+				"type" : "Domain"
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						12.614561080932617
+					]
+				}
+			},
+			"type" : "Coverage"
+		}
+	],
+	"domainType" : "Trajectory",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"description" : 
+			{
+				"en" : "L\u4b70\u5892\ude6ca"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Id of observed property...",
+				"label" : 
+				{
+					"en" : "L\u4b70\u5892\ude6ca"
+				}
+			},
+			"type" : "Parameter",
+			"unit" : 
+			{
+				"label" : 
+				{
+					"en" : "Label of parameter..."
+				},
+				"symbol" : 
+				{
+					"type" : "Type of parameter ...",
+					"value" : "Symbol of parameter ..."
+				}
+			}
+		}
+	},
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"y",
+				"x"
+			],
+			"system" : 
+			{
+				"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"id" : "TODO: PressureLevel",
+				"type" : "VerticalCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Georgian",
+				"type" : "TemporalCRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection"
+}
+

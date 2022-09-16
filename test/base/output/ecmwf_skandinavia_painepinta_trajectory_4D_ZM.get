@@ -6,25 +6,24 @@
 			{
 				"axes" : 
 				{
-					"t" : 
+					"composite" : 
 					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
 						"values" : 
 						[
-							"2008-08-05T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.483899999999998
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.972299999999997
+							[
+								"2008-09-09T12:00:00Z",
+								24.483899999999998,
+								60.972299999999997,
+								300.0
+							]
 						]
 					}
 				},
@@ -36,21 +35,17 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
-						"t"
+						"composite"
 					],
 					"dataType" : "float",
 					"shape" : 
 					[
-						1,
-						1,
 						1
 					],
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.957128524780273
+						-41.860942840576172
 					]
 				}
 			},
@@ -61,25 +56,24 @@
 			{
 				"axes" : 
 				{
-					"t" : 
+					"composite" : 
 					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
 						"values" : 
 						[
-							"2008-08-05T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.686399999999999
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							61.0426
+							[
+								"2008-09-09T18:00:00Z",
+								24.856200000000001,
+								61.101999999999997,
+								700.0
+							]
 						]
 					}
 				},
@@ -91,21 +85,17 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
-						"t"
+						"composite"
 					],
 					"dataType" : "float",
 					"shape" : 
 					[
-						1,
-						1,
 						1
 					],
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.981928825378418
+						-0.22664681077003479
 					]
 				}
 			},
@@ -116,25 +106,24 @@
 			{
 				"axes" : 
 				{
-					"t" : 
+					"composite" : 
 					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
 						"values" : 
 						[
-							"2008-08-05T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.856200000000001
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							61.101999999999997
+							[
+								"2008-09-09T21:00:00Z",
+								25.019600000000001,
+								61.043599999999998,
+								850.0
+							]
 						]
 					}
 				},
@@ -146,21 +135,17 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
-						"t"
+						"composite"
 					],
 					"dataType" : "float",
 					"shape" : 
 					[
-						1,
-						1,
 						1
 					],
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.940394401550293
+						1.8482965230941772
 					]
 				}
 			},
@@ -171,25 +156,24 @@
 			{
 				"axes" : 
 				{
-					"t" : 
+					"composite" : 
 					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
 						"values" : 
 						[
-							"2008-08-05T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.019600000000001
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							61.043599999999998
+							[
+								"2008-09-10T00:00:00Z",
+								25.019600000000001,
+								60.927900000000001,
+								925.0
+							]
 						]
 					}
 				},
@@ -201,21 +185,17 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
-						"t"
+						"composite"
 					],
 					"dataType" : "float",
 					"shape" : 
 					[
-						1,
-						1,
 						1
 					],
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.906764030456543
+						5.0183506011962891
 					]
 				}
 			},
@@ -226,80 +206,24 @@
 			{
 				"axes" : 
 				{
-					"t" : 
+					"composite" : 
 					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y",
+							"z"
+						],
+						"dataType" : "tuple",
 						"values" : 
 						[
-							"2008-08-05T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.019600000000001
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.927900000000001
-						]
-					}
-				},
-				"type" : "Domain"
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.881711006164551
-					]
-				}
-			},
-			"type" : "Coverage"
-		},
-		{
-			"domain" : 
-			{
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.973800000000001
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.851599999999998
+							[
+								"2008-09-10T03:00:00Z",
+								24.973800000000001,
+								60.851599999999998,
+								1000.0
+							]
 						]
 					}
 				},
@@ -311,28 +235,24 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
-						"t"
+						"composite"
 					],
 					"dataType" : "float",
 					"shape" : 
 					[
-						1,
-						1,
 						1
 					],
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.851447105407715
+						8.0449647903442383
 					]
 				}
 			},
 			"type" : "Coverage"
 		}
 	],
-	"domainType" : "Point",
+	"domainType" : "Trajectory",
 	"parameters" : 
 	{
 		"temperature" : 
@@ -376,6 +296,17 @@
 			{
 				"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
 				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"id" : "TODO: PressureLevel",
+				"type" : "VerticalCRS"
 			}
 		},
 		{

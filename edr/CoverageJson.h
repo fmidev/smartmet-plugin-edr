@@ -1,6 +1,6 @@
 #include "EDRMetaData.h"
 #include "EDRQuery.h"
-#include <boost/optional.hpp>
+#include "CoordinateFilter.h"
 #include <json/json.h>
 #include <spine/Parameter.h>
 #include <spine/Location.h>
@@ -26,7 +26,9 @@ namespace EDR {
 namespace CoverageJson {
 Json::Value
 formatOutputData(TS::OutputData &outputData, const EDRMetaData &emd,
-                 boost::optional<int> level,
+				 EDRQueryType query_type,
+                 const std::set<int>& levels,
+				 const CoordinateFilter& coordinate_filter,
                  const std::vector<Spine::Parameter> &query_parameters);
 
 EDRMetaData getProducerMetaData(const std::string &producer,

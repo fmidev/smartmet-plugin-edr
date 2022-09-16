@@ -11,6 +11,7 @@
 #include "AggregationInterval.h"
 #include "Producers.h"
 #include "EDRQuery.h"
+#include "CoordinateFilter.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/shared_ptr.hpp>
 #include <engines/geonames/Engine.h>
@@ -156,6 +157,7 @@ struct Query
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
   
   const EDRQuery& edrQuery() const { return itsEDRQuery; }
+  const CoordinateFilter& coordinateFilter() const { return itsCoordinateFilter; }
   bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
  private:
   Query();
@@ -182,6 +184,7 @@ struct Query
 
   std::string maxdistance;
   EDRQuery itsEDRQuery;
+  CoordinateFilter itsCoordinateFilter;
 };
 
 std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ);

@@ -25,6 +25,56 @@ std::string to_string(const EDRQueryId& id)
   
   return "";
 }
+
+std::string to_string(EDRQueryType query_type)
+{
+  if(query_type==EDRQueryType::Position)
+    return "Position";
+  if(query_type==EDRQueryType::Radius)
+    return "Radius";
+  if(query_type==EDRQueryType::Area)
+    return "Area";
+  if(query_type==EDRQueryType::Cube)
+    return "Cube";
+  if(query_type==EDRQueryType::Trajectory)
+    return "Trajectory";
+  if(query_type==EDRQueryType::Corridor)
+    return "Corridor";
+  if(query_type==EDRQueryType::Items)
+    return "Items";
+  if(query_type==EDRQueryType::Locations)
+    return "Locations";
+  if(query_type==EDRQueryType::Instances)
+    return "Instances";
+
+  return "InvalidQueryType";
+  
+}
+  
+EDRQueryType to_query_type_id(const std::string& query_type)
+{
+  if(query_type=="position")
+    return EDRQueryType::Position;
+  if(query_type=="radius")
+    return EDRQueryType::Radius;
+  if(query_type=="area")
+    return EDRQueryType::Area;
+  if(query_type=="cube")
+    return EDRQueryType::Cube;
+  if(query_type=="trajectory")
+    return EDRQueryType::Trajectory;
+  if(query_type=="corridor")
+    return EDRQueryType::Corridor;
+  if(query_type=="items")
+    return EDRQueryType::Items;
+  if(query_type=="locations")
+    return EDRQueryType::Locations;
+  if(query_type=="instances")
+    return EDRQueryType::Instances;
+
+  return EDRQueryType::InvalidQueryType;
+}
+
   
 std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ)
 {
