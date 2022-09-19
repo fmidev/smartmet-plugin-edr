@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.9.16
+Version: 22.9.19
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Mon Sep 19 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.19-1.fmi
+- Remove description-field from parameter section and set parameter name into label-field
+
 * Fri Sep 16 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.16-1.fmi
 - When z-parameter not specified all levels are returned
 - Modified output format of trajectory query

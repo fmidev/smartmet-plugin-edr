@@ -44,7 +44,7 @@ std::string parse_parameter_name(const std::string& name)
   boost::algorithm::to_lower(parameter_name);
   
   return parameter_name;
- }
+}
   
 Json::Value parse_temporal_extent(const edr_temporal_extent& temporal_extent)
 {
@@ -301,12 +301,16 @@ Json::Value get_edr_series_parameters(
       
 	  if(lon_lat_level_param(parameter_name))
         continue;
-      const auto &edr_parameter = edr_parameters.at(parameter_name);
 
       auto parameter = Json::Value(Json::ValueType::objectValue);
       parameter["type"] = Json::Value("Parameter");
-      parameter["description"] = Json::Value(Json::ValueType::objectValue);
-      parameter["description"]["en"] = Json::Value(edr_parameter.description);
+	  const auto &edr_parameter = edr_parameters.at(parameter_name);
+	  /*
+		// Description field is optional
+		// QEngine returns parameter description in finnish and skandinavian characters cause problems
+		parameter["description"] = Json::Value(Json::ValueType::objectValue);
+		parameter["description"]["en"] = Json::Value(edr_parameter.description);
+	  */
       parameter["unit"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"]["en"] = Json::Value("Label of parameter...");
@@ -321,7 +325,7 @@ Json::Value get_edr_series_parameters(
       parameter["observedProperty"]["label"] =
           Json::Value(Json::ValueType::objectValue);
       parameter["observedProperty"]["label"]["en"] =
-          Json::Value(edr_parameter.description);
+          Json::Value(edr_parameter.name);
       parameters[parameter_name] = parameter;
     }
 
