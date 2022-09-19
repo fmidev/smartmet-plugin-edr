@@ -76,16 +76,12 @@
 	{
 		"temperature" : 
 		{
-			"description" : 
-			{
-				"en" : "L\u4b70\u5892\ude6ca"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Id of observed property...",
 				"label" : 
 				{
-					"en" : "L\u4b70\u5892\ude6ca"
+					"en" : "Temperature"
 				}
 			},
 			"type" : "Parameter",

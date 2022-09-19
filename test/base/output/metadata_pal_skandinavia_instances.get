@@ -166,97 +166,87 @@
 			{
 				"DewPoint" : 
 				{
-					"description" : "Kastepiste",
 					"id" : "DewPoint",
 					"observedProperty" : 
 					{
-						"label" : "Kastepiste"
+						"label" : "DewPoint"
 					},
 					"type" : "Parameter"
 				},
 				"FogIntensity" : 
 				{
-					"description" : "Density of Fog",
 					"id" : "FogIntensity",
 					"observedProperty" : 
 					{
-						"label" : "Density of Fog"
+						"label" : "FogIntensity"
 					},
 					"type" : "Parameter"
 				},
 				"HighCloudCover" : 
 				{
-					"description" : "High Cloud Cover",
 					"id" : "HighCloudCover",
 					"observedProperty" : 
 					{
-						"label" : "High Cloud Cover"
+						"label" : "HighCloudCover"
 					},
 					"type" : "Parameter"
 				},
 				"HourlyMaximumGust" : 
 				{
-					"description" : "MaxGustMS",
 					"id" : "HourlyMaximumGust",
 					"observedProperty" : 
 					{
-						"label" : "MaxGustMS"
+						"label" : "HourlyMaximumGust"
 					},
 					"type" : "Parameter"
 				},
 				"Humidity" : 
 				{
-					"description" : "Suhteellinen kosteus",
 					"id" : "Humidity",
 					"observedProperty" : 
 					{
-						"label" : "Suhteellinen kosteus"
+						"label" : "Humidity"
 					},
 					"type" : "Parameter"
 				},
 				"KIndex" : 
 				{
-					"description" : "K-indeksi",
 					"id" : "KIndex",
 					"observedProperty" : 
 					{
-						"label" : "K-indeksi"
+						"label" : "KIndex"
 					},
 					"type" : "Parameter"
 				},
 				"LowCloudCover" : 
 				{
-					"description" : "Low Cloud Cover",
 					"id" : "LowCloudCover",
 					"observedProperty" : 
 					{
-						"label" : "Low Cloud Cover"
+						"label" : "LowCloudCover"
 					},
 					"type" : "Parameter"
 				},
 				"MediumCloudCover" : 
 				{
-					"description" : "Medium Cloud Cover",
 					"id" : "MediumCloudCover",
 					"observedProperty" : 
 					{
-						"label" : "Medium Cloud Cover"
+						"label" : "MediumCloudCover"
 					},
 					"type" : "Parameter"
 				},
 				"MiddleAndLowCloudCover" : 
 				{
-					"description" : "Middle+Low Cloud Cover",
 					"id" : "MiddleAndLowCloudCover",
 					"observedProperty" : 
 					{
-						"label" : "Middle+Low Cloud Cover"
+						"label" : "MiddleAndLowCloudCover"
 					},
 					"type" : "Parameter"
 				},
 				"PoP" : 
 				{
-					"description" : "PoP",
 					"id" : "PoP",
 					"observedProperty" : 
 					{
@@ -266,161 +256,145 @@
 				},
 				"Precipitation1h" : 
 				{
-					"description" : "Precipitation mm/h",
 					"id" : "Precipitation1h",
 					"observedProperty" : 
 					{
-						"label" : "Precipitation mm/h"
+						"label" : "Precipitation1h"
 					},
 					"type" : "Parameter"
 				},
 				"PrecipitationForm" : 
 				{
-					"description" : "Precipitation Form",
 					"id" : "PrecipitationForm",
 					"observedProperty" : 
 					{
-						"label" : "Precipitation Form"
+						"label" : "PrecipitationForm"
 					},
 					"type" : "Parameter"
 				},
 				"PrecipitationType" : 
 				{
-					"description" : "Precipitation Type",
 					"id" : "PrecipitationType",
 					"observedProperty" : 
 					{
-						"label" : "Precipitation Type"
+						"label" : "PrecipitationType"
 					},
 					"type" : "Parameter"
 				},
 				"Pressure" : 
 				{
-					"description" : "Pintapaine",
 					"id" : "Pressure",
 					"observedProperty" : 
 					{
-						"label" : "Pintapaine"
+						"label" : "Pressure"
 					},
 					"type" : "Parameter"
 				},
 				"ProbabilityThunderstorm" : 
 				{
-					"description" : "Probability of Thunder",
 					"id" : "ProbabilityThunderstorm",
 					"observedProperty" : 
 					{
-						"label" : "Probability of Thunder"
+						"label" : "ProbabilityThunderstorm"
 					},
 					"type" : "Parameter"
 				},
 				"RadiationGlobal" : 
 				{
-					"description" : "Auringon s\u4d25ily",
 					"id" : "RadiationGlobal",
 					"observedProperty" : 
 					{
-						"label" : "Auringon s\u4d25ily"
+						"label" : "RadiationGlobal"
 					},
 					"type" : "Parameter"
 				},
 				"RadiationLW" : 
 				{
-					"description" : "Pitk\u4861ltoinen s\u4d25ily",
 					"id" : "RadiationLW",
 					"observedProperty" : 
 					{
-						"label" : "Pitk\u4861ltoinen s\u4d25ily"
+						"label" : "RadiationLW"
 					},
 					"type" : "Parameter"
 				},
 				"Temperature" : 
 				{
-					"description" : "L\u4b70\u5892\ude6ca",
 					"id" : "Temperature",
 					"observedProperty" : 
 					{
-						"label" : "L\u4b70\u5892\ude6ca"
+						"label" : "Temperature"
 					},
 					"type" : "Parameter"
 				},
 				"TotalCloudCover" : 
 				{
-					"description" : "Total Cloud Cover",
 					"id" : "TotalCloudCover",
 					"observedProperty" : 
 					{
-						"label" : "Total Cloud Cover"
+						"label" : "TotalCloudCover"
 					},
 					"type" : "Parameter"
 				},
 				"WeatherSymbol1" : 
 				{
-					"description" : "Precipitation Symbol",
 					"id" : "WeatherSymbol1",
 					"observedProperty" : 
 					{
-						"label" : "Precipitation Symbol"
+						"label" : "WeatherSymbol1"
 					},
 					"type" : "Parameter"
 				},
 				"WeatherSymbol3" : 
 				{
-					"description" : "Weather Symbol",
 					"id" : "WeatherSymbol3",
 					"observedProperty" : 
 					{
-						"label" : "Weather Symbol"
+						"label" : "WeatherSymbol3"
 					},
 					"type" : "Parameter"
 				},
 				"WindDirection" : 
 				{
-					"description" : "Wind dir",
 					"id" : "WindDirection",
 					"observedProperty" : 
 					{
-						"label" : "Wind dir"
+						"label" : "WindDirection"
 					},
 					"type" : "Parameter"
 				},
 				"WindSpeedMS" : 
 				{
-					"description" : "Wind speed",
 					"id" : "WindSpeedMS",
 					"observedProperty" : 
 					{
-						"label" : "Wind speed"
+						"label" : "WindSpeedMS"
 					},
 					"type" : "Parameter"
 				},
 				"WindUMS" : 
 				{
-					"description" : "U",
 					"id" : "WindUMS",
 					"observedProperty" : 
 					{
-						"label" : "U"
+						"label" : "WindUMS"
 					},
 					"type" : "Parameter"
 				},
 				"WindVMS" : 
 				{
-					"description" : "V",
 					"id" : "WindVMS",
 					"observedProperty" : 
 					{
-						"label" : "V"
+						"label" : "WindVMS"
 					},
 					"type" : "Parameter"
 				},
 				"WindVectorMS" : 
 				{
-					"description" : "Wind vector",
 					"id" : "WindVectorMS",
 					"observedProperty" : 
 					{
-						"label" : "Wind vector"
+						"label" : "WindVectorMS"
 					},
 					"type" : "Parameter"
 				}
