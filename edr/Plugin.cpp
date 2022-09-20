@@ -592,12 +592,13 @@ std::size_t Plugin::hash_value(const State& state,
     // Initial hash value = geonames hash (may change during reloads) + querystring hash
     auto hash = state.getGeoEngine().hash_value();
 
+    // EDR resource has to be fully included in the hash
+    Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
+
     // Calculate a hash for the query. We can ignore the time series options
     // since we later on generate a hash for the generated time series.
     // In particular this permits us to ignore the endtime=x setting, which
     // Ilmanet sets to a precision of one second.
-
-    Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
 
     for (const auto& name_value : request.getParameterMap())
     {
@@ -847,7 +848,6 @@ std::size_t Plugin::hash_value(const State& state,
       ++producer_group;
     }
 
-	Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
 
     return hash;
   }
@@ -3749,7 +3749,7 @@ void Plugin::query(const State& state,
 
     if (product_hash != Fmi::bad_hash)
     {
-      response.setHeader("ETag", fmt::format("\"{:x}-timeseries\"", product_hash));
+      response.setHeader("ETag", fmt::format("\"{:x}-edr\"", product_hash));
 
       // If the product is cacheable and etag was requested, respond with etag only
 
@@ -3766,13 +3766,13 @@ void Plugin::query(const State& state,
     if (obj)
     {
       response.setHeader("X-Duration", timeheader);
-      response.setHeader("X-TimeSeries-Cache", "yes");
+      response.setHeader("X-EDR-Cache", "yes");
       response.setContent(obj);
       return;
     }
 
     // Must generate the result from scratch
-    response.setHeader("X-TimeSeries-Cache", "no");
+    response.setHeader("X-EDR-Cache", "no");
 
     high_resolution_clock::time_point t4 = high_resolution_clock::now();
     timeheader.append("+").append(
@@ -4069,7 +4069,7 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
     // Adding the first exception information into the response header
     boost::algorithm::replace_all(firstMessage, "\n", " ");
     firstMessage = firstMessage.substr(0, 300);
-    theResponse.setHeader("X-TimeSeriesPlugin-Error", firstMessage);
+    theResponse.setHeader("X-EDR-Plugin-Error", firstMessage);
   }
 }
 
