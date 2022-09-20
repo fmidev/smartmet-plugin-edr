@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.9.19
+Version: 22.9.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Tue Sep 20 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.20-1.fmi
+- Fixed hash_value calculation (request.getResource added)
+
 * Mon Sep 19 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.19-1.fmi
 - Remove description-field from parameter section and set parameter name into label-field
 

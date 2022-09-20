@@ -845,6 +845,8 @@ std::size_t Plugin::hash_value(const State& state,
       ++producer_group;
     }
 
+	Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
+
     return hash;
   }
   catch (...)
