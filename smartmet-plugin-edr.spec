@@ -107,6 +107,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Tue Sep 20 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.20-2.fmi
+- Timestamp is added into hash_value of metadata queries, timestamp is updated every 300 seconds
+
+* Tue Sep 20 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.20-1.fmi
 - Fixed hash_value calculation (request.getResource added)
 
 * Mon Sep 19 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.19-1.fmi

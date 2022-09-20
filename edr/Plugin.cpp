@@ -595,6 +595,15 @@ std::size_t Plugin::hash_value(const State& state,
     // EDR resource has to be fully included in the hash
     Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
 
+	auto timet_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+	// 300 seconds
+	if(timet_now - itsTimeT > 300)
+	  itsTimeT = timet_now;
+	  
+	if(masterquery.isEDRMetaDataQuery())
+	  Fmi::hash_combine(hash, Fmi::hash_value(itsTimeT));		
+
     // Calculate a hash for the query. We can ignore the time series options
     // since we later on generate a hash for the generated time series.
     // In particular this permits us to ignore the endtime=x setting, which
@@ -4108,6 +4117,8 @@ void Plugin::init()
 
   try
   {
+	itsTimeT = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
     // Time series cache
     itsTimeSeriesCache.reset(new TS::TimeSeriesGeneratorCache);
     itsTimeSeriesCache->resize(itsConfig.maxTimeSeriesCacheSize());

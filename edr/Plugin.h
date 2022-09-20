@@ -245,6 +245,8 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
 
   // Geometries and their svg-representations are stored here
   Engine::Gis::GeometryStorage itsGeometryStorage;
+
+  std::time_t itsTimeT;
 };  // class Plugin
 
 }  // namespace EDR
