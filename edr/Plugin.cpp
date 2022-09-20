@@ -597,6 +597,8 @@ std::size_t Plugin::hash_value(const State& state,
     // In particular this permits us to ignore the endtime=x setting, which
     // Ilmanet sets to a precision of one second.
 
+    Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
+
     for (const auto& name_value : request.getParameterMap())
     {
       const auto& name = name_value.first;
