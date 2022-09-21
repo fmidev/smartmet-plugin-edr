@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.9.20
+Version: 22.9.21
 Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Wed Sep 21 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.21-1.fmi
+- Removed slow observablePropertyQuery database query for each parameter, 
+since description field is not used any more
+
 * Tue Sep 20 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.20-2.fmi
 - Timestamp is added into hash_value of metadata queries, timestamp is updated every 300 seconds
 
