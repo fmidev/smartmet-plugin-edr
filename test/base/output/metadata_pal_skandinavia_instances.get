@@ -166,6 +166,7 @@
 			{
 				"DewPoint" : 
 				{
+					"description" : "DewPoint",
 					"id" : "DewPoint",
 					"observedProperty" : 
 					{
@@ -175,6 +176,7 @@
 				},
 				"FogIntensity" : 
 				{
+					"description" : "FogIntensity",
 					"id" : "FogIntensity",
 					"observedProperty" : 
 					{
@@ -184,6 +186,7 @@
 				},
 				"HighCloudCover" : 
 				{
+					"description" : "HighCloudCover",
 					"id" : "HighCloudCover",
 					"observedProperty" : 
 					{
@@ -193,6 +196,7 @@
 				},
 				"HourlyMaximumGust" : 
 				{
+					"description" : "HourlyMaximumGust",
 					"id" : "HourlyMaximumGust",
 					"observedProperty" : 
 					{
@@ -202,6 +206,7 @@
 				},
 				"Humidity" : 
 				{
+					"description" : "Humidity",
 					"id" : "Humidity",
 					"observedProperty" : 
 					{
@@ -211,6 +216,7 @@
 				},
 				"KIndex" : 
 				{
+					"description" : "KIndex",
 					"id" : "KIndex",
 					"observedProperty" : 
 					{
@@ -220,6 +226,7 @@
 				},
 				"LowCloudCover" : 
 				{
+					"description" : "LowCloudCover",
 					"id" : "LowCloudCover",
 					"observedProperty" : 
 					{
@@ -229,6 +236,7 @@
 				},
 				"MediumCloudCover" : 
 				{
+					"description" : "MediumCloudCover",
 					"id" : "MediumCloudCover",
 					"observedProperty" : 
 					{
@@ -238,6 +246,7 @@
 				},
 				"MiddleAndLowCloudCover" : 
 				{
+					"description" : "MiddleAndLowCloudCover",
 					"id" : "MiddleAndLowCloudCover",
 					"observedProperty" : 
 					{
@@ -247,6 +256,7 @@
 				},
 				"PoP" : 
 				{
+					"description" : "PoP",
 					"id" : "PoP",
 					"observedProperty" : 
 					{
@@ -256,6 +266,7 @@
 				},
 				"Precipitation1h" : 
 				{
+					"description" : "Precipitation1h",
 					"id" : "Precipitation1h",
 					"observedProperty" : 
 					{
@@ -265,6 +276,7 @@
 				},
 				"PrecipitationForm" : 
 				{
+					"description" : "PrecipitationForm",
 					"id" : "PrecipitationForm",
 					"observedProperty" : 
 					{
@@ -274,6 +286,7 @@
 				},
 				"PrecipitationType" : 
 				{
+					"description" : "PrecipitationType",
 					"id" : "PrecipitationType",
 					"observedProperty" : 
 					{
@@ -283,6 +296,7 @@
 				},
 				"Pressure" : 
 				{
+					"description" : "Pressure",
 					"id" : "Pressure",
 					"observedProperty" : 
 					{
@@ -292,6 +306,7 @@
 				},
 				"ProbabilityThunderstorm" : 
 				{
+					"description" : "ProbabilityThunderstorm",
 					"id" : "ProbabilityThunderstorm",
 					"observedProperty" : 
 					{
@@ -301,6 +316,7 @@
 				},
 				"RadiationGlobal" : 
 				{
+					"description" : "RadiationGlobal",
 					"id" : "RadiationGlobal",
 					"observedProperty" : 
 					{
@@ -310,6 +326,7 @@
 				},
 				"RadiationLW" : 
 				{
+					"description" : "RadiationLW",
 					"id" : "RadiationLW",
 					"observedProperty" : 
 					{
@@ -319,6 +336,7 @@
 				},
 				"Temperature" : 
 				{
+					"description" : "Temperature",
 					"id" : "Temperature",
 					"observedProperty" : 
 					{
@@ -328,6 +346,7 @@
 				},
 				"TotalCloudCover" : 
 				{
+					"description" : "TotalCloudCover",
 					"id" : "TotalCloudCover",
 					"observedProperty" : 
 					{
@@ -337,6 +356,7 @@
 				},
 				"WeatherSymbol1" : 
 				{
+					"description" : "WeatherSymbol1",
 					"id" : "WeatherSymbol1",
 					"observedProperty" : 
 					{
@@ -346,6 +366,7 @@
 				},
 				"WeatherSymbol3" : 
 				{
+					"description" : "WeatherSymbol3",
 					"id" : "WeatherSymbol3",
 					"observedProperty" : 
 					{
@@ -355,6 +376,7 @@
 				},
 				"WindDirection" : 
 				{
+					"description" : "WindDirection",
 					"id" : "WindDirection",
 					"observedProperty" : 
 					{
@@ -364,6 +386,7 @@
 				},
 				"WindSpeedMS" : 
 				{
+					"description" : "WindSpeedMS",
 					"id" : "WindSpeedMS",
 					"observedProperty" : 
 					{
@@ -373,6 +396,7 @@
 				},
 				"WindUMS" : 
 				{
+					"description" : "WindUMS",
 					"id" : "WindUMS",
 					"observedProperty" : 
 					{
@@ -382,6 +406,7 @@
 				},
 				"WindVMS" : 
 				{
+					"description" : "WindVMS",
 					"id" : "WindVMS",
 					"observedProperty" : 
 					{
@@ -391,6 +416,7 @@
 				},
 				"WindVectorMS" : 
 				{
+					"description" : "WindVectorMS",
 					"id" : "WindVectorMS",
 					"observedProperty" : 
 					{

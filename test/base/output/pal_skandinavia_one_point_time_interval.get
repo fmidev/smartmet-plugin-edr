@@ -64,6 +64,10 @@
 	{
 		"temperature" : 
 		{
+			"description" : 
+			{
+				"en" : "temperature"
+			},
 			"observedProperty" : 
 			{
 				"id" : "Id of observed property...",
