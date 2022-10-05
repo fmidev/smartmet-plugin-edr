@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.9.21
+Version: 22.10.5
 Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Wed Oct 5 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.10.5-1.fmi
+- Reintroduce description-field in parameter section and set parameter name into it
+
 * Wed Sep 21 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.9.21-1.fmi
 - Removed slow observablePropertyQuery database query for each parameter, 
 since description field is not used any more

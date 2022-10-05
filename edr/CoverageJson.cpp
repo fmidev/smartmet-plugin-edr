@@ -305,12 +305,11 @@ Json::Value get_edr_series_parameters(
       auto parameter = Json::Value(Json::ValueType::objectValue);
       parameter["type"] = Json::Value("Parameter");
 	  const auto &edr_parameter = edr_parameters.at(parameter_name);
-	  /*
-		// Description field is optional
-		// QEngine returns parameter description in finnish and skandinavian characters cause problems
-		parameter["description"] = Json::Value(Json::ValueType::objectValue);
-		parameter["description"]["en"] = Json::Value(edr_parameter.description);
-	  */
+	  // Description field is optional
+	  // QEngine returns parameter description in finnish and skandinavian characters cause problems
+	  // metoffice test interface uses description field -> set parameter name to description field
+	  parameter["description"] = Json::Value(Json::ValueType::objectValue);
+	  parameter["description"]["en"] = Json::Value(parameter_name);
       parameter["unit"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"]["en"] = Json::Value("Label of parameter...");
@@ -775,7 +774,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
         auto param = Json::Value(Json::ValueType::objectValue);
         param["id"] = Json::Value(p.name);
         param["type"] = Json::Value("Parameter");
-        //param["description"] = Json::Value(p.description);
+		// Set parameter name to description field
+        param["description"] = Json::Value(p.name);
         // Observed property: Mandatory: label, Optional: id, description
         auto observedProperty = Json::Value(Json::ValueType::objectValue);	
         observedProperty["label"] = Json::Value(p.name);
@@ -904,7 +904,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         auto param = Json::Value(Json::ValueType::objectValue);
         param["id"] = Json::Value(p.name);
         param["type"] = Json::Value("Parameter");
-		//        param["description"] = Json::Value(p.description);
+		// Set parameter name to description field
+		param["description"] = Json::Value(p.name);
         // Observed property: Mandatory: label, Optional: id, description
         auto observedProperty = Json::Value(Json::ValueType::objectValue);
         observedProperty["label"] = Json::Value(p.name);
