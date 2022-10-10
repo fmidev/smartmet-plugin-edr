@@ -30,6 +30,7 @@
 #include <gis/CoordinateTransformation.h>
 #include <timeseries/TableFeeder.h>
 #include <timeseries/ParameterTools.h>
+#include <timeseries/ParameterKeywords.h>
 #include <timeseries/TimeSeriesInclude.h>
 
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF

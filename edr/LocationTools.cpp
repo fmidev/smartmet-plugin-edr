@@ -1,6 +1,7 @@
 #include "LocationTools.h"
 #include "LonLatDistance.h"
 #include <engines/observation/Keywords.h>
+#include <timeseries/ParameterKeywords.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiSvgTools.h>
 
