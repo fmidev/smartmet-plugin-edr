@@ -377,9 +377,12 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 	  EDRMetaData emd;
 
 #ifndef WITHOUT_OBSERVATION
-	  auto obs_station_types = state.getObsEngine()->getValidStationTypes();
-	  if(!config.obsEngineDisabled() && obs_station_types.find(itsEDRQuery.collection_id) != obs_station_types.end())
-		emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getObsEngine()));
+	  if(!config.obsEngineDisabled())
+		{
+		  auto obs_station_types = state.getObsEngine()->getValidStationTypes();
+		  if(obs_station_types.find(itsEDRQuery.collection_id) != obs_station_types.end())
+			emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getObsEngine()));
+		}
 #endif
 	  if(emd.parameters.empty())
 	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, state.getQEngine());
