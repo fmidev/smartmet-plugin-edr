@@ -249,9 +249,9 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			  coords += (":"+Fmi::to_string(radius));
 			}
 		  auto wkt = coords;
-		  // If query_type is Trajectory, check if is 2D, 3D, 4D
 		  if(itsEDRQuery.query_type == EDRQueryType::Trajectory)
 			{
+			  // If query_type is Trajectory, check if is 2D, 3D, 4D
 			  boost::algorithm::to_upper(wkt);
 			  boost::algorithm::trim(wkt);
 			  auto geometry_name = wkt.substr(0, wkt.find("("));
@@ -329,6 +329,38 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			  else
 				req.addParameter("place", location);
 			}
+		  else if(itsEDRQuery.query_type == EDRQueryType::Cube)
+			{
+			  auto bbox = Spine::optional_string(req.getParameter("bbox"), "");
+			  if(bbox.empty())
+				throw Fmi::Exception(BCP, "Query parameter 'bbox' must be defined for Cube!");
+
+			  std::vector<string> parts;
+			  boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
+			  if(parts.size() != 2)
+				throw Fmi::Exception(BCP, "Invalid bbox parameter, format is bbox=<lower left coordinate>, <upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
+			  auto lower_left_coord = parts[0];
+			  auto upper_right_coord = parts[1];
+			  boost::algorithm::trim(lower_left_coord);
+			  boost::algorithm::trim(upper_right_coord);
+			  parts.clear();
+			  boost::algorithm::split(parts, lower_left_coord, boost::algorithm::is_any_of(" "));
+			  if(parts.size() != 2)
+				throw Fmi::Exception(BCP, "Invalid bbox parameter, format is bbox=<lower left coordinate>, <upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
+			  auto lower_left_x = parts[0];
+			  auto lower_left_y = parts[1];
+			  parts.clear();
+			  boost::algorithm::split(parts, upper_right_coord, boost::algorithm::is_any_of(" "));
+			  if(parts.size() != 2)
+				throw Fmi::Exception(BCP, "Invalid bbox parameter, format is bbox=<lower left coordinate>, <upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
+			  auto upper_right_x = parts[0];
+			  auto upper_right_y = parts[1];
+
+			  auto wkt = ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " + upper_right_y + "," + upper_right_x + " " + upper_right_y + "," +  upper_right_x + " " + lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
+
+			  req.addParameter("wkt", wkt);
+			  req.removeParameter("bbox");
+			}
 		}
 	  
       // EDR datetime
@@ -389,6 +421,9 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 	  if(!config.gridEngineDisabled() && emd.parameters.empty())
 	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getGridEngine()));
 
+	  if(emd.vertical_extent.levels.empty() && itsEDRQuery.query_type == EDRQueryType::Cube)
+		throw Fmi::Exception(BCP, "Error! Cube query not possible for '" + itsEDRQuery.collection_id + "', because there is no vertical extent!");
+
 	  std::string producerId = "";
 	  std::string geometryId = "";
 	  std::string levelId = "";
@@ -403,16 +438,31 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 	      if(producer_parts.size() > 2)
 			levelId = producer_parts[2];
 	    }
-
+	  
 	  // EDR z
 	  auto z  = Spine::optional_string(req.getParameter("z"), "");
-	  if(z.empty())
+	  double min_level = std::numeric_limits<double>::min();
+	  double max_level = std::numeric_limits<double>::max();
+	  bool range = false;
+	  if(z.find("/") != std::string::npos)
+		{
+		  std::vector<std::string> parts;
+		  boost::algorithm::split(parts, z, boost::algorithm::is_any_of("/"));
+		  min_level = Fmi::stod(parts[0]);
+		  max_level = Fmi::stod(parts[1]);
+		  z.clear();
+		  range = true;
+		}
+	  if(!range && z.empty())
 		z = itsCoordinateFilter.getLevels();
 	  // If no level given get all levels
 	  if(z.empty() && emd.vertical_extent.levels.size() > 0)
 		{
 		  for(const auto& l : emd.vertical_extent.levels)
 			{
+			  double d_level = Fmi::stod(l);
+			  if(d_level < min_level || d_level > max_level)
+				continue;
 			  if(!z.empty())
 				z.append(",");
 			  z.append(l);

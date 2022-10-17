@@ -120,6 +120,35 @@
 					]
 				}
 			}
+		},
+		"trajectory" : 
+		{
+			"link" : 
+			{
+				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/trajectory",
+				"rel" : "data",
+				"templated" : true,
+				"title" : "Trajectory query",
+				"variables" : 
+				{
+					"coords" : "Well Known Text LINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
+					"crs_details" : 
+					[
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"description" : "Data along trajectory",
+					"output_formats" : 
+					[
+						"CoverageJSON"
+					],
+					"query_type" : "trajectory",
+					"title" : "Trajectory query"
+				}
+			}
 		}
 	},
 	"extent" : 
