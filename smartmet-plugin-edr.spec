@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.10.17
+Version: 22.10.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -29,36 +29,36 @@ BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 22.9.5
 BuildRequires: smartmet-library-locus-devel >= 22.6.17
-BuildRequires: smartmet-library-macgyver-devel >= 22.8.23
-BuildRequires: smartmet-library-grid-content-devel >= 22.10.10
-BuildRequires: smartmet-library-grid-files-devel >= 22.10.10
+BuildRequires: smartmet-library-macgyver-devel >= 22.10.12
+BuildRequires: smartmet-library-grid-content-devel >= 22.10.20
+BuildRequires: smartmet-library-grid-files-devel >= 22.10.20
 BuildRequires: smartmet-library-newbase-devel >= 22.8.29
 BuildRequires: smartmet-library-gis-devel >= 22.9.28
-BuildRequires: smartmet-library-timeseries-devel >= 22.10.10
+BuildRequires: smartmet-library-timeseries-devel >= 22.10.18
 BuildRequires: smartmet-engine-geonames-devel >= 22.10.5
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 22.10.10
+BuildRequires: smartmet-engine-observation-devel >= 22.10.12
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 22.10.5
 BuildRequires: smartmet-engine-gis-devel >= 22.10.5
-BuildRequires: smartmet-engine-grid-devel >= 22.10.10
+BuildRequires: smartmet-engine-grid-devel >= 22.10.20
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 22.10.10
+#Requires: smartmet-engine-observation >= 22.10.12
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 22.9.28
 Requires: smartmet-library-locus >= 22.6.17
-Requires: smartmet-library-macgyver >= 22.8.23
+Requires: smartmet-library-macgyver >= 22.10.12
 Requires: smartmet-library-newbase >= 22.8.29
 Requires: smartmet-library-spine >= 22.9.5
-Requires: smartmet-library-timeseries >= 22.10.10
+Requires: smartmet-library-timeseries >= 22.10.18
 Requires: smartmet-library-gis >= 22.9.28
 Requires: smartmet-engine-geonames >= 22.10.5
 Requires: smartmet-engine-querydata >= 22.10.5
 Requires: smartmet-engine-gis >= 22.10.5
-Requires: smartmet-engine-grid >= 22.10.10
+Requires: smartmet-engine-grid >= 22.10.20
 Requires: smartmet-server >= 22.10.5
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
@@ -72,15 +72,15 @@ Provides: %{SPECNAME}
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 22.4.14
 #TestRequires: smartmet-test-data >= 20.12.1
-#TestRequires: smartmet-engine-grid-test >= 22.10.10
+#TestRequires: smartmet-engine-grid-test >= 22.10.20
 #TestRequires: smartmet-library-gis >= 22.9.28
 #TestRequires: smartmet-engine-geonames >= 22.10.5
 #TestRequires: smartmet-engine-gis >= 22.10.5
 #TestRequires: smartmet-engine-querydata >= 22.10.5
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 22.10.10
+#TestRequires: smartmet-engine-observation >= 22.10.12
 %endif
-#TestRequires: smartmet-engine-grid >= 22.10.10
+#TestRequires: smartmet-engine-grid >= 22.10.20
 #TestRequires: gdal34
 
 %description
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Thu Oct 20 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.10.20-1.fmi
+- Repackaged due to base library ABI changes
+
 * Mon Oct 17 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.10.10-1.fmi
 - Added support for Cube query
 
