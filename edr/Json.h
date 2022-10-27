@@ -3,6 +3,7 @@
 #include <boost/variant.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <iostream>
+#include <map>
 
 namespace SmartMet {
 namespace Plugin {
