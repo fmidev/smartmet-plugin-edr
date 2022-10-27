@@ -21,6 +21,7 @@
 #include <engines/querydata/Producer.h>
 #include <engines/querydata/Q.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include "EDRMetaData.h"
 
 namespace Fmi
 {
@@ -88,6 +89,7 @@ class State
       const Engine::Querydata::Producer& theProducer,
       const Engine::Querydata::OriginTime& theOriginTime) const;
   TS::LocalTimePoolPtr getLocalTimePool() const;
+  EDRMetaData getProducerMetaData(const std::string& producer) const;
 
  private:
   const Plugin& itsPlugin;

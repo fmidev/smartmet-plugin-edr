@@ -2,8 +2,10 @@
 	"coverages" : 
 	[
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -17,18 +19,17 @@
 					{
 						"values" : 
 						[
-							24.179085144358137
+							24.17909
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							61.05438604111206
+							61.05439
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -50,15 +51,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						16.081167221069336
+						16.1
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -72,18 +74,17 @@
 					{
 						"values" : 
 						[
-							24.459140791586531
+							24.45914
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							61.04414750875447
+							61.04415
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -105,15 +106,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						16.061717987060547
+						16.1
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -127,18 +129,17 @@
 					{
 						"values" : 
 						[
-							24.199606718066349
+							24.19961
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							61.189689995396591
+							61.18969
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -160,15 +161,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						16.124824523925781
+						16.1
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -182,18 +184,17 @@
 					{
 						"values" : 
 						[
-							24.481026739799525
+							24.48103
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							61.179395037072631
+							61.17940
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -215,15 +216,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						16.074041366577148
+						16.1
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -237,18 +239,17 @@
 					{
 						"values" : 
 						[
-							24.220330464031552
+							24.22033
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							61.325072489741594
+							61.32507
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -270,15 +271,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						16.111766815185547
+						16.1
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -292,18 +294,17 @@
 					{
 						"values" : 
 						[
-							24.241259379148374
+							24.24126
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							61.4605331609663
+							61.46053
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -325,45 +326,13 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.970260620117188
+						16.0
 					]
-				}
-			},
-			"type" : "Coverage"
-		}
-	],
-	"domainType" : "Point",
-	"parameters" : 
-	{
-		"temperature" : 
-		{
-			"description" : 
-			{
-				"en" : "temperature"
-			},
-			"observedProperty" : 
-			{
-				"id" : "Id of observed property...",
-				"label" : 
-				{
-					"en" : "Temperature"
-				}
-			},
-			"type" : "Parameter",
-			"unit" : 
-			{
-				"label" : 
-				{
-					"en" : "Label of parameter..."
-				},
-				"symbol" : 
-				{
-					"type" : "Type of parameter ...",
-					"value" : "Symbol of parameter ..."
 				}
 			}
 		}
-	},
+	],
+	"domainType" : "Point",
 	"referencing" : 
 	[
 		{
@@ -390,6 +359,36 @@
 			}
 		}
 	],
-	"type" : "CoverageCollection"
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Id of observed property...",
+				"label" : 
+				{
+					"en" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"en" : "Label of parameter..."
+				},
+				"symbol" : 
+				{
+					"type" : "Type of parameter ...",
+					"value" : "Symbol of parameter ..."
+				}
+			}
+		}
+	}
 }
-

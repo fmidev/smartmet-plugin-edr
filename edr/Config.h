@@ -25,6 +25,7 @@ namespace EDR
 {
 using Precisions = std::map<std::string, Precision>;
 using SupportedQueries = std::map<std::string, std::set<std::string>>; // producer -> queries
+
 class Config : private boost::noncopyable
 {
  public:
@@ -68,6 +69,8 @@ class Config : private boost::noncopyable
   unsigned long long maxTimeSeriesCacheSize() const;
 
   unsigned int expirationTime() const { return itsExpirationTime; }
+  bool metaDataUpdatesDisabled() const { return itsMetaDataUpdatesDisabled; }
+  int metaDataUpdateInterval() const { return itsMetaDataUpdateInterval; }
 
   QueryServer::AliasFileCollection itsAliasFileCollection;
   time_t itsLastAliasCheck;
@@ -100,6 +103,9 @@ class Config : private boost::noncopyable
   unsigned long long itsMaxTimeSeriesCacheSize;
 
   SupportedQueries itsSupportedQueries; // producer->queries
+
+  bool itsMetaDataUpdatesDisabled;  // disable updates after initial update
+  int itsMetaDataUpdateInterval;        // scan interval in seconds
 
  private:
   void add_default_precisions();

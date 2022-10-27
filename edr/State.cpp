@@ -205,6 +205,18 @@ TS::LocalTimePoolPtr State::getLocalTimePool() const
   return itsLocalTimePool;
 }
 
+EDRMetaData State::getProducerMetaData(const std::string& producer) const
+{
+  try
+  {
+    return itsPlugin.getProducerMetaData(producer);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

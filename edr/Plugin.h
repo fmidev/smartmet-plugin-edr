@@ -25,7 +25,8 @@
 #include <spine/Reactor.h>
 #include <spine/SmartMetPlugin.h>
 #include <timeseries/TimeSeriesInclude.h>
-#include <json/json.h>
+//#include <json/json.h>
+#include "Json.h"
 #include <map>
 #include <queue>
 #include <string>
@@ -97,6 +98,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   // May return null
   Engine::Observation::Engine* getObsEngine() const { return itsObsEngine; }
 #endif
+  EDRMetaData getProducerMetaData(const std::string& producer) const;
 
  protected:
   void init() override;
@@ -122,7 +124,6 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                                               const QueryServer::QueryStreamer_sptr& queryStreamer,
                                               size_t& product_hash);
 
-  EDRMetaData getProducerMetaData(const std::string& producer);
   Json::Value processMetaDataQuery(const EDRQuery& edr_query, const Spine::LocationList& locations);
 
   void processQEngineQuery(const State& state,
@@ -246,7 +247,17 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   // Geometries and their svg-representations are stored here
   Engine::Gis::GeometryStorage itsGeometryStorage;
 
-  std::time_t itsTimeT;
+  std::unique_ptr<Fmi::AsyncTask> itsMetaDataUpdateTask;
+
+  void metaDataUpdateLoop();
+  void updateMetaData();
+
+  //  std::map<std::string, Json::Value> itsMetaData; // collection_id -> meta data
+
+  // Metadata for producers (producer name -> metadata) This must be a shared pointer
+  // and must be used via atomic_load and atomic_store, since CTPP::CDT is not thread safe.
+
+  boost::atomic_shared_ptr<EngineMetaData> itsMetaData;
 };  // class Plugin
 
 }  // namespace EDR

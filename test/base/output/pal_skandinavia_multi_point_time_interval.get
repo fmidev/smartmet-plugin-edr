@@ -2,8 +2,10 @@
 	"coverages" : 
 	[
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -17,18 +19,17 @@
 					{
 						"values" : 
 						[
-							24.938400000000001
+							24.93840
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.169899999999998
+							60.16990
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -50,15 +51,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						14.905610084533691
+						14.9
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -72,18 +74,17 @@
 					{
 						"values" : 
 						[
-							24.938400000000001
+							24.93840
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.169899999999998
+							60.16990
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -105,15 +106,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						14.516239166259766
+						14.5
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -127,18 +129,17 @@
 					{
 						"values" : 
 						[
-							24.938400000000001
+							24.93840
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.169899999999998
+							60.16990
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -160,15 +161,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						14.653659820556641
+						14.7
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -182,18 +184,17 @@
 					{
 						"values" : 
 						[
-							24.938400000000001
+							24.93840
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.169899999999998
+							60.16990
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -215,15 +216,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						14.664922714233398
+						14.7
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -237,18 +239,17 @@
 					{
 						"values" : 
 						[
-							24.938400000000001
+							24.93840
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.169899999999998
+							60.16990
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -270,15 +271,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						14.707723617553711
+						14.7
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -292,18 +294,17 @@
 					{
 						"values" : 
 						[
-							24.938400000000001
+							24.93840
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.169899999999998
+							60.16990
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -325,15 +326,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						14.945700645446777
+						14.9
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -347,18 +349,17 @@
 					{
 						"values" : 
 						[
-							24.938400000000001
+							24.93840
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.169899999999998
+							60.16990
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -380,15 +381,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.167548179626465
+						15.2
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -402,18 +404,17 @@
 					{
 						"values" : 
 						[
-							25.665299999999998
+							25.66530
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.3932
+							60.39320
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -435,15 +436,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.732704162597656
+						15.7
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -457,18 +459,17 @@
 					{
 						"values" : 
 						[
-							25.665299999999998
+							25.66530
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.3932
+							60.39320
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -490,15 +491,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.68196964263916
+						15.7
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -512,18 +514,17 @@
 					{
 						"values" : 
 						[
-							25.665299999999998
+							25.66530
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.3932
+							60.39320
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -545,15 +546,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.92440128326416
+						15.9
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -567,18 +569,17 @@
 					{
 						"values" : 
 						[
-							25.665299999999998
+							25.66530
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.3932
+							60.39320
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -600,15 +601,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						16.069545745849609
+						16.1
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -622,18 +624,17 @@
 					{
 						"values" : 
 						[
-							25.665299999999998
+							25.66530
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.3932
+							60.39320
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -655,15 +656,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.920661926269531
+						15.9
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -677,18 +679,17 @@
 					{
 						"values" : 
 						[
-							25.665299999999998
+							25.66530
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.3932
+							60.39320
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -710,15 +711,16 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.907261848449707
+						15.9
 					]
 				}
-			},
-			"type" : "Coverage"
+			}
 		},
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"t" : 
@@ -732,18 +734,17 @@
 					{
 						"values" : 
 						[
-							25.665299999999998
+							25.66530
 						]
 					},
 					"y" : 
 					{
 						"values" : 
 						[
-							60.3932
+							60.39320
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -765,45 +766,13 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						15.87989330291748
+						15.9
 					]
-				}
-			},
-			"type" : "Coverage"
-		}
-	],
-	"domainType" : "Point",
-	"parameters" : 
-	{
-		"temperature" : 
-		{
-			"description" : 
-			{
-				"en" : "temperature"
-			},
-			"observedProperty" : 
-			{
-				"id" : "Id of observed property...",
-				"label" : 
-				{
-					"en" : "Temperature"
-				}
-			},
-			"type" : "Parameter",
-			"unit" : 
-			{
-				"label" : 
-				{
-					"en" : "Label of parameter..."
-				},
-				"symbol" : 
-				{
-					"type" : "Type of parameter ...",
-					"value" : "Symbol of parameter ..."
 				}
 			}
 		}
-	},
+	],
+	"domainType" : "Point",
 	"referencing" : 
 	[
 		{
@@ -830,6 +799,36 @@
 			}
 		}
 	],
-	"type" : "CoverageCollection"
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Id of observed property...",
+				"label" : 
+				{
+					"en" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"en" : "Label of parameter..."
+				},
+				"symbol" : 
+				{
+					"type" : "Type of parameter ...",
+					"value" : "Symbol of parameter ..."
+				}
+			}
+		}
+	}
 }
-

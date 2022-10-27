@@ -1,0 +1,1 @@
+GET /edr/collections/pal_skandinavia/corridor?coords=LINESTRING(22.264824+60.454510,24.945831+60.192059,25.72088+62.24147,29.763530+62.601090)&corridor-width=50&width-units=km&datetime=200808051200&parameter-name=Temperature HTTP/1.0

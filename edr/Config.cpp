@@ -241,20 +241,26 @@ Config::Config(const string& configfile)
       itsObsEngineDisabled(false),
       itsGridEngineDisabled(false),
       itsPreventObsEngineDatabaseQuery(false),
-      itsMaxTimeSeriesCacheSize(10000)
+      itsMaxTimeSeriesCacheSize(10000),
+      itsMetaDataUpdatesDisabled(false),
+      itsMetaDataUpdateInterval(30)
 {
   try
   {
     itsIgnoreGridGeometriesWhenPreloadReady = true;
 
     if (configfile.empty())
-      throw Fmi::Exception(BCP, "TimeSeries configuration file cannot be empty");
+      throw Fmi::Exception(BCP, "EDR configuration file cannot be empty");
 
     boost::filesystem::path p = configfile;
     p.remove_filename();
     itsConfig.setIncludeDir(p.c_str());
 
     itsConfig.readFile(configfile.c_str());
+
+	// Metadata update settings
+    itsConfig.lookupValue("metadata_updates_disabled", itsMetaDataUpdatesDisabled);
+    itsConfig.lookupValue("metadata_update_interval", itsMetaDataUpdateInterval);
 
     // Obligatory settings
     itsDefaultLocaleName = itsConfig.lookup("locale").c_str();

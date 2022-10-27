@@ -78,11 +78,29 @@ EDRQueryType to_query_type_id(const std::string& query_type)
   
 std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ)
 {
-  out << "EDR query:"
-      << "\nhost: " << edrQ.host 
-      << "\ncollection_id: " << edrQ.collection_id 
-      << "\ninstance_id: " << edrQ.instance_id
-      << "\nquery_id: " << to_string(edrQ.query_id) << std::endl;
+  out << "EDR query:";
+  if(!edrQ.data_queries.empty())
+	{
+	  out << "\ndata_queries:";
+	  
+	  for(const auto& item : edrQ.data_queries)
+		{
+		  std::string data_queries;
+		  for(const auto& item2 : item.second)
+			{
+			  if(!data_queries.empty())
+				data_queries.append(", ");
+			  data_queries.append(to_string(item2));
+			}
+		  out << "\n " << item.first << ": [" + data_queries + "]";
+		}
+	}
+  
+  out << "\nhost: " << edrQ.host 
+	  << "\ncollection_id: " << edrQ.collection_id 
+	  << "\ninstance_id: " << edrQ.instance_id
+	  << "\nquery_type: " << to_string(edrQ.query_type)
+	  << "\nquery_id: " << to_string(edrQ.query_id) << std::endl;
 
   return out;
 }

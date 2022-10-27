@@ -8,7 +8,6 @@
 #include "Config.h"
 #include "Hash.h"
 #include "State.h"
-#include "CoverageJson.h"
 #include <engines/geonames/Engine.h>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
@@ -223,8 +222,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 
       // If query_type is position, radius, trajectory -> coords is required
       auto coords = Spine::optional_string(req.getParameter("coords"), "");
-      if((itsEDRQuery.query_type == EDRQueryType::Position || itsEDRQuery.query_type == EDRQueryType::Radius || itsEDRQuery.query_type == EDRQueryType::Trajectory || itsEDRQuery.query_type == EDRQueryType::Area) && coords.empty())
-		throw Fmi::Exception(BCP, "Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area query!");
+      if((itsEDRQuery.query_type == EDRQueryType::Position || itsEDRQuery.query_type == EDRQueryType::Radius || itsEDRQuery.query_type == EDRQueryType::Trajectory || itsEDRQuery.query_type == EDRQueryType::Area || itsEDRQuery.query_type == EDRQueryType::Corridor) && coords.empty())
+		throw Fmi::Exception(BCP, "Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area, Corridor query!");
 
 	  // If Trajectory + LINESTRINGZ,LINESTRINGM, LIENSTRINGZM, use these variables
 	  //	  boost::posix_time::ptime first_time(boost::posix_time::not_a_date_time);
@@ -238,8 +237,33 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 		  auto within_units  = Spine::optional_string(req.getParameter("within-units"), "");
 		  if(itsEDRQuery.query_type == EDRQueryType::Radius && (within.empty() || within_units.empty()))
 			throw Fmi::Exception(BCP, "Query parameter 'within' and 'within-units' must be defined for Radius query");
+
+		  if(itsEDRQuery.query_type == EDRQueryType::Corridor)
+			{
+			  auto corridor_width  = Spine::optional_string(req.getParameter("corridor-width"), "");
+			  auto width_units  = Spine::optional_string(req.getParameter("width-units"), "");
+			  if(corridor_width.empty() || width_units.empty())
+				throw Fmi::Exception(BCP, "Query parameter 'corridor-width' and 'width-units' must be defined for Corridor query!");
+
+			  within = corridor_width;
+			  within_units = width_units;
+
+			  /*
+			  auto corridor_width  = Spine::optional_string(req.getParameter("corridor-width"), "");
+			  auto width_units  = Spine::optional_string(req.getParameter("width-units"), "");
+			  if(corridor_width.empty() || width_units.empty())
+				throw Fmi::Exception(BCP, "Query parameter 'corridor-width' and 'width-units' must be defined for Corridor query!");
+			  
+			  auto radius = Fmi::stod(corridor_width);
+			  if(width_units == "mi")
+				radius = (radius * 1.60934);
+			  else if(width_units != "km")
+				throw Fmi::Exception(BCP, "Invalid width-units option '" + width_units + "' used, 'km' and 'mi' supported!");
+			  coords += (":"+Fmi::to_string(radius));
+			  */
+			}
 		  
-		  if(!within.empty() && !within_units.empty())
+		  if((itsEDRQuery.query_type == EDRQueryType::Radius || itsEDRQuery.query_type == EDRQueryType::Corridor)&& !within.empty() && !within_units.empty())
 			{
 			  auto radius = Fmi::stod(within);
 			  if(within_units == "mi")
@@ -249,15 +273,16 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			  coords += (":"+Fmi::to_string(radius));
 			}
 		  auto wkt = coords;
-		  if(itsEDRQuery.query_type == EDRQueryType::Trajectory)
+		  if(itsEDRQuery.query_type == EDRQueryType::Trajectory || itsEDRQuery.query_type == EDRQueryType::Corridor)
 			{
 			  // If query_type is Trajectory, check if is 2D, 3D, 4D
 			  boost::algorithm::to_upper(wkt);
 			  boost::algorithm::trim(wkt);
 			  auto geometry_name = wkt.substr(0, wkt.find("("));
 			  boost::algorithm::trim(geometry_name);
-			  auto geometry_values = wkt.substr(wkt.find("(")+1);
-			  geometry_values.resize(geometry_values.size()-1);
+			  auto len = (wkt.rfind(")") - wkt.find("(") - 1);
+			  auto geometry_values = wkt.substr(wkt.find("(")+1, len);
+			  auto radius = wkt.substr(wkt.rfind(")")+1);
 
 			  wkt = "LINESTRING(";
 			  if(geometry_name == "LINESTRINGZM")
@@ -313,6 +338,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			  if(wkt.back() == ',')
 				wkt.resize(wkt.size()-1);
 			  wkt.append(")");
+			  if(!radius.empty())
+				wkt.append(radius);
 			}
 
 		  req.addParameter("wkt", wkt);
@@ -406,8 +433,9 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 	  std::list<string> param_names;
 	  boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
 
-	  EDRMetaData emd;
+	  EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
 
+	  /*
 #ifndef WITHOUT_OBSERVATION
 	  if(!config.obsEngineDisabled())
 		{
@@ -420,6 +448,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, state.getQEngine());
 	  if(!config.gridEngineDisabled() && emd.parameters.empty())
 	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getGridEngine()));
+	  */
 
 	  if(emd.vertical_extent.levels.empty() && itsEDRQuery.query_type == EDRQueryType::Cube)
 		throw Fmi::Exception(BCP, "Error! Cube query not possible for '" + itsEDRQuery.collection_id + "', because there is no vertical extent!");

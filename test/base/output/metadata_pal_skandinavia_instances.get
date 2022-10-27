@@ -2,6 +2,16 @@
 	"instances" : 
 	[
 		{
+			"id" : "20080805T063100",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/20080805T063100",
+					"hreflang" : "en",
+					"rel" : "data"
+				}
+			],
+			"title" : "Origintime: 2008-08-05T06:31:00Z Starttime: 2008-08-05T03:00:00Z Endtime: 2008-08-09T06:00:00Z Timestep: 60",
 			"data_queries" : 
 			{
 				"area" : 
@@ -30,6 +40,41 @@
 							],
 							"query_type" : "area",
 							"title" : "Area query"
+						}
+					}
+				},
+				"corridor" : 
+				{
+					"link" : 
+					{
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/corridor",
+						"rel" : "data",
+						"templated" : true,
+						"title" : "Corridor query",
+						"variables" : 
+						{
+							"coords" : "Well Known Text LINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
+							"corridor-width" : "Corridor width",
+							"crs_details" : 
+							[
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								}
+							],
+							"default_output_format" : "CoverageJSON",
+							"description" : "Data within corridor",
+							"output_formats" : 
+							[
+								"CoverageJSON"
+							],
+							"query_type" : "corridor",
+							"title" : "Corridor query",
+							"width-units" : 
+							[
+								"km",
+								"mi"
+							]
 						}
 					}
 				},
@@ -160,10 +205,10 @@
 				{
 					"bbox" : 
 					[
-						-9.0987063271781388,
-						51.299999999999997,
-						49.0,
-						72.642084080345256
+						-9.0987,
+						51.3000,
+						49.0000,
+						72.6421
 					],
 					"crs" : "EPSG:4326"
 				},
@@ -182,279 +227,269 @@
 					]
 				}
 			},
-			"id" : "20080805T063100",
-			"links" : 
-			[
-				{
-					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/20080805T063100",
-					"hreflang" : "en",
-					"rel" : "data"
-				}
-			],
 			"parameter_names" : 
 			{
 				"DewPoint" : 
 				{
 					"description" : "DewPoint",
 					"id" : "DewPoint",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "DewPoint"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"FogIntensity" : 
 				{
 					"description" : "FogIntensity",
 					"id" : "FogIntensity",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "FogIntensity"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"HighCloudCover" : 
 				{
 					"description" : "HighCloudCover",
 					"id" : "HighCloudCover",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "HighCloudCover"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"HourlyMaximumGust" : 
 				{
 					"description" : "HourlyMaximumGust",
 					"id" : "HourlyMaximumGust",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "HourlyMaximumGust"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"Humidity" : 
 				{
 					"description" : "Humidity",
 					"id" : "Humidity",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "Humidity"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"KIndex" : 
 				{
 					"description" : "KIndex",
 					"id" : "KIndex",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "KIndex"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"LowCloudCover" : 
 				{
 					"description" : "LowCloudCover",
 					"id" : "LowCloudCover",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "LowCloudCover"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"MediumCloudCover" : 
 				{
 					"description" : "MediumCloudCover",
 					"id" : "MediumCloudCover",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "MediumCloudCover"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"MiddleAndLowCloudCover" : 
 				{
 					"description" : "MiddleAndLowCloudCover",
 					"id" : "MiddleAndLowCloudCover",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "MiddleAndLowCloudCover"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"PoP" : 
 				{
 					"description" : "PoP",
 					"id" : "PoP",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "PoP"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"Precipitation1h" : 
 				{
 					"description" : "Precipitation1h",
 					"id" : "Precipitation1h",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "Precipitation1h"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"PrecipitationForm" : 
 				{
 					"description" : "PrecipitationForm",
 					"id" : "PrecipitationForm",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "PrecipitationForm"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"PrecipitationType" : 
 				{
 					"description" : "PrecipitationType",
 					"id" : "PrecipitationType",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "PrecipitationType"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"Pressure" : 
 				{
 					"description" : "Pressure",
 					"id" : "Pressure",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "Pressure"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"ProbabilityThunderstorm" : 
 				{
 					"description" : "ProbabilityThunderstorm",
 					"id" : "ProbabilityThunderstorm",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "ProbabilityThunderstorm"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"RadiationGlobal" : 
 				{
 					"description" : "RadiationGlobal",
 					"id" : "RadiationGlobal",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "RadiationGlobal"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"RadiationLW" : 
 				{
 					"description" : "RadiationLW",
 					"id" : "RadiationLW",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "RadiationLW"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"Temperature" : 
 				{
 					"description" : "Temperature",
 					"id" : "Temperature",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "Temperature"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"TotalCloudCover" : 
 				{
 					"description" : "TotalCloudCover",
 					"id" : "TotalCloudCover",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "TotalCloudCover"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"WeatherSymbol1" : 
 				{
 					"description" : "WeatherSymbol1",
 					"id" : "WeatherSymbol1",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "WeatherSymbol1"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"WeatherSymbol3" : 
 				{
 					"description" : "WeatherSymbol3",
 					"id" : "WeatherSymbol3",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "WeatherSymbol3"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"WindDirection" : 
 				{
 					"description" : "WindDirection",
 					"id" : "WindDirection",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "WindDirection"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"WindSpeedMS" : 
 				{
 					"description" : "WindSpeedMS",
 					"id" : "WindSpeedMS",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "WindSpeedMS"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"WindUMS" : 
 				{
 					"description" : "WindUMS",
 					"id" : "WindUMS",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "WindUMS"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"WindVMS" : 
 				{
 					"description" : "WindVMS",
 					"id" : "WindVMS",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "WindVMS"
-					},
-					"type" : "Parameter"
+					}
 				},
 				"WindVectorMS" : 
 				{
 					"description" : "WindVectorMS",
 					"id" : "WindVectorMS",
+					"type" : "Parameter",
 					"observedProperty" : 
 					{
 						"label" : "WindVectorMS"
-					},
-					"type" : "Parameter"
+					}
 				}
-			},
-			"title" : "Origintime: 2008-08-05T06:31:00Z Starttime: 2008-08-05T03:00:00Z Endtime: 2008-08-09T06:00:00Z Timestep: 60"
+			}
 		}
 	],
 	"links" : 
@@ -466,4 +501,3 @@
 		}
 	]
 }
-

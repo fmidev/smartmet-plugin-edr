@@ -596,15 +596,6 @@ std::size_t Plugin::hash_value(const State& state,
     // EDR resource has to be fully included in the hash
     Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
 
-	auto timet_now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-	// 300 seconds
-	if(timet_now - itsTimeT > 300)
-	  itsTimeT = timet_now;
-	  
-	if(masterquery.isEDRMetaDataQuery())
-	  Fmi::hash_combine(hash, Fmi::hash_value(itsTimeT));		
-
     // Calculate a hash for the query. We can ignore the time series options
     // since we later on generate a hash for the generated time series.
     // In particular this permits us to ignore the endtime=x setting, which
@@ -3480,36 +3471,38 @@ void Plugin::checkInKeywordLocations(Query& masterquery)
   }
 }
 
-EDRMetaData Plugin::getProducerMetaData(const std::string& producer)
+EDRMetaData Plugin::getProducerMetaData(const std::string& producer) const
 {
+  auto metadata = itsMetaData.load();
+  EDRMetaData empty_emd;
+
 #ifndef WITHOUT_OBSERVATION
   if(!itsConfig.obsEngineDisabled() && isObsProducer(producer))
-    return CoverageJson::getProducerMetaData(producer, *itsObsEngine);
+	{
+	  if(metadata->observation.find(producer) != metadata->observation.end())
+	    return metadata->observation.at(producer).front();
+	  else 
+	    return empty_emd;
+	}
 #endif
-  EDRMetaData emd = CoverageJson::getProducerMetaData(producer, *itsQEngine);
-  if(!itsConfig.gridEngineDisabled() && emd.parameters.empty())
-    emd = CoverageJson::getProducerMetaData(producer, *itsGridEngine);
-  return emd;
+  if(metadata->querydata.find(producer) != metadata->querydata.end())
+    return metadata->querydata.at(producer).front();
+  
+  if(metadata->grid.find(producer) != metadata->grid.end())
+    return metadata->grid.at(producer).front();
+  
+  return empty_emd;
 }
   
 Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query, const Spine::LocationList& locations)
 {
+  // Atomic copy of metadata
+  auto metadata = itsMetaData.load();
+  
   if(edr_query.query_id == EDRQueryId::SpecifiedCollectionLocations)
-    return CoverageJson::processEDRMetaDataQuery(locations);
-    
-#ifndef WITHOUT_OBSERVATION
-  if(!itsConfig.gridEngineDisabled())
-    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsGridEngine, *itsObsEngine);
-  else if(!itsConfig.obsEngineDisabled())
-    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsObsEngine);
-  else
-    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine);
-#else
-  if(!itsConfig.gridEngineDisabled())
-    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine, *itsGridEngine);
-  else
-    return CoverageJson::processEDRMetaDataQuery(edr_query, *itsQEngine);
-#endif
+    return CoverageJson::parseEDRMetaData(locations, *metadata);
+
+  return CoverageJson::parseEDRMetaData(edr_query, *metadata);
 }
 
 boost::shared_ptr<std::string> Plugin::processQuery(
@@ -3522,11 +3515,11 @@ boost::shared_ptr<std::string> Plugin::processQuery(
   try
   {
     if(masterquery.isEDRMetaDataQuery())
-      {
-		const auto& edr_query = masterquery.edrQuery();
-		auto result = processMetaDataQuery(edr_query, masterquery.inKeywordLocations);
-		table.set(0, 0, result.toStyledString());
-		return {};
+      {	
+	const auto& edr_query = masterquery.edrQuery();	
+	auto result = processMetaDataQuery(edr_query, masterquery.inKeywordLocations);
+	table.set(0, 0, result.toStyledString());
+	return {};
       }
 
     checkInKeywordLocations(masterquery);
@@ -3641,6 +3634,18 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 	const auto& edr_query = masterquery.edrQuery();
 	const auto& producer = edr_query.collection_id;
 	EDRMetaData emd = getProducerMetaData(producer);
+
+	// Set precisions
+	std::map<std::string, int> precisions;
+	unsigned int i = 0;
+	for (const TS::OptionParsers::ParameterList::value_type& p : masterquery.poptions.parameters())
+	  {
+	    auto pname = p.name();
+	    boost::algorithm::to_lower(pname);
+	    emd.parameter_precisions[pname] = masterquery.precisions[i++];
+	  }
+	emd.parameter_precisions["__DEFAULT_PRECISION__"] = 4;
+	
 	Json::Value result = CoverageJson::formatOutputData(outputData, emd, edr_query.query_type, masterquery.levels, masterquery.coordinateFilter(),  masterquery.poptions.parameters());
 
 	table.set(0, 0, result.toStyledString());
@@ -3677,16 +3682,16 @@ void Plugin::query(const State& state,
     Query query(state, request, itsConfig);
 
     if(!query.isEDRMetaDataQuery())
-	  {
-		// Resolve locations for FMISDs,WMOs,LPNNs (https://jira.fmi.fi/browse/BRAINSTORM-1848)
-		Engine::Geonames::LocationOptions lopt =
-		  itsGeoEngine->parseLocations(query.fmisids, query.lpnns, query.wmos, query.language);
-				
-		const Spine::TaggedLocationList& locations = lopt.locations();
-		Spine::TaggedLocationList tagged_ll = query.loptions->locations();
-		tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
-		query.loptions->setLocations(tagged_ll);
-	  }
+      {
+	// Resolve locations for FMISDs,WMOs,LPNNs (https://jira.fmi.fi/browse/BRAINSTORM-1848)
+	Engine::Geonames::LocationOptions lopt =
+	  itsGeoEngine->parseLocations(query.fmisids, query.lpnns, query.wmos, query.language);
+	
+	const Spine::TaggedLocationList& locations = lopt.locations();
+	Spine::TaggedLocationList tagged_ll = query.loptions->locations();
+	tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
+	query.loptions->setLocations(tagged_ll);
+      }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
 
@@ -4118,8 +4123,6 @@ void Plugin::init()
 
   try
   {
-	itsTimeT = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
     // Time series cache
     itsTimeSeriesCache.reset(new TS::TimeSeriesGeneratorCache);
     itsTimeSeriesCache->resize(itsConfig.maxTimeSeriesCacheSize());
@@ -4181,6 +4184,22 @@ void Plugin::init()
                                        boost::bind(&Plugin::callRequestHandler, this, _1, _2, _3), true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
+
+	// Get metadata
+	updateMetaData();
+
+	if (Spine::Reactor::isShuttingDown())
+	  return;
+
+	// Begin the update loop
+	
+	if (!itsConfig.metaDataUpdatesDisabled())
+	  {
+		itsMetaDataUpdateTask.reset(new Fmi::AsyncTask("Plugin: metadata update task",
+														[this]() { metaDataUpdateLoop(); }));
+	  }
+
+
     // DONE
     itsReady = true;
   }
@@ -4189,6 +4208,59 @@ void Plugin::init()
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+void Plugin::metaDataUpdateLoop()
+{
+  try
+  {
+    while (!Spine::Reactor::isShuttingDown())
+    {
+      try
+      {
+        // update metadata every N seconds
+        // FIXME: do we need to put interruption points into methods called below?
+		// TODO
+        boost::this_thread::sleep_for(boost::chrono::seconds(itsConfig.metaDataUpdateInterval()));
+        updateMetaData();
+      }
+      catch (...)
+      {
+        Fmi::Exception exception(BCP, "Could not update capabilities!", nullptr);
+        exception.printError();
+      }
+    }
+  }
+  catch (...)
+  {
+    Fmi::Exception exception(BCP, "Could not update metadata!", nullptr);
+    exception.printError();
+  }
+}
+
+void Plugin::updateMetaData()
+{
+  try
+    {
+      // New shared pointer which will be atomically set into production
+      boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
+      
+      // Get medata of all producers
+      engine_meta_data->querydata = get_edr_metadata_qd("", *itsQEngine);
+      if(!itsConfig.gridEngineDisabled())
+	engine_meta_data->grid= get_edr_metadata_grid("", *itsGridEngine);
+#ifndef WITHOUT_OBSERVATION
+      if(!itsConfig.obsEngineDisabled())
+	engine_meta_data->observation = get_edr_metadata_obs("", *itsObsEngine);
+#endif
+      
+      itsMetaData.store(engine_meta_data);
+    }
+  catch (...)
+    {
+      throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    }
+}
+
 
 // ----------------------------------------------------------------------
 /*!

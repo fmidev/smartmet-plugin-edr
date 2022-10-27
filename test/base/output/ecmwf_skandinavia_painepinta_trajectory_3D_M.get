@@ -2,8 +2,10 @@
 	"coverages" : 
 	[
 		{
+			"type" : "Coverage",
 			"domain" : 
 			{
+				"type" : "Domain",
 				"axes" : 
 				{
 					"composite" : 
@@ -20,38 +22,37 @@
 						[
 							[
 								"2008-09-09T12:00:00Z",
-								24.483899999999998,
-								60.972299999999997,
-								1000.0
+								24.48390,
+								60.97230,
+								1000
 							],
 							[
 								"2008-09-09T18:00:00Z",
-								24.856200000000001,
-								61.101999999999997,
-								1000.0
+								24.85620,
+								61.10200,
+								1000
 							],
 							[
 								"2008-09-09T21:00:00Z",
-								25.019600000000001,
-								61.043599999999998,
-								1000.0
+								25.01960,
+								61.04360,
+								1000
 							],
 							[
 								"2008-09-10T00:00:00Z",
-								25.019600000000001,
-								60.927900000000001,
-								1000.0
+								25.01960,
+								60.92790,
+								1000
 							],
 							[
 								"2008-09-10T03:00:00Z",
-								24.973800000000001,
-								60.851599999999998,
-								1000.0
+								24.97380,
+								60.85160,
+								1000
 							]
 						]
 					}
-				},
-				"type" : "Domain"
+				}
 			},
 			"ranges" : 
 			{
@@ -69,49 +70,17 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						13.671103477478027,
-						11.623205184936523,
-						9.7459096908569336,
-						9.0682411193847656,
-						8.0449647903442383
+						13.7,
+						11.6,
+						9.7,
+						9.1,
+						8.0
 					]
-				}
-			},
-			"type" : "Coverage"
-		}
-	],
-	"domainType" : "Trajectory",
-	"parameters" : 
-	{
-		"temperature" : 
-		{
-			"description" : 
-			{
-				"en" : "temperature"
-			},
-			"observedProperty" : 
-			{
-				"id" : "Id of observed property...",
-				"label" : 
-				{
-					"en" : "Temperature"
-				}
-			},
-			"type" : "Parameter",
-			"unit" : 
-			{
-				"label" : 
-				{
-					"en" : "Label of parameter..."
-				},
-				"symbol" : 
-				{
-					"type" : "Type of parameter ...",
-					"value" : "Symbol of parameter ..."
 				}
 			}
 		}
-	},
+	],
+	"domainType" : "Trajectory",
 	"referencing" : 
 	[
 		{
@@ -149,6 +118,36 @@
 			}
 		}
 	],
-	"type" : "CoverageCollection"
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Id of observed property...",
+				"label" : 
+				{
+					"en" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"en" : "Label of parameter..."
+				},
+				"symbol" : 
+				{
+					"type" : "Type of parameter ...",
+					"value" : "Symbol of parameter ..."
+				}
+			}
+		}
+	}
 }
-
