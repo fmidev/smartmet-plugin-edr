@@ -435,6 +435,9 @@ ValueType DataValue::valueType() const
   return get_value_type(*this);
 }
 
+DataValue& DataValue::operator = (const DataValue&) = default;
+
+
 } // namespace Json
 } // namespace EDR
 } // namespace Plugin
