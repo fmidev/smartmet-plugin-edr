@@ -116,9 +116,9 @@ private:
   DataValue data_value; // Value is stored here
   std::vector<Value> data_value_vector; // // Vector of values
 
-  std::map<std::string, Value> values;
-  std::map<std::string, Value> children;
-  std::map<std::string, Value> key_map; // Map to temporary store values
+  std::map<std::string, Value> values; // Current level
+  std::map<std::string, Value> children; // Children
+  std::map<std::string, Value> key_map; // Temporary store of values
 
   ValueType valueType;
   std::string nodeKey;

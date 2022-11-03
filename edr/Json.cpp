@@ -14,7 +14,12 @@ namespace Json {
 
 #define UNINITIALIZED_KEY "__uninitialized__"
 #define COMMA_PLUS_NEWLINE ",\n"
-
+#define LEFT_ROUND_BRACKET_PLUS_NEWLINE "{\n"
+#define RIGHT_ROUND_BRACKET_PLUS_COMMA "},"
+#define LEFT_SQUARE_BRACKET_PLUS_NEWLINE "[\n"
+#define LEFT_SQUARE_BRACKET "["
+#define RIGHT_SQUARE_BRACKET "]"
+#define NEWLINE "\n"
 
 std::string value_type_to_string(ValueType type)
 {
@@ -48,63 +53,62 @@ std::string value_type_to_string(ValueType type)
 
 namespace
 {
-
   ValueType get_value_type(const DataValue& dv)
   {
     const auto& data = dv.get_data();
     
     if(boost::get<std::string>(&data) != nullptr)
       {
-	return ValueType::stringValue;
+		return ValueType::stringValue;
       }
     else if(boost::get<std::size_t>(&data) != nullptr)
       {
-	return ValueType::intValue;
+		return ValueType::intValue;
       }
     else if(boost::get<double>(&data) != nullptr)
       {
-	return ValueType::doubleValue;
+		return ValueType::doubleValue;
       }
     else if(boost::get<bool>(&data) != nullptr)
       {
-	return ValueType::boolValue;
+		return ValueType::boolValue;
       }
-
+	
     return ValueType::nullValue;
     
   }
- 
+  
   std::string data_value_to_string(const DataValue& dv, unsigned int precision)
   {
     std::string ret;
-
+	
     ValueType vt = get_value_type(dv);
 	
     const auto& data = dv.get_data();
     
     if(vt == ValueType::stringValue)
       {
-	ret = ("\""+*(boost::get<std::string>(&data))+"\"");
+		ret = ("\""+*(boost::get<std::string>(&data))+"\"");
       }
     else if(vt == ValueType::intValue)
       {
-	ret = Fmi::to_string(*(boost::get<std::size_t>(&data)));
+		ret = Fmi::to_string(*(boost::get<std::size_t>(&data)));
       }
     else if(vt == ValueType::boolValue)
       {
-	auto bool_value = *(boost::get<bool>(&data));
-	ret = (bool_value ? "true" : "false");
+		auto bool_value = *(boost::get<bool>(&data));
+		ret = (bool_value ? "true" : "false");
       }
     else if(vt == ValueType::doubleValue)
       {
-	Fmi::ValueFormatterParam fmtParam("null", "fixed");
-	Fmi::ValueFormatter formatter(fmtParam);
-	double value = *(boost::get<double>(&data));
-	ret = formatter.format(value, precision);
+		Fmi::ValueFormatterParam fmtParam("null", "fixed");
+		Fmi::ValueFormatter formatter(fmtParam);
+		double value = *(boost::get<double>(&data));
+		ret = formatter.format(value, precision);
       }
     else if(vt == ValueType::nullValue)
       {
-	ret = "null";
+		ret = "null";
       }
     
     return ret;
@@ -116,7 +120,7 @@ namespace
 Value::Value() : valueType(ValueType::nullValue), nodeKey(UNINITIALIZED_KEY), beginIter(data_value_vector.begin()), endIter(data_value_vector.end())
 {
 }
-
+  
 Value::Value(ValueType type) : valueType(type), nodeKey(UNINITIALIZED_KEY), beginIter(data_value_vector.begin()), endIter(data_value_vector.end())
 {
 }
@@ -222,24 +226,25 @@ Value& Value::operator[](const std::string& key)
     {
       // If key found in values
       if(values.find(key) != values.end())
-	{
-	  return values.at(key);
-	}
-      // If key forund in children
+		{
+		  return values.at(key);
+		}
+      // If key found in children
       if(children.find(key) != children.end())
-	{
-	  return children.at(key);
-	}
+		{
+		  return children.at(key);
+		}
+
       // Return object from key_map, it is later inserted into values or children
       if(key_map.find(key) == key_map.end())
-	key_map[key] = Value();
+		key_map[key] = Value();
       key_map[key].parentNode = this;
       key_map[key].nodeKey= key;
       return key_map[key];
     }
   
   nodeKey = key;
-
+  
   return *this;
 }
 
@@ -291,52 +296,52 @@ std::string Value::values_to_string(unsigned int level) const
   
   if(values.empty())
     return data_value_vector_to_string(level);
-
+  
   for(const auto& item : values)
     {      
       std::string value = (tabs(level+1)+"\""+item.first+"\" : ");
       const auto& value_obj = item.second;
       if(value_obj.data_value_vector.size())
-	{
-	  auto value_array = std::string();
-	  for(const auto& val : value_obj.data_value_vector)
-	    {	      
-	      if(val.valueType < ValueType::arrayValue)
 		{
-		  auto new_value = val.data_value.to_string(val.precision);
-		  if(!value_array.empty() && !new_value.empty())
-		    value_array.append(COMMA_PLUS_NEWLINE);		  
-		  value_array.append(tabs(level+2)+new_value);
+		  auto value_array = std::string();
+		  for(const auto& val : value_obj.data_value_vector)
+			{	      
+			  if(val.valueType < ValueType::arrayValue)
+				{
+				  auto new_value = val.data_value.to_string(val.precision);
+				  if(!value_array.empty() && !new_value.empty())
+					value_array.append(COMMA_PLUS_NEWLINE);		  
+				  value_array.append(tabs(level+2)+new_value);
+				}
+			  else
+				{
+				  auto new_value = val.to_string_impl(level+2);
+				  if(!value_array.empty() && !new_value.empty())
+					{
+					  if(boost::algorithm::starts_with(new_value, NEWLINE))
+						value_array.append(",");
+					  else
+						value_array.append(COMMA_PLUS_NEWLINE);
+					}
+				  value_array.append(new_value);
+				}
+			}
+		  if(boost::algorithm::starts_with(value_array, NEWLINE))
+			value.append(NEWLINE+tabs(level+1)+LEFT_SQUARE_BRACKET);
+		  else
+			value.append(NEWLINE+tabs(level+1)+LEFT_SQUARE_BRACKET_PLUS_NEWLINE);
+		  value.append(value_array+NEWLINE+tabs(level+1)+RIGHT_SQUARE_BRACKET);
 		}
-	      else
-		{
-		  auto new_value = val.to_string_impl(level+2);
-		  if(!value_array.empty() && !new_value.empty())
-		    {
-		      if(boost::algorithm::starts_with(new_value, "\n"))
-			value_array.append(",");
-		      else
-			value_array.append(COMMA_PLUS_NEWLINE);
-		    }
-		  value_array.append(new_value);
-		}
-	    }
-	  if(boost::algorithm::starts_with(value_array, "\n"))
-	    value.append("\n"+tabs(level+1)+"[");
-	  else
-	    value.append("\n"+tabs(level+1)+"[\n");
-	  value.append(value_array+"\n"+tabs(level+1)+"]");
-	}
       else
-	{
-	  DataValue dv = value_obj.data_value;
-	  std::string data = data_value_to_string(dv, value_obj.precision);
-	  if(data.empty())
-	    data = "error: data empty";
-	  value.append(data);
-	}
-      if(!result.empty() && !boost::algorithm::ends_with(result, "{\n") && !boost::algorithm::ends_with(result, "},") && !value.empty())
-	result.append(COMMA_PLUS_NEWLINE);
+		{
+		  DataValue dv = value_obj.data_value;
+		  std::string data = data_value_to_string(dv, value_obj.precision);
+		  if(data.empty())
+			data = "error: data empty";
+		  value.append(data);
+		}
+      if(!result.empty() && !boost::algorithm::ends_with(result, LEFT_ROUND_BRACKET_PLUS_NEWLINE) && !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) && !value.empty())
+		result.append(COMMA_PLUS_NEWLINE);
       
       result.append(value);
     }
@@ -352,49 +357,49 @@ std::string Value::data_value_vector_to_string(unsigned int level) const
     {
       std::string value;
       if(dv.valueType < ValueType::arrayValue)
-	value = dv.data_value.to_string(dv.precision);
+		value = dv.data_value.to_string(dv.precision);
       else
-	value = dv.to_string();
+		value = dv.to_string();
       if(!value.empty())
-	{
-	  if(!ret.empty() && !boost::algorithm::ends_with(ret, "{\n") && !boost::algorithm::ends_with(ret, "},"))
-	    ret.append(COMMA_PLUS_NEWLINE);
-	  ret.append(tabs(level+1)+value);
-	}
+		{
+		  if(!ret.empty() && !boost::algorithm::ends_with(ret, LEFT_ROUND_BRACKET_PLUS_NEWLINE) && !boost::algorithm::ends_with(ret, RIGHT_ROUND_BRACKET_PLUS_COMMA))
+			ret.append(COMMA_PLUS_NEWLINE);
+		  ret.append(tabs(level+1)+value);
+		}
     }
-
+  
   if(ret.empty())
     return ret;
-
-  return (tabs(level)+"[\n"+ret+"\n"+tabs(level)+"]");
+  
+  return (tabs(level)+LEFT_SQUARE_BRACKET_PLUS_NEWLINE+ret+NEWLINE+tabs(level)+RIGHT_SQUARE_BRACKET);
 }
-
+  
 std::string Value::to_string_impl(unsigned int level) const
 {
   if(valueType == ValueType::arrayValue)
-    return data_value_vector_to_string(level);
-
-  std::string result = (level == 0 ? "{\n" : ("\n"+tabs(level)+"{\n"));
+	return data_value_vector_to_string(level);
+  
+  std::string result = (level == 0 ? LEFT_ROUND_BRACKET_PLUS_NEWLINE : (NEWLINE+tabs(level)+LEFT_ROUND_BRACKET_PLUS_NEWLINE));
   
   result.append(values_to_string(level));
   std::string children_string;
   for(const auto& item : children)
-    {      
-      auto child_key = item.first;
-      auto child_value = item.second.to_string_impl(level+1);
-      if(!children_string.empty())
-	children_string.append(COMMA_PLUS_NEWLINE);
-      children_string.append(tabs(level+1)+"\""+child_key+"\" : "+ child_value);
-    }
-  if(!result.empty() && !boost::algorithm::ends_with(result, "{\n") && !boost::algorithm::ends_with(result, "},") && !boost::algorithm::ends_with(result, ",\n") && !children_string.empty())
-    result.append(COMMA_PLUS_NEWLINE);
-
+	{      
+	  auto child_key = item.first;
+	  auto child_value = item.second.to_string_impl(level+1);
+	  if(!children_string.empty())
+		children_string.append(COMMA_PLUS_NEWLINE);
+	  children_string.append(tabs(level+1)+"\""+child_key+"\" : "+ child_value);
+	}
+  if(!result.empty() && !boost::algorithm::ends_with(result, LEFT_ROUND_BRACKET_PLUS_NEWLINE) && !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) && !boost::algorithm::ends_with(result, COMMA_PLUS_NEWLINE) && !children_string.empty())
+	result.append(COMMA_PLUS_NEWLINE);
+  
   result.append(children_string);   
-  result.append("\n"+tabs(level)+"}");
+  result.append(NEWLINE+tabs(level)+"}");
   
   return result;
 }
-
+  
 std::string Value::to_string() const
 {
   return to_string_impl(0);
