@@ -5,8 +5,10 @@ This page describes more indepth EDR API
 
 - [Introduction](#introduction)
 - [EDR metadata queries](#edr-metadata-queries)
-  - [Collections metadata](#collections-metadata)
-  - [Collection instance metadata](#collection-instance-metadata)
+  - [Metadata of all ollections](#metadata-of-all-collections)
+  - [Metadata of specified collection](#metadata-of-specified-collection)
+  - [Metadata of all instances of specified collection](#metadata-of-all-instances-of-specified-collection)
+  - [Metadata of specified instance of specified collection](#metadata-of-specified-instance-of-specified-collection)
 - [EDR data queries]()
 
 ## Introduction
@@ -23,11 +25,9 @@ The EDR plugin fetches observation data via ObsEngine module and the forecast da
 
 Metadata requests are used to retrieve information about meteorological data provided by SmartMet server.
 
-### Collections metadata
+### Metadata of all collections
 
-Collections metadata query returns informaton of all available collections.
-
-Request:
+Information of all available collections can be requested as follows:
 
 ```
 {host_server}/edr/collections
@@ -35,21 +35,31 @@ Request:
 
 Response, see Annex 1.
 
-### Collection instance metadata
+### Metadata of specified collection
 
-Collection instance metadata query returns informaton of specified collection.
-
-Request:
+Information of specified collection can be requested as follows:
 
 ```
 {host_server}/edr/collections/{collection_id}
 ```
-Currently one of the collections SmartMet provides is named ecmwf_eurooppa_mallipinta, so the collection instance metadata request could be:
+Currently one of the collections SmartMet provides is named ecmwf_eurooppa_mallipinta, so the request could be:
 
 ```
 smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_mallipinta
 ```
 Response, see Annex 2.
+
+### Metadata of all instances of specified collection
+
+```
+{host_server}/edr/collections/{collection_id}/instances
+```
+
+### Metadata of specified instance of specified collection
+
+```
+{host_server}/edr/collections/{collection_id}/instances/{instance_id}
+```
 
 ## EDR data queries
 
