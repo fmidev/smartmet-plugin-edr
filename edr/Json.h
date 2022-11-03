@@ -3,6 +3,7 @@
 #include <boost/variant.hpp>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <iostream>
+#include <map>
 
 namespace SmartMet {
 namespace Plugin {
@@ -69,7 +70,8 @@ enum class ValueType{stringValue,doubleValue,intValue,boolValue,nullValue,arrayV
 	{
 	  data = value;
 	}
-        
+    DataValue& operator = (const DataValue&);
+
     std::string to_string(unsigned int precision = DEFAULT_PRECISION) const;
     ValueType valueType() const;
     const boost::variant<NullValue, std::string, double, std::size_t, bool>& get_data() const { return data; }
