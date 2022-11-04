@@ -9,28 +9,42 @@ This page describes more indepth EDR API
   - [Metadata of specified collection](#metadata-of-specified-collection)
   - [Metadata of all instances of specified collection](#metadata-of-all-instances-of-specified-collection)
   - [Metadata of specified instance of specified collection](#metadata-of-specified-instance-of-specified-collection)
-- [EDR data queries]()
+- [EDR data queries](edr-data-queries)
+  - [Query types](query-types)
+  - [Query paramaters](query-parameters)
+  - [Position query](position-query)
+  - [Radius query](radius-query)
+  - [Area query](area-query)
+  - [Cube query](cube-query)
+  - [Trajectory query](trajectory-query)
+  - [Corridor query](corridor-query)
 
 ## Introduction
 
-The EDR plugin offers a convenient way to fetch the meteorological time
-series information over the Web using the HTTP protocol according to a specific
-time or time interval chosen by the user. EDR plugin implements EDR API as specified in 'OGC API - Environmental Data Retrieval Standard' document (https://ogcapi.ogc.org/edr/)
+EDR plugin implements EDR API as specified in OGC API - 'Environmental Data Retrieval Standard' document (https://ogcapi.ogc.org/edr/). The specification documens describes the API as follows *The Environmental Data Retrieval (EDR) Application Programming Interface (API) provides a family of lightweight query interfaces to access spatio-temporal data resources by requesting data at a Position, within an Area, along a Trajectory or through a Corridor.*
 
 EDR plugin is used to retrieve small subsets from large collections of environmental data, such as meteorological forecasts or observations. The important aspect is that the data can be unambiguously specified by spatio-temporal coordinates.
 
-The EDR plugin fetches observation data via ObsEngine module and the forecast data is fetched via the QEngine or GridEngine module. So, these modules should be in place when using the TimeSeries plugin.
+The EDR plugin fetches observation data via ObsEngine module and the forecast data is fetched via the QEngine or GridEngine module. So, these modules should be in place when using the EDR plugin.
+
+The following notations are used in the following chapters:
+
+{host} = Base URI for the API server
+{collection_id_} = an identifier for a specific collection of data
+{instance_id_} = an identifier for a specific version or instance of a collection of data
+{query_type} = an identifier for a specific query pattern to retrieve data from a specific collection of data
 
 ## EDR metadata queries
 
-Metadata requests are used to retrieve information about meteorological data provided by SmartMet server.
+Metadata requests are used to retrieve metadata information about data provided by SmartMet server. Meatadata describes sptio-temporal attribues of each collection as well as supported query types.
+
 
 ### Metadata of all collections
 
 Information of all available collections can be requested as follows:
 
 ```
-{host_server}/edr/collections
+{host}/edr/collections
 ```
 
 Response, see Annex 1.
@@ -40,7 +54,7 @@ Response, see Annex 1.
 Information of specified collection can be requested as follows:
 
 ```
-{host_server}/edr/collections/{collection_id}
+{host}/edr/collections/{collection_id}
 ```
 Currently one of the collections SmartMet provides is named ecmwf_eurooppa_mallipinta, so the request could be:
 
@@ -52,7 +66,13 @@ Response, see Annex 2.
 ### Metadata of all instances of specified collection
 
 ```
-{host_server}/edr/collections/{collection_id}/instances
+{host}/edr/collections/{collection_id}/instances
+```
+
+Currently one of the collections SmartMet provides is named ecmwf_eurooppa_mallipinta, so the request could be:
+
+```
+smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_mallipinta/instances
 ```
 
 ### Metadata of specified instance of specified collection
@@ -60,7 +80,58 @@ Response, see Annex 2.
 ```
 {host_server}/edr/collections/{collection_id}/instances/{instance_id}
 ```
+In data provided by FMI the {instance_id} is a timestamp, so the actual request could be:
+
+```
+smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_painepinta/instances/20221103T000000
+```
 
 ## EDR data queries
 
+EDR data requests are used to retrieve spatio-temporal data from SmartMet server. 
+
+### Query types
+
+The following query types are supported by EDR plugin.
+
+| Path Template | Query Type | Description     |
+| :---        |    :----   |          :--- |
+| /collections/{collection_id}/position      | Position       | Return data for the requested position   |
+| /collections/{collection_id}/radius      | Radius       | Return data within a given radius of a position   |
+| /collections/{collection_id}/area      | Area       | Return data for the requested area   |
+| /collections/{collection_id}/cube      | Cube       | Return data for a spatial cube   |
+| /collections/{collection_id}/trajectory      | Trajectory       | Return data along a defined trajectory   |
+| /collections/{collection_id}/corridor      | Corridor       | Return data within spatio-temporal corridor   |
+
+### Query parameters
+
+Query parameters are used in URLs to define the resources which are returned on a request. Some parameters are shared by all query types while the other are only relevant for some query types. The following are defined as standard shared parameters by all query types:
+
+- coords
+- datetime
+- parameter-name
+
+### Position query
+
 ...
+
+### Radius query
+
+...
+
+### Area query
+
+...
+
+### Cube query
+
+...
+
+### Trajectory query
+
+...
+
+### Corridor query
+
+...
+
