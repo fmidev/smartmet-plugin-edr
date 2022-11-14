@@ -27,11 +27,11 @@ BuildRequires: fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 22.9.5
+BuildRequires: smartmet-library-spine-devel >= 22.10.26
 BuildRequires: smartmet-library-locus-devel >= 22.6.17
 BuildRequires: smartmet-library-macgyver-devel >= 22.10.20
-BuildRequires: smartmet-library-grid-content-devel >= 22.10.20
-BuildRequires: smartmet-library-grid-files-devel >= 22.10.20
+BuildRequires: smartmet-library-grid-content-devel >= 22.11.8
+BuildRequires: smartmet-library-grid-files-devel >= 22.11.8
 BuildRequires: smartmet-library-newbase-devel >= 22.8.29
 BuildRequires: smartmet-library-gis-devel >= 22.9.28
 BuildRequires: smartmet-library-timeseries-devel >= 22.10.25
@@ -41,7 +41,7 @@ BuildRequires: smartmet-engine-observation-devel >= 22.10.12
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 22.10.5
 BuildRequires: smartmet-engine-gis-devel >= 22.10.5
-BuildRequires: smartmet-engine-grid-devel >= 22.10.20
+BuildRequires: smartmet-engine-grid-devel >= 22.11.8
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 22.10.12
@@ -52,14 +52,14 @@ Requires: smartmet-library-gis >= 22.9.28
 Requires: smartmet-library-locus >= 22.6.17
 Requires: smartmet-library-macgyver >= 22.10.20
 Requires: smartmet-library-newbase >= 22.8.29
-Requires: smartmet-library-spine >= 22.9.5
+Requires: smartmet-library-spine >= 22.10.26
 Requires: smartmet-library-timeseries >= 22.10.25
 Requires: smartmet-library-gis >= 22.9.28
 Requires: smartmet-engine-geonames >= 22.10.5
 Requires: smartmet-engine-querydata >= 22.10.5
 Requires: smartmet-engine-gis >= 22.10.5
-Requires: smartmet-engine-grid >= 22.10.20
-Requires: smartmet-server >= 22.10.5
+Requires: smartmet-engine-grid >= 22.11.8
+Requires: smartmet-server >= 22.11.7
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -67,12 +67,12 @@ Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 22.10.7
-#TestRequires: smartmet-library-spine-plugin-test >= 22.9.5
+#TestRequires: smartmet-library-spine-plugin-test >= 22.10.26
 #TestRequires: smartmet-library-newbase-devel >= 22.8.29
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 22.4.14
 #TestRequires: smartmet-test-data >= 20.12.1
-#TestRequires: smartmet-engine-grid-test >= 22.10.20
+#TestRequires: smartmet-engine-grid-test >= 22.11.8
 #TestRequires: smartmet-library-gis >= 22.9.28
 #TestRequires: smartmet-engine-geonames >= 22.10.5
 #TestRequires: smartmet-engine-gis >= 22.10.5
@@ -80,7 +80,7 @@ Provides: %{SPECNAME}
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 22.10.12
 %endif
-#TestRequires: smartmet-engine-grid >= 22.10.20
+#TestRequires: smartmet-engine-grid >= 22.11.8
 #TestRequires: gdal34
 
 %description
@@ -111,7 +111,7 @@ rm -rf $RPM_BUILD_ROOT
 - Valid locations in Location query can now be defined in configuration file by using keywords
 - More information of locations added into metadata (properties section)
 
-* Thu Nov 3 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.11.3-1.fmi
+* Tue Nov 8 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.11.8-1.fmi
 - Code cleaned, started writing plugin documentation
 
 * Thu Oct 27 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.10.27-1.fmi
