@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/position?coords=MULTIPOINTZ((24.9384+60.1699+500),(24.8562+61.1020+700),(25.0196+60.9279+925))&datetime=200809091200&parameter-name=Temperature HTTP/1.0

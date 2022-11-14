@@ -20,8 +20,8 @@
 			"link" : 
 			{
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area",
+				"hreflang" : "en",
 				"rel" : "data",
-				"templated" : true,
 				"title" : "Area query",
 				"variables" : 
 				{
@@ -49,8 +49,8 @@
 			"link" : 
 			{
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/corridor",
+				"hreflang" : "en",
 				"rel" : "data",
-				"templated" : true,
 				"title" : "Corridor query",
 				"variables" : 
 				{
@@ -84,8 +84,8 @@
 			"link" : 
 			{
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/locations",
+				"hreflang" : "en",
 				"rel" : "data",
-				"templated" : true,
 				"title" : "Locations query",
 				"variables" : 
 				{
@@ -112,8 +112,8 @@
 			"link" : 
 			{
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position",
+				"hreflang" : "en",
 				"rel" : "data",
-				"templated" : true,
 				"title" : "Position query",
 				"variables" : 
 				{
@@ -141,8 +141,8 @@
 			"link" : 
 			{
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/radius",
+				"hreflang" : "en",
 				"rel" : "data",
-				"templated" : true,
 				"title" : "Radius query",
 				"variables" : 
 				{
@@ -175,8 +175,8 @@
 			"link" : 
 			{
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/trajectory",
+				"hreflang" : "en",
 				"rel" : "data",
-				"templated" : true,
 				"title" : "Trajectory query",
 				"variables" : 
 				{

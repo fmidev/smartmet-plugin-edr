@@ -4,8 +4,8 @@
 //#include <json/json.h>
 #include "Json.h"
 #include <spine/Parameter.h>
-#include <spine/Location.h>
 #include <timeseries/TimeSeriesInclude.h>
+//#include <spine/Location.h>
 
 namespace SmartMet {
 namespace Plugin {
@@ -19,7 +19,7 @@ formatOutputData(TS::OutputData &outputData, const EDRMetaData &emd,
                  const std::vector<Spine::Parameter> &query_parameters);
 
 Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData& emd);
-Json::Value parseEDRMetaData(const Spine::LocationList& locations, const EngineMetaData& emd);
+Json::Value reportError(int code, const std::string& description);
 
 } // namespace CoverageJson
 } // namespace EDR

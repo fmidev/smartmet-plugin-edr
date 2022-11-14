@@ -127,7 +127,9 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
     {      
       format = "ascii";
       Spine::HTTP::Request req = request;
-      auto resource = req.getResource();	
+      auto resource = req.getResource();
+	  //	  std::cout << "BEFORE: " << resource << ", " << Spine::HTTP::urlencode(resource) << ", " << Spine::HTTP::urldecode(resource) << std::endl;
+	  //	  resource = Spine::HTTP::urlencode(resource);
       std::vector<std::string> resource_parts;
       boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
       if(resource_parts.size() > 1 && resource_parts.at(0).empty())
@@ -150,10 +152,18 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 						  if(resource_parts.at(3) == "instances")
 							{
 							  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
-							  if(resource_parts.size() > 4)
+							  if(resource_parts.size() > 4 && !resource_parts.at(4).empty())
 								{
 								  itsEDRQuery.instance_id = resource_parts.at(4);
-								  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;				  
+								  req.addParameter("origintime", itsEDRQuery.instance_id);
+								  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;
+								  if(resource_parts.size() > 5 && !resource_parts.at(5).empty())
+									{
+									  auto query_type_id = to_query_type_id(resource_parts.at(5));
+									  itsEDRQuery.query_type = query_type_id;
+									  if(itsEDRQuery.query_type == EDRQueryType::Locations)
+										itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
+									}
 								}
 							}
 						  else
@@ -161,13 +171,17 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 							  itsEDRQuery.query_type = to_query_type_id(resource_parts.at(3));
 							  if(itsEDRQuery.query_type == EDRQueryType::Locations)
 								itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
+							  if(resource_parts.size() > 4)
+								{
+								  itsEDRQuery.instance_id = resource_parts.at(4);
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-      
+
 	  const auto& dataQueries = config.getSupportedQueries();
 	  for(const auto& dataQueryItem : dataQueries)
 		{
@@ -176,6 +190,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 		  for(const auto& dq : queries)
 		    {
 			  itsEDRQuery.data_queries[producer].insert(to_query_type_id(dq));
+			  if(!data_query_list.empty())
+				data_query_list += ",";
 			  data_query_list += dq;
 		    }
 		}
@@ -184,31 +200,17 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 	  
       if(itsEDRQuery.query_id == EDRQueryId::DataQuery && supportedQueries.find(itsEDRQuery.query_type) == supportedQueries.end())
 		{
-		  throw Fmi::Exception(BCP, "Invalid query type '" + to_string(itsEDRQuery.query_type) + "'. The following queries supported: " + data_query_list + " for producer " + itsEDRQuery.collection_id + "!");
+		  throw Fmi::Exception(BCP, "Invalid query type '" + to_string(itsEDRQuery.query_type) + "'. The following queries supported: " + data_query_list + " for collection " + itsEDRQuery.collection_id + "!");
 		}
 	  
       itsEDRQuery.host = resolve_host(req);
 
       req.removeParameter("f"); // remove f parameter, curretly only JSON is supported
-      if(!req.getQueryString().empty() && req.getParameterList("inkeyword").empty())
-		itsEDRQuery.query_id = EDRQueryId::DataQuery;
 
-	  keyword = Spine::optional_string(req.getParameter("keyword"), "");
-	  auto searchName = req.getParameterList("inkeyword");
-	  if (searchName.empty() && itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionLocations)
-		searchName = {"synop_fi"};
-	  if (!searchName.empty())
-		{
-		  for (const std::string& keyword : searchName)
-			{
-			  Locus::QueryOptions opts;
-			  opts.SetLanguage(language);
-			  Spine::LocationList places = state.getGeoEngine().keywordSearch(opts, keyword);
-			  if (places.empty())
-				throw Fmi::Exception(BCP, "No locations for keyword " + std::string(keyword) + " found");
-			  inKeywordLocations.insert(inKeywordLocations.end(), places.begin(), places.end());
-			}
-		}
+	  EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
+
+      if(!req.getQueryString().empty())// && req.getParameterList("inkeyword").empty())
+		itsEDRQuery.query_id = EDRQueryId::DataQuery;
 
       // If meta data query return from here
       if(itsEDRQuery.query_id != EDRQueryId::DataQuery)
@@ -225,7 +227,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       if((itsEDRQuery.query_type == EDRQueryType::Position || itsEDRQuery.query_type == EDRQueryType::Radius || itsEDRQuery.query_type == EDRQueryType::Trajectory || itsEDRQuery.query_type == EDRQueryType::Area || itsEDRQuery.query_type == EDRQueryType::Corridor) && coords.empty())
 		throw Fmi::Exception(BCP, "Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area, Corridor query!");
 
-	  // If Trajectory + LINESTRINGZ,LINESTRINGM, LIENSTRINGZM, use these variables
+	  // If Trajectory + LINESTRINGZ,LINESTRINGM, LINESTRINGZM, use these variables
 	  //	  boost::posix_time::ptime first_time(boost::posix_time::not_a_date_time);
 	  //	  boost::posix_time::ptime last_time(boost::posix_time::not_a_date_time);
 	  //	  std::set<double> levels;
@@ -247,20 +249,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 
 			  within = corridor_width;
 			  within_units = width_units;
-
-			  /*
-			  auto corridor_width  = Spine::optional_string(req.getParameter("corridor-width"), "");
-			  auto width_units  = Spine::optional_string(req.getParameter("width-units"), "");
-			  if(corridor_width.empty() || width_units.empty())
-				throw Fmi::Exception(BCP, "Query parameter 'corridor-width' and 'width-units' must be defined for Corridor query!");
-			  
-			  auto radius = Fmi::stod(corridor_width);
-			  if(width_units == "mi")
-				radius = (radius * 1.60934);
-			  else if(width_units != "km")
-				throw Fmi::Exception(BCP, "Invalid width-units option '" + width_units + "' used, 'km' and 'mi' supported!");
-			  coords += (":"+Fmi::to_string(radius));
-			  */
 			}
 		  
 		  if((itsEDRQuery.query_type == EDRQueryType::Radius || itsEDRQuery.query_type == EDRQueryType::Corridor)&& !within.empty() && !within_units.empty())
@@ -273,6 +261,38 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			  coords += (":"+Fmi::to_string(radius));
 			}
 		  auto wkt = coords;
+		  if(itsEDRQuery.query_type == EDRQueryType::Position)
+			{
+			  // If query_type is Position and MULTIPOINTZ
+			  boost::algorithm::to_upper(wkt);
+			  boost::algorithm::trim(wkt);
+			  auto geometry_name = wkt.substr(0, wkt.find("("));
+			  if(geometry_name == "MULTIPOINTZ")
+				{
+				  boost::algorithm::trim(geometry_name);
+				  auto len = (wkt.rfind(")") - wkt.find("(") - 1);
+				  auto geometry_values = wkt.substr(wkt.find("(")+1, len);
+				  std::vector<string> coordinates;
+				  boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
+
+				  wkt = "MULTIPOINT(";
+				  for(auto& coordinate_item : coordinates)
+					{
+					  boost::algorithm::trim(coordinate_item);
+					  if(coordinate_item.front() == '(' && coordinate_item.back() == ')')
+						coordinate_item = coordinate_item.substr(1, coordinate_item.length()-2);
+					  std::vector<string> parts;
+					  boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
+					  if(parts.size() != 3)
+						throw Fmi::Exception(BCP, "Invalid MULTIPOINTZ definition, longitude, latitude, level expected: " + coords);
+					  wkt.append(parts[0] + " " + parts[1]+",");
+					  itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
+					}
+				  wkt.resize(wkt.size()-1);
+				  wkt.append(")");
+				}
+			}
+
 		  if(itsEDRQuery.query_type == EDRQueryType::Trajectory || itsEDRQuery.query_type == EDRQueryType::Corridor)
 			{
 			  // If query_type is Trajectory, check if is 2D, 3D, 4D
@@ -349,12 +369,23 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 		  if(itsEDRQuery.query_type == EDRQueryType::Locations)
 			{
 			  if(resource_parts.size() != 5)
-				throw Fmi::Exception(BCP, "Missing 'locationId' in Locations query! Format /edr/collections/{collectionId}/locations/{locationId}?..., e.g. .../locations/helsinki?...");
-			  const auto& location = resource_parts.at(4);
-			  if(location.size() > 0 && (location.at(0) == '-' || isdigit(location.at(0))))
-				req.addParameter("geoid", location);
+				throw Fmi::Exception(BCP, "Missing 'locationId' in Locations query! Format '/edr/collections/{collectionId}/locations/{locationId}'");
+
+			  const auto& location_id = resource_parts.at(4);
+
+			  if(!emd.locations)
+				throw Fmi::Exception(BCP, "Location query is not supported by collection '" + itsEDRQuery.collection_id + "'!");
+			  
+			  if(emd.locations->find(location_id) == emd.locations->end())
+				throw Fmi::Exception(BCP, "Invalid locationId '" + location_id+"' for collection '" + itsEDRQuery.collection_id + "'! Please check metadata for valid locationIds!");
+
+			  const auto& location_info = emd.locations->at(location_id);
+
+			  // Corrently locationId is either fmisid or geoid
+			  if(location_info.type == "fmisid")
+				req.addParameter("fmisid", location_id);
 			  else
-				req.addParameter("place", location);
+				req.addParameter("geoid", location_id);
 			}
 		  else if(itsEDRQuery.query_type == EDRQueryType::Cube)
 			{
@@ -428,27 +459,9 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       // EDR parameter-name
       auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
       
-
 	  // Check valid parameters for requested producer
 	  std::list<string> param_names;
 	  boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
-
-	  EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
-
-	  /*
-#ifndef WITHOUT_OBSERVATION
-	  if(!config.obsEngineDisabled())
-		{
-		  auto obs_station_types = state.getObsEngine()->getValidStationTypes();
-		  if(obs_station_types.find(itsEDRQuery.collection_id) != obs_station_types.end())
-			emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getObsEngine()));
-		}
-#endif
-	  if(emd.parameters.empty())
-	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, state.getQEngine());
-	  if(!config.gridEngineDisabled() && emd.parameters.empty())
-	    emd = CoverageJson::getProducerMetaData(itsEDRQuery.collection_id, *(state.getGridEngine()));
-	  */
 
 	  if(emd.vertical_extent.levels.empty() && itsEDRQuery.query_type == EDRQueryType::Cube)
 		throw Fmi::Exception(BCP, "Error! Cube query not possible for '" + itsEDRQuery.collection_id + "', because there is no vertical extent!");

@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.11.3
+Version: 22.11.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Mon Nov 14 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.11.14-1.fmi
+- Fixed Position query for collection instnces
+- Valid locations in Location query can now be defined in configuration file by using keywords
+- More information of locations added into metadata (properties section)
+
 * Thu Nov 3 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.11.3-1.fmi
 - Code cleaned, started writing plugin documentation
 

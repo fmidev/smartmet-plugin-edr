@@ -5,6 +5,7 @@
 #include <map>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/optional.hpp>
+#include "LocationInfo.h"
 
 namespace SmartMet
 {
@@ -67,6 +68,7 @@ namespace EDR
     std::set<std::string> parameter_names;
     std::map<std::string, edr_parameter> parameters;
     std::map<std::string, int> parameter_precisions;
+	const SupportedLocations* locations{nullptr}; // supported locations
     int getPrecision(const std::string& parameter_name) const;
   };
 
@@ -84,6 +86,8 @@ namespace EDR
 	EDRProducerMetaData grid;
 	EDRProducerMetaData observation;
   };
+
+  void update_location_info(EngineMetaData& emd, const SupportedProducerLocations& spl);
 
 }  // namespace EDR
 }  // namespace Plugin

@@ -3494,13 +3494,10 @@ EDRMetaData Plugin::getProducerMetaData(const std::string& producer) const
   return empty_emd;
 }
   
-Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query, const Spine::LocationList& locations)
+Json::Value Plugin::processMetaDataQuery(const EDRQuery& edr_query)
 {
   // Atomic copy of metadata
   auto metadata = itsMetaData.load();
-  
-  if(edr_query.query_id == EDRQueryId::SpecifiedCollectionLocations)
-    return CoverageJson::parseEDRMetaData(locations, *metadata);
 
   return CoverageJson::parseEDRMetaData(edr_query, *metadata);
 }
@@ -3516,13 +3513,13 @@ boost::shared_ptr<std::string> Plugin::processQuery(
   {
     if(masterquery.isEDRMetaDataQuery())
       {	
-	const auto& edr_query = masterquery.edrQuery();	
-	auto result = processMetaDataQuery(edr_query, masterquery.inKeywordLocations);
-	table.set(0, 0, result.toStyledString());
-	return {};
+		const auto& edr_query = masterquery.edrQuery();	
+		auto result = processMetaDataQuery(edr_query);
+		table.set(0, 0, result.toStyledString());
+		return {};
       }
 
-    checkInKeywordLocations(masterquery);
+	//    checkInKeywordLocations(masterquery);
 
     // if only location related parameters queried, use shortcut
     if (TS::is_plain_location_query(masterquery.poptions.parameters()))
@@ -3634,6 +3631,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 	const auto& edr_query = masterquery.edrQuery();
 	const auto& producer = edr_query.collection_id;
 	EDRMetaData emd = getProducerMetaData(producer);
+	emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
 
 	// Set precisions
 	std::map<std::string, int> precisions;
@@ -3644,7 +3642,8 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 	    boost::algorithm::to_lower(pname);
 	    emd.parameter_precisions[pname] = masterquery.precisions[i++];
 	  }
-	emd.parameter_precisions["__DEFAULT_PRECISION__"] = 4;
+
+	//	std::cout << "RESULT: " << outputData << std::endl;
 	
 	Json::Value result = CoverageJson::formatOutputData(outputData, emd, edr_query.query_type, masterquery.levels, masterquery.coordinateFilter(),  masterquery.poptions.parameters());
 
@@ -3681,111 +3680,98 @@ void Plugin::query(const State& state,
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
     Query query(state, request, itsConfig);
 
-    if(!query.isEDRMetaDataQuery())
-      {
-	// Resolve locations for FMISDs,WMOs,LPNNs (https://jira.fmi.fi/browse/BRAINSTORM-1848)
-	Engine::Geonames::LocationOptions lopt =
-	  itsGeoEngine->parseLocations(query.fmisids, query.lpnns, query.wmos, query.language);
+	if(!query.isEDRMetaDataQuery())
+	  {
+		// Resolve locations for FMISDs,WMOs,LPNNs (https://jira.fmi.fi/browse/BRAINSTORM-1848)
+		Engine::Geonames::LocationOptions lopt =
+		  itsGeoEngine->parseLocations(query.fmisids, query.lpnns, query.wmos, query.language);
+		
+		const Spine::TaggedLocationList& locations = lopt.locations();
+		Spine::TaggedLocationList tagged_ll = query.loptions->locations();
+		tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
+		query.loptions->setLocations(tagged_ll);
+	  }
 	
-	const Spine::TaggedLocationList& locations = lopt.locations();
-	Spine::TaggedLocationList tagged_ll = query.loptions->locations();
-	tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
-	query.loptions->setLocations(tagged_ll);
-      }
-
-    high_resolution_clock::time_point t2 = high_resolution_clock::now();
-
-    data.setPaging(0, 1);
-
-    std::string producer_option =
-        Spine::optional_string(request.getParameter(PRODUCER_PARAM),
-                               Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
-
-    boost::algorithm::to_lower(producer_option);
-    // At least one of location specifiers must be set
-
-
-	/*
-#ifndef WITHOUT_OBSERVATION
-    if (query.fmisids.empty() && query.lpnns.empty() && query.wmos.empty() &&
-        query.boundingBox.empty() && !is_flash_or_mobile_producer(producer_option) &&
-        query.loptions->locations().empty())
-#else
-    if (query.loptions->locations().empty())
-#endif
-      throw Fmi::Exception(BCP, "No location option given!");
-	*/
-
-    // The formatter knows which mimetype to send
-
-    Spine::TableFormatter* fmt = nullptr;
-
-    if (strcasecmp(query.format.c_str(), "IMAGE") == 0)
-      fmt = new Spine::ImageFormatter();
-    else if (strcasecmp(query.format.c_str(), "FILE") == 0)
-    {
-      fmt = new Spine::ImageFormatter();
-      auto* qStreamer = new QueryServer::QueryStreamer();
-      queryStreamer.reset(qStreamer);
-    }
-    else if (strcasecmp(query.format.c_str(), "INFO") == 0)
-      fmt = Spine::TableFormatterFactory::create("debug");
-    else
-      fmt = Spine::TableFormatterFactory::create(query.format);
-
-    bool gridEnabled = false;
-    if (strcasecmp(query.forecastSource.c_str(), "grid") == 0 ||
-        (query.forecastSource.length() == 0 &&
-         strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))
-      gridEnabled = true;
+	high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	
-    boost::shared_ptr<Spine::TableFormatter> formatter(fmt);
-    std::string mime = "application/json";
-    response.setHeader("Content-Type", mime);
-
-    // Calculate the hash value for the product.
-
-    std::size_t product_hash = Fmi::bad_hash;
-
-    try
-    {
-      product_hash = hash_value(state, query, request);
-    }
-    catch (...)
-    {
-      if (!gridEnabled)
-        throw Fmi::Exception(BCP, "Operation failed!", NULL);
-    }
-
-    high_resolution_clock::time_point t3 = high_resolution_clock::now();
-
-    std::string timeheader = Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
-                             Fmi::to_string(duration_cast<microseconds>(t3 - t2).count());
-
-    if (product_hash != Fmi::bad_hash)
-    {
-      response.setHeader("ETag", fmt::format("\"{:x}-edr\"", product_hash));
-
-      // If the product is cacheable and etag was requested, respond with etag only
-
-      if (request.getHeader("X-Request-ETag"))
-      {
-        response.setStatus(Spine::HTTP::Status::no_content);
-        return;
-      }
-    }
-
-    // If obj is not nullptr it is from cache
-    auto obj = processQuery(state, data, query, queryStreamer, product_hash);
-
-    if (obj)
-    {
-      response.setHeader("X-Duration", timeheader);
-      response.setHeader("X-EDR-Cache", "yes");
-      response.setContent(obj);
-      return;
-    }
-
+	data.setPaging(0, 1);
+	
+	std::string producer_option =
+	  Spine::optional_string(request.getParameter(PRODUCER_PARAM),
+							 Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
+	
+	boost::algorithm::to_lower(producer_option);	
+	
+	// The formatter knows which mimetype to send
+	
+	Spine::TableFormatter* fmt = nullptr;
+		
+	if (strcasecmp(query.format.c_str(), "IMAGE") == 0)
+		  fmt = new Spine::ImageFormatter();
+	else if (strcasecmp(query.format.c_str(), "FILE") == 0)
+	  {
+		fmt = new Spine::ImageFormatter();
+		auto* qStreamer = new QueryServer::QueryStreamer();
+		queryStreamer.reset(qStreamer);
+	  }
+	else if (strcasecmp(query.format.c_str(), "INFO") == 0)
+	  fmt = Spine::TableFormatterFactory::create("debug");
+	else
+	  fmt = Spine::TableFormatterFactory::create(query.format);
+	
+	bool gridEnabled = false;
+	if (strcasecmp(query.forecastSource.c_str(), "grid") == 0 ||
+		(query.forecastSource.length() == 0 &&
+		 strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))
+	  gridEnabled = true;
+	
+	boost::shared_ptr<Spine::TableFormatter> formatter(fmt);
+	std::string mime = "application/json";
+	response.setHeader("Content-Type", mime);
+	
+	// Calculate the hash value for the product.
+	
+	std::size_t product_hash = Fmi::bad_hash;
+	
+	try
+	  {
+		product_hash = hash_value(state, query, request);
+	  }
+	catch (...)
+	  {
+		if (!gridEnabled)
+			  throw Fmi::Exception(BCP, "Operation failed!", NULL);
+	  }
+	
+	high_resolution_clock::time_point t3 = high_resolution_clock::now();
+	
+	std::string timeheader = Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
+	  Fmi::to_string(duration_cast<microseconds>(t3 - t2).count());
+	
+	if (product_hash != Fmi::bad_hash)
+	  {
+		response.setHeader("ETag", fmt::format("\"{:x}-edr\"", product_hash));
+		
+		// If the product is cacheable and etag was requested, respond with etag only
+		
+		if (request.getHeader("X-Request-ETag"))
+		  {
+			response.setStatus(Spine::HTTP::Status::no_content);
+			return;
+		  }
+	  }
+	
+	// If obj is not nullptr it is from cache
+	auto obj = processQuery(state, data, query, queryStreamer, product_hash);
+	
+	if (obj)
+	  {
+		response.setHeader("X-Duration", timeheader);
+		response.setHeader("X-EDR-Cache", "yes");
+		response.setContent(obj);
+		return;
+	  }
+	
     // Must generate the result from scratch
     response.setHeader("X-EDR-Cache", "no");
 
@@ -3821,7 +3807,7 @@ void Plugin::query(const State& state,
           header_name += ("_" + p.getSensorParameter());
         headers.push_back(header_name);
       }
-    }
+	}
 
     // Format product
     // Deduce WXML-tag from used producer. (What happens when we combine forecasts and
@@ -3840,7 +3826,6 @@ void Plugin::query(const State& state,
         break;
       }
     }
-
 
     auto formatter_options = itsConfig.formatterOptions();
     formatter_options.setFormatType(wxml_type);
@@ -4184,7 +4169,8 @@ void Plugin::init()
                                        boost::bind(&Plugin::callRequestHandler, this, _1, _2, _3), true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
-
+	// Get locations
+	updateSupportedLocations();
 	// Get metadata
 	updateMetaData();
 
@@ -4247,12 +4233,13 @@ void Plugin::updateMetaData()
       // Get medata of all producers
       engine_meta_data->querydata = get_edr_metadata_qd("", *itsQEngine);
       if(!itsConfig.gridEngineDisabled())
-	engine_meta_data->grid= get_edr_metadata_grid("", *itsGridEngine);
+		engine_meta_data->grid = get_edr_metadata_grid("", *itsGridEngine);
 #ifndef WITHOUT_OBSERVATION
       if(!itsConfig.obsEngineDisabled())
-	engine_meta_data->observation = get_edr_metadata_obs("", *itsObsEngine);
+		engine_meta_data->observation = get_edr_metadata_obs("", *itsObsEngine);
 #endif
-      
+	  update_location_info(*engine_meta_data, itsSupportedLocations);
+
       itsMetaData.store(engine_meta_data);
     }
   catch (...)
@@ -4261,6 +4248,37 @@ void Plugin::updateMetaData()
     }
 }
 
+void Plugin::updateSupportedLocations()
+{
+  try
+    {
+	  // Get locations for each Producers
+	  auto producer_keywords = itsConfig.getProducerKeywords();
+	  Locus::QueryOptions opts;
+	  opts.SetLanguage(itsConfig.defaultLanguage());
+	  for(const auto& item : producer_keywords)
+		{
+		  auto producer = item.first;
+		  Spine::LocationList producer_llist;
+		  SupportedLocations sls;
+		  for(const auto& keyword : item.second)
+			{
+			  auto llist = itsGeoEngine->keywordSearch(opts, keyword);
+			  for(const auto& loc : llist)
+				{
+				  location_info li(loc, keyword);
+				  sls[li.id] = li;
+				}
+			}
+		  if(!sls.empty())
+			itsSupportedLocations[producer] = sls;
+		}
+    }
+  catch (...)
+    {
+      throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    }
+}
 
 // ----------------------------------------------------------------------
 /*!

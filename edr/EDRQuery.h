@@ -17,10 +17,12 @@ namespace Plugin
 {
 namespace EDR
 {
+#define DEFAULT_DATA_QUERIES "default_data_queries"
+#define DEFAULT_LOCATIONS_KEYWORD "synop_fi"
+#define DEFAULT_PRODUCER_KEY "default"
 
   enum class EDRQueryType{Position,Radius,Area,Cube,Trajectory,Corridor,Items,Locations,Instances,InvalidQueryType};
   enum class EDRQueryId{AllCollections,SpecifiedCollection,SpecifiedCollectionAllInstances,SpecifiedCollectionSpecifiedInstance,SpecifiedCollectionLocations,DataQuery};
-#define DEFAULT_DATA_QUERIES "default_data_queries"
   
   struct EDRQuery
   {

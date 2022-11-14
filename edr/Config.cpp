@@ -302,6 +302,35 @@ Config::Config(const string& configfile)
 
     parse_config_precisions();
 
+	if (itsConfig.exists("locations"))
+	  {
+		if (itsConfig.exists("locations.default"))
+		  {
+			const libconfig::Setting& defaultKeywords = itsConfig.lookup("locations.default");
+			if (!defaultKeywords.isArray())
+			  throw Fmi::Exception(BCP, "Configured value of 'locations.default' must be an array");
+			for (int i = 0; i < defaultKeywords.getLength(); i++)
+			  itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(defaultKeywords[i]);
+		  }
+		if (itsConfig.exists("locations.override"))
+		  {
+			const libconfig::Setting& overriddenProducerKeywords = itsConfig.lookup("locations.override");
+			for (int i = 0; i < overriddenProducerKeywords.getLength(); i++)
+			  {
+				std::string producer = overriddenProducerKeywords[i].getName();
+				const libconfig::Setting& overriddenKeywords = itsConfig.lookup("locations.override." + producer);
+				if (!overriddenKeywords.isArray())
+				  throw Fmi::Exception(BCP, "Configured overridden locations for collection must be an array");
+				for (int j = 0; j < overriddenKeywords.getLength(); j++)
+				  itsProducerKeywords[producer].insert(overriddenKeywords[j]);
+			  }
+		  }
+		}
+	// If keywords not defined -> set default keyword
+	if(itsProducerKeywords.empty())
+	  itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(DEFAULT_LOCATIONS_KEYWORD);
+
+	// Data queries
 	if (itsConfig.exists("data_queries"))
 	  {
 		if (itsConfig.exists("data_queries.default"))
@@ -320,11 +349,11 @@ Config::Config(const string& configfile)
 			for (int i = 0; i < overriddenQueries.getLength(); i++)
 			  {
 				std::string producer = overriddenQueries[i].getName();
-				const libconfig::Setting& overriddenQueryArray = itsConfig.lookup("data_queries.override." + producer);
-				if (!overriddenQueryArray.isArray())
+				const libconfig::Setting& overriddenQueries = itsConfig.lookup("data_queries.override." + producer);
+				if (!overriddenQueries.isArray())
 				  throw Fmi::Exception(BCP, "Configured overridden data_queries for producer must be an array");
-				for (int j = 0; j < overriddenQueryArray.getLength(); j++)
-				  itsSupportedQueries[producer].insert(overriddenQueryArray[j]);
+				for (int j = 0; j < overriddenQueries.getLength(); j++)
+				  itsSupportedQueries[producer].insert(overriddenQueries[j]);
 			  }
 		  }
 	  }
@@ -476,11 +505,18 @@ const Precision& Config::getPrecision(const string& name) const
 
 Engine::Gis::PostGISIdentifierVector Config::getPostGISIdentifiers() const
 {
-  Engine::Gis::PostGISIdentifierVector ret;
-  for (const auto& item : postgis_identifiers)
-    ret.push_back(item.second);
+  try
+  {
+	Engine::Gis::PostGISIdentifierVector ret;
+	for (const auto& item : postgis_identifiers)
+	  ret.push_back(item.second);	
+	return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 
-  return ret;
 }
 
 unsigned long long Config::maxTimeSeriesCacheSize() const

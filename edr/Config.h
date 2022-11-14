@@ -25,6 +25,7 @@ namespace EDR
 {
 using Precisions = std::map<std::string, Precision>;
 using SupportedQueries = std::map<std::string, std::set<std::string>>; // producer -> queries
+using ProducerKeywords = std::map<std::string, std::set<std::string>>; // producer -> keywords
 
 class Config : private boost::noncopyable
 {
@@ -32,7 +33,8 @@ class Config : private boost::noncopyable
   Config(const std::string& configfile);
   Config() = delete;
 
-  const SupportedQueries& getSupportedQueries() { return itsSupportedQueries; }
+  const SupportedQueries& getSupportedQueries() const { return itsSupportedQueries; }
+  const ProducerKeywords& getProducerKeywords() { return itsProducerKeywords; }
   const Precision& getPrecision(const std::string& name) const;
 
   const std::string& defaultPrecision() const { return itsDefaultPrecision; }
@@ -103,6 +105,8 @@ class Config : private boost::noncopyable
   unsigned long long itsMaxTimeSeriesCacheSize;
 
   SupportedQueries itsSupportedQueries; // producer->queries
+  //  SupportedProducerLocations itsSupportedProducerLocations; // producer->locations
+  ProducerKeywords itsProducerKeywords; // producer->keywords
 
   bool itsMetaDataUpdatesDisabled;  // disable updates after initial update
   int itsMetaDataUpdateInterval;        // scan interval in seconds

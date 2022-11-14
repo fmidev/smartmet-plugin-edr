@@ -1,4 +1,5 @@
 #include "EDRMetaData.h"
+#include "EDRQuery.h"
 
 #include <engines/querydata/Engine.h>
 #include <engines/grid/Engine.h>
@@ -17,7 +18,9 @@ namespace Plugin
 namespace EDR
 {
 
-  EDRProducerMetaData get_edr_metadata_qd(const std::string &producer, const Engine::Querydata::Engine &qEngine, EDRMetaData *emd /*= nullptr*/) 
+#define DEFAULT_PRECISION 4
+
+EDRProducerMetaData get_edr_metadata_qd(const std::string &producer, const Engine::Querydata::Engine &qEngine, EDRMetaData *emd /*= nullptr*/) 
 {
   try 
 	{
@@ -77,6 +80,7 @@ namespace EDR
 			  producer_emd.parameter_names.insert(parameter_name);
 			  producer_emd.parameters.insert(std::make_pair(parameter_name, edr_parameter(p.name, p.description)));
 			}
+		  producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
 		  epmd[qmd.producer].push_back(producer_emd);
 		}
 	  
@@ -98,7 +102,7 @@ namespace EDR
 	}
 }
 
-  EDRProducerMetaData get_edr_metadata_grid(const std::string &producer, const Engine::Grid::Engine &gEngine, EDRMetaData *emd /*= nullptr*/)
+EDRProducerMetaData get_edr_metadata_grid(const std::string &producer, const Engine::Grid::Engine &gEngine, EDRMetaData *emd /*= nullptr*/)
 {
   try 
 	{    
@@ -189,6 +193,7 @@ namespace EDR
 		  std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." + Fmi::to_string(gmd.levelId));
 		  boost::algorithm::to_lower(producerId);
 		  
+		  producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
 		  epmd[producerId].push_back(producer_emd);      
 		}
 	  
@@ -266,6 +271,7 @@ EDRProducerMetaData get_edr_metadata_obs(const std::string &producer, Engine::Ob
 			  producer_emd.parameters.insert(std::make_pair(parameter_name, edr_parameter(p, description)));
 			}
 		  
+		  producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
 		  epmd[producer].push_back(producer_emd);
 		}
 	  
@@ -294,11 +300,49 @@ int EDRMetaData::getPrecision(const std::string& parameter_name) const
     {
       auto pname = parameter_name;
       boost::algorithm::to_lower(pname);
-
+	  
       if(parameter_precisions.find(pname) != parameter_precisions.end())
-	return parameter_precisions.at(pname);
+		return parameter_precisions.at(pname);
       
       return parameter_precisions.at("__DEFAULT_PRECISION__");
+    }
+  catch (...)
+    {
+      throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    }
+}
+
+void update_location_info(EDRProducerMetaData& pmd, const SupportedProducerLocations& spl)
+{
+  try 
+    {
+	  for(auto& item : pmd)
+		{
+		  const auto& producer = item.first;
+		  // 
+		  auto& md_vector = item.second;
+		  auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
+		  if(spl.find(producer_key) != spl.end())
+			{
+			  for(auto& md : md_vector)
+				md.locations = &spl.at(producer_key);
+			}		 
+		}
+    }
+  catch (...)
+    {
+      throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    }
+}
+
+
+void update_location_info(EngineMetaData& emd, const SupportedProducerLocations& spl)
+{
+  try 
+    {
+	  update_location_info(emd.querydata, spl);
+	  update_location_info(emd.grid, spl);
+	  update_location_info(emd.observation, spl);
     }
   catch (...)
     {

@@ -13,6 +13,7 @@
 #include "QueryLevelDataCache.h"
 #include "EDRMetaData.h"
 #include "EDRQuery.h"
+#include "LocationInfo.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
@@ -124,7 +125,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                                               const QueryServer::QueryStreamer_sptr& queryStreamer,
                                               size_t& product_hash);
 
-  Json::Value processMetaDataQuery(const EDRQuery& edr_query, const Spine::LocationList& locations);
+  Json::Value processMetaDataQuery(const EDRQuery& edr_query);
 
   void processQEngineQuery(const State& state,
                            Query& query,
@@ -251,8 +252,10 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
 
   void metaDataUpdateLoop();
   void updateMetaData();
+  void updateSupportedLocations();
 
-  //  std::map<std::string, Json::Value> itsMetaData; // collection_id -> meta data
+  // Locations info is read once at startup, the used subsequent queries
+  SupportedProducerLocations itsSupportedLocations;
 
   // Metadata for producers (producer name -> metadata) This must be a shared pointer
   // and must be used via atomic_load and atomic_store, since CTPP::CDT is not thread safe.
