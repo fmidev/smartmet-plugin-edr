@@ -32,7 +32,7 @@ BuildRequires: smartmet-library-locus-devel >= 22.6.17
 BuildRequires: smartmet-library-macgyver-devel >= 22.10.20
 BuildRequires: smartmet-library-grid-content-devel >= 22.11.8
 BuildRequires: smartmet-library-grid-files-devel >= 22.11.8
-BuildRequires: smartmet-library-newbase-devel >= 22.8.29
+BuildRequires: smartmet-library-newbase-devel >= 22.11.14
 BuildRequires: smartmet-library-gis-devel >= 22.9.28
 BuildRequires: smartmet-library-timeseries-devel >= 22.10.25
 BuildRequires: smartmet-engine-geonames-devel >= 22.10.5
@@ -51,7 +51,7 @@ Requires: jsoncpp
 Requires: smartmet-library-gis >= 22.9.28
 Requires: smartmet-library-locus >= 22.6.17
 Requires: smartmet-library-macgyver >= 22.10.20
-Requires: smartmet-library-newbase >= 22.8.29
+Requires: smartmet-library-newbase >= 22.11.14
 Requires: smartmet-library-spine >= 22.10.26
 Requires: smartmet-library-timeseries >= 22.10.25
 Requires: smartmet-library-gis >= 22.9.28
@@ -68,7 +68,7 @@ Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 22.10.7
 #TestRequires: smartmet-library-spine-plugin-test >= 22.10.26
-#TestRequires: smartmet-library-newbase-devel >= 22.8.29
+#TestRequires: smartmet-library-newbase-devel >= 22.11.14
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 22.4.14
 #TestRequires: smartmet-test-data >= 20.12.1
