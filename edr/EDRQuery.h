@@ -35,6 +35,7 @@ namespace EDR
   };
   
   std::string to_string(EDRQueryType query_type);  
+  std::string to_string(EDRQueryId id);
   EDRQueryType to_query_type_id(const std::string& query_type);
 
 

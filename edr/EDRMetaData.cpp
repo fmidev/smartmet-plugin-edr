@@ -46,16 +46,7 @@ EDRProducerMetaData get_edr_metadata_qd(const std::string &producer, const Engin
 		  
 		  if (qmd.levels.size() > 1) 
 			{
-			  if (qmd.levels.front().type == "PressureLevel")
-				producer_emd.vertical_extent.vrs =
-				  "TODO: PARAMETRICCRS['WMO standard atmosphere layer "
-				  "0',PDATUM['Mean Sea Level',ANCHOR['1013.25 hPa at "
-				  "15\u00b0C']],CS[parametric,1§],AXIS['pressure "
-				  "(hPa)',up],PARAMETRICUNIT['Hectopascal',100.0";
-			  else if (qmd.levels.front().type == "HybridLevel")
-				producer_emd.vertical_extent.vrs =
-				  "TODO: PARAMETRICCRS['WMO Hybrid "
-				  "Levels',CS[parametric,1],AXIS['Hybrid',up]]";
+			  producer_emd.vertical_extent.vrs = ("Vertical Reference System: "+qmd.levels.front().type);
 			  producer_emd.vertical_extent.level_type = qmd.levels.front().type;
 			  for (const auto &item : qmd.levels)
 				producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));

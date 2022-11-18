@@ -8,7 +8,7 @@ namespace Plugin
 namespace EDR
 {
 
-std::string to_string(const EDRQueryId& id)
+std::string to_string(EDRQueryId id)
 {
   if(id == EDRQueryId::AllCollections)
     return "EDRQueryId::AllCollections";
@@ -74,7 +74,6 @@ EDRQueryType to_query_type_id(const std::string& query_type)
 
   return EDRQueryType::InvalidQueryType;
 }
-
   
 std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ)
 {

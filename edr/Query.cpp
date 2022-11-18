@@ -42,22 +42,6 @@ const char* default_timezone = "localtime";
 namespace
 {
 
-std::string get_query_id(EDRQueryId query_id)
-{
-  if(query_id==EDRQueryId::AllCollections)
-    return "AllCollections";
-  if(query_id==EDRQueryId::SpecifiedCollection)
-    return "SpecifiedCollection";
-  if(query_id==EDRQueryId::SpecifiedCollectionAllInstances)
-    return "SpecifiedCollectionAllInstances";
-  if(query_id==EDRQueryId::SpecifiedCollectionSpecifiedInstance)
-    return "SpecifiedCollectionSpecifiedInstance";
-  if(query_id==EDRQueryId::SpecifiedCollectionLocations)
-    return "SpecifiedCollectionLocations";
-
-  return "DataQuery";  
-}
-
 std::string resolve_host(const Spine::HTTP::Request& theRequest)
 {  
    auto host_header = theRequest.getHeader("Host");
@@ -112,6 +96,65 @@ Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request& req)
   return opt;
 }
 
+std::string transform_coordinates(const std::string& wkt, const std::string& crs)
+{
+  try
+  {
+	std::string ret;
+	
+	auto iter = wkt.begin();
+	while(iter != wkt.end())
+	  {
+		// Read till digit encountered
+		while(!std::isdigit(*iter))
+		  {
+			ret.push_back(*iter);
+			iter++;
+		  }
+
+		// Wkt coordinates are always of format {lon} {lat}
+		std::string lon_str;
+		std::string lat_str;
+		// Longitude
+		while(std::isdigit(*iter))
+		  {
+			lon_str.push_back(*iter);
+			iter++;
+		  }
+		// Space between longitude and latitude
+		while(!std::isdigit(*iter))
+		  iter++;
+		// Latitude
+		while(iter != wkt.end() && std::isdigit(*iter))
+		  {
+			lat_str.push_back(*iter);
+			iter++;
+		  }
+		// Do the transformation
+		auto lon_coord = Fmi::stod(lon_str);
+		auto lat_coord = Fmi::stod(lat_str);
+		Fmi::CoordinateTransformation transformation(crs, "WGS84");
+		if(!transformation.transform(lon_coord, lat_coord))
+		  throw Fmi::Exception::Trace(BCP, "Failed to transform coordinates to WGS84: " + lon_str + ", " + lat_str);
+
+		ret.append(Fmi::to_string(lon_coord)+" "+Fmi::to_string(lat_coord));
+		// Read till next digit is encountered
+		while(iter != wkt.end() && !std::isdigit(*iter))
+		  {
+			ret.push_back(*iter);
+			iter++;
+		  }
+	  }
+	
+	return ret;	
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Failed to transform coordinates to WGS84: " + crs + ", " +wkt);
+  }
+}
+
+
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -155,7 +198,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 							  if(resource_parts.size() > 4 && !resource_parts.at(4).empty())
 								{
 								  itsEDRQuery.instance_id = resource_parts.at(4);
-								  req.addParameter("origintime", itsEDRQuery.instance_id);
 								  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;
 								  if(resource_parts.size() > 5 && !resource_parts.at(5).empty())
 									{
@@ -209,12 +251,17 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 
 	  EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
 
-      if(!req.getQueryString().empty())// && req.getParameterList("inkeyword").empty())
-		itsEDRQuery.query_id = EDRQueryId::DataQuery;
+      if(!req.getQueryString().empty())
+		{
+		  if(itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance && !itsEDRQuery.instance_id.empty())
+			req.addParameter("origintime", itsEDRQuery.instance_id);
+		  itsEDRQuery.query_id = EDRQueryId::DataQuery;
+		}
 
       // If meta data query return from here
       if(itsEDRQuery.query_id != EDRQueryId::DataQuery)
 		return;
+
 	
 	  // From here on EDR data query
 	  // Querydata and obervation producers do not have dots (.) in id, but grid producers always do have
@@ -334,7 +381,6 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 					  wkt.append(parts[0] + " " + parts[1]+",");
 					  itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
 					}
-
 				}
 			  else if(geometry_name == "LINESTRINGM")
 				{
@@ -360,8 +406,22 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 			  wkt.append(")");
 			  if(!radius.empty())
 				wkt.append(radius);
+			  
 			}
+		  
+		  auto crs = Spine::optional_string(req.getParameter("crs"), "");
+		  if(!crs.empty() && crs != "EPSG:4326" && crs != "WGS84")
+			throw Fmi::Exception(BCP, "Invalid crs: "+crs+"! Only EPSG:4326 is supported");
 
+		  /*
+			// Maybe later: support other CRSs than WGS84
+		  if(!crs.empty() && crs != "EPSG:4326")
+			{
+			  // Have to convert coordinates into WGS84
+			  auto transformed_wkt = transform_coordinates(wkt, crs);
+			  wkt = transformed_wkt;
+			}
+		  */
 		  req.addParameter("wkt", wkt);
 		}
       else
@@ -434,8 +494,14 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 		{
 		  std::vector<std::string> datetime_parts;
 		  boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
-		  req.addParameter("starttime", datetime_parts.at(0));
-		  req.addParameter("endtime", datetime_parts.at(1));	  
+		  auto starttime = datetime_parts.at(0);
+		  auto endtime = datetime_parts.at(1);
+		  if(starttime == "..")
+			req.addParameter("starttime", "data");
+		  else
+			req.addParameter("starttime", starttime);
+		  if(endtime != "..")
+			req.addParameter("endtime", endtime);	  
 		}
       else
 		{

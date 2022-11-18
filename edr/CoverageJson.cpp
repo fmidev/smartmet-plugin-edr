@@ -49,6 +49,7 @@ Json::Value parse_temporal_extent(const edr_temporal_extent& temporal_extent)
   auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
   auto temporal_interval2 = Json::Value(Json::ValueType::arrayValue);
   temporal_interval2[0] = Json::Value(boost::posix_time::to_iso_extended_string(temporal_extent.start_time) + "Z");
+  temporal_interval2[1] = Json::Value(boost::posix_time::to_iso_extended_string(temporal_extent.end_time) + "Z");
   temporal_interval[0] = temporal_interval2;
   
   auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
@@ -896,9 +897,13 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
 			{
 			  auto vertical = Json::Value(Json::ValueType::objectValue);
 			  auto vertical_interval = Json::Value(Json::ValueType::arrayValue);
+			  auto vertical_interval_values = Json::Value(Json::ValueType::arrayValue);
 			  for (unsigned int i = 0; i < emd.vertical_extent.levels.size(); i++)
-				vertical_interval[i] = emd.vertical_extent.levels.at(i);
+				vertical_interval_values[i] = emd.vertical_extent.levels.at(i);
+			  vertical_interval[0] = emd.vertical_extent.levels.front();
+			  vertical_interval[1] = emd.vertical_extent.levels.back();
 			  vertical["interval"] = vertical_interval;
+			  vertical["values"] = vertical_interval_values;
 			  vertical["vrs"] = emd.vertical_extent.vrs;
 			  extent["vertical"] = vertical;
 			}
@@ -1053,12 +1058,17 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 			{
 			  auto vertical = Json::Value(Json::ValueType::objectValue);
 			  auto vertical_interval = Json::Value(Json::ValueType::arrayValue);
+			  auto vertical_interval_values = Json::Value(Json::ValueType::arrayValue);
 			  for (unsigned int i = 0; i < collection_emd.vertical_extent.levels.size(); i++)
-				vertical_interval[i] = collection_emd.vertical_extent.levels.at(i);
+				vertical_interval_values[i] = collection_emd.vertical_extent.levels.at(i);
+			  vertical_interval[0] = collection_emd.vertical_extent.levels.front();
+			  vertical_interval[1] = collection_emd.vertical_extent.levels.back();
 			  vertical["interval"] = vertical_interval;
+			  vertical["values"] = vertical_interval_values;
 			  vertical["vrs"] = collection_emd.vertical_extent.vrs;
 			  extent["vertical"] = vertical;
 			}
+
 		  value["extent"] = extent;
 		  // Optional: data_queries
 		  value["data_queries"] = get_data_queries(edr_query, producer, collection_emd.vertical_extent.levels.size() > 0, instances_exist);
