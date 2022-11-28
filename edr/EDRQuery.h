@@ -32,6 +32,7 @@ namespace EDR
 	EDRQueryType query_type{EDRQueryType::InvalidQueryType}; // query type in the request
 	std::map<std::string, std::set<EDRQueryType>> data_queries; // supported data_queries by this ollection
 	EDRQueryId query_id{EDRQueryId::DataQuery};
+	std::string language;
   };
   
   std::string to_string(EDRQueryType query_type);  

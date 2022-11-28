@@ -253,9 +253,13 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   void metaDataUpdateLoop();
   void updateMetaData();
   void updateSupportedLocations();
+  void updateParameterInfo();
 
   // Locations info is read once at startup, the used subsequent queries
   SupportedProducerLocations itsSupportedLocations;
+
+  // Parameter info read at startup
+  ParameterInfo itsParameterInfo;
 
   // Metadata for producers (producer name -> metadata) This must be a shared pointer
   // and must be used via atomic_load and atomic_store, since CTPP::CDT is not thread safe.

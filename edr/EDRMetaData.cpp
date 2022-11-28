@@ -20,19 +20,12 @@ namespace EDR
 
 #define DEFAULT_PRECISION 4
 
-EDRProducerMetaData get_edr_metadata_qd(const std::string &producer, const Engine::Querydata::Engine &qEngine, EDRMetaData *emd /*= nullptr*/) 
+EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine) 
 {
   try 
 	{
 	  Engine::Querydata::MetaQueryOptions opts;
-	  if (!producer.empty())
-		opts.setProducer(producer);
 	  auto qd_meta_data = qEngine.getEngineMetadata(opts);
-	  
-	  /*
-		if(qd_meta_data.empty())
-		throw Fmi::Exception::Trace(BCP, "Failed to get metadata for querydata producer '" + producer + "'!");
-	  */
 	  
 	  EDRProducerMetaData epmd;
 	  
@@ -74,17 +67,7 @@ EDRProducerMetaData get_edr_metadata_qd(const std::string &producer, const Engin
 		  producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
 		  epmd[qmd.producer].push_back(producer_emd);
 		}
-	  
-	  if (!producer.empty() && emd)
-		{
-		  const auto &emds = epmd.begin()->second;
-		  for (unsigned int i = 0; i < emds.size(); i++)
-			{
-			  if (i == 0 || emd->temporal_extent.origin_time < emds.at(i).temporal_extent.origin_time)
-				*emd = emds.at(i);
-			}
-		}
-	  
+	  	  
 	  return epmd;
 	}
   catch (...) 
@@ -93,29 +76,27 @@ EDRProducerMetaData get_edr_metadata_qd(const std::string &producer, const Engin
 	}
 }
 
-EDRProducerMetaData get_edr_metadata_grid(const std::string &producer, const Engine::Grid::Engine &gEngine, EDRMetaData *emd /*= nullptr*/)
+EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine)
 {
   try 
 	{    
 	  EDRProducerMetaData epmd;
 	  
+	  /*
 	  std::vector<std::string> parts;
 	  boost::algorithm::split(parts, producer, boost::algorithm::is_any_of("."));
 	  
 	  auto producerName = parts[0];
 	  auto geometryId = (parts.size() > 1 ? parts[1] : "");
 	  auto levelId = (parts.size() > 2 ? parts[2] : "");
-	  
-	  auto grid_meta_data = gEngine.getEngineMetadata(producerName.c_str());    
-	  
-	  /*
-		if(grid_meta_data.empty())
-		throw Fmi::Exception::Trace(BCP, "Failed to get metadata for grid producer '" + producer + "'!");
 	  */
-    
+	  //	  auto grid_meta_data = gEngine.getEngineMetadata(producerName.c_str());    
+	  auto grid_meta_data = gEngine.getEngineMetadata("");
+	      
 	  // Iterate Grid metadata and add items into collection
 	  for (const auto &gmd : grid_meta_data) 
-		{		  
+		{
+		  /*
 		  if(!geometryId.empty())
 			{
 			  if(!boost::iequals(Fmi::to_string(gmd.geometryId), geometryId))
@@ -126,7 +107,7 @@ EDRProducerMetaData get_edr_metadata_grid(const std::string &producer, const Eng
 			  if(!boost::iequals(Fmi::to_string(gmd.levelId), levelId))
 				continue;
 			}
-		  
+		  */
 		  EDRMetaData producer_emd;
 		  
 		  if (gmd.levels.size() > 1) {
@@ -187,17 +168,7 @@ EDRProducerMetaData get_edr_metadata_grid(const std::string &producer, const Eng
 		  producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
 		  epmd[producerId].push_back(producer_emd);      
 		}
-	  
-	  if (!producer.empty() && emd) 
-		{
-		  const auto &emds = epmd.begin()->second;
-		  for (unsigned int i = 0; i < emds.size(); i++) 
-			{
-			  if (i == 0 || emd->temporal_extent.origin_time <
-				  emds.at(i).temporal_extent.origin_time)
-				*emd = emds.at(i);
-			}
-		}	  
+
 	  return epmd;
 	} 
   catch (...)
@@ -207,17 +178,19 @@ EDRProducerMetaData get_edr_metadata_grid(const std::string &producer, const Eng
 }
 
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData get_edr_metadata_obs(const std::string &producer, Engine::Observation::Engine &obsEngine, EDRMetaData *emd /*= nullptr*/) 
+EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine) 
 {
   try 
 	{
 	  std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
 	  
-	  std::set<std::string> producers;
+	  std::set<std::string> producers = obsEngine.getValidStationTypes();
+	  /*
 	  if (!producer.empty())
 		producers.insert(producer);
 	  else
-		producers = obsEngine.getValidStationTypes();
+	  producers = obsEngine.getValidStationTypes();
+	  */
 	  
 	  for (const auto &prod : producers)
 		observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
@@ -264,16 +237,6 @@ EDRProducerMetaData get_edr_metadata_obs(const std::string &producer, Engine::Ob
 		  
 		  producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
 		  epmd[producer].push_back(producer_emd);
-		}
-	  
-	  if (!producer.empty() && emd)
-		{
-		  const auto &emds = epmd.begin()->second;
-		  for (unsigned int i = 0; i < emds.size(); i++)
-			{
-			  if (i == 0 || emd->temporal_extent.origin_time < emds.at(i).temporal_extent.origin_time)
-				*emd = emds.at(i);
-			}
 		}
 	  
 	  return epmd;

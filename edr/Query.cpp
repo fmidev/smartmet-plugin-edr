@@ -43,21 +43,29 @@ namespace
 {
 
 std::string resolve_host(const Spine::HTTP::Request& theRequest)
-{  
-   auto host_header = theRequest.getHeader("Host");
-   if (!host_header)
-     {
-       // This should never happen, host header is mandatory in HTTP 1.1
-       return "http://smartmet.fmi.fi/edr";
-     }
-   
-   // http/https scheme selection based on 'X-Forwarded-Proto' header
-   auto host_protocol = theRequest.getProtocol();
-   std::string protocol((host_protocol ? *host_protocol : "http") + "://");
-   
-   std::string host = *host_header;
-   
-   return (protocol + host + "/edr");      
+{
+  try
+  {
+	auto host_header = theRequest.getHeader("Host");
+	if (!host_header)
+	  {
+		// This should never happen, host header is mandatory in HTTP 1.1
+		return "http://smartmet.fmi.fi/edr";
+	  }
+	
+	// http/https scheme selection based on 'X-Forwarded-Proto' header
+	auto host_protocol = theRequest.getProtocol();
+	std::string protocol((host_protocol ? *host_protocol : "http") + "://");
+	
+	std::string host = *host_header;
+	
+	return (protocol + host + "/edr");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Resolving host failed!");
+  }
+
 }
   
 void add_sql_data_filter(const Spine::HTTP::Request& req,
@@ -626,14 +634,15 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       
       req.addParameter("param", parameter_names);
 	  
+	  language = Spine::optional_string(req.getParameter("lang"), config.defaultLanguage());
+	  itsEDRQuery.language = language;
       
+
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));
     report_unsupported_option("width", req.getParameter("width"));
     report_unsupported_option("fill", req.getParameter("fill"));
     report_unsupported_option("showpos", req.getParameter("showpos"));
     report_unsupported_option("uppercase", req.getParameter("uppercase"));
-
-    language = Spine::optional_string(req.getParameter("lang"), config.defaultLanguage());
 
     time_t tt = time(nullptr);
     if ((config.itsLastAliasCheck + 10) < tt)

@@ -362,12 +362,15 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData, const 
 	}
 }
 
-Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query_parameters, const std::map<std::string, edr_parameter> &edr_parameters) 
+Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query_parameters, const EDRMetaData& metadata)
 {
   try 
 	{
+	  const auto& engine_parameter_info = metadata.parameters;// const std::map<std::string, edr_parameter> &edr_parameters)
+	  const auto& config_parameter_info = *metadata.parameter_info;
+
 	  auto parameters = Json::Value(Json::ValueType::objectValue);
-	  
+	  	  
 	  for (const auto &p : query_parameters) 
 		{
 		  auto parameter_name = parse_parameter_name(p.name());
@@ -375,29 +378,31 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 		  if(lon_lat_level_param(parameter_name))
 			continue;
 		  
+		  const auto &edr_parameter = engine_parameter_info.at(parameter_name);
+
+		  auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
+		  auto description = (!pinfo.description.empty() ? pinfo.description : "");
+		  auto label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter.name);
+		  auto symbol = (!pinfo.unit_symbol_value.empty() ? pinfo.unit_symbol_value : "");
+		  auto symbol_type = (!pinfo.unit_symbol_type.empty() ? pinfo.unit_symbol_type : "");
+
 		  auto parameter = Json::Value(Json::ValueType::objectValue);
 		  parameter["type"] = Json::Value("Parameter");
-		  const auto &edr_parameter = edr_parameters.at(parameter_name);
 		  // Description field is optional
 		  // QEngine returns parameter description in finnish and skandinavian characters cause problems
 		  // metoffice test interface uses description field -> set parameter name to description field
 		  parameter["description"] = Json::Value(Json::ValueType::objectValue);
-		  parameter["description"]["en"] = Json::Value(parameter_name);
+		  parameter["description"][metadata.language] = Json::Value(parameter_name);
 		  parameter["unit"] = Json::Value(Json::ValueType::objectValue);
 		  parameter["unit"]["label"] = Json::Value(Json::ValueType::objectValue);
-		  parameter["unit"]["label"]["en"] = Json::Value("Label of parameter...");
+		  parameter["unit"]["label"][metadata.language] = Json::Value(label);
 		  parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
-		  parameter["unit"]["symbol"]["value"] =
-			Json::Value("Symbol of parameter ...");
-		  parameter["unit"]["symbol"]["type"] =
-			Json::Value("Type of parameter ...");
+		  parameter["unit"]["symbol"]["value"] = Json::Value(symbol);
+		  parameter["unit"]["symbol"]["type"] = Json::Value(symbol_type);
 		  parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
-		  parameter["observedProperty"]["id"] =
-			Json::Value("Id of observed property...");
-		  parameter["observedProperty"]["label"] =
-			Json::Value(Json::ValueType::objectValue);
-		  parameter["observedProperty"]["label"]["en"] =
-			Json::Value(edr_parameter.name);
+		  parameter["observedProperty"]["id"] = Json::Value(edr_parameter.name);
+		  parameter["observedProperty"]["label"] = Json::Value(Json::ValueType::objectValue);
+		  parameter["observedProperty"]["label"][metadata.language] = Json::Value(edr_parameter.name);
 		  parameters[parameter_name] = parameter;
 		}
 	  
@@ -673,7 +678,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
       Json::Value coverage_collection;
       
       coverage_collection["type"] = Json::Value("CoverageCollection");
-      coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd.parameters);
+      coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd);
       
       auto referencing = Json::Value(Json::ValueType::arrayValue);
       auto referencing_xy = Json::Value(Json::ValueType::objectValue);
@@ -810,6 +815,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                          const EDRQuery &edr_query) {
   try 
 	{
+	  //	  std::cout << "parse_edr_metadata_instances: " << edr_query << std::endl;
 	  Json::Value nulljson;
 	  
 	  if (epmd.empty())
@@ -920,17 +926,29 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
 		  // measurementType
 		  for (const auto &name : emd.parameter_names) 
 			{
+			  auto pinfo = emd.parameter_info->get_parameter_info(name, emd.language);
 			  const auto &p = emd.parameters.at(name);
 			  auto param = Json::Value(Json::ValueType::objectValue);
 			  param["id"] = Json::Value(p.name);
 			  param["type"] = Json::Value("Parameter");
 			  // Set parameter name to description field
-			  param["description"] = Json::Value(p.name);
+			  param["description"] = Json::Value(!pinfo.description.empty() ? pinfo.description : p.name);
+			  if(!pinfo.unit_label.empty() || !pinfo.unit_symbol_value.empty() || !pinfo.unit_symbol_type.empty())
+				{
+				  auto unit = Json::Value(Json::ValueType::objectValue);
+				  unit["label"] = pinfo.unit_label;
+				  auto unit_symbol = Json::Value(Json::ValueType::objectValue);
+				  unit_symbol["value"] = pinfo.unit_symbol_value;
+				  unit_symbol["type"] = pinfo.unit_symbol_type;
+				  unit["symbol"] = unit_symbol;
+				  param["unit"] = unit;
+				}
+
 			  // Observed property: Mandatory: label, Optional: id, description
 			  auto observedProperty = Json::Value(Json::ValueType::objectValue);	
 			  observedProperty["label"] = Json::Value(p.name);
 			  //		  observedProperty["id"] = Json::Value("http://....");
-			  //		  observedProperty["description"] =
+			  // observedProperty["description"] =
 			  // Json::Value("Description of property...");
 			  param["observedProperty"] = observedProperty;
 			  parameter_names[p.name] = param;
@@ -958,7 +976,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 {
   try
     {
-      //	std::cout << "parse_edr_metadata_collections: " << edr_query << std::endl;
+	  //	  std::cout << "parse_edr_metadata_collections: " << edr_query << std::endl;
 
       EDRProducerMetaData requested_epmd;
       if(!edr_query.collection_id.empty())
@@ -1082,12 +1100,24 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 		  // measurementType
 		  for (const auto &name : collection_emd.parameter_names)
 			{
+			  auto pinfo = collection_emd.parameter_info->get_parameter_info(name, collection_emd.language);
 			  const auto &p = collection_emd.parameters.at(name);
 			  auto param = Json::Value(Json::ValueType::objectValue);
 			  param["id"] = Json::Value(p.name);
 			  param["type"] = Json::Value("Parameter");
 			  // Set parameter name to description field
-			  param["description"] = Json::Value(p.name);
+			  param["description"] = Json::Value(!pinfo.description.empty() ? pinfo.description : p.name);
+			  if(!pinfo.unit_label.empty() || !pinfo.unit_symbol_value.empty() || !pinfo.unit_symbol_type.empty())
+				{
+				  auto unit = Json::Value(Json::ValueType::objectValue);
+				  unit["label"] = pinfo.unit_label;
+				  auto unit_symbol = Json::Value(Json::ValueType::objectValue);
+				  unit_symbol["value"] = pinfo.unit_symbol_value;
+				  unit_symbol["type"] = pinfo.unit_symbol_type;
+				  unit["symbol"] = unit_symbol;
+				  param["unit"] = unit;
+				}
+
 			  // Observed property: Mandatory: label, Optional: id, description
 			  auto observedProperty = Json::Value(Json::ValueType::objectValue);
 			  observedProperty["label"] = Json::Value(p.name);
@@ -1178,7 +1208,7 @@ Json::Value format_output_data_one_point(TS::OutputData &outputData, const EDRMe
 													longitude_precision, 
 													latitude_precision);
 				  coverage["parameters"] =
-					get_edr_series_parameters(query_parameters, emd.parameters);
+					get_edr_series_parameters(query_parameters, emd);
 				  json_param_object["type"] = Json::Value("NdArray");
 				  auto axis_names = Json::Value(Json::ValueType::arrayValue);
 				  axis_names[0] = Json::Value("t");
@@ -1256,7 +1286,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
 	  
 	  coverage_collection["type"] = Json::Value("CoverageCollection");
 	  coverage_collection["domainType"] = Json::Value("Point");
-	  coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd.parameters);
+	  coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd);
 	  
 	  // Referencing x,y coordinates
 	  auto referencing = Json::Value(Json::ValueType::arrayValue);
@@ -1455,7 +1485,7 @@ Json::Value format_output_data_multi_point(TS::OutputData &outputData,
 					  if (i == 0) 
 						{
 						  coverage = add_prologue_multi_point(level, emd, coordinates);
-						  coverage["parameters"] = get_edr_series_parameters(query_parameters, emd.parameters);
+						  coverage["parameters"] = get_edr_series_parameters(query_parameters, emd);
 						  json_param_object["type"] = Json::Value("NdArray");
 						  auto shape = Json::Value(Json::ValueType::arrayValue);
 						  shape[0] = Json::Value(ts.size());
@@ -1755,7 +1785,7 @@ Json::Value format_coverage_collection_trajectory_alternative(const DataPerParam
       
       coverage["type"] = Json::Value("Coverage");
       coverage["domainType"] = Json::Value("Trajectory");
-      coverage["parameters"] = get_edr_series_parameters(query_parameters, emd.parameters);
+      coverage["parameters"] = get_edr_series_parameters(query_parameters, emd);
       coverage["domain"] = coverage_domain;
       coverage["ranges"] = ranges;
       

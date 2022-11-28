@@ -6,6 +6,7 @@
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/optional.hpp>
 #include "LocationInfo.h"
+#include "ParameterInfo.h"
 
 namespace SmartMet
 {
@@ -26,14 +27,15 @@ namespace Plugin
 {
 namespace EDR
 {
+  // Parameter infor from querydata-, observation-, grid-engine
   struct edr_parameter
   {
-    edr_parameter(const std::string& n, const std::string& d, const std::string& u = "") : name(n), description(d), unit(u) {}
+	edr_parameter(const std::string& n, const std::string& d, const std::string& u = "") : name(n), description(d), unit(u) {}
     std::string name;
     std::string description;
     std::string unit;
   };
-  
+
   struct edr_spatial_extent
   {
     double bbox_xmin; 
@@ -50,14 +52,14 @@ namespace EDR
     boost::posix_time::ptime end_time;
     int timestep;
     int timesteps;
-    std::string trs {"TODO: Temporal Reference System"};
+    std::string trs {"Temporal Reference System"};
   };
   
   struct edr_vertical_extent
   {
     std::string level_type;
     std::vector<std::string> levels;
-    std::string vrs {"TODO: Vertical Reference System"};
+    std::string vrs {"Vertical Reference System"};
   };
   
   struct EDRMetaData
@@ -68,17 +70,20 @@ namespace EDR
     std::set<std::string> parameter_names;
     std::map<std::string, edr_parameter> parameters;
     std::map<std::string, int> parameter_precisions;
-	const SupportedLocations* locations{nullptr}; // supported locations
+	const SupportedLocations* locations{nullptr}; // Supported locations, default keyword synop_fi can be overwirtten in configuration file
+	const ParameterInfo* parameter_info{nullptr}; // Info about parameters from config file
+	std::string language{"en"}; // Language from configuration file
     int getPrecision(const std::string& parameter_name) const;
   };
 
   using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>; // producer-> meta data
 
-  EDRProducerMetaData get_edr_metadata_qd(const std::string &producer, const Engine::Querydata::Engine &qEngine, EDRMetaData *emd = nullptr);
-  EDRProducerMetaData get_edr_metadata_grid(const std::string &producer, const Engine::Grid::Engine &gEngine, EDRMetaData *emd = nullptr);
+  EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine);
+  EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine);
 #ifndef WITHOUT_OBSERVATION
-  EDRProducerMetaData get_edr_metadata_obs(const std::string &producer, Engine::Observation::Engine &obsEngine, EDRMetaData *emd = nullptr);
+  EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine);
 #endif
+  
 
   struct EngineMetaData
   {
@@ -87,8 +92,7 @@ namespace EDR
 	EDRProducerMetaData observation;
   };
 
-  void update_location_info(EngineMetaData& emd, const SupportedProducerLocations& spl);
-
+  void update_location_info(EngineMetaData& emd, const SupportedProducerLocations& spl);  
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

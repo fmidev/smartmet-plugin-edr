@@ -147,26 +147,26 @@
 			"type" : "Parameter",
 			"description" : 
 			{
-				"en" : "temperature"
+				"fi" : "temperature"
 			},
 			"observedProperty" : 
 			{
-				"id" : "Id of observed property...",
+				"id" : "Temperature",
 				"label" : 
 				{
-					"en" : "Temperature"
+					"fi" : "Temperature"
 				}
 			},
 			"unit" : 
 			{
 				"label" : 
 				{
-					"en" : "Label of parameter..."
+					"fi" : "Celsius"
 				},
 				"symbol" : 
 				{
-					"type" : "Type of parameter ...",
-					"value" : "Symbol of parameter ..."
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
 				}
 			}
 		}

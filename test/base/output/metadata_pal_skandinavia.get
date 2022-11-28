@@ -403,12 +403,21 @@
 		},
 		"Temperature" : 
 		{
-			"description" : "Temperature",
+			"description" : "Ilman lämpötila",
 			"id" : "Temperature",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
 				"label" : "Temperature"
+			},
+			"unit" : 
+			{
+				"label" : "Celsius",
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
+				}
 			}
 		},
 		"TotalCloudCover" : 

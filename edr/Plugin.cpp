@@ -4173,6 +4173,8 @@ void Plugin::init()
 	updateSupportedLocations();
 	// Get metadata
 	updateMetaData();
+	// Update metadata parameter info from config
+	updateParameterInfo();
 
 	if (Spine::Reactor::isShuttingDown())
 	  return;
@@ -4231,12 +4233,34 @@ void Plugin::updateMetaData()
       boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
       
       // Get medata of all producers
-      engine_meta_data->querydata = get_edr_metadata_qd("", *itsQEngine);
+      engine_meta_data->querydata = get_edr_metadata_qd(*itsQEngine);
+	  for(auto& item : engine_meta_data->querydata)
+		for(auto& md : item.second)
+		  {
+			md.language = itsConfig.defaultLanguage();
+			md.parameter_info = &itsParameterInfo;
+		  }
       if(!itsConfig.gridEngineDisabled())
-		engine_meta_data->grid = get_edr_metadata_grid("", *itsGridEngine);
+		{
+		  engine_meta_data->grid = get_edr_metadata_grid(*itsGridEngine);
+		  for(auto& item : engine_meta_data->grid)
+			for(auto& md : item.second)
+			  {
+				md.language = itsConfig.defaultLanguage();
+				md.parameter_info = &itsParameterInfo;
+			  }
+		}
 #ifndef WITHOUT_OBSERVATION
       if(!itsConfig.obsEngineDisabled())
-		engine_meta_data->observation = get_edr_metadata_obs("", *itsObsEngine);
+		{
+		  engine_meta_data->observation = get_edr_metadata_obs(*itsObsEngine);
+		  for(auto& item : engine_meta_data->observation)
+			for(auto& md : item.second)
+			  {
+				md.language = itsConfig.defaultLanguage();
+				md.parameter_info = &itsParameterInfo;
+			  }
+		}
 #endif
 	  update_location_info(*engine_meta_data, itsSupportedLocations);
 
@@ -4279,6 +4303,97 @@ void Plugin::updateSupportedLocations()
       throw Fmi::Exception::Trace(BCP, "Operation failed!");
     }
 }
+
+void Plugin::updateParameterInfo()
+{
+  try
+    {
+	  auto metadata = itsMetaData.load();
+
+	  std::set<std::string> parameter_names;
+	  for(const auto& item : metadata->querydata)
+		for(const auto& md : item.second)
+		  for(const auto& pname : md.parameter_names)
+			parameter_names.insert(pname);
+	  for(const auto& item : metadata->grid)
+		for(const auto& md : item.second)
+		  for(const auto& pname : md.parameter_names)
+			parameter_names.insert(pname);
+	  for(const auto& item : metadata->observation)
+		for(const auto& md : item.second)
+		  for(const auto& pname : md.parameter_names)
+			parameter_names.insert(pname);
+
+
+	  
+	  const auto& lconfig = itsConfig.config();
+	  
+	  for(const auto& pname : parameter_names)
+		{
+		  if(pname.empty())
+			continue;
+		  parameter_info_config pinfo;
+		  // Default values
+		  pinfo.description["en"] = pname;
+		  pinfo.unit_label["en"] = pname;
+
+		  auto pname_key = ("parameter_info."+pname);
+		  if(lconfig.exists(pname_key))
+			{
+			  // Description
+			  auto desc_key = (pname_key+".description");
+			  if(lconfig.exists(desc_key))
+				{
+				  auto& setting = lconfig.lookup(desc_key);
+				  int len = setting.getLength();
+				  for(int i = 0; i < len; i++)
+					{
+					  auto name = setting[i].getName();
+					  std::string value;
+					  lconfig.lookupValue(desc_key+"."+name, value);
+					  pinfo.description[name] = value;
+					}
+				}
+			  // Unit
+			  auto unit_label_key = (pname_key+".unit.label");
+			  if(lconfig.exists(unit_label_key))
+				{
+				  auto& setting = lconfig.lookup(unit_label_key);
+				  int len = setting.getLength();
+				  for(int i = 0; i < len; i++)
+					{
+					  auto name = setting[i].getName();
+					  std::string value;
+					  lconfig.lookupValue(unit_label_key+"."+name, value);
+					  pinfo.unit_label[name] = value;
+					}
+
+				}
+			  if(lconfig.exists(pname_key+".unit.symbol.value"))
+				lconfig.lookupValue(pname_key+".unit.symbol.value", pinfo.unit_symbol_value);
+			  if(lconfig.exists(pname_key+".unit.symbol.type"))
+				lconfig.lookupValue(pname_key+".unit.symbol.type", pinfo.unit_symbol_type);
+			}
+		  itsParameterInfo[pname] = pinfo;
+		}
+
+
+	  for(auto& item : metadata->querydata)
+		for(auto& md : item.second)
+		  md.parameter_info = &itsParameterInfo;
+	  for(auto& item : metadata->grid)
+		for(auto& md : item.second)
+		  md.parameter_info = &itsParameterInfo;
+	  for(auto& item : metadata->observation)
+		for(auto& md : item.second)
+		  md.parameter_info = &itsParameterInfo;
+    }
+  catch (...)
+    {
+      throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    }
+}
+
 
 // ----------------------------------------------------------------------
 /*!
