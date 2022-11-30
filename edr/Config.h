@@ -52,7 +52,6 @@ class Config : private boost::noncopyable
   }
 
   const std::vector<uint>& defaultGridGeometries() { return itsDefaultGridGeometries; }
-  bool ignoreGridGeometriesWhenPreloadReady() { return itsIgnoreGridGeometriesWhenPreloadReady; }
 
   const std::string& defaultWxmlVersion() const { return itsFormatterOptions.defaultWxmlVersion(); }
   const std::string& wxmlSchema() const { return itsFormatterOptions.wxmlSchema(); }
@@ -90,7 +89,6 @@ class Config : private boost::noncopyable
   unsigned int itsExpirationTime;
   std::vector<std::string> itsParameterAliasFiles;
   std::vector<uint> itsDefaultGridGeometries;
-  bool itsIgnoreGridGeometriesWhenPreloadReady;
 
   Spine::TableFormatterOptions itsFormatterOptions;
   Precisions itsPrecisions;

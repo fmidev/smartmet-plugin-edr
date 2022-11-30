@@ -3353,7 +3353,6 @@ bool Plugin::processGridEngineQuery(const State& state,
       T::GeometryId_set geometryIdList;
       if (areaproducers.empty() && !itsGridInterface->containsParameterWithGridProducer(query) &&
           !itsGridInterface->isValidDefaultRequest(itsConfig.defaultGridGeometries(),
-                                                   itsConfig.ignoreGridGeometriesWhenPreloadReady(),
                                                    polygonPath,
                                                    geometryIdList))
 		{
