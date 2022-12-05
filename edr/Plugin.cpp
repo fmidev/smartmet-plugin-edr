@@ -4003,6 +4003,11 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
 
   try
   {
+    // Check request method (support GET, OPTIONS)
+    if (checkRequest(theRequest, theResponse, false)) {
+      return;
+    }
+
     if (Spine::optional_bool(theRequest.getParameter("grouplocations"), false))
       grouplocations(const_cast<Spine::HTTP::Request&>(theRequest));
 
