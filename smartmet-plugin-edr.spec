@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 22.12.12
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
