@@ -595,6 +595,13 @@ std::size_t Plugin::hash_value(const State& state,
 
     // EDR resource has to be fully included in the hash
     Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
+	  
+	if(masterquery.isEDRMetaDataQuery())
+	  {
+		auto metadata = itsMetaData.load();
+		Fmi::hash_combine(hash, Fmi::hash_value(metadata->update_time));
+		return hash;
+	  }
 
     // Calculate a hash for the query. We can ignore the time series options
     // since we later on generate a hash for the generated time series.
@@ -4235,6 +4242,7 @@ void Plugin::updateMetaData()
     {
       // New shared pointer which will be atomically set into production
       boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
+	  engine_meta_data->update_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
       
       // Get medata of all producers
       engine_meta_data->querydata = get_edr_metadata_qd(*itsQEngine);

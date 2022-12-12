@@ -90,6 +90,7 @@ namespace EDR
 	EDRProducerMetaData querydata;
 	EDRProducerMetaData grid;
 	EDRProducerMetaData observation;
+	std::time_t update_time;
   };
 
   void update_location_info(EngineMetaData& emd, const SupportedProducerLocations& spl);  
