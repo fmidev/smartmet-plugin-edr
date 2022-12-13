@@ -25,6 +25,14 @@ struct time_coord_value
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>; // level -> array of values
 using DataPerParameter = std::map<std::string, DataPerLevel>; // parameter_name -> data
 
+
+double as_double(const TS::Value& value)
+{
+  return (boost::get<double>(&value) != nullptr
+		  ? *(boost::get<double>(&value))
+		  : Fmi::stod(*(boost::get<std::string>(&value))));
+}
+
 bool lon_lat_level_param(const std::string& name)
 {
   return (name == "longitude" || name == "latitude"  || name == "level");
@@ -231,10 +239,7 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr& tsv, const std:
 		  if (ts.size() > 0) 
 			{
 			  const auto &tv = ts.front();
-			  double value =
-				(boost::get<double>(&tv.value) != nullptr
-				 ? *(boost::get<double>(&tv.value))
-				 : Fmi::stod(*(boost::get<std::string>(&tv.value))));
+			  double value = as_double(tv.value);
 			  if (param_name == "longitude") 
 				{
 				  longitude_vector.push_back(value);
@@ -303,11 +308,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData, const 
 			  if (ts->size() > 0) 
 				{
 				  const TS::TimedValue &tv = ts->at(0);
-				  double value =
-					(boost::get<double>(&tv.value) != nullptr
-					 ? *(boost::get<double>(&tv.value))
-					 : Fmi::stod(*(boost::get<std::string>(&tv.value))));
-				  
+				  double value = as_double(tv.value);
 				  if (param_name == "longitude")
 					longitude_vector.push_back(value);
 				  else
@@ -332,10 +333,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData, const 
 				  if (ts.size() > 0) 
 					{
 					  const auto &tv = ts.front();
-					  double value =
-						(boost::get<double>(&tv.value) != nullptr
-						 ? *(boost::get<double>(&tv.value))
-						 : Fmi::stod(*(boost::get<std::string>(&tv.value))));
+					  double value = as_double(tv.value);
 					  if (param_name == "longitude") {
 						longitude_vector.push_back(value);
 					  } 
@@ -1903,7 +1901,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
     {	  
       DataPerParameter dpp;
       
-      //	  std::cout << "get_output_data_per_parameter" << std::endl;
+	  //	  std::cout << "get_output_data_per_parameter" << std::endl;
       
       bool levels_present = (levels.size() > 0);
       
@@ -1935,7 +1933,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
 			{
 			  auto parameter_name = parse_parameter_name(query_parameters[j].name());
 			  DataPerLevel dpl;
-			  
+
 			  if(lon_lat_level_param(parameter_name))
 				continue;
 			  
@@ -1964,10 +1962,10 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
 					  const auto &data_value = llts_data.timeseries.at(l);
 					  const auto &lon_value = llts_lon.timeseries.at(l);
 					  const auto &lat_value = llts_lat.timeseries.at(l);
-					  
+
 					  time_coord_value tcv;
-					  tcv.lon = *(boost::get<double>(&lon_value.value));;
-					  tcv.lat = *(boost::get<double>(&lat_value.value));
+					  tcv.lon = as_double(lon_value.value);
+					  tcv.lat = as_double(lat_value.value);
 					  tcv.time = (boost::posix_time::to_iso_extended_string(data_value.time.utc_time())+"Z");
 					  
 					  double level = std::numeric_limits<double>::max();
@@ -1984,11 +1982,14 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
 							  level = *(boost::get<int>(&level_value.value));
 							}					  					  
 						}
+
 					  if(data_value.value != TS::None())
 						tcv.value = *(boost::get<double>(&data_value.value));
 					  bool accept = coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
+
 					  if(accept)
 						dpl[level].push_back(tcv);
+
 					  if (levels_present) 
 						{
 						  levels_index++;
@@ -2048,6 +2049,7 @@ Json::Value  formatOutputData(TS::OutputData &outputData,
     {
       Json::Value empty_result;
       
+
       if (outputData.empty())
 		return empty_result;
       
@@ -2062,7 +2064,7 @@ Json::Value  formatOutputData(TS::OutputData &outputData,
 		{
 		  // Zero or one levels
 		  if(levels.size() <= 1)
-			{
+			{	  
 			  boost::optional<int> level;
 			  if(levels.size() == 1)
 				level = *(levels.begin());
@@ -2191,11 +2193,9 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
 		  auto edr_metadata_grid = parse_edr_metadata(emd.grid, edr_query);
 		  auto edr_metadata_obs = parse_edr_metadata(emd.observation, edr_query);
 		  // Append grid engine metadata after QEngine metadata
-		  for (const auto &item : edr_metadata_grid)
-			edr_metadata.append(item);
+		  edr_metadata.append(edr_metadata_grid);
 		  // Append observation engine metadata in the end
-		  for (const auto &item : edr_metadata_obs)
-			edr_metadata.append(item);
+		  edr_metadata.append(edr_metadata_obs);
 		  
 		  // Add main level links
 		  Json::Value meta_data;

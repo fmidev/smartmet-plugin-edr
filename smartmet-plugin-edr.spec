@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.12.12
+Version: 22.12.13
 Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Tue Dec 13 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.12.13-1.fmi
+- Fixed bug of missing observation collections in  <host>/edr/collections metadata query
+
 * Mon Dec 12 2022 Anssi Reponen <anssi.reponen@fmi.fi> - 22.12.12-2.fmi
 - Timestamp of the latest metadata update added into hash_value of metadata query
 

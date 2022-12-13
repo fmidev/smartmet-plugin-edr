@@ -427,7 +427,10 @@ Value::const_iterator Value::end() const
 
 void Value::append(const Value& value)
 {
-  data_value_vector.push_back(value);
+  if(value.data_value_vector.size() > 0)
+	data_value_vector.insert(data_value_vector.end(), value.data_value_vector.begin(), value.data_value_vector.end());
+  else
+	data_value_vector.push_back(value);
 }
 
 std::string DataValue::to_string(unsigned int precision /*= DEFAULT_PRECISION*/) const
