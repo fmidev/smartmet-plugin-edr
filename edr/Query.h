@@ -20,27 +20,30 @@
 #include <grid-content/queryServer/definition/AliasFileCollection.h>
 #include <grid-files/common/AdditionalParameters.h>
 #include <grid-files/common/AttributeList.h>
-#include <list>
-#include <locale>
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/ValueFormatter.h>
-#include <map>
 #include <newbase/NFmiPoint.h>
-#include <set>
 #include <spine/HTTP.h>
 #include <spine/Location.h>
 #include <spine/Parameter.h>
-#include <string>
 #include <timeseries/OptionParsers.h>
 #include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <list>
+#include <locale>
+#include <map>
+#include <set>
+#include <string>
 #include <vector>
 
 #include "ProducerDataPeriod.h"
 
-namespace SmartMet {
-namespace Plugin {
-namespace EDR {
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
 class Config;
 
 // ----------------------------------------------------------------------
@@ -49,7 +52,8 @@ class Config;
  */
 // ----------------------------------------------------------------------
 
-struct Query {
+struct Query
+{
   Query(const State &state, const Spine::HTTP::Request &req, Config &config);
 
   // Note: Data members ordered according to the advice of Clang Analyzer to
@@ -70,10 +74,10 @@ struct Query {
 
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
 
-  double step; // used with path geometry
+  double step;  // used with path geometry
 
-  std::size_t startrow;   // Paging; first (0-) row to return; default 0
-  std::size_t maxresults; // max rows to return (page length); default 0 (all)
+  std::size_t startrow;    // Paging; first (0-) row to return; default 0
+  std::size_t maxresults;  // max rows to return (page length); default 0 (all)
 
   std::string wmo;
   std::string fmisid;
@@ -155,20 +159,15 @@ struct Query {
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
 
   const EDRQuery &edrQuery() const { return itsEDRQuery; }
-  const CoordinateFilter &coordinateFilter() const {
-    return itsCoordinateFilter;
-  }
-  bool isEDRMetaDataQuery() const {
-    return itsEDRQuery.query_id != EDRQueryId::DataQuery;
-  }
+  const CoordinateFilter &coordinateFilter() const { return itsCoordinateFilter; }
+  bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
 
-private:
+ private:
   Query();
 
   void parse_levels(const Spine::HTTP::Request &theReq);
 
-  void parse_precision(const Spine::HTTP::Request &theReq,
-                       const Config &config);
+  void parse_precision(const Spine::HTTP::Request &theReq, const Config &config);
 
 #ifndef WITHOUT_OBSERVATION
   void parse_parameters(const Spine::HTTP::Request &theReq,
@@ -193,8 +192,8 @@ private:
 
 std::ostream &operator<<(std::ostream &out, const EDRQuery &edrQ);
 
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet
 
 // ======================================================================

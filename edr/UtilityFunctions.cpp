@@ -2,18 +2,24 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-namespace SmartMet {
-namespace Plugin {
-namespace EDR {
-namespace UtilityFunctions {
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
+namespace UtilityFunctions
+{
 // ----------------------------------------------------------------------
 /*!
  * \brief
  */
 // ----------------------------------------------------------------------
 
-void update_latest_timestep(Query &query, const TS::TimeSeriesVectorPtr &tsv) {
-  try {
+void update_latest_timestep(Query &query, const TS::TimeSeriesVectorPtr &tsv)
+{
+  try
+  {
     if (tsv->empty())
       return;
 
@@ -29,7 +35,9 @@ void update_latest_timestep(Query &query, const TS::TimeSeriesVectorPtr &tsv) {
       query.latestTimestep = last_time.utc_time();
     else
       query.latestTimestep = last_time.local_time();
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -40,8 +48,10 @@ void update_latest_timestep(Query &query, const TS::TimeSeriesVectorPtr &tsv) {
  */
 // ----------------------------------------------------------------------
 
-void update_latest_timestep(Query &query, const TS::TimeSeries &ts) {
-  try {
+void update_latest_timestep(Query &query, const TS::TimeSeries &ts)
+{
+  try
+  {
     if (ts.empty())
       return;
 
@@ -51,7 +61,9 @@ void update_latest_timestep(Query &query, const TS::TimeSeries &ts) {
       query.latestTimestep = last_time.utc_time();
     else
       query.latestTimestep = last_time.local_time();
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -62,8 +74,10 @@ void update_latest_timestep(Query &query, const TS::TimeSeries &ts) {
  */
 // ----------------------------------------------------------------------
 
-void update_latest_timestep(Query &query, const TS::TimeSeriesGroup &tsg) {
-  try {
+void update_latest_timestep(Query &query, const TS::TimeSeriesGroup &tsg)
+{
+  try
+  {
     // take first time series and last timestep thereof
     TS::TimeSeries ts = tsg[0].timeseries;
 
@@ -73,7 +87,9 @@ void update_latest_timestep(Query &query, const TS::TimeSeriesGroup &tsg) {
     // update the latest timestep, so that next query (is exists) knows from
     // where to continue
     update_latest_timestep(query, ts);
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -84,9 +100,10 @@ void update_latest_timestep(Query &query, const TS::TimeSeriesGroup &tsg) {
  */
 // ----------------------------------------------------------------------
 
-void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query &query,
-                TS::OutputData &outputData) {
-  try {
+void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query &query, TS::OutputData &outputData)
+{
+  try
+  {
     if (aggregatedData->empty())
       return;
 
@@ -94,7 +111,9 @@ void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query &query,
     std::vector<TS::TimeSeriesData> &odata = (--outputData.end())->second;
     odata.emplace_back(TS::TimeSeriesData(aggregatedData));
     update_latest_timestep(query, aggregatedData);
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -105,20 +124,23 @@ void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query &query,
  */
 // ----------------------------------------------------------------------
 
-void store_data(std::vector<TS::TimeSeriesData> &aggregatedData, Query &query,
-                TS::OutputData &outputData) {
-  try {
+void store_data(std::vector<TS::TimeSeriesData> &aggregatedData,
+                Query &query,
+                TS::OutputData &outputData)
+{
+  try
+  {
     if (aggregatedData.empty())
       return;
 
     TS::TimeSeriesData tsdata;
-    if (boost::get<TS::TimeSeriesPtr>(&aggregatedData[0])) {
-      TS::TimeSeriesPtr ts_first =
-          *(boost::get<TS::TimeSeriesPtr>(&aggregatedData[0]));
-      TS::TimeSeriesPtr ts_result(
-          new TS::TimeSeries(ts_first->getLocalTimePool()));
+    if (boost::get<TS::TimeSeriesPtr>(&aggregatedData[0]))
+    {
+      TS::TimeSeriesPtr ts_first = *(boost::get<TS::TimeSeriesPtr>(&aggregatedData[0]));
+      TS::TimeSeriesPtr ts_result(new TS::TimeSeries(ts_first->getLocalTimePool()));
       // first merge timeseries of all levels of one parameter
-      for (const auto &data : aggregatedData) {
+      for (const auto &data : aggregatedData)
+      {
         TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&data));
         ts_result->insert(ts_result->end(), ts->begin(), ts->end());
       }
@@ -126,12 +148,14 @@ void store_data(std::vector<TS::TimeSeriesData> &aggregatedData, Query &query,
       // where to continue
       update_latest_timestep(query, *ts_result);
       tsdata = ts_result;
-    } else if (boost::get<TS::TimeSeriesGroupPtr>(&aggregatedData[0])) {
+    }
+    else if (boost::get<TS::TimeSeriesGroupPtr>(&aggregatedData[0]))
+    {
       TS::TimeSeriesGroupPtr tsg_result(new TS::TimeSeriesGroup);
       // first merge timeseries of all levels of one parameter
-      for (const auto &data : aggregatedData) {
-        TS::TimeSeriesGroupPtr tsg =
-            *(boost::get<TS::TimeSeriesGroupPtr>(&data));
+      for (const auto &data : aggregatedData)
+      {
+        TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&data));
         tsg_result->insert(tsg_result->end(), tsg->begin(), tsg->end());
       }
       // update the latest timestep, so that next query (if exists) knows from
@@ -143,12 +167,14 @@ void store_data(std::vector<TS::TimeSeriesData> &aggregatedData, Query &query,
     // insert data to the end
     std::vector<TS::TimeSeriesData> &odata = (--outputData.end())->second;
     odata.push_back(tsdata);
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-} // namespace UtilityFunctions
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace UtilityFunctions
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet

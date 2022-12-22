@@ -1,18 +1,22 @@
 #include "ParameterInfo.h"
 #include <boost/algorithm/string/case_conv.hpp>
 
-namespace SmartMet {
-namespace Plugin {
-namespace EDR {
-parameter_info
-ParameterInfo::get_parameter_info(const std::string &pname,
-                                  const std::string &language) const {
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
+parameter_info ParameterInfo::get_parameter_info(const std::string &pname,
+                                                 const std::string &language) const
+{
   parameter_info ret;
 
   auto parameter_name = pname;
   boost::algorithm::to_lower(parameter_name);
 
-  if (find(parameter_name) != end()) {
+  if (find(parameter_name) != end())
+  {
     const auto &pinfo = at(parameter_name);
     if (pinfo.description.find(language) != pinfo.description.end())
       ret.description = pinfo.description.at(language);
@@ -26,6 +30,6 @@ ParameterInfo::get_parameter_info(const std::string &pname,
 
   return ret;
 }
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet

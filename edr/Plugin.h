@@ -32,42 +32,53 @@
 #include <queue>
 #include <string>
 
-namespace SmartMet {
-namespace Engine {
-namespace Querydata {
+namespace SmartMet
+{
+namespace Engine
+{
+namespace Querydata
+{
 class Engine;
 }
-namespace Geonames {
+namespace Geonames
+{
 class Engine;
 }
-namespace Gis {
+namespace Gis
+{
 class Engine;
 }
-namespace Grid {
+namespace Grid
+{
 class Engine;
 }
-} // namespace Engine
+}  // namespace Engine
 
-namespace Plugin {
-namespace EDR {
+namespace Plugin
+{
+namespace EDR
+{
 class State;
 class PluginImpl;
 class GridInterface;
 
 using ObsParameters = std::vector<ObsParameter>;
 
-struct SettingsInfo {
+struct SettingsInfo
+{
   Engine::Observation::Settings settings;
   bool is_area = false;
   std::string area_name;
 
-  SettingsInfo(const Engine::Observation::Settings &s, bool isa,
-               const std::string &an)
-      : settings(s), is_area(isa), area_name(an) {}
+  SettingsInfo(const Engine::Observation::Settings &s, bool isa, const std::string &an)
+      : settings(s), is_area(isa), area_name(an)
+  {
+  }
 };
 
-class Plugin : public SmartMetPlugin, private boost::noncopyable {
-public:
+class Plugin : public SmartMetPlugin, private boost::noncopyable
+{
+ public:
   Plugin(Spine::Reactor *theReactor, const char *theConfig);
   virtual ~Plugin();
 
@@ -78,9 +89,7 @@ public:
   bool ready() const;
 
   // Get timezone information
-  const Fmi::TimeZones &getTimeZones() const {
-    return itsGeoEngine->getTimeZones();
-  }
+  const Fmi::TimeZones &getTimeZones() const { return itsGeoEngine->getTimeZones(); }
   // Get the engines
   const Engine::Querydata::Engine &getQEngine() const { return *itsQEngine; }
   const Engine::Geonames::Engine &getGeoEngine() const { return *itsGeoEngine; }
@@ -92,46 +101,53 @@ public:
 #endif
   EDRMetaData getProducerMetaData(const std::string &producer) const;
 
-protected:
+ protected:
   void init() override;
   void shutdown() override;
   void requestHandler(Spine::Reactor &theReactor,
                       const Spine::HTTP::Request &theRequest,
                       Spine::HTTP::Response &theResponse) override;
 
-private:
+ private:
   Plugin();
 
-  std::size_t hash_value(const State &state, Query masterquery,
+  std::size_t hash_value(const State &state,
+                         Query masterquery,
                          const Spine::HTTP::Request &request);
 
-  void query(const State &theState, const Spine::HTTP::Request &req,
+  void query(const State &theState,
+             const Spine::HTTP::Request &req,
              Spine::HTTP::Response &response);
 
-  boost::shared_ptr<std::string>
-  processQuery(const State &state, Spine::Table &data, Query &masterquery,
-               const QueryServer::QueryStreamer_sptr &queryStreamer,
-               size_t &product_hash);
+  boost::shared_ptr<std::string> processQuery(const State &state,
+                                              Spine::Table &data,
+                                              Query &masterquery,
+                                              const QueryServer::QueryStreamer_sptr &queryStreamer,
+                                              size_t &product_hash);
 
   Json::Value processMetaDataQuery(const EDRQuery &edr_query);
 
-  void processQEngineQuery(const State &state, Query &query,
+  void processQEngineQuery(const State &state,
+                           Query &query,
                            TS::OutputData &outputData,
                            const AreaProducers &areaproducers,
                            const ProducerDataPeriod &producerDataPeriod);
-  void fetchStaticLocationValues(Query &query, Spine::Table &data,
+  void fetchStaticLocationValues(Query &query,
+                                 Spine::Table &data,
                                  unsigned int column_index,
                                  unsigned int row_index);
 
   void fetchQEngineValues(const State &state,
                           const TS::ParameterAndFunctions &paramfunc,
-                          const Spine::TaggedLocation &tloc, Query &query,
+                          const Spine::TaggedLocation &tloc,
+                          Query &query,
                           const AreaProducers &areaproducers,
                           const ProducerDataPeriod &producerDataPeriod,
                           QueryLevelDataCache &queryLevelDataCache,
                           TS::OutputData &outputData);
 
-  bool processGridEngineQuery(const State &state, Query &masterquery,
+  bool processGridEngineQuery(const State &state,
+                              Query &masterquery,
                               TS::OutputData &outputData,
                               QueryServer::QueryStreamer_sptr queryStreamer,
                               const AreaProducers &areaproducers,
@@ -140,7 +156,8 @@ private:
 #ifndef WITHOUT_OBSERVATION
   bool isObsProducer(const std::string &producer) const;
 
-  void processObsEngineQuery(const State &state, Query &query,
+  void processObsEngineQuery(const State &state,
+                             Query &query,
                              TS::OutputData &outputData,
                              const AreaProducers &areaproducers,
                              const ProducerDataPeriod &producerDataPeriod,
@@ -150,42 +167,48 @@ private:
                                    const ObsParameters &obsParameters,
                                    const std::string &areaName,
                                    Engine::Observation::Settings &settings,
-                                   Query &query, TS::OutputData &outputData);
+                                   Query &query,
+                                   TS::OutputData &outputData);
   void fetchObsEngineValuesForPlaces(const State &state,
                                      const std::string &producer,
                                      const ObsParameters &obsParameters,
                                      Engine::Observation::Settings &settings,
-                                     Query &query, TS::OutputData &outputData);
+                                     Query &query,
+                                     TS::OutputData &outputData);
 
   void getCommonObsSettings(Engine::Observation::Settings &settings,
-                            const std::string &producer, Query &query) const;
+                            const std::string &producer,
+                            Query &query) const;
   void getObsSettings(std::vector<SettingsInfo> &settingsVector,
                       const std::string &producer,
                       const ProducerDataPeriod &producerDataPeriod,
                       const boost::posix_time::ptime &now,
-                      const ObsParameters &obsParameters, Query &query) const;
+                      const ObsParameters &obsParameters,
+                      Query &query) const;
 
   bool resolveAreaStations(const Spine::LocationPtr &location,
-                           const std::string &producer, Query &query,
+                           const std::string &producer,
+                           Query &query,
                            Engine::Observation::Settings &settings,
                            std::string &name) const;
   void resolveParameterSettings(const ObsParameters &obsParameters,
-                                const Query &query, const std::string &producer,
+                                const Query &query,
+                                const std::string &producer,
                                 Engine::Observation::Settings &settings,
                                 unsigned int &aggregationIntervalBehind,
                                 unsigned int &aggregationIntervalAhead) const;
   void resolveTimeSettings(const std::string &producer,
                            const ProducerDataPeriod &producerDataPeriod,
-                           const boost::posix_time::ptime &now, Query &query,
+                           const boost::posix_time::ptime &now,
+                           Query &query,
                            unsigned int aggregationIntervalBehind,
                            unsigned int aggregationIntervalAhead,
                            Engine::Observation::Settings &settings) const;
   std::vector<ObsParameter> getObsParameters(const Query &query) const;
 #endif
 
-  TS::TimeSeriesGenerator::LocalTimeList
-  generateQEngineQueryTimes(const Query &query,
-                            const std::string &paramname) const;
+  TS::TimeSeriesGenerator::LocalTimeList generateQEngineQueryTimes(
+      const Query &query, const std::string &paramname) const;
 
   Spine::LocationPtr getLocationForArea(const Spine::TaggedLocation &tloc,
                                         const Query &query,
@@ -193,10 +216,10 @@ private:
   void checkInKeywordLocations(Query &masterquery);
 
   Spine::LocationPtr getLocationForArea(const Spine::TaggedLocation &tloc,
-                                        int radius, const Query &query,
+                                        int radius,
+                                        const Query &query,
                                         NFmiSvgPath *svgPath = nullptr) const;
-  void resolveAreaLocations(Query &query, const State &state,
-                            const AreaProducers &areaproducers);
+  void resolveAreaLocations(Query &query, const State &state, const AreaProducers &areaproducers);
 
   Fmi::Cache::CacheStatistics getCacheStats() const override;
 
@@ -243,10 +266,10 @@ private:
   // is not thread safe.
 
   boost::atomic_shared_ptr<EngineMetaData> itsMetaData;
-}; // class Plugin
+};  // class Plugin
 
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet
 
 // ======================================================================

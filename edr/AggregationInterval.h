@@ -10,24 +10,25 @@
 #include <iosfwd>
 #include <map>
 
-namespace SmartMet {
-namespace Plugin {
-namespace EDR {
-struct AggregationInterval {
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
+struct AggregationInterval
+{
   unsigned int behind;
   unsigned int ahead;
 
-  AggregationInterval(unsigned int be = 0, unsigned int ah = 0)
-      : behind(be), ahead(ah) {}
-  friend std::ostream &operator<<(std::ostream &out,
-                                  const AggregationInterval &interval);
+  AggregationInterval(unsigned int be = 0, unsigned int ah = 0) : behind(be), ahead(ah) {}
+  friend std::ostream &operator<<(std::ostream &out, const AggregationInterval &interval);
 };
 
 using MaxAggregationIntervals = std::map<std::string, AggregationInterval>;
 
-std::ostream &operator<<(std::ostream &out,
-                         const AggregationInterval &interval);
+std::ostream &operator<<(std::ostream &out, const AggregationInterval &interval);
 
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet

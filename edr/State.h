@@ -23,36 +23,46 @@
 #include <engines/querydata/Q.h>
 #include <timeseries/TimeSeriesInclude.h>
 
-namespace Fmi {
+namespace Fmi
+{
 class TimeZones;
 }
 
-namespace SmartMet {
-namespace Engine {
-namespace Querydata {
+namespace SmartMet
+{
+namespace Engine
+{
+namespace Querydata
+{
 class Engine;
 }
-namespace Grid {
+namespace Grid
+{
 class Engine;
 }
 
 #ifndef WITHOUT_OBSERVATION
-namespace Observation {
+namespace Observation
+{
 class Engine;
 }
 #endif
 
-namespace Geonames {
+namespace Geonames
+{
 class Engine;
 }
-} // namespace Engine
+}  // namespace Engine
 
-namespace Plugin {
-namespace EDR {
+namespace Plugin
+{
+namespace EDR
+{
 class Plugin;
 
-class State {
-public:
+class State
+{
+ public:
   // We always construct with the plugin only
   State(const Plugin &thePlugin);
   State() = delete;
@@ -73,15 +83,13 @@ public:
   void setTime(const boost::posix_time::ptime &theTime);
 
   // Get querydata for the given input
-  Engine::Querydata::Q
-  get(const Engine::Querydata::Producer &theProducer) const;
-  Engine::Querydata::Q
-  get(const Engine::Querydata::Producer &theProducer,
-      const Engine::Querydata::OriginTime &theOriginTime) const;
+  Engine::Querydata::Q get(const Engine::Querydata::Producer &theProducer) const;
+  Engine::Querydata::Q get(const Engine::Querydata::Producer &theProducer,
+                           const Engine::Querydata::OriginTime &theOriginTime) const;
   TS::LocalTimePoolPtr getLocalTimePool() const;
   EDRMetaData getProducerMetaData(const std::string &producer) const;
 
-private:
+ private:
   const Plugin &itsPlugin;
   boost::posix_time::ptime itsTime;
   TS::LocalTimePoolPtr itsLocalTimePool{nullptr};
@@ -94,8 +102,8 @@ private:
   mutable QCache itsQCache;
   mutable TimedQCache itsTimedQCache;
 
-}; // class State
+};  // class State
 
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet

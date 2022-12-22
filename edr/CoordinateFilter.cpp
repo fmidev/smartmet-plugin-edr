@@ -2,43 +2,58 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <macgyver/StringConversion.h>
 
-namespace SmartMet {
-namespace Plugin {
-namespace EDR {
-
-void CoordinateFilter::add(double longitude, double latitude, double level) {
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
+void CoordinateFilter::add(double longitude, double latitude, double level)
+{
   LonLat lonlat(longitude, latitude);
   itsAllowedLevels[lonlat].insert(level);
 }
 
-void CoordinateFilter::add(double longitude, double latitude,
-                           const boost::posix_time::ptime &timestep) {
+void CoordinateFilter::add(double longitude,
+                           double latitude,
+                           const boost::posix_time::ptime &timestep)
+{
   LonLat lonlat(longitude, latitude);
   itsAllowedTimesteps[lonlat].insert(timestep);
 }
 
-void CoordinateFilter::add(double longitude, double latitude, double level,
-                           const boost::posix_time::ptime &timestep) {
+void CoordinateFilter::add(double longitude,
+                           double latitude,
+                           double level,
+                           const boost::posix_time::ptime &timestep)
+{
   LonLat lonlat(longitude, latitude);
   itsAllowedLevelsTimesteps[lonlat].insert(std::make_pair(level, timestep));
 }
 
-bool CoordinateFilter::isEmpty() const {
+bool CoordinateFilter::isEmpty() const
+{
   return (itsAllowedLevels.empty() && itsAllowedTimesteps.empty() &&
           itsAllowedLevelsTimesteps.empty());
 }
 
 // Get all levels
-std::string CoordinateFilter::getLevels() const {
-
+std::string CoordinateFilter::getLevels() const
+{
   std::set<double> levels;
-  if (!itsAllowedLevels.empty()) {
-    for (const auto &item : itsAllowedLevels) {
+  if (!itsAllowedLevels.empty())
+  {
+    for (const auto &item : itsAllowedLevels)
+    {
       levels.insert(item.second.begin(), item.second.end());
     }
-  } else if (!itsAllowedLevelsTimesteps.empty()) {
-    for (const auto &coords : itsAllowedLevelsTimesteps) {
-      for (const auto &item : coords.second) {
+  }
+  else if (!itsAllowedLevelsTimesteps.empty())
+  {
+    for (const auto &coords : itsAllowedLevelsTimesteps)
+    {
+      for (const auto &item : coords.second)
+      {
         levels.insert(item.first);
       }
     }
@@ -46,7 +61,8 @@ std::string CoordinateFilter::getLevels() const {
 
   std::string ret;
 
-  for (const auto &l : levels) {
+  for (const auto &l : levels)
+  {
     if (!ret.empty())
       ret.append(",");
     ret.append(Fmi::to_string(l));
@@ -56,16 +72,21 @@ std::string CoordinateFilter::getLevels() const {
 }
 
 // Get datetime
-std::string CoordinateFilter::getDatetime() const {
+std::string CoordinateFilter::getDatetime() const
+{
   boost::posix_time::ptime starttime(boost::posix_time::not_a_date_time);
   boost::posix_time::ptime endtime(boost::posix_time::not_a_date_time);
 
-  if (!itsAllowedTimesteps.empty()) {
-    for (const auto &item : itsAllowedTimesteps) {
-      for (const auto &timestep : item.second) {
+  if (!itsAllowedTimesteps.empty())
+  {
+    for (const auto &item : itsAllowedTimesteps)
+    {
+      for (const auto &timestep : item.second)
+      {
         auto timesteps = item.second;
 
-        if (starttime.is_not_a_date_time()) {
+        if (starttime.is_not_a_date_time())
+        {
           starttime = timestep;
           endtime = timestep;
           continue;
@@ -77,11 +98,16 @@ std::string CoordinateFilter::getDatetime() const {
           endtime = timestep;
       }
     }
-  } else if (!itsAllowedLevelsTimesteps.empty()) {
-    for (const auto &coords : itsAllowedLevelsTimesteps) {
-      for (const auto &item : coords.second) {
+  }
+  else if (!itsAllowedLevelsTimesteps.empty())
+  {
+    for (const auto &coords : itsAllowedLevelsTimesteps)
+    {
+      for (const auto &item : coords.second)
+      {
         auto timestep = item.second;
-        if (starttime.is_not_a_date_time()) {
+        if (starttime.is_not_a_date_time())
+        {
           starttime = timestep;
           endtime = timestep;
           continue;
@@ -102,32 +128,40 @@ std::string CoordinateFilter::getDatetime() const {
   return "";
 }
 
-bool CoordinateFilter::accept(double longitude, double latitude, double level,
-                              const boost::posix_time::ptime &timestep) const {
+bool CoordinateFilter::accept(double longitude,
+                              double latitude,
+                              double level,
+                              const boost::posix_time::ptime &timestep) const
+{
   if (isEmpty())
     return true;
 
   auto lonlat = LonLat(longitude, latitude);
 
-  if (!itsAllowedLevelsTimesteps.empty()) {
-    if (itsAllowedLevelsTimesteps.find(lonlat) ==
-        itsAllowedLevelsTimesteps.end())
+  if (!itsAllowedLevelsTimesteps.empty())
+  {
+    if (itsAllowedLevelsTimesteps.find(lonlat) == itsAllowedLevelsTimesteps.end())
       return false;
 
     const auto &level_time_pairs = itsAllowedLevelsTimesteps.at(lonlat);
 
-    for (const auto &item : level_time_pairs) {
+    for (const auto &item : level_time_pairs)
+    {
       if (item.first == level && item.second == timestep)
         return true;
     }
-  } else if (!itsAllowedLevels.empty()) {
+  }
+  else if (!itsAllowedLevels.empty())
+  {
     if (itsAllowedLevels.find(lonlat) == itsAllowedLevels.end())
       return false;
 
     const auto &levels = itsAllowedLevels.at(lonlat);
 
     return (levels.find(level) != levels.end());
-  } else if (!itsAllowedTimesteps.empty()) {
+  }
+  else if (!itsAllowedTimesteps.empty())
+  {
     if (itsAllowedTimesteps.find(lonlat) == itsAllowedTimesteps.end())
       return false;
 
@@ -139,6 +173,6 @@ bool CoordinateFilter::accept(double longitude, double latitude, double level,
   return false;
 }
 
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet

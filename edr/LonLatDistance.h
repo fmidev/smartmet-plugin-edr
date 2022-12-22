@@ -2,9 +2,12 @@
 
 #include <utility>
 
-namespace SmartMet {
-namespace Plugin {
-namespace EDR {
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
 /** @brief Computes the distance between two WGS-84 positions.
  *
  */
@@ -19,10 +22,10 @@ double distance_in_kilometers(const std::pair<double, double> &from,
  * destination is reached)
  *
  */
-std::pair<double, double>
-destination_point(const std::pair<double, double> &from,
-                  const std::pair<double, double> &to, const double &distance);
+std::pair<double, double> destination_point(const std::pair<double, double> &from,
+                                            const std::pair<double, double> &to,
+                                            const double &distance);
 
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet

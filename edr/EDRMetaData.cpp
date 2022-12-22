@@ -11,15 +11,18 @@
 #include <engines/observation/ObservableProperty.h>
 #endif
 
-namespace SmartMet {
-namespace Plugin {
-namespace EDR {
-
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
 #define DEFAULT_PRECISION 4
 
-EDRProducerMetaData
-get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine) {
-  try {
+EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine)
+{
+  try
+  {
     Engine::Querydata::MetaQueryOptions opts;
     auto qd_meta_data = qEngine.getEngineMetadata(opts);
 
@@ -29,16 +32,17 @@ get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine) {
       return epmd;
 
     // Iterate QEngine metadata and add items into collection
-    for (const auto &qmd : qd_meta_data) {
+    for (const auto &qmd : qd_meta_data)
+    {
       EDRMetaData producer_emd;
 
-      if (qmd.levels.size() > 1) {
+      if (qmd.levels.size() > 1)
+      {
         producer_emd.vertical_extent.vrs =
             ("Vertical Reference System: " + qmd.levels.front().type);
         producer_emd.vertical_extent.level_type = qmd.levels.front().type;
         for (const auto &item : qmd.levels)
-          producer_emd.vertical_extent.levels.push_back(
-              Fmi::to_string(item.value));
+          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
       }
 
       const auto &rangeLon = qmd.wgs84Envelope.getRangeLon();
@@ -53,26 +57,30 @@ get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine) {
       producer_emd.temporal_extent.timestep = qmd.timeStep;
       producer_emd.temporal_extent.timesteps = qmd.nTimeSteps;
 
-      for (const auto &p : qmd.parameters) {
+      for (const auto &p : qmd.parameters)
+      {
         auto parameter_name = p.name;
         boost::algorithm::to_lower(parameter_name);
         producer_emd.parameter_names.insert(parameter_name);
-        producer_emd.parameters.insert(std::make_pair(
-            parameter_name, edr_parameter(p.name, p.description)));
+        producer_emd.parameters.insert(
+            std::make_pair(parameter_name, edr_parameter(p.name, p.description)));
       }
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] =
-          DEFAULT_PRECISION;
+      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       epmd[qmd.producer].push_back(producer_emd);
     }
 
     return epmd;
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine) {
-  try {
+EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine)
+{
+  try
+  {
     EDRProducerMetaData epmd;
 
     /*
@@ -87,7 +95,8 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine) {
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
     // Iterate Grid metadata and add items into collection
-    for (const auto &gmd : grid_meta_data) {
+    for (const auto &gmd : grid_meta_data)
+    {
       /*
       if(!geometryId.empty())
             {
@@ -102,10 +111,10 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine) {
       */
       EDRMetaData producer_emd;
 
-      if (gmd.levels.size() > 1) {
+      if (gmd.levels.size() > 1)
+      {
         producer_emd.vertical_extent.vrs =
-            (Fmi::to_string(gmd.levelId) + ";" + gmd.levelName + ";" +
-             gmd.levelDescription);
+            (Fmi::to_string(gmd.levelId) + ";" + gmd.levelName + ";" + gmd.levelDescription);
 
         /*
           1;GROUND;Ground or water surface;
@@ -145,47 +154,44 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine) {
       const auto &start_time = *begin_iter;
       begin_iter++;
       const auto &start_time_plus_one = *begin_iter;
-      auto timestep_duration =
-          (boost::posix_time::from_iso_string(start_time_plus_one) -
-           boost::posix_time::from_iso_string(start_time));
+      auto timestep_duration = (boost::posix_time::from_iso_string(start_time_plus_one) -
+                                boost::posix_time::from_iso_string(start_time));
 
-      producer_emd.temporal_extent.start_time =
-          boost::posix_time::from_iso_string(start_time);
-      producer_emd.temporal_extent.end_time =
-          boost::posix_time::from_iso_string(end_time);
-      producer_emd.temporal_extent.timestep =
-          (timestep_duration.total_seconds() / 60);
+      producer_emd.temporal_extent.start_time = boost::posix_time::from_iso_string(start_time);
+      producer_emd.temporal_extent.end_time = boost::posix_time::from_iso_string(end_time);
+      producer_emd.temporal_extent.timestep = (timestep_duration.total_seconds() / 60);
       producer_emd.temporal_extent.timesteps = gmd.times.size();
 
-      for (const auto &p : gmd.parameters) {
+      for (const auto &p : gmd.parameters)
+      {
         auto parameter_name = p.parameterName;
         boost::algorithm::to_lower(parameter_name);
         producer_emd.parameter_names.insert(parameter_name);
-        producer_emd.parameters.insert(
-            std::make_pair(parameter_name,
-                           edr_parameter(parameter_name, p.parameterDescription,
-                                         p.parameterUnits)));
+        producer_emd.parameters.insert(std::make_pair(
+            parameter_name,
+            edr_parameter(parameter_name, p.parameterDescription, p.parameterUnits)));
       }
-      std::string producerId =
-          (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." +
-           Fmi::to_string(gmd.levelId));
+      std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." +
+                                Fmi::to_string(gmd.levelId));
       boost::algorithm::to_lower(producerId);
 
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] =
-          DEFAULT_PRECISION;
+      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       epmd[producerId].push_back(producer_emd);
     }
 
     return epmd;
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData
-get_edr_metadata_obs(Engine::Observation::Engine &obsEngine) {
-  try {
+EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine)
+{
+  try
+  {
     std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
 
     std::set<std::string> producers = obsEngine.getValidStationTypes();
@@ -197,14 +203,14 @@ get_edr_metadata_obs(Engine::Observation::Engine &obsEngine) {
     */
 
     for (const auto &prod : producers)
-      observation_meta_data.insert(
-          std::make_pair(prod, obsEngine.metaData(prod)));
+      observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
 
     EDRProducerMetaData epmd;
 
     // Iterate Observation engine metadata and add item into collection
     std::vector<std::string> params{""};
-    for (const auto &item : observation_meta_data) {
+    for (const auto &item : observation_meta_data)
+    {
       const auto &producer = item.first;
       const auto &obs_md = item.second;
 
@@ -214,15 +220,14 @@ get_edr_metadata_obs(Engine::Observation::Engine &obsEngine) {
       producer_emd.spatial_extent.bbox_ymin = obs_md.bbox.yMin;
       producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
       producer_emd.spatial_extent.bbox_ymax = obs_md.bbox.yMax;
-      producer_emd.temporal_extent.origin_time =
-          boost::posix_time::second_clock::universal_time();
+      producer_emd.temporal_extent.origin_time = boost::posix_time::second_clock::universal_time();
       producer_emd.temporal_extent.start_time = obs_md.period.begin();
       producer_emd.temporal_extent.end_time = obs_md.period.last();
       producer_emd.temporal_extent.timestep = obs_md.timestep;
-      producer_emd.temporal_extent.timesteps =
-          (obs_md.period.length().minutes() / obs_md.timestep);
+      producer_emd.temporal_extent.timesteps = (obs_md.period.length().minutes() / obs_md.timestep);
 
-      for (const auto &p : obs_md.parameters) {
+      for (const auto &p : obs_md.parameters)
+      {
         params[0] = p;
         std::string description = p;
         /*
@@ -240,20 +245,23 @@ get_edr_metadata_obs(Engine::Observation::Engine &obsEngine) {
             std::make_pair(parameter_name, edr_parameter(p, description)));
       }
 
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] =
-          DEFAULT_PRECISION;
+      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       epmd[producer].push_back(producer_emd);
     }
 
     return epmd;
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 #endif
 
-int EDRMetaData::getPrecision(const std::string &parameter_name) const {
-  try {
+int EDRMetaData::getPrecision(const std::string &parameter_name) const
+{
+  try
+  {
     auto pname = parameter_name;
     boost::algorithm::to_lower(pname);
 
@@ -261,41 +269,50 @@ int EDRMetaData::getPrecision(const std::string &parameter_name) const {
       return parameter_precisions.at(pname);
 
     return parameter_precisions.at("__DEFAULT_PRECISION__");
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-void update_location_info(EDRProducerMetaData &pmd,
-                          const SupportedProducerLocations &spl) {
-  try {
-    for (auto &item : pmd) {
+void update_location_info(EDRProducerMetaData &pmd, const SupportedProducerLocations &spl)
+{
+  try
+  {
+    for (auto &item : pmd)
+    {
       const auto &producer = item.first;
       //
       auto &md_vector = item.second;
-      auto producer_key =
-          (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
-      if (spl.find(producer_key) != spl.end()) {
+      auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+      {
         for (auto &md : md_vector)
           md.locations = &spl.at(producer_key);
       }
     }
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-void update_location_info(EngineMetaData &emd,
-                          const SupportedProducerLocations &spl) {
-  try {
+void update_location_info(EngineMetaData &emd, const SupportedProducerLocations &spl)
+{
+  try
+  {
     update_location_info(emd.querydata, spl);
     update_location_info(emd.grid, spl);
     update_location_info(emd.observation, spl);
-  } catch (...) {
+  }
+  catch (...)
+  {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-} // namespace EDR
-} // namespace Plugin
-} // namespace SmartMet
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet
