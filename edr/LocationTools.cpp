@@ -1,21 +1,17 @@
 #include "LocationTools.h"
 #include "LonLatDistance.h"
 #include <engines/observation/Keywords.h>
-#include <timeseries/ParameterKeywords.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiSvgTools.h>
+#include <timeseries/ParameterKeywords.h>
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
-namespace
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
+namespace {
 // Construct the locale for case conversions only once
 const std::locale stdlocale = std::locale();
-}  // namespace
+} // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -23,10 +19,8 @@ const std::locale stdlocale = std::locale();
  */
 // ----------------------------------------------------------------------
 
-std::string get_name_base(const std::string& theName)
-{
-  try
-  {
+std::string get_name_base(const std::string &theName) {
+  try {
     std::string place = theName;
 
     // remove radius if exists
@@ -34,9 +28,7 @@ std::string get_name_base(const std::string& theName)
       place = place.substr(0, place.find(':'));
 
     return place;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -47,56 +39,46 @@ std::string get_name_base(const std::string& theName)
  */
 // ----------------------------------------------------------------------
 
-const OGRGeometry* get_ogr_geometry(const Spine::TaggedLocation& tloc,
-                                    const Engine::Gis::GeometryStorage& geometryStorage)
-{
-  const OGRGeometry* ret = nullptr;
+const OGRGeometry *
+get_ogr_geometry(const Spine::TaggedLocation &tloc,
+                 const Engine::Gis::GeometryStorage &geometryStorage) {
+  const OGRGeometry *ret = nullptr;
 
-  try
-  {
+  try {
     Spine::LocationPtr loc = tloc.loc;
     std::string place = get_name_base(loc->name);
     boost::algorithm::to_lower(place, stdlocale);
 
-    if (loc->type == Spine::Location::Place || loc->type == Spine::Location::CoordinatePoint)
-    {
+    if (loc->type == Spine::Location::Place ||
+        loc->type == Spine::Location::CoordinatePoint) {
       ret = geometryStorage.getOGRGeometry(place, wkbPoint);
-    }
-    else if (loc->type == Spine::Location::Area)
-    {
+    } else if (loc->type == Spine::Location::Area) {
       ret = geometryStorage.getOGRGeometry(place, wkbPolygon);
       if (ret == nullptr)
         ret = geometryStorage.getOGRGeometry(place, wkbMultiPolygon);
-    }
-    else if (loc->type == Spine::Location::Path)
-    {
+    } else if (loc->type == Spine::Location::Path) {
       ret = geometryStorage.getOGRGeometry(place, wkbLineString);
       if (ret == nullptr)
         ret = geometryStorage.getOGRGeometry(place, wkbMultiLineString);
     }
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 
   return ret;
 }
 
-std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string& wktString, double radius /*= 0.0*/)
-{
-  try
-  {
+std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string &wktString,
+                                              double radius /*= 0.0*/) {
+  try {
     std::unique_ptr<OGRGeometry> ret;
 
     std::string wkt = get_name_base(wktString);
 
-    OGRGeometry* geom = Fmi::OGR::createFromWkt(wkt, 4326);
+    OGRGeometry *geom = Fmi::OGR::createFromWkt(wkt, 4326);
 
-    if (geom)
-    {
-      if (radius > 0.0)
-      {
+    if (geom) {
+      if (radius > 0.0) {
         std::unique_ptr<OGRGeometry> poly;
         poly.reset(Fmi::OGR::expandGeometry(geom, radius * 1000));
         OGRGeometryFactory::destroyGeometry(geom);
@@ -107,9 +89,7 @@ std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string& wktString, doub
     }
 
     return ret;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
@@ -120,75 +100,58 @@ std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string& wktString, doub
  */
 // ----------------------------------------------------------------------
 
-void get_svg_path(const Spine::TaggedLocation& tloc,
-                  const Engine::Gis::GeometryStorage& geometryStorage,
-                  NFmiSvgPath& svgPath)
-{
-  try
-  {
+void get_svg_path(const Spine::TaggedLocation &tloc,
+                  const Engine::Gis::GeometryStorage &geometryStorage,
+                  NFmiSvgPath &svgPath) {
+  try {
     Spine::LocationPtr loc = tloc.loc;
     std::string place = get_name_base(loc->name);
 
-    if (loc->type == Spine::Location::Place || loc->type == Spine::Location::CoordinatePoint)
-    {
+    if (loc->type == Spine::Location::Place ||
+        loc->type == Spine::Location::CoordinatePoint) {
       NFmiSvgTools::PointToSvgPath(svgPath, loc->longitude, loc->latitude);
-    }
-    else if (loc->type == Spine::Location::Area)
-    {
-      if (geometryStorage.isPolygon(place))
-      {
+    } else if (loc->type == Spine::Location::Area) {
+      if (geometryStorage.isPolygon(place)) {
         std::stringstream svgStringStream(geometryStorage.getSVGPath(place));
         svgPath.Read(svgStringStream);
-      }
-      else if (geometryStorage.isPoint(place))
-      {
+      } else if (geometryStorage.isPoint(place)) {
         std::pair<double, double> thePoint = geometryStorage.getPoint(place);
         NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
+      } else {
+        throw Fmi::Exception(BCP, "Area '" + place +
+                                      "' not found in PostGIS database!");
       }
-      else
-      {
-        throw Fmi::Exception(BCP, "Area '" + place + "' not found in PostGIS database!");
-      }
-    }
-    else if (loc->type == Spine::Location::Path)
-    {
-      if (place.find(',') != std::string::npos)
-      {
-        // path given as a query parameter in format "lon,lat,lon,lat,lon,lat,..."
+    } else if (loc->type == Spine::Location::Path) {
+      if (place.find(',') != std::string::npos) {
+        // path given as a query parameter in format
+        // "lon,lat,lon,lat,lon,lat,..."
         std::vector<std::string> lonLatVector;
-        boost::algorithm::split(lonLatVector, place, boost::algorithm::is_any_of(","));
-        for (unsigned int i = 0; i < lonLatVector.size(); i += 2)
-        {
+        boost::algorithm::split(lonLatVector, place,
+                                boost::algorithm::is_any_of(","));
+        for (unsigned int i = 0; i < lonLatVector.size(); i += 2) {
           double longitude = Fmi::stod(lonLatVector[i]);
           double latitude = Fmi::stod(lonLatVector[i + 1]);
-          svgPath.push_back(NFmiSvgPath::Element(
-              (i == 0 ? NFmiSvgPath::kElementMoveto : NFmiSvgPath::kElementLineto),
-              longitude,
-              latitude));
+          svgPath.push_back(
+              NFmiSvgPath::Element((i == 0 ? NFmiSvgPath::kElementMoveto
+                                           : NFmiSvgPath::kElementLineto),
+                                   longitude, latitude));
         }
-      }
-      else
-      {
+      } else {
         // path fetched from PostGIS database
-        if (geometryStorage.isPolygon(place) || geometryStorage.isLine(place))
-        {
+        if (geometryStorage.isPolygon(place) || geometryStorage.isLine(place)) {
           std::stringstream svgStringStream(geometryStorage.getSVGPath(place));
           svgPath.Read(svgStringStream);
-        }
-        else if (geometryStorage.isPoint(place))
-        {
+        } else if (geometryStorage.isPoint(place)) {
           std::pair<double, double> thePoint = geometryStorage.getPoint(place);
-          NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
-        }
-        else
-        {
-          throw Fmi::Exception(BCP, "Path '" + place + "' not found in PostGIS database!");
+          NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first,
+                                       thePoint.second);
+        } else {
+          throw Fmi::Exception(BCP, "Path '" + place +
+                                        "' not found in PostGIS database!");
         }
       }
     }
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -199,92 +162,79 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
  */
 // ----------------------------------------------------------------------
 
-Spine::LocationList get_location_list(const NFmiSvgPath& thePath,
-                                      const std::string& thePathName,
-                                      const double& stepInKm,
-                                      const Engine::Geonames::Engine& geonames)
-{
-  try
-  {
+Spine::LocationList
+get_location_list(const NFmiSvgPath &thePath, const std::string &thePathName,
+                  const double &stepInKm,
+                  const Engine::Geonames::Engine &geonames) {
+  try {
     Spine::LocationList locationList;
 
     double step = abs(stepInKm);
     if (step > 0 && step < 0.01)
       step = 0.01;
 
-    std::pair<double, double> from(thePath.begin()->itsX, thePath.begin()->itsY);
+    std::pair<double, double> from(thePath.begin()->itsX,
+                                   thePath.begin()->itsY);
     std::pair<double, double> to(thePath.begin()->itsX, thePath.begin()->itsY);
 
     double leftoverDistanceKmFromPreviousLeg = 0.0;
     std::string theTimezone;
 
     std::size_t i = 0;
-    for (const auto& element : thePath)
-    {
+    for (const auto &element : thePath) {
       to = std::pair<double, double>(element.itsX, element.itsY);
 
       // first round
-      if (i++ == 0)
-      {
-        // fetch geoinfo only for the first coordinate, because geosearch is so slow
-        // reuse name and timezone for rest of the locations
-        Spine::LocationPtr locFirst = geonames.lonlatSearch(element.itsX, element.itsY, "");
+      if (i++ == 0) {
+        // fetch geoinfo only for the first coordinate, because geosearch is so
+        // slow reuse name and timezone for rest of the locations
+        Spine::LocationPtr locFirst =
+            geonames.lonlatSearch(element.itsX, element.itsY, "");
 
-        Spine::LocationPtr loc = Spine::LocationPtr(new Spine::Location(locFirst->geoid,
-                                                                        thePathName,
-                                                                        locFirst->iso2,
-                                                                        locFirst->municipality,
-                                                                        locFirst->area,
-                                                                        locFirst->feature,
-                                                                        locFirst->country,
-                                                                        locFirst->longitude,
-                                                                        locFirst->latitude,
-                                                                        locFirst->timezone,
-                                                                        locFirst->population,
-                                                                        locFirst->elevation));
+        Spine::LocationPtr loc = Spine::LocationPtr(new Spine::Location(
+            locFirst->geoid, thePathName, locFirst->iso2,
+            locFirst->municipality, locFirst->area, locFirst->feature,
+            locFirst->country, locFirst->longitude, locFirst->latitude,
+            locFirst->timezone, locFirst->population, locFirst->elevation));
 
         theTimezone = loc->timezone;
         locationList.push_back(loc);
-      }
-      else
-      {
-	if(step == 0)
-	  {
-	    locationList.push_back(Spine::LocationPtr(new Spine::Location(to.first, to.second, thePathName, theTimezone)));
-	    continue;
-	  }
-	  
+      } else {
+        if (step == 0) {
+          locationList.push_back(Spine::LocationPtr(new Spine::Location(
+              to.first, to.second, thePathName, theTimezone)));
+          continue;
+        }
+
         // Each path-element is handled separately
         if (element.itsType == NFmiSvgPath::kElementMoveto &&
-            distance_in_kilometers(from, to) > step)
-        {
+            distance_in_kilometers(from, to) > step) {
           // Start the new leg
-          locationList.push_back(Spine::LocationPtr(
-              new Spine::Location(to.first, to.second, thePathName, theTimezone)));
+          locationList.push_back(Spine::LocationPtr(new Spine::Location(
+              to.first, to.second, thePathName, theTimezone)));
           from = to;
           leftoverDistanceKmFromPreviousLeg = 0.0;
           continue;
         }
 
         double intermediateDistance = distance_in_kilometers(from, to);
-        if ((intermediateDistance + leftoverDistanceKmFromPreviousLeg) <= step)
-        {
+        if ((intermediateDistance + leftoverDistanceKmFromPreviousLeg) <=
+            step) {
           leftoverDistanceKmFromPreviousLeg += intermediateDistance;
-        }
-        else
-        {
+        } else {
           // missing distance from step
           double missingDistance = step - leftoverDistanceKmFromPreviousLeg;
           std::pair<double, double> intermediatePoint =
               destination_point(from, to, missingDistance);
           locationList.push_back(Spine::LocationPtr(new Spine::Location(
-              intermediatePoint.first, intermediatePoint.second, thePathName, theTimezone)));
+              intermediatePoint.first, intermediatePoint.second, thePathName,
+              theTimezone)));
           from = intermediatePoint;
-          while (distance_in_kilometers(from, to) > step)
-          {
+          while (distance_in_kilometers(from, to) > step) {
             intermediatePoint = destination_point(from, to, step);
             locationList.push_back(Spine::LocationPtr(new Spine::Location(
-                intermediatePoint.first, intermediatePoint.second, thePathName, theTimezone)));
+                intermediatePoint.first, intermediatePoint.second, thePathName,
+                theTimezone)));
             from = intermediatePoint;
           }
           leftoverDistanceKmFromPreviousLeg = distance_in_kilometers(from, to);
@@ -294,10 +244,9 @@ Spine::LocationList get_location_list(const NFmiSvgPath& thePath,
     }
 
     // Last leg is not full
-    if (leftoverDistanceKmFromPreviousLeg > 0.001)
-    {
-      locationList.push_back(
-          Spine::LocationPtr(new Spine::Location(to.first, to.second, thePathName, theTimezone)));
+    if (leftoverDistanceKmFromPreviousLeg > 0.001) {
+      locationList.push_back(Spine::LocationPtr(
+          new Spine::Location(to.first, to.second, thePathName, theTimezone)));
     }
 
     Spine::LocationPtr front = locationList.front();
@@ -308,9 +257,7 @@ Spine::LocationList get_location_list(const NFmiSvgPath& thePath,
       locationList.pop_back();
 
     return locationList;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -321,19 +268,15 @@ Spine::LocationList get_location_list(const NFmiSvgPath& thePath,
  */
 // ----------------------------------------------------------------------
 
-std::string get_location_id(const Spine::LocationPtr& loc)
-{
-  try
-  {
+std::string get_location_id(const Spine::LocationPtr &loc) {
+  try {
     std::ostringstream ss;
 
-    ss << loc->name << " " << std::fixed << std::setprecision(7) << loc->longitude << " "
-       << loc->latitude << " " << loc->geoid;
+    ss << loc->name << " " << std::fixed << std::setprecision(7)
+       << loc->longitude << " " << loc->latitude << " " << loc->geoid;
 
     return ss.str();
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -345,26 +288,23 @@ std::string get_location_id(const Spine::LocationPtr& loc)
 // ----------------------------------------------------------------------
 
 #ifndef WITHOUT_OBSERVATION
-std::vector<int> get_fmisids_for_wkt(Engine::Observation::Engine* observation,
-                                     const std::string& producer,
-                                     const boost::posix_time::ptime& starttime,
-                                     const boost::posix_time::ptime& endtime,
-                                     const std::string& wktstring)
-{
-  try
-  {
+std::vector<int> get_fmisids_for_wkt(Engine::Observation::Engine *observation,
+                                     const std::string &producer,
+                                     const boost::posix_time::ptime &starttime,
+                                     const boost::posix_time::ptime &endtime,
+                                     const std::string &wktstring) {
+  try {
     std::vector<int> fmisids;
 
     Spine::Stations stations;
 
-    observation->getStationsByArea(stations, producer, starttime, endtime, wktstring);
-    for (const auto& station : stations)
+    observation->getStationsByArea(stations, producer, starttime, endtime,
+                                   wktstring);
+    for (const auto &station : stations)
       fmisids.push_back(station.fmisid);
 
     return fmisids;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -376,13 +316,10 @@ std::vector<int> get_fmisids_for_wkt(Engine::Observation::Engine* observation,
  */
 // ----------------------------------------------------------------------
 
-Spine::LocationPtr get_location(const Engine::Geonames::Engine& geonames,
-                                const int id,
-                                const std::string& idtype,
-                                const std::string& language)
-{
-  try
-  {
+Spine::LocationPtr get_location(const Engine::Geonames::Engine &geonames,
+                                const int id, const std::string &idtype,
+                                const std::string &language) {
+  try {
     if (idtype == GEOID_PARAM)
       return geonames.idSearch(id, language);
 
@@ -398,21 +335,18 @@ Spine::LocationPtr get_location(const Engine::Geonames::Engine& geonames,
     Spine::LocationPtr loc;
 
     // lets just take the first one
-    if (ll.size() > 0)
-	  {
-		loc = geonames.idSearch((*ll.begin())->geoid, language);
-		if(loc)
-		  {
-			Spine::Location location(*loc);
-			location.dem = geonames.demHeight(location.longitude, location.latitude);
-			loc = boost::make_shared<Spine::Location>(location);
-		  }
-	  }
+    if (ll.size() > 0) {
+      loc = geonames.idSearch((*ll.begin())->geoid, language);
+      if (loc) {
+        Spine::Location location(*loc);
+        location.dem =
+            geonames.demHeight(location.longitude, location.latitude);
+        loc = boost::make_shared<Spine::Location>(location);
+      }
+    }
 
     return loc;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -425,19 +359,15 @@ Spine::LocationPtr get_location(const Engine::Geonames::Engine& geonames,
 
 #ifndef WITHOUT_OBSERVATION
 
-int get_fmisid_index(const Engine::Observation::Settings& settings)
-{
-  try
-  {
+int get_fmisid_index(const Engine::Observation::Settings &settings) {
+  try {
     // find out fmisid column
     for (unsigned int i = 0; i < settings.parameters.size(); i++)
       if (settings.parameters[i].name() == FMISID_PARAM)
         return i;
 
     return -1;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -452,21 +382,17 @@ int get_fmisid_index(const Engine::Observation::Settings& settings)
 
 #ifndef WITHOUT_OBSERVATION
 
-int get_fmisid_value(const TS::Value& value)
-{
-  try
-  {
+int get_fmisid_value(const TS::Value &value) {
+  try {
     // fmisid can be std::string or double
-    if (boost::get<std::string>(&value))
-    {
+    if (boost::get<std::string>(&value)) {
       std::string fmisidstr = boost::get<std::string>(value);
       boost::algorithm::trim(fmisidstr);
       if (!fmisidstr.empty())
         return std::stoi(fmisidstr);
       else
         throw Fmi::Exception(BCP, "fmisid value is an empty string");
-    }
-    else if (boost::get<int>(&value))
+    } else if (boost::get<int>(&value))
       return boost::get<int>(value);
     else if (boost::get<double>(&value))
       return boost::get<double>(value);
@@ -476,9 +402,7 @@ int get_fmisid_value(const TS::Value& value)
       throw Fmi::Exception(BCP, "Station with latlon as fmisid encountered!");
     else
       throw Fmi::Exception(BCP, "Unknown fmisid type");
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -487,20 +411,16 @@ int get_fmisid_value(const TS::Value& value)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Extract fmisid from a timeseries vector where fmisid may not be set for all rows
+ * \brief Extract fmisid from a timeseries vector where fmisid may not be set
+ * for all rows
  */
 // ----------------------------------------------------------------------
 
-int get_fmisid_value(const TS::TimeSeries& ts)
-{
-  for (const auto& tv : ts)
-  {
-    try
-    {
+int get_fmisid_value(const TS::TimeSeries &ts) {
+  for (const auto &tv : ts) {
+    try {
       return get_fmisid_value(tv.value);
-    }
-    catch (...)
-    {
+    } catch (...) {
     }
   }
   return -1;
@@ -512,37 +432,27 @@ int get_fmisid_value(const TS::TimeSeries& ts)
  */
 // ----------------------------------------------------------------------
 
-std::unique_ptr<Spine::Location> get_coordinate_location(double lon,
-                                                         double lat,
-                                                         const std::string& language,
-                                                         const Engine::Geonames::Engine& geoEngine)
+std::unique_ptr<Spine::Location>
+get_coordinate_location(double lon, double lat, const std::string &language,
+                        const Engine::Geonames::Engine &geoEngine)
 
 {
-  try
-  {
+  try {
     Spine::LocationPtr loc = geoEngine.lonlatSearch(lon, lat, language);
 
-    std::unique_ptr<Spine::Location> ret(new Spine::Location(loc->geoid,
-                                                             "",  // tloc.tag,
-                                                             loc->iso2,
-                                                             loc->municipality,
-                                                             loc->area,
-                                                             loc->feature,
-                                                             loc->country,
-                                                             loc->longitude,
-                                                             loc->latitude,
-                                                             loc->timezone,
-                                                             loc->population,
-                                                             loc->elevation));
+    std::unique_ptr<Spine::Location> ret(new Spine::Location(
+        loc->geoid,
+        "", // tloc.tag,
+        loc->iso2, loc->municipality, loc->area, loc->feature, loc->country,
+        loc->longitude, loc->latitude, loc->timezone, loc->population,
+        loc->elevation));
 
     return ret;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet

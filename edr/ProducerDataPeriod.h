@@ -15,83 +15,72 @@
 #include <map>
 #include <string>
 
-namespace Fmi
-{
+namespace Fmi {
 class TimeZones;
 }
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
 class State;
 
-class ProducerDataPeriod
-{
- private:
+class ProducerDataPeriod {
+private:
   using DataPeriod = std::map<std::string, boost::posix_time::time_period>;
 
-  enum eTime
-  {
-    STARTTIME,
-    ENDTIME
-  };
+  enum eTime { STARTTIME, ENDTIME };
 
   DataPeriod itsDataPeriod;
 
-  boost::local_time::local_date_time getTime(const std::string& producer,
-                                             const std::string& timezone,
-                                             const Fmi::TimeZones& timezones,
+  boost::local_time::local_date_time getTime(const std::string &producer,
+                                             const std::string &timezone,
+                                             const Fmi::TimeZones &timezones,
                                              eTime time_enum) const;
 
-  boost::posix_time::ptime getTime(const std::string& producer, eTime time_enum) const;
+  boost::posix_time::ptime getTime(const std::string &producer,
+                                   eTime time_enum) const;
 
-  void getQEngineDataPeriods(const Engine::Querydata::Engine& querydata,
-                             const TimeProducers& producers);
+  void getQEngineDataPeriods(const Engine::Querydata::Engine &querydata,
+                             const TimeProducers &producers);
 
 #ifndef WITHOUT_OBSERVATION
-  void getObsEngineDataPeriods(const Engine::Observation::Engine& observation,
-                               const TimeProducers& producers,
-                               const boost::posix_time::ptime& now);
+  void getObsEngineDataPeriods(const Engine::Observation::Engine &observation,
+                               const TimeProducers &producers,
+                               const boost::posix_time::ptime &now);
 #endif
 
- public:
-  boost::local_time::local_date_time getLocalStartTime(const std::string& producer,
-                                                       const std::string& timezone,
-                                                       const Fmi::TimeZones& timezones) const;
+public:
+  boost::local_time::local_date_time
+  getLocalStartTime(const std::string &producer, const std::string &timezone,
+                    const Fmi::TimeZones &timezones) const;
 
-  boost::posix_time::ptime getUTCStartTime(const std::string& producer) const;
+  boost::posix_time::ptime getUTCStartTime(const std::string &producer) const;
 
-  boost::local_time::local_date_time getLocalEndTime(const std::string& producer,
-                                                     const std::string& timezone,
-                                                     const Fmi::TimeZones& timezones) const;
+  boost::local_time::local_date_time
+  getLocalEndTime(const std::string &producer, const std::string &timezone,
+                  const Fmi::TimeZones &timezones) const;
 
-  boost::posix_time::ptime getUTCEndTime(const std::string& producer) const;
+  boost::posix_time::ptime getUTCEndTime(const std::string &producer) const;
 
 #ifndef WITHOUT_OBSERVATION
-  void init(const State& state,
-            const Engine::Querydata::Engine& querydata,
-            const Engine::Observation::Engine* observation,
-            const TimeProducers& producers);
+  void init(const State &state, const Engine::Querydata::Engine &querydata,
+            const Engine::Observation::Engine *observation,
+            const TimeProducers &producers);
 #else
-  void init(const State& state,
-            const Engine::Querydata::Engine& querydata,
-            const TimeProducers& producers);
+  void init(const State &state, const Engine::Querydata::Engine &querydata,
+            const TimeProducers &producers);
 #endif
 
-  std::string info()
-  {
+  std::string info() {
     std::string str;
 
     std::vector<std::string> producernames;
 
     // Retrieve all keys
-    boost::copy(itsDataPeriod | boost::adaptors::map_keys, std::back_inserter(producernames));
+    boost::copy(itsDataPeriod | boost::adaptors::map_keys,
+                std::back_inserter(producernames));
 
-    for (const std::string& producer : producernames)
-    {
+    for (const std::string &producer : producernames) {
       str.append("producer -> period: ")
           .append(producer)
           .append(" -> ")
@@ -101,8 +90,8 @@ class ProducerDataPeriod
     return str;
   }
 
-};  // class ProducerDataPeriod
+}; // class ProducerDataPeriod
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet

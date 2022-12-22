@@ -7,34 +7,28 @@
 #include "ImageFormatter.h"
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <iostream>
 #include <macgyver/Exception.h>
+#include <set>
 #include <spine/Convenience.h>
 #include <spine/HTTP.h>
 #include <spine/Table.h>
-#include <iostream>
-#include <set>
 #include <stdexcept>
 
-namespace SmartMet
-{
-namespace Spine
-{
+namespace SmartMet {
+namespace Spine {
 // ----------------------------------------------------------------------
 /*!
  * \brief Convert a comma separated string into a set of strings
  */
 // ----------------------------------------------------------------------
 
-std::set<std::string> parse_debug_attributes(const std::string& theStr)
-{
-  try
-  {
+std::set<std::string> parse_debug_attributes(const std::string &theStr) {
+  try {
     std::set<std::string> ret;
     boost::algorithm::split(ret, theStr, boost::algorithm::is_any_of(","));
     return ret;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -45,13 +39,12 @@ std::set<std::string> parse_debug_attributes(const std::string& theStr)
  */
 // ----------------------------------------------------------------------
 
-std::string ImageFormatter::format(const Table& theTable,
-                                   const TableFormatter::Names& /* theNames */,
-                                   const HTTP::Request& theReq,
-                                   const TableFormatterOptions& /* theConfig */) const
-{
-  try
-  {
+std::string
+ImageFormatter::format(const Table &theTable,
+                       const TableFormatter::Names & /* theNames */,
+                       const HTTP::Request &theReq,
+                       const TableFormatterOptions & /* theConfig */) const {
+  try {
     std::string miss;
     auto missing = theReq.getParameter("missingtext");
 
@@ -88,11 +81,9 @@ std::string ImageFormatter::format(const Table& theTable,
     }
     out += "</tr>";
     */
-    for (const auto j : rows)
-    {
+    for (const auto j : rows) {
       out += "<tr>\n";
-      for (const auto i : cols)
-      {
+      for (const auto i : cols) {
         // std::string value = htmlescape(theTable.get(i, j));
         std::string value = theTable.get(i, j);
         out += "<td>";
@@ -103,14 +94,12 @@ std::string ImageFormatter::format(const Table& theTable,
     }
     out += "</table></body></html>";
     return out;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-}  // namespace Spine
-}  // namespace SmartMet
+} // namespace Spine
+} // namespace SmartMet
 
 // ======================================================================

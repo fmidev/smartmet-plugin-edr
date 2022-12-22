@@ -9,9 +9,9 @@
 #pragma once
 
 #include "AggregationInterval.h"
-#include "Producers.h"
-#include "EDRQuery.h"
 #include "CoordinateFilter.h"
+#include "EDRQuery.h"
+#include "Producers.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/shared_ptr.hpp>
 #include <engines/geonames/Engine.h>
@@ -20,30 +20,27 @@
 #include <grid-content/queryServer/definition/AliasFileCollection.h>
 #include <grid-files/common/AdditionalParameters.h>
 #include <grid-files/common/AttributeList.h>
+#include <list>
+#include <locale>
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/ValueFormatter.h>
+#include <map>
 #include <newbase/NFmiPoint.h>
+#include <set>
 #include <spine/HTTP.h>
 #include <spine/Location.h>
 #include <spine/Parameter.h>
+#include <string>
 #include <timeseries/OptionParsers.h>
 #include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <timeseries/TimeSeriesInclude.h>
-#include <list>
-#include <locale>
-#include <map>
-#include <set>
-#include <string>
 #include <vector>
 
 #include "ProducerDataPeriod.h"
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
 class Config;
 
 // ----------------------------------------------------------------------
@@ -52,18 +49,19 @@ class Config;
  */
 // ----------------------------------------------------------------------
 
-struct Query
-{
-  Query(const State& state, const Spine::HTTP::Request& req, Config& config);
+struct Query {
+  Query(const State &state, const Spine::HTTP::Request &req, Config &config);
 
-  // Note: Data members ordered according to the advice of Clang Analyzer to avoid excessive padding
+  // Note: Data members ordered according to the advice of Clang Analyzer to
+  // avoid excessive padding
 
-  // iot_producer_specifier, latestTimestep, origintime, timeproducers, loptions, timeformatter,
-  // lastpoint, weekdays, wmos, lpnns, fmisids, precisions, valueformatter, boundingBox,
-  // dataFilter, levels, pressures, heights, poptions, maxAggregationIntervals, wktGeometries,
-  // toptions, numberofstations, maxdistanceOptionGiven, findnearestvalidpoint, debug, allplaces,
-  // latestObservation, useDataCache, starttimeOptionGiven, endtimeOptionGiven,
-  // timeAggregationRequested,
+  // iot_producer_specifier, latestTimestep, origintime, timeproducers,
+  // loptions, timeformatter, lastpoint, weekdays, wmos, lpnns, fmisids,
+  // precisions, valueformatter, boundingBox, dataFilter, levels, pressures,
+  // heights, poptions, maxAggregationIntervals, wktGeometries, toptions,
+  // numberofstations, maxdistanceOptionGiven, findnearestvalidpoint, debug,
+  // allplaces, latestObservation, useDataCache, starttimeOptionGiven,
+  // endtimeOptionGiven, timeAggregationRequested,
 
   using ParamPrecisions = std::vector<int>;
   using Levels = std::set<int>;
@@ -72,10 +70,10 @@ struct Query
 
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
 
-  double step;  // used with path geometry
+  double step; // used with path geometry
 
-  std::size_t startrow;    // Paging; first (0-) row to return; default 0
-  std::size_t maxresults;  // max rows to return (page length); default 0 (all)
+  std::size_t startrow;   // Paging; first (0-) row to return; default 0
+  std::size_t maxresults; // max rows to return (page length); default 0 (all)
 
   std::string wmo;
   std::string fmisid;
@@ -155,42 +153,48 @@ struct Query
   double maxdistance_kilometers() const;
   double maxdistance_meters() const;
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
-  
-  const EDRQuery& edrQuery() const { return itsEDRQuery; }
-  const CoordinateFilter& coordinateFilter() const { return itsCoordinateFilter; }
-  bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
- private:
+
+  const EDRQuery &edrQuery() const { return itsEDRQuery; }
+  const CoordinateFilter &coordinateFilter() const {
+    return itsCoordinateFilter;
+  }
+  bool isEDRMetaDataQuery() const {
+    return itsEDRQuery.query_id != EDRQueryId::DataQuery;
+  }
+
+private:
   Query();
 
-  void parse_levels(const Spine::HTTP::Request& theReq);
+  void parse_levels(const Spine::HTTP::Request &theReq);
 
-  void parse_precision(const Spine::HTTP::Request& theReq, const Config& config);
+  void parse_precision(const Spine::HTTP::Request &theReq,
+                       const Config &config);
 
 #ifndef WITHOUT_OBSERVATION
-  void parse_parameters(const Spine::HTTP::Request& theReq,
-                        const Engine::Observation::Engine* theObsEngine);
-  void parse_producers(const Spine::HTTP::Request& theReq,
-                       const Engine::Querydata::Engine& theQEngine,
-                       const Engine::Grid::Engine* theGridEngine,
-                       const Engine::Observation::Engine* theObsEngine);
+  void parse_parameters(const Spine::HTTP::Request &theReq,
+                        const Engine::Observation::Engine *theObsEngine);
+  void parse_producers(const Spine::HTTP::Request &theReq,
+                       const Engine::Querydata::Engine &theQEngine,
+                       const Engine::Grid::Engine *theGridEngine,
+                       const Engine::Observation::Engine *theObsEngine);
 #else
-  void parse_parameters(const Spine::HTTP::Request& theReq);
-  void parse_producers(const Spine::HTTP::Request& theReq,
-                       const Engine::Querydata::Engine& theQEngine,
-                       const Engine::Grid::Engine& theGridEngine);
+  void parse_parameters(const Spine::HTTP::Request &theReq);
+  void parse_producers(const Spine::HTTP::Request &theReq,
+                       const Engine::Querydata::Engine &theQEngine,
+                       const Engine::Grid::Engine &theGridEngine);
 
 #endif
-  QueryServer::AliasFileCollection* itsAliasFileCollectionPtr;
+  QueryServer::AliasFileCollection *itsAliasFileCollectionPtr;
 
   std::string maxdistance;
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;
 };
 
-std::ostream& operator<<(std::ostream& out, const EDRQuery& edrQ);
+std::ostream &operator<<(std::ostream &out, const EDRQuery &edrQ);
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet
 
 // ======================================================================

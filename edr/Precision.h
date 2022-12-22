@@ -10,14 +10,10 @@
 #include <map>
 #include <string>
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
-struct Precision
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
+struct Precision {
   using Map = std::map<std::string, int>;
 
   int default_precision = 0;
@@ -26,6 +22,6 @@ struct Precision
   Precision() = default;
 };
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet

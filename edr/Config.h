@@ -12,60 +12,70 @@
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
 #include <engines/grid/Engine.h>
+#include <libconfig.h++>
 #include <spine/Parameter.h>
 #include <spine/TableFormatterOptions.h>
-#include <libconfig.h++>
 #include <string>
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
 using Precisions = std::map<std::string, Precision>;
-using SupportedQueries = std::map<std::string, std::set<std::string>>; // producer -> queries
-using ProducerKeywords = std::map<std::string, std::set<std::string>>; // producer -> keywords
+using SupportedQueries =
+    std::map<std::string, std::set<std::string>>; // producer -> queries
+using ProducerKeywords =
+    std::map<std::string, std::set<std::string>>; // producer -> keywords
 
-class Config : private boost::noncopyable
-{
- public:
-  Config(const std::string& configfile);
+class Config : private boost::noncopyable {
+public:
+  Config(const std::string &configfile);
   Config() = delete;
 
-  const SupportedQueries& getSupportedQueries() const { return itsSupportedQueries; }
-  const ProducerKeywords& getProducerKeywords() { return itsProducerKeywords; }
-  const Precision& getPrecision(const std::string& name) const;
+  const SupportedQueries &getSupportedQueries() const {
+    return itsSupportedQueries;
+  }
+  const ProducerKeywords &getProducerKeywords() { return itsProducerKeywords; }
+  const Precision &getPrecision(const std::string &name) const;
 
-  const std::string& defaultPrecision() const { return itsDefaultPrecision; }
-  const std::string& defaultProducerMappingName() const { return itsDefaultProducerMappingName; }
-  const std::string& defaultLanguage() const { return itsDefaultLanguage; }
+  const std::string &defaultPrecision() const { return itsDefaultPrecision; }
+  const std::string &defaultProducerMappingName() const {
+    return itsDefaultProducerMappingName;
+  }
+  const std::string &defaultLanguage() const { return itsDefaultLanguage; }
   // You can copy the locale, not modify it!
-  const std::locale& defaultLocale() const { return *itsDefaultLocale; }
-  const std::string& defaultLocaleName() const { return itsDefaultLocaleName; }
-  const std::string& defaultTimeFormat() const { return itsDefaultTimeFormat; }
-  const std::string& defaultUrl() const { return itsDefaultUrl; }
-  const std::string& defaultMaxDistance() const { return itsDefaultMaxDistance; }
-  const std::string& defaultWxmlTimeString() const
-  {
+  const std::locale &defaultLocale() const { return *itsDefaultLocale; }
+  const std::string &defaultLocaleName() const { return itsDefaultLocaleName; }
+  const std::string &defaultTimeFormat() const { return itsDefaultTimeFormat; }
+  const std::string &defaultUrl() const { return itsDefaultUrl; }
+  const std::string &defaultMaxDistance() const {
+    return itsDefaultMaxDistance;
+  }
+  const std::string &defaultWxmlTimeString() const {
     return itsFormatterOptions.defaultWxmlTimeString();
   }
 
-  const std::vector<uint>& defaultGridGeometries() { return itsDefaultGridGeometries; }
+  const std::vector<uint> &defaultGridGeometries() {
+    return itsDefaultGridGeometries;
+  }
 
-  const std::string& defaultWxmlVersion() const { return itsFormatterOptions.defaultWxmlVersion(); }
-  const std::string& wxmlSchema() const { return itsFormatterOptions.wxmlSchema(); }
-  const Spine::TableFormatterOptions& formatterOptions() const
-  {
+  const std::string &defaultWxmlVersion() const {
+    return itsFormatterOptions.defaultWxmlVersion();
+  }
+  const std::string &wxmlSchema() const {
+    return itsFormatterOptions.wxmlSchema();
+  }
+  const Spine::TableFormatterOptions &formatterOptions() const {
     return itsFormatterOptions;
   }
-  const libconfig::Config& config() const { return itsConfig; }
+  const libconfig::Config &config() const { return itsConfig; }
   Engine::Gis::PostGISIdentifierVector getPostGISIdentifiers() const;
 
   bool obsEngineDisabled() const { return itsObsEngineDisabled; }
   bool gridEngineDisabled() const { return itsGridEngineDisabled; }
   std::string primaryForecastSource() const { return itsPrimaryForecastSource; }
-  bool obsEngineDatabaseQueryPrevented() const { return itsPreventObsEngineDatabaseQuery; }
+  bool obsEngineDatabaseQueryPrevented() const {
+    return itsPreventObsEngineDatabaseQuery;
+  }
 
   unsigned long long maxTimeSeriesCacheSize() const;
 
@@ -76,7 +86,7 @@ class Config : private boost::noncopyable
   QueryServer::AliasFileCollection itsAliasFileCollection;
   time_t itsLastAliasCheck;
 
- private:
+private:
   libconfig::Config itsConfig;
   std::string itsDefaultPrecision;
   std::string itsDefaultProducerMappingName;
@@ -103,21 +113,22 @@ class Config : private boost::noncopyable
   unsigned long long itsMaxTimeSeriesCacheSize;
 
   SupportedQueries itsSupportedQueries; // producer->queries
-  //  SupportedProducerLocations itsSupportedProducerLocations; // producer->locations
+  //  SupportedProducerLocations itsSupportedProducerLocations; //
+  //  producer->locations
   ProducerKeywords itsProducerKeywords; // producer->keywords
 
-  bool itsMetaDataUpdatesDisabled;  // disable updates after initial update
-  int itsMetaDataUpdateInterval;        // scan interval in seconds
+  bool itsMetaDataUpdatesDisabled; // disable updates after initial update
+  int itsMetaDataUpdateInterval;   // scan interval in seconds
 
- private:
+  // Private helper functions
   void add_default_precisions();
   void parse_config_precisions();
-  void parse_config_precision(const std::string& name);
+  void parse_config_precision(const std::string &name);
 
-};  // class Config
+}; // class Config
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet
 
 // ======================================================================

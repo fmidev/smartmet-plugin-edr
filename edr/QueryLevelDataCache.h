@@ -9,14 +9,10 @@
 
 #pragma once
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
-struct QueryLevelDataCache
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
+struct QueryLevelDataCache {
   using PressureLevelParameterPair = std::pair<float, std::string>;
   using ParameterTimeSeriesMap =
       std::map<PressureLevelParameterPair, TS::TimeSeriesPtr>;
@@ -27,6 +23,6 @@ struct QueryLevelDataCache
   ParameterTimeSeriesGroupMap itsTimeSeriesGroups;
 };
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet

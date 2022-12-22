@@ -4,24 +4,19 @@
 #include <macgyver/Exception.h>
 #include <ogr_geometry.h>
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
 // ----------------------------------------------------------------------
 /*!
  * \brief Initialize'the query state object
  */
 // ----------------------------------------------------------------------
 
-State::State(const Plugin& thePlugin)
+State::State(const Plugin &thePlugin)
     : itsPlugin(thePlugin),
       itsTime(boost::posix_time::second_clock::universal_time()),
-      itsLocalTimePool(boost::make_shared<TS::LocalTimePool>())
-{
-}
+      itsLocalTimePool(boost::make_shared<TS::LocalTimePool>()) {}
 
 // ----------------------------------------------------------------------
 /*!
@@ -29,26 +24,18 @@ State::State(const Plugin& thePlugin)
  */
 // ----------------------------------------------------------------------
 
-const Engine::Querydata::Engine& State::getQEngine() const
-{
-  try
-  {
+const Engine::Querydata::Engine &State::getQEngine() const {
+  try {
     return itsPlugin.getQEngine();
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-const Engine::Grid::Engine* State::getGridEngine() const
-{
-  try
-  {
+const Engine::Grid::Engine *State::getGridEngine() const {
+  try {
     return itsPlugin.getGridEngine();
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -59,14 +46,10 @@ const Engine::Grid::Engine* State::getGridEngine() const
  */
 // ----------------------------------------------------------------------
 
-const Engine::Geonames::Engine& State::getGeoEngine() const
-{
-  try
-  {
+const Engine::Geonames::Engine &State::getGeoEngine() const {
+  try {
     return itsPlugin.getGeoEngine();
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -78,14 +61,10 @@ const Engine::Geonames::Engine& State::getGeoEngine() const
 // ----------------------------------------------------------------------
 
 #ifndef WITHOUT_OBSERVATION
-Engine::Observation::Engine* State::getObsEngine() const
-{
-  try
-  {
+Engine::Observation::Engine *State::getObsEngine() const {
+  try {
     return itsPlugin.getObsEngine();
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -97,14 +76,10 @@ Engine::Observation::Engine* State::getObsEngine() const
  */
 // ----------------------------------------------------------------------
 
-const Fmi::TimeZones& State::getTimeZones() const
-{
-  try
-  {
+const Fmi::TimeZones &State::getTimeZones() const {
+  try {
     return itsPlugin.getTimeZones();
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -115,10 +90,7 @@ const Fmi::TimeZones& State::getTimeZones() const
  */
 // ----------------------------------------------------------------------
 
-const boost::posix_time::ptime& State::getTime() const
-{
-  return itsTime;
-}
+const boost::posix_time::ptime &State::getTime() const { return itsTime; }
 
 // ----------------------------------------------------------------------
 /*!
@@ -130,8 +102,7 @@ const boost::posix_time::ptime& State::getTime() const
  */
 // ----------------------------------------------------------------------
 
-void State::setTime(const boost::posix_time::ptime& theTime)
-{
+void State::setTime(const boost::posix_time::ptime &theTime) {
   itsTime = theTime;
 }
 
@@ -141,10 +112,9 @@ void State::setTime(const boost::posix_time::ptime& theTime)
  */
 // ----------------------------------------------------------------------
 
-Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer) const
-{
-  try
-  {
+Engine::Querydata::Q
+State::get(const Engine::Querydata::Producer &theProducer) const {
+  try {
     // Use cached result if there is one
     auto res = itsQCache.find(theProducer);
     if (res != itsQCache.end())
@@ -157,9 +127,7 @@ Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer) 
     // request specific, no need for mutexes here.
     itsQCache[theProducer] = q;
     return q;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -170,15 +138,13 @@ Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer) 
  */
 // ----------------------------------------------------------------------
 
-Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer,
-                                const Engine::Querydata::OriginTime& theOriginTime) const
-{
-  try
-  {
+Engine::Querydata::Q
+State::get(const Engine::Querydata::Producer &theProducer,
+           const Engine::Querydata::OriginTime &theOriginTime) const {
+  try {
     // Use cached result if there is one
     auto res = itsTimedQCache.find(theOriginTime);
-    if (res != itsTimedQCache.end())
-    {
+    if (res != itsTimedQCache.end()) {
       auto res2 = res->second.find(theProducer);
       if (res2 != res->second.end())
         return res2->second;
@@ -192,31 +158,25 @@ Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer,
 
     itsTimedQCache[theOriginTime][theProducer] = q;
     return q;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Failed to get querydata for the requested origintime")
+  } catch (...) {
+    throw Fmi::Exception::Trace(
+        BCP, "Failed to get querydata for the requested origintime")
         .disableStackTrace();
   }
 }
 
-TS::LocalTimePoolPtr State::getLocalTimePool() const
-{
+TS::LocalTimePoolPtr State::getLocalTimePool() const {
   return itsLocalTimePool;
 }
 
-EDRMetaData State::getProducerMetaData(const std::string& producer) const
-{
-  try
-  {
+EDRMetaData State::getProducerMetaData(const std::string &producer) const {
+  try {
     return itsPlugin.getProducerMetaData(producer);
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet

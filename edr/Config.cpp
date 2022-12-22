@@ -11,9 +11,9 @@
 #include <grid-files/common/ShowFunction.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <ogr_geometry.h>
 #include <spine/Convenience.h>
 #include <spine/Exceptions.h>
-#include <ogr_geometry.h>
 #include <stdexcept>
 
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
@@ -21,33 +21,26 @@
 
 using namespace std;
 
-const char* default_url = "/edr";
-const char* default_timeformat = "iso";
+const char *default_url = "/edr";
+const char *default_timeformat = "iso";
 
-unsigned int default_expires = 60;  // seconds
+unsigned int default_expires = 60; // seconds
 
-namespace SmartMet
-{
-namespace Plugin
-{
-namespace EDR
-{
+namespace SmartMet {
+namespace Plugin {
+namespace EDR {
 // ----------------------------------------------------------------------
 /*!
  * \brief Add default precisions if none were configured
  */
 // ----------------------------------------------------------------------
 
-void Config::add_default_precisions()
-{
-  try
-  {
+void Config::add_default_precisions() {
+  try {
     Precision prec;
     itsPrecisions.insert(Precisions::value_type("double", prec));
     itsDefaultPrecision = "double";
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -58,10 +51,8 @@ void Config::add_default_precisions()
  */
 // ----------------------------------------------------------------------
 
-TS::FunctionId get_function_id(const string& configName)
-{
-  try
-  {
+TS::FunctionId get_function_id(const string &configName) {
+  try {
     if (configName == "mean")
       return TS::FunctionId::Mean;
 
@@ -93,9 +84,7 @@ TS::FunctionId get_function_id(const string& configName)
       return TS::FunctionId::Percentage;
 
     return TS::FunctionId::NullFunction;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -106,10 +95,8 @@ TS::FunctionId get_function_id(const string& configName)
  */
 // ----------------------------------------------------------------------
 
-void Config::parse_config_precision(const string& name)
-{
-  try
-  {
+void Config::parse_config_precision(const string &name) {
+  try {
     string optname = "precision." + name;
 
     if (!itsConfig.exists(optname))
@@ -117,31 +104,27 @@ void Config::parse_config_precision(const string& name)
                            string("Precision settings for ") + name +
                                " are missing from pointforecast configuration");
 
-    libconfig::Setting& settings = itsConfig.lookup(optname);
+    libconfig::Setting &settings = itsConfig.lookup(optname);
 
     if (!settings.isGroup())
-      throw Fmi::Exception(
-          BCP,
-          "Precision settings for point forecasts must be stored in groups delimited by {}: line " +
-              Fmi::to_string(settings.getSourceLine()));
+      throw Fmi::Exception(BCP, "Precision settings for point forecasts must "
+                                "be stored in groups delimited by {}: line " +
+                                    Fmi::to_string(settings.getSourceLine()));
 
     Precision prec;
 
-    for (int i = 0; i < settings.getLength(); ++i)
-    {
+    for (int i = 0; i < settings.getLength(); ++i) {
       string paramname = settings[i].getName();
 
-      try
-      {
+      try {
         int value = settings[i];
 
         if (paramname == "default")
           prec.default_precision = value;
         else
-          prec.parameter_precisions.insert(Precision::Map::value_type(paramname, value));
-      }
-      catch(...)
-      {
+          prec.parameter_precisions.insert(
+              Precision::Map::value_type(paramname, value));
+      } catch (...) {
         Spine::Exceptions::handle("EDR plugin");
       }
     }
@@ -150,9 +133,7 @@ void Config::parse_config_precision(const string& name)
     // Looks like a bug in g++
 
     itsPrecisions.insert(Precisions::value_type(name, prec));
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -163,53 +144,45 @@ void Config::parse_config_precision(const string& name)
  */
 // ----------------------------------------------------------------------
 
-void Config::parse_config_precisions()
-{
-  try
-  {
+void Config::parse_config_precisions() {
+  try {
     if (!itsConfig.exists("precision"))
-      add_default_precisions();  // set sensible defaults
-    else
-    {
+      add_default_precisions(); // set sensible defaults
+    else {
       // Require available precisions in
 
       if (!itsConfig.exists("precision.enabled"))
-        throw Fmi::Exception(BCP,
-                             "precision.enabled missing from pointforecast congiguration file");
-
-      libconfig::Setting& enabled = itsConfig.lookup("precision.enabled");
-      if (!enabled.isArray())
-      {
         throw Fmi::Exception(
             BCP,
-            "precision.enabled must be an array in pointforecast configuration file line " +
-                Fmi::to_string(enabled.getSourceLine()));
+            "precision.enabled missing from pointforecast congiguration file");
+
+      libconfig::Setting &enabled = itsConfig.lookup("precision.enabled");
+      if (!enabled.isArray()) {
+        throw Fmi::Exception(BCP, "precision.enabled must be an array in "
+                                  "pointforecast configuration file line " +
+                                      Fmi::to_string(enabled.getSourceLine()));
       }
 
-      for (int i = 0; i < enabled.getLength(); ++i)
-      {
-        const char* name = enabled[i];
+      for (int i = 0; i < enabled.getLength(); ++i) {
+        const char *name = enabled[i];
         if (i == 0)
           itsDefaultPrecision = name;
         parse_config_precision(name);
       }
 
       if (itsPrecisions.empty())
-        throw Fmi::Exception(BCP, "No precisions defined in pointforecast precision: datablock!");
+        throw Fmi::Exception(
+            BCP,
+            "No precisions defined in pointforecast precision: datablock!");
     }
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-string parse_config_key(const char* str1 = nullptr,
-                        const char* str2 = nullptr,
-                        const char* str3 = nullptr)
-{
-  try
-  {
+string parse_config_key(const char *str1 = nullptr, const char *str2 = nullptr,
+                        const char *str3 = nullptr) {
+  try {
     string string1(str1 ? str1 : "");
     string string2(str2 ? str2 : "");
     string string3(str3 ? str3 : "");
@@ -217,9 +190,7 @@ string parse_config_key(const char* str1 = nullptr,
     string retval(string1 + string2 + string3);
 
     return retval;
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
@@ -230,23 +201,15 @@ string parse_config_key(const char* str1 = nullptr,
  */
 // ----------------------------------------------------------------------
 
-Config::Config(const string& configfile)
-    : itsDefaultPrecision("normal"),
-      itsDefaultTimeFormat(default_timeformat),
-      itsDefaultUrl(default_url),
-      itsDefaultMaxDistance(DEFAULT_MAXDISTANCE),
-      itsExpirationTime(default_expires),
-      itsFormatterOptions(),
-      itsPrecisions(),
-      itsObsEngineDisabled(false),
-      itsGridEngineDisabled(false),
-      itsPreventObsEngineDatabaseQuery(false),
-      itsMaxTimeSeriesCacheSize(10000),
-      itsMetaDataUpdatesDisabled(false),
-      itsMetaDataUpdateInterval(30)
-{
-  try
-  {
+Config::Config(const string &configfile)
+    : itsDefaultPrecision("normal"), itsDefaultTimeFormat(default_timeformat),
+      itsDefaultUrl(default_url), itsDefaultMaxDistance(DEFAULT_MAXDISTANCE),
+      itsExpirationTime(default_expires), itsFormatterOptions(),
+      itsPrecisions(), itsObsEngineDisabled(false),
+      itsGridEngineDisabled(false), itsPreventObsEngineDatabaseQuery(false),
+      itsMaxTimeSeriesCacheSize(10000), itsMetaDataUpdatesDisabled(false),
+      itsMetaDataUpdateInterval(30) {
+  try {
     if (configfile.empty())
       throw Fmi::Exception(BCP, "EDR configuration file cannot be empty");
 
@@ -256,9 +219,11 @@ Config::Config(const string& configfile)
 
     itsConfig.readFile(configfile.c_str());
 
-	// Metadata update settings
-    itsConfig.lookupValue("metadata_updates_disabled", itsMetaDataUpdatesDisabled);
-    itsConfig.lookupValue("metadata_update_interval", itsMetaDataUpdateInterval);
+    // Metadata update settings
+    itsConfig.lookupValue("metadata_updates_disabled",
+                          itsMetaDataUpdatesDisabled);
+    itsConfig.lookupValue("metadata_update_interval",
+                          itsMetaDataUpdateInterval);
 
     // Obligatory settings
     itsDefaultLocaleName = itsConfig.lookup("locale").c_str();
@@ -277,10 +242,10 @@ Config::Config(const string& configfile)
     itsConfig.lookupValue("observation_disabled", itsObsEngineDisabled);
     itsConfig.lookupValue("gridengine_disabled", itsGridEngineDisabled);
     itsConfig.lookupValue("primaryForecastSource", itsPrimaryForecastSource);
-    itsConfig.lookupValue("prevent_observation_database_query", itsPreventObsEngineDatabaseQuery);
+    itsConfig.lookupValue("prevent_observation_database_query",
+                          itsPreventObsEngineDatabaseQuery);
 
-    if (itsConfig.exists("maxdistance"))
-    {
+    if (itsConfig.exists("maxdistance")) {
       double value = 0;
       itsConfig.lookupValue("maxdistance", value);
       itsDefaultMaxDistance = Fmi::to_string(value) + "km";
@@ -289,83 +254,89 @@ Config::Config(const string& configfile)
     // TODO: Remove deprecated settings detection
     using Spine::log_time_str;
     if (itsConfig.exists("cache.memory_bytes"))
-      std::cerr << log_time_str() << " Warning: cache.memory_bytes setting is deprecated\n";
+      std::cerr << log_time_str()
+                << " Warning: cache.memory_bytes setting is deprecated\n";
     if (itsConfig.exists("cache.filesystem_bytes"))
-      std::cerr << log_time_str() << " Warning: cache.filesystem_bytes setting is deprecated\n";
+      std::cerr << log_time_str()
+                << " Warning: cache.filesystem_bytes setting is deprecated\n";
     if (itsConfig.exists("cache.directory"))
-      std::cerr << log_time_str() << " Warning: cache.directory setting is deprecated\n";
+      std::cerr << log_time_str()
+                << " Warning: cache.directory setting is deprecated\n";
 
     itsConfig.lookupValue("cache.timeseries_size", itsMaxTimeSeriesCacheSize);
     itsFormatterOptions = Spine::TableFormatterOptions(itsConfig);
 
     parse_config_precisions();
 
-	if (itsConfig.exists("locations"))
-	  {
-		if (itsConfig.exists("locations.default"))
-		  {
-			const libconfig::Setting& defaultKeywords = itsConfig.lookup("locations.default");
-			if (!defaultKeywords.isArray())
-			  throw Fmi::Exception(BCP, "Configured value of 'locations.default' must be an array");
-			for (int i = 0; i < defaultKeywords.getLength(); i++)
-			  itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(defaultKeywords[i]);
-		  }
-		if (itsConfig.exists("locations.override"))
-		  {
-			const libconfig::Setting& overriddenProducerKeywords = itsConfig.lookup("locations.override");
-			for (int i = 0; i < overriddenProducerKeywords.getLength(); i++)
-			  {
-				std::string producer = overriddenProducerKeywords[i].getName();
-				const libconfig::Setting& overriddenKeywords = itsConfig.lookup("locations.override." + producer);
-				if (!overriddenKeywords.isArray())
-				  throw Fmi::Exception(BCP, "Configured overridden locations for collection must be an array");
-				for (int j = 0; j < overriddenKeywords.getLength(); j++)
-				  itsProducerKeywords[producer].insert(overriddenKeywords[j]);
-			  }
-		  }
-		}
-	// If keywords not defined -> set default keyword
-	if(itsProducerKeywords.empty())
-	  itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(DEFAULT_LOCATIONS_KEYWORD);
+    if (itsConfig.exists("locations")) {
+      if (itsConfig.exists("locations.default")) {
+        const libconfig::Setting &defaultKeywords =
+            itsConfig.lookup("locations.default");
+        if (!defaultKeywords.isArray())
+          throw Fmi::Exception(
+              BCP, "Configured value of 'locations.default' must be an array");
+        for (int i = 0; i < defaultKeywords.getLength(); i++)
+          itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(defaultKeywords[i]);
+      }
+      if (itsConfig.exists("locations.override")) {
+        const libconfig::Setting &overriddenProducerKeywords =
+            itsConfig.lookup("locations.override");
+        for (int i = 0; i < overriddenProducerKeywords.getLength(); i++) {
+          std::string producer = overriddenProducerKeywords[i].getName();
+          const libconfig::Setting &overriddenKeywords =
+              itsConfig.lookup("locations.override." + producer);
+          if (!overriddenKeywords.isArray())
+            throw Fmi::Exception(BCP, "Configured overridden locations for "
+                                      "collection must be an array");
+          for (int j = 0; j < overriddenKeywords.getLength(); j++)
+            itsProducerKeywords[producer].insert(overriddenKeywords[j]);
+        }
+      }
+    }
+    // If keywords not defined -> set default keyword
+    if (itsProducerKeywords.empty())
+      itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(
+          DEFAULT_LOCATIONS_KEYWORD);
 
-	// Data queries
-	if (itsConfig.exists("data_queries"))
-	  {
-		if (itsConfig.exists("data_queries.default"))
-		  {
-			const libconfig::Setting& defaultQueries = itsConfig.lookup("data_queries.default");
-			if (!defaultQueries.isArray())
-			  throw Fmi::Exception(BCP, "Configured value of 'data_queries.default' must be an array");
-			for (int i = 0; i < defaultQueries.getLength(); i++)
-			  itsSupportedQueries[DEFAULT_DATA_QUERIES].insert(defaultQueries[i]);
-		  }
-		
-		if (itsConfig.exists("data_queries.override"))
-		  {
-			const libconfig::Setting& overriddenQueries = itsConfig.lookup("data_queries.override");
-			
-			for (int i = 0; i < overriddenQueries.getLength(); i++)
-			  {
-				std::string producer = overriddenQueries[i].getName();
-				const libconfig::Setting& overriddenQueries = itsConfig.lookup("data_queries.override." + producer);
-				if (!overriddenQueries.isArray())
-				  throw Fmi::Exception(BCP, "Configured overridden data_queries for producer must be an array");
-				for (int j = 0; j < overriddenQueries.getLength(); j++)
-				  itsSupportedQueries[producer].insert(overriddenQueries[j]);
-			  }
-		  }
-	  }
-	
-	if(itsSupportedQueries.find(DEFAULT_DATA_QUERIES) == itsSupportedQueries.end())
-	  {
-	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("position");
-	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("radius");
-	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("area");
-	    itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("locations");
-	  }
+    // Data queries
+    if (itsConfig.exists("data_queries")) {
+      if (itsConfig.exists("data_queries.default")) {
+        const libconfig::Setting &defaultQueries =
+            itsConfig.lookup("data_queries.default");
+        if (!defaultQueries.isArray())
+          throw Fmi::Exception(
+              BCP,
+              "Configured value of 'data_queries.default' must be an array");
+        for (int i = 0; i < defaultQueries.getLength(); i++)
+          itsSupportedQueries[DEFAULT_DATA_QUERIES].insert(defaultQueries[i]);
+      }
 
-    if (itsConfig.exists("geometry_tables"))
-    {
+      if (itsConfig.exists("data_queries.override")) {
+        const libconfig::Setting &overriddenQueries =
+            itsConfig.lookup("data_queries.override");
+
+        for (int i = 0; i < overriddenQueries.getLength(); i++) {
+          std::string producer = overriddenQueries[i].getName();
+          const libconfig::Setting &overriddenQueries =
+              itsConfig.lookup("data_queries.override." + producer);
+          if (!overriddenQueries.isArray())
+            throw Fmi::Exception(BCP, "Configured overridden data_queries for "
+                                      "producer must be an array");
+          for (int j = 0; j < overriddenQueries.getLength(); j++)
+            itsSupportedQueries[producer].insert(overriddenQueries[j]);
+        }
+      }
+    }
+
+    if (itsSupportedQueries.find(DEFAULT_DATA_QUERIES) ==
+        itsSupportedQueries.end()) {
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("position");
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("radius");
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("area");
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("locations");
+    }
+
+    if (itsConfig.exists("geometry_tables")) {
       Engine::Gis::postgis_identifier default_postgis_id;
       std::string default_source_name;
       std::string default_server;
@@ -377,24 +348,23 @@ Config::Config(const string& configfile)
       itsConfig.lookupValue("geometry_tables.schema", default_schema);
       itsConfig.lookupValue("geometry_tables.table", default_table);
       itsConfig.lookupValue("geometry_tables.field", default_field);
-      if (!default_schema.empty() && !default_table.empty() && !default_field.empty())
-      {
+      if (!default_schema.empty() && !default_table.empty() &&
+          !default_field.empty()) {
         default_postgis_id.source_name = default_source_name;
         default_postgis_id.pgname = default_server;
         default_postgis_id.schema = default_schema;
         default_postgis_id.table = default_table;
         default_postgis_id.field = default_field;
-        postgis_identifiers.insert(make_pair(default_postgis_id.key(), default_postgis_id));
+        postgis_identifiers.insert(
+            make_pair(default_postgis_id.key(), default_postgis_id));
       }
 
-      if (itsConfig.exists("geometry_tables.additional_tables"))
-      {
-        libconfig::Setting& additionalTables =
+      if (itsConfig.exists("geometry_tables.additional_tables")) {
+        libconfig::Setting &additionalTables =
             itsConfig.lookup("geometry_tables.additional_tables");
 
-        for (int i = 0; i < additionalTables.getLength(); i++)
-        {
-          libconfig::Setting& tableConfig = additionalTables[i];
+        for (int i = 0; i < additionalTables.getLength(); i++) {
+          libconfig::Setting &tableConfig = additionalTables[i];
           std::string source_name;
           std::string server = (default_server.empty() ? "" : default_server);
           std::string schema = (default_schema.empty() ? "" : default_schema);
@@ -414,11 +384,12 @@ Config::Config(const string& configfile)
           postgis_id.field = field;
 
           if (schema.empty() || table.empty() || field.empty())
-            throw Fmi::Exception(BCP,
-                                 "Configuration file error. Some of the following fields "
-                                 "missing: server, schema, table, field!");
+            throw Fmi::Exception(
+                BCP, "Configuration file error. Some of the following fields "
+                     "missing: server, schema, table, field!");
 
-          postgis_identifiers.insert(std::make_pair(postgis_id.key(), postgis_id));
+          postgis_identifiers.insert(
+              std::make_pair(postgis_id.key(), postgis_id));
         }
       }
     }
@@ -427,52 +398,51 @@ Config::Config(const string& configfile)
     itsDefaultLocale.reset(new std::locale(itsDefaultLocaleName.c_str()));
 
     itsLastAliasCheck = time(nullptr);
-    try
-    {
-      const libconfig::Setting& gridGeometries = itsConfig.lookup("defaultGridGeometries");
+    try {
+      const libconfig::Setting &gridGeometries =
+          itsConfig.lookup("defaultGridGeometries");
       if (!gridGeometries.isArray())
-        throw Fmi::Exception(BCP, "Configured value of 'defaultGridGeometries' must be an array");
+        throw Fmi::Exception(
+            BCP,
+            "Configured value of 'defaultGridGeometries' must be an array");
 
-      for (int i = 0; i < gridGeometries.getLength(); ++i)
-      {
+      for (int i = 0; i < gridGeometries.getLength(); ++i) {
         uint geomId = gridGeometries[i];
         itsDefaultGridGeometries.push_back(geomId);
       }
 
-      itsConfig.lookupValue("defaultProducerMappingName", itsDefaultProducerMappingName);
+      itsConfig.lookupValue("defaultProducerMappingName",
+                            itsDefaultProducerMappingName);
 
-      const libconfig::Setting& aliasFiles = itsConfig.lookup("parameterAliasFiles");
+      const libconfig::Setting &aliasFiles =
+          itsConfig.lookup("parameterAliasFiles");
 
       if (!aliasFiles.isArray())
-        throw Fmi::Exception(BCP, "Configured value of 'parameterAliasFiles' must be an array");
+        throw Fmi::Exception(
+            BCP, "Configured value of 'parameterAliasFiles' must be an array");
 
       boost::filesystem::path path(configfile);
 
-      for (int i = 0; i < aliasFiles.getLength(); ++i)
-      {
+      for (int i = 0; i < aliasFiles.getLength(); ++i) {
         std::string st = aliasFiles[i];
-        if (!st.empty())
-        {
+        if (!st.empty()) {
           if (st[0] == '/')
             itsParameterAliasFiles.push_back(st);
           else
-            itsParameterAliasFiles.push_back(path.parent_path().string() + "/" + st);
+            itsParameterAliasFiles.push_back(path.parent_path().string() + "/" +
+                                             st);
         }
       }
 
       itsAliasFileCollection.init(itsParameterAliasFiles);
+    } catch (const libconfig::SettingNotFoundException &e) {
+      // throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting
+      // path", e.getPath());
     }
-    catch (const libconfig::SettingNotFoundException& e)
-    {
-      // throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
-    }
-  }
-  catch (const libconfig::SettingNotFoundException& e)
-  {
-    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
-  }
-  catch (...)
-  {
+  } catch (const libconfig::SettingNotFoundException &e) {
+    throw Fmi::Exception(BCP, "Setting not found")
+        .addParameter("Setting path", e.getPath());
+  } catch (...) {
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
@@ -483,45 +453,35 @@ Config::Config(const string& configfile)
  */
 // ----------------------------------------------------------------------
 
-const Precision& Config::getPrecision(const string& name) const
-{
-  try
-  {
+const Precision &Config::getPrecision(const string &name) const {
+  try {
     Precisions::const_iterator p = itsPrecisions.find(name);
     if (p != itsPrecisions.end())
       return p->second;
 
     throw Fmi::Exception(BCP, "Unknown precision '" + name + "'!");
-  }
-  catch (...)
-  {
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-Engine::Gis::PostGISIdentifierVector Config::getPostGISIdentifiers() const
-{
-  try
-  {
-	Engine::Gis::PostGISIdentifierVector ret;
-	for (const auto& item : postgis_identifiers)
-	  ret.push_back(item.second);	
-	return ret;
-  }
-  catch (...)
-  {
+Engine::Gis::PostGISIdentifierVector Config::getPostGISIdentifiers() const {
+  try {
+    Engine::Gis::PostGISIdentifierVector ret;
+    for (const auto &item : postgis_identifiers)
+      ret.push_back(item.second);
+    return ret;
+  } catch (...) {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
-
 }
 
-unsigned long long Config::maxTimeSeriesCacheSize() const
-{
+unsigned long long Config::maxTimeSeriesCacheSize() const {
   return itsMaxTimeSeriesCacheSize;
 }
 
-}  // namespace EDR
-}  // namespace Plugin
-}  // namespace SmartMet
+} // namespace EDR
+} // namespace Plugin
+} // namespace SmartMet
 
 // ======================================================================
