@@ -44,9 +44,10 @@ std::string parse_parameter_name(const std::string &name)
 {
   auto parameter_name = name;
 
-  // If ':' exists patameter_name is before first ':'
-  if (parameter_name.find(":") != std::string::npos)
-    parameter_name.resize(parameter_name.find(":"));
+  // If ':' exists parameter_name is before first ':'
+  auto pos = parameter_name.find(':');
+  if (pos != std::string::npos)
+    parameter_name.resize(pos);
   // Modify to lower case
   boost::algorithm::to_lower(parameter_name);
 
@@ -106,7 +107,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     query_info_link["hreflang"] = Json::Value("en");
     //      query_info_link["templated"] = Json::Value(true);
 
-    std::string query_type_string = "";
+    std::string query_type_string;
     if (query_type == EDRQueryType::Position)
     {
       query_info_link["title"] = Json::Value("Position query");
@@ -279,7 +280,7 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
         continue;
 
       const TS::TimeSeries &ts = tsv->at(i);
-      if (ts.size() > 0)
+      if (!ts.empty())
       {
         const auto &tv = ts.front();
         double value = as_double(tv.value);
@@ -369,7 +370,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
         {
           const auto &ts = llts.timeseries;
 
-          if (ts.size() > 0)
+          if (!ts.empty())
           {
             const auto &tv = ts.front();
             double value = as_double(tv.value);
@@ -391,7 +392,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
-      ret.push_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
+      ret.emplace_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
 
     return ret;
   }
@@ -828,29 +829,25 @@ Json::Value add_prologue_coverage_collection(boost::optional<int> level,
 }
 
 /*
+clang-format off
+
 Table C.1 — EDR Collection Object structure:
 https://docs.ogc.org/is/19-086r4/19-086r4.html#toc63
 -------------------------------------------------------
-| Field Name      | Type                | Required	| Description |
+| Field Name      | Type                   | Required  | Description
 -------------------------------------------------------
-| links           |	link Array	        | Yes | Array of Link objects |
-| id	          | String	            | Yes | Unique identifier string for
-the collection, used as the value for the collection_id path parameter in all
-queries on the collection |
-| title	          | String	            | No  | A short text label for the
-collection | | description     | String	            | No  | A text description
-of the information provided by the collection | | keywords	      | String
-Array	    | No  | Array of words and phrases that define the information that
-the collection provides | | extent	      | extent object	    | Yes |
-Object describing the spatio-temporal extent of the information provided by the
-collection | | data_queries    | data_queries object	| No  | Object providing
-query specific information |
-| crs	          | String Array	    | No  | Array of coordinate
-reference system names, which define the output coordinate systems supported by
-the collection | | output_formats  | String Array	    | No  | Array of
-data format names, which define the data formats to which information in the
-collection can be output | | parameter_names | parameter_names object | Yes |
-Describes the data values available in the collection |
+| links           | link Array             | Yes       | Array of Link objects
+| id              | String                 | Yes       | Unique identifier string for the collection, used as the value for the collection_id path parameter in all queries on the collection
+| title           | String                 | No        | A short text label for the collection
+| description     | String                 | No        | A text description of the information provided by the collection
+| keywords        | String Array           | No        | Array of words and phrases that define the information that the collection provides
+| extent          | extent object          | Yes       | Object describing the spatio-temporal extent of the information provided by the collection
+| data_queries    | data_queries object    | No        | Object providing query specific information
+| crs             | String Array           | No        | Array of coordinate reference system names, which define the output coordinate systems supported by the collection
+| output_formats  | String Array           | No        | Array of data format names, which define the data formats to which information in the collection can be output
+| parameter_names | parameter_names object | Yes       | Describes the data values available in the collection
+
+clang-format on
 */
 
 // Metadata of specified producers' specified  collections' instance/instances
@@ -877,7 +874,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
     auto result = Json::Value(Json::ValueType::objectValue);
 
     const auto &emds = requested_epmd.begin()->second;
-    bool instances_exist = (emds.size() > 0);
+    bool instances_exist = !emds.empty();
 
     if (!instances_exist)
       return reportError(400,
@@ -946,7 +943,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
       // Vertical (optional)
-      if (emd.vertical_extent.levels.size() > 0)
+      if (!emd.vertical_extent.levels.empty())
       {
         auto vertical = Json::Value(Json::ValueType::objectValue);
         auto vertical_interval = Json::Value(Json::ValueType::arrayValue);
@@ -963,7 +960,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       instance["extent"] = extent;
       // Optional: data_queries
       instance["data_queries"] = get_data_queries(
-          edr_query, producer, emd.vertical_extent.levels.size() > 0, false, instance_id);
+          edr_query, producer, !emd.vertical_extent.levels.empty(), false, instance_id);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -1121,7 +1118,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
       // Vertical (optional)
-      if (collection_emd.vertical_extent.levels.size() > 0)
+      if (!collection_emd.vertical_extent.levels.empty())
       {
         auto vertical = Json::Value(Json::ValueType::objectValue);
         auto vertical_interval = Json::Value(Json::ValueType::arrayValue);
@@ -1139,7 +1136,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       value["extent"] = extent;
       // Optional: data_queries
       value["data_queries"] = get_data_queries(
-          edr_query, producer, collection_emd.vertical_extent.levels.size() > 0, instances_exist);
+          edr_query, producer, !collection_emd.vertical_extent.levels.empty(), instances_exist);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -1324,7 +1321,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
     unsigned int longitude_index;
     unsigned int latitude_index;
     boost::optional<unsigned int> level_index;
-    auto last_param = query_parameters.back();
+    const auto &last_param = query_parameters.back();
     auto last_param_name = last_param.name();
     boost::algorithm::to_lower(last_param_name);
     if (last_param_name == "level")
@@ -1387,9 +1384,10 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
 
     unsigned int coverages_index = 0;
     //    std::set<std::string> timesteps;
-    for (unsigned int i = 0; i < outputData.size(); i++)
+
+    for (const auto &output : outputData)
     {
-      const auto &outdata = outputData[i].second;
+      const auto &outdata = output.second;
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++)
       {
@@ -1757,10 +1755,10 @@ Json::Value format_coverage_collection_trajectory_alternative(
         levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
 
         auto values = dpl_item.second;
-        for (unsigned int i = 0; i < values.size(); i++)
+
+        for (const auto &value : values)
         {
           auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
-          const auto &value = values.at(i);
           time_coord_value[0] = Json::Value(value.time);
           time_coord_value[1] = Json::Value(value.lon, longitude_precision);
           time_coord_value[2] = Json::Value(value.lat, latitude_precision);
@@ -1973,13 +1971,13 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
 
     //	  std::cout << "get_output_data_per_parameter" << std::endl;
 
-    bool levels_present = (levels.size() > 0);
+    bool levels_present = !levels.empty();
 
     // Get indexes of longitude, latitude, level
     unsigned int longitude_index;
     unsigned int latitude_index;
     unsigned int level_index;
-    auto last_param = query_parameters.back();
+    const auto &last_param = query_parameters.back();
     auto last_param_name = last_param.name();
     boost::algorithm::to_lower(last_param_name);
     if (levels_present)
@@ -1994,9 +1992,9 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
       longitude_index = (query_parameters.size() - 2);
     }
 
-    for (unsigned int i = 0; i < outputData.size(); i++)
+    for (const auto &output : outputData)
     {
-      const auto &outdata = outputData[i].second;
+      const auto &outdata = output.second;
 
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++)
@@ -2099,8 +2097,8 @@ Json::Value format_output_data_coverage_collection(
 
     if (query_type == EDRQueryType::Trajectory)
       return format_coverage_collection_trajectory(dpp, emd, query_parameters);
-    else
-      return format_coverage_collection_point(dpp, emd, query_parameters);
+
+    return format_coverage_collection_point(dpp, emd, query_parameters);
   }
   catch (...)
   {
@@ -2144,7 +2142,8 @@ Json::Value formatOutputData(TS::OutputData &outputData,
       // More than one level
       return format_output_data_position(outputData, emd, query_parameters);
     }
-    else if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first))
+
+    if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first))
     {
       if (outdata_first.size() > 1)
         std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
@@ -2155,7 +2154,7 @@ Json::Value formatOutputData(TS::OutputData &outputData,
       for (unsigned int i = 0; i < tsv->size(); i++)
       {
         TS::TimeSeriesPtr tsp(new TS::TimeSeries(tsv->at(i)));
-        tsd.push_back(tsp);
+        tsd.emplace_back(tsp);
       }
       TS::OutputData od;
       od.push_back(std::make_pair("_obs_", tsd));
@@ -2170,7 +2169,8 @@ Json::Value formatOutputData(TS::OutputData &outputData,
       // More than one level
       return format_output_data_position(od, emd, query_parameters);
     }
-    else if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata_first))
+
+    if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata_first))
     {
       return format_output_data_coverage_collection(
           outputData, emd, levels, coordinate_filter, query_parameters, query_type);

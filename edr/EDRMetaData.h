@@ -34,8 +34,9 @@ namespace EDR
 // Parameter infor from querydata-, observation-, grid-engine
 struct edr_parameter
 {
-  edr_parameter(const std::string &n, const std::string &d, const std::string &u = "")
-      : name(n), description(d), unit(u)
+  edr_parameter(std::string n, std::string d) : name(std::move(n)), description(std::move(d)) {}
+  edr_parameter(std::string n, std::string d, std::string u)
+      : name(std::move(n)), description(std::move(d)), unit(std::move(u))
   {
   }
   std::string name;

@@ -229,15 +229,16 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine)
       for (const auto &p : obs_md.parameters)
       {
         params[0] = p;
-        std::string description = p;
         /*
         // This is slow and not used any more,
+        std::string description = p;
         auto observedProperties =
         obsEngine.observablePropertyQuery(params, "en");
         if (observedProperties->size() > 0)
-        description = observedProperties->at(0).observablePropertyLabel;
+          description = observedProperties->at(0).observablePropertyLabel;
         */
 
+        const auto &description = p;
         auto parameter_name = p;
         boost::algorithm::to_lower(parameter_name);
         producer_emd.parameter_names.insert(parameter_name);

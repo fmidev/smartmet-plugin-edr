@@ -60,8 +60,8 @@ class GridInterface
                         const AreaProducers &areaproducers,
                         const Spine::TaggedLocation &tloc,
                         const Spine::LocationPtr &loc,
-                        T::GeometryId_set &geometryIdList,
-                        std::vector<std::vector<T::Coordinate>> &polygonPath);
+                        const T::GeometryId_set &geometryIdList,
+                        const std::vector<std::vector<T::Coordinate>> &polygonPath);
 
   void insertFileQueries(QueryServer::Query &query,
                          const QueryServer::QueryStreamer_sptr &queryStreamer);
@@ -86,7 +86,6 @@ class GridInterface
 
   T::ParamLevelId getLevelId(const char *producerName, const Query &masterquery);
 
- private:
   Engine::Grid::Engine *itsGridEngine;
   const Fmi::TimeZones &itsTimezones;
 

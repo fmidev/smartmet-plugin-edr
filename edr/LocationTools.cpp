@@ -400,7 +400,7 @@ Spine::LocationPtr get_location(const Engine::Geonames::Engine &geonames,
     Spine::LocationPtr loc;
 
     // lets just take the first one
-    if (ll.size() > 0)
+    if (!ll.empty())
     {
       loc = geonames.idSearch((*ll.begin())->geoid, language);
       if (loc)
@@ -465,19 +465,19 @@ int get_fmisid_value(const TS::Value &value)
       boost::algorithm::trim(fmisidstr);
       if (!fmisidstr.empty())
         return std::stoi(fmisidstr);
-      else
-        throw Fmi::Exception(BCP, "fmisid value is an empty string");
+
+      throw Fmi::Exception(BCP, "fmisid value is an empty string");
     }
-    else if (boost::get<int>(&value))
+    if (boost::get<int>(&value))
       return boost::get<int>(value);
-    else if (boost::get<double>(&value))
+    if (boost::get<double>(&value))
       return boost::get<double>(value);
-    else if (boost::get<TS::None>(&value))
+    if (boost::get<TS::None>(&value))
       throw Fmi::Exception(BCP, "Station with null fmisid encountered!");
-    else if (boost::get<TS::LonLat>(&value))
+    if (boost::get<TS::LonLat>(&value))
       throw Fmi::Exception(BCP, "Station with latlon as fmisid encountered!");
-    else
-      throw Fmi::Exception(BCP, "Unknown fmisid type");
+
+    throw Fmi::Exception(BCP, "Unknown fmisid type");
   }
   catch (...)
   {

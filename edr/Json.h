@@ -104,13 +104,12 @@ class Value
   std::string value() const;
   std::string values_to_string(unsigned int level) const;
   std::string data_value_vector_to_string(unsigned int level) const;
-  DataValue data_value;                  // Value is stored here
-  std::vector<Value> data_value_vector;  // // Vector of values
 
+  DataValue data_value;                   // Value is stored here
+  std::vector<Value> data_value_vector;   // // Vector of values
   std::map<std::string, Value> values;    // Current level
   std::map<std::string, Value> children;  // Children
   std::map<std::string, Value> key_map;   // Temporary store of values
-
   ValueType valueType;
   std::string nodeKey;
   unsigned int precision{4};  // default value for precision (in case of double)
