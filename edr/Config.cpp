@@ -17,14 +17,8 @@
 #include <stdexcept>
 
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
-#define DEFAULT_MAXDISTANCE "60.0km"
 
 using namespace std;
-
-const char *default_url = "/edr";
-const char *default_timeformat = "iso";
-
-unsigned int default_expires = 60;  // seconds
 
 namespace SmartMet
 {
@@ -232,33 +226,213 @@ string parse_config_key(const char *str1 = nullptr,
 
 void Config::parse_config_locations()
 {
-  if (itsConfig.exists("locations"))
+  try
   {
-    if (itsConfig.exists("locations.default"))
+    if (itsConfig.exists("locations"))
     {
-      const libconfig::Setting &defaultKeywords = itsConfig.lookup("locations.default");
-      if (!defaultKeywords.isArray())
-        throw Fmi::Exception(BCP, "Configured value of 'locations.default' must be an array");
-      for (int i = 0; i < defaultKeywords.getLength(); i++)
-        itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(defaultKeywords[i]);
-    }
-    if (itsConfig.exists("locations.override"))
-    {
-      const libconfig::Setting &overriddenProducerKeywords = itsConfig.lookup("locations.override");
-      for (int i = 0; i < overriddenProducerKeywords.getLength(); i++)
+      if (itsConfig.exists("locations.default"))
       {
-        std::string producer = overriddenProducerKeywords[i].getName();
-        const libconfig::Setting &overriddenKeywords =
-            itsConfig.lookup("locations.override." + producer);
-        if (!overriddenKeywords.isArray())
-          throw Fmi::Exception(BCP,
-                               "Configured overridden locations for "
-                               "collection must be an array");
-        for (int j = 0; j < overriddenKeywords.getLength(); j++)
-          itsProducerKeywords[producer].insert(overriddenKeywords[j]);
+        const libconfig::Setting &defaultKeywords = itsConfig.lookup("locations.default");
+        if (!defaultKeywords.isArray())
+          throw Fmi::Exception(BCP, "Configured value of 'locations.default' must be an array");
+        for (int i = 0; i < defaultKeywords.getLength(); i++)
+          itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(defaultKeywords[i]);
+      }
+      if (itsConfig.exists("locations.override"))
+      {
+        const libconfig::Setting &overriddenProducerKeywords =
+            itsConfig.lookup("locations.override");
+        for (int i = 0; i < overriddenProducerKeywords.getLength(); i++)
+        {
+          std::string producer = overriddenProducerKeywords[i].getName();
+          const libconfig::Setting &overriddenKeywords =
+              itsConfig.lookup("locations.override." + producer);
+          if (!overriddenKeywords.isArray())
+            throw Fmi::Exception(BCP,
+                                 "Configured overridden locations for "
+                                 "collection must be an array");
+          for (int j = 0; j < overriddenKeywords.getLength(); j++)
+            itsProducerKeywords[producer].insert(overriddenKeywords[j]);
+        }
       }
     }
   }
+  catch (const libconfig::SettingNotFoundException &e)
+  {
+    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+void Config::parse_config_data_queries()
+{
+  try
+  {
+    if (itsConfig.exists("data_queries"))
+    {
+      if (itsConfig.exists("data_queries.default"))
+      {
+        const libconfig::Setting &defaultQueries = itsConfig.lookup("data_queries.default");
+        if (!defaultQueries.isArray())
+          throw Fmi::Exception(BCP, "Configured value of 'data_queries.default' must be an array");
+        for (int i = 0; i < defaultQueries.getLength(); i++)
+          itsSupportedQueries[DEFAULT_DATA_QUERIES].insert(defaultQueries[i]);
+      }
+
+      if (itsConfig.exists("data_queries.override"))
+      {
+        const libconfig::Setting &overriddenQueries = itsConfig.lookup("data_queries.override");
+
+        for (int i = 0; i < overriddenQueries.getLength(); i++)
+        {
+          std::string producer = overriddenQueries[i].getName();
+          const libconfig::Setting &overrides =
+              itsConfig.lookup("data_queries.override." + producer);
+          if (!overrides.isArray())
+            throw Fmi::Exception(BCP,
+                                 "Configured overridden data_queries for "
+                                 "producer must be an array");
+          for (int j = 0; j < overrides.getLength(); j++)
+            itsSupportedQueries[producer].insert(overrides[j]);
+        }
+      }
+    }
+
+    if (itsSupportedQueries.find(DEFAULT_DATA_QUERIES) == itsSupportedQueries.end())
+    {
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("position");
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("radius");
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("area");
+      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("locations");
+    }
+  }
+  catch (const libconfig::SettingNotFoundException &e)
+  {
+    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse geometry table settings
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_geometry_tables()
+{
+  try
+  {
+    if (itsConfig.exists("geometry_tables"))
+    {
+      Engine::Gis::postgis_identifier default_postgis_id;
+      std::string default_source_name;
+      std::string default_server;
+      std::string default_schema;
+      std::string default_table;
+      std::string default_field;
+      itsConfig.lookupValue("geometry_tables.name", default_source_name);
+      itsConfig.lookupValue("geometry_tables.server", default_server);
+      itsConfig.lookupValue("geometry_tables.schema", default_schema);
+      itsConfig.lookupValue("geometry_tables.table", default_table);
+      itsConfig.lookupValue("geometry_tables.field", default_field);
+      if (!default_schema.empty() && !default_table.empty() && !default_field.empty())
+      {
+        default_postgis_id.source_name = default_source_name;
+        default_postgis_id.pgname = default_server;
+        default_postgis_id.schema = default_schema;
+        default_postgis_id.table = default_table;
+        default_postgis_id.field = default_field;
+        postgis_identifiers.insert(make_pair(default_postgis_id.key(), default_postgis_id));
+      }
+
+      if (itsConfig.exists("geometry_tables.additional_tables"))
+      {
+        libconfig::Setting &additionalTables =
+            itsConfig.lookup("geometry_tables.additional_tables");
+
+        for (int i = 0; i < additionalTables.getLength(); i++)
+        {
+          libconfig::Setting &tableConfig = additionalTables[i];
+          std::string source_name;
+          std::string server = (default_server.empty() ? "" : default_server);
+          std::string schema = (default_schema.empty() ? "" : default_schema);
+          std::string table = (default_table.empty() ? "" : default_table);
+          std::string field = (default_field.empty() ? "" : default_field);
+          tableConfig.lookupValue("name", source_name);
+          tableConfig.lookupValue("server", server);
+          tableConfig.lookupValue("schema", schema);
+          tableConfig.lookupValue("table", table);
+          tableConfig.lookupValue("field", field);
+
+          Engine::Gis::postgis_identifier postgis_id;
+          postgis_id.source_name = source_name;
+          postgis_id.pgname = server;
+          postgis_id.schema = schema;
+          postgis_id.table = table;
+          postgis_id.field = field;
+
+          if (schema.empty() || table.empty() || field.empty())
+            throw Fmi::Exception(BCP,
+                                 "Configuration file error. Some of the following fields "
+                                 "missing: server, schema, table, field!");
+
+          postgis_identifiers.insert(std::make_pair(postgis_id.key(), postgis_id));
+        }
+      }
+    }
+  }
+  catch (const libconfig::SettingNotFoundException &e)
+  {
+    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+void Config::parse_config_grid_geometries()
+{
+  const libconfig::Setting &gridGeometries = itsConfig.lookup("defaultGridGeometries");
+  if (!gridGeometries.isArray())
+    throw Fmi::Exception(BCP, "Configured value of 'defaultGridGeometries' must be an array");
+
+  for (int i = 0; i < gridGeometries.getLength(); ++i)
+  {
+    uint geomId = gridGeometries[i];
+    itsDefaultGridGeometries.push_back(geomId);
+  }
+}
+
+void Config::parse_config_parameter_aliases(const std::string &configfile)
+{
+  const libconfig::Setting &aliasFiles = itsConfig.lookup("parameterAliasFiles");
+
+  if (!aliasFiles.isArray())
+    throw Fmi::Exception(BCP, "Configured value of 'parameterAliasFiles' must be an array");
+
+  boost::filesystem::path path(configfile);
+
+  for (int i = 0; i < aliasFiles.getLength(); ++i)
+  {
+    std::string st = aliasFiles[i];
+    if (!st.empty())
+    {
+      if (st[0] == '/')
+        itsParameterAliasFiles.push_back(st);
+      else
+        itsParameterAliasFiles.push_back(path.parent_path().string() + "/" + st);
+    }
+  }
+
+  itsAliasFileCollection.init(itsParameterAliasFiles);
 }
 
 // ----------------------------------------------------------------------
@@ -268,19 +442,6 @@ void Config::parse_config_locations()
 // ----------------------------------------------------------------------
 
 Config::Config(const string &configfile)
-    : itsDefaultPrecision("normal"),
-      itsDefaultTimeFormat(default_timeformat),
-      itsDefaultUrl(default_url),
-      itsDefaultMaxDistance(DEFAULT_MAXDISTANCE),
-      itsExpirationTime(default_expires),
-      itsFormatterOptions(),
-      itsPrecisions(),
-      itsObsEngineDisabled(false),
-      itsGridEngineDisabled(false),
-      itsPreventObsEngineDatabaseQuery(false),
-      itsMaxTimeSeriesCacheSize(10000),
-      itsMetaDataUpdatesDisabled(false),
-      itsMetaDataUpdateInterval(30)
 {
   try
   {
@@ -343,103 +504,10 @@ Config::Config(const string &configfile)
     if (itsProducerKeywords.empty())
       itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(DEFAULT_LOCATIONS_KEYWORD);
 
-    // Data queries
-    if (itsConfig.exists("data_queries"))
-    {
-      if (itsConfig.exists("data_queries.default"))
-      {
-        const libconfig::Setting &defaultQueries = itsConfig.lookup("data_queries.default");
-        if (!defaultQueries.isArray())
-          throw Fmi::Exception(BCP, "Configured value of 'data_queries.default' must be an array");
-        for (int i = 0; i < defaultQueries.getLength(); i++)
-          itsSupportedQueries[DEFAULT_DATA_QUERIES].insert(defaultQueries[i]);
-      }
+    parse_config_data_queries();
 
-      if (itsConfig.exists("data_queries.override"))
-      {
-        const libconfig::Setting &overriddenQueries = itsConfig.lookup("data_queries.override");
+    parse_config_geometry_tables();
 
-        for (int i = 0; i < overriddenQueries.getLength(); i++)
-        {
-          std::string producer = overriddenQueries[i].getName();
-          const libconfig::Setting &overriddenQueries =
-              itsConfig.lookup("data_queries.override." + producer);
-          if (!overriddenQueries.isArray())
-            throw Fmi::Exception(BCP,
-                                 "Configured overridden data_queries for "
-                                 "producer must be an array");
-          for (int j = 0; j < overriddenQueries.getLength(); j++)
-            itsSupportedQueries[producer].insert(overriddenQueries[j]);
-        }
-      }
-    }
-
-    if (itsSupportedQueries.find(DEFAULT_DATA_QUERIES) == itsSupportedQueries.end())
-    {
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("position");
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("radius");
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("area");
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("locations");
-    }
-
-    if (itsConfig.exists("geometry_tables"))
-    {
-      Engine::Gis::postgis_identifier default_postgis_id;
-      std::string default_source_name;
-      std::string default_server;
-      std::string default_schema;
-      std::string default_table;
-      std::string default_field;
-      itsConfig.lookupValue("geometry_tables.name", default_source_name);
-      itsConfig.lookupValue("geometry_tables.server", default_server);
-      itsConfig.lookupValue("geometry_tables.schema", default_schema);
-      itsConfig.lookupValue("geometry_tables.table", default_table);
-      itsConfig.lookupValue("geometry_tables.field", default_field);
-      if (!default_schema.empty() && !default_table.empty() && !default_field.empty())
-      {
-        default_postgis_id.source_name = default_source_name;
-        default_postgis_id.pgname = default_server;
-        default_postgis_id.schema = default_schema;
-        default_postgis_id.table = default_table;
-        default_postgis_id.field = default_field;
-        postgis_identifiers.insert(make_pair(default_postgis_id.key(), default_postgis_id));
-      }
-
-      if (itsConfig.exists("geometry_tables.additional_tables"))
-      {
-        libconfig::Setting &additionalTables =
-            itsConfig.lookup("geometry_tables.additional_tables");
-
-        for (int i = 0; i < additionalTables.getLength(); i++)
-        {
-          libconfig::Setting &tableConfig = additionalTables[i];
-          std::string source_name;
-          std::string server = (default_server.empty() ? "" : default_server);
-          std::string schema = (default_schema.empty() ? "" : default_schema);
-          std::string table = (default_table.empty() ? "" : default_table);
-          std::string field = (default_field.empty() ? "" : default_field);
-          tableConfig.lookupValue("name", source_name);
-          tableConfig.lookupValue("server", server);
-          tableConfig.lookupValue("schema", schema);
-          tableConfig.lookupValue("table", table);
-          tableConfig.lookupValue("field", field);
-
-          Engine::Gis::postgis_identifier postgis_id;
-          postgis_id.source_name = source_name;
-          postgis_id.pgname = server;
-          postgis_id.schema = schema;
-          postgis_id.table = table;
-          postgis_id.field = field;
-
-          if (schema.empty() || table.empty() || field.empty())
-            throw Fmi::Exception(BCP,
-                                 "Configuration file error. Some of the following fields "
-                                 "missing: server, schema, table, field!");
-
-          postgis_identifiers.insert(std::make_pair(postgis_id.key(), postgis_id));
-        }
-      }
-    }
     // We construct the default locale only once from the string,
     // creating it from scratch for every request is very expensive
     itsDefaultLocale.reset(new std::locale(itsDefaultLocaleName.c_str()));
@@ -447,38 +515,9 @@ Config::Config(const string &configfile)
     itsLastAliasCheck = time(nullptr);
     try
     {
-      const libconfig::Setting &gridGeometries = itsConfig.lookup("defaultGridGeometries");
-      if (!gridGeometries.isArray())
-        throw Fmi::Exception(BCP, "Configured value of 'defaultGridGeometries' must be an array");
-
-      for (int i = 0; i < gridGeometries.getLength(); ++i)
-      {
-        uint geomId = gridGeometries[i];
-        itsDefaultGridGeometries.push_back(geomId);
-      }
-
       itsConfig.lookupValue("defaultProducerMappingName", itsDefaultProducerMappingName);
-
-      const libconfig::Setting &aliasFiles = itsConfig.lookup("parameterAliasFiles");
-
-      if (!aliasFiles.isArray())
-        throw Fmi::Exception(BCP, "Configured value of 'parameterAliasFiles' must be an array");
-
-      boost::filesystem::path path(configfile);
-
-      for (int i = 0; i < aliasFiles.getLength(); ++i)
-      {
-        std::string st = aliasFiles[i];
-        if (!st.empty())
-        {
-          if (st[0] == '/')
-            itsParameterAliasFiles.push_back(st);
-          else
-            itsParameterAliasFiles.push_back(path.parent_path().string() + "/" + st);
-        }
-      }
-
-      itsAliasFileCollection.init(itsParameterAliasFiles);
+      parse_config_grid_geometries();
+      parse_config_parameter_aliases(configfile);
     }
     catch (const libconfig::SettingNotFoundException &e)
     {
@@ -506,7 +545,7 @@ const Precision &Config::getPrecision(const string &name) const
 {
   try
   {
-    Precisions::const_iterator p = itsPrecisions.find(name);
+    auto p = itsPrecisions.find(name);
     if (p != itsPrecisions.end())
       return p->second;
 

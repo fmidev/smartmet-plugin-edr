@@ -30,7 +30,7 @@ using ProducerKeywords = std::map<std::string, std::set<std::string>>;  // produ
 class Config : private boost::noncopyable
 {
  public:
-  Config(const std::string &configfile);
+  explicit Config(const std::string &configfile);
   Config() = delete;
 
   const SupportedQueries &getSupportedQueries() const { return itsSupportedQueries; }
@@ -75,15 +75,15 @@ class Config : private boost::noncopyable
 
  private:
   libconfig::Config itsConfig;
-  std::string itsDefaultPrecision;
+  std::string itsDefaultPrecision = "normal";
   std::string itsDefaultProducerMappingName;
   std::string itsDefaultLanguage;
   std::string itsDefaultLocaleName;
   std::unique_ptr<std::locale> itsDefaultLocale;
-  std::string itsDefaultTimeFormat;
-  std::string itsDefaultUrl;
-  std::string itsDefaultMaxDistance;
-  unsigned int itsExpirationTime;
+  std::string itsDefaultTimeFormat = "iso";
+  std::string itsDefaultUrl = "/edr";
+  std::string itsDefaultMaxDistance = "60.0km";
+  unsigned int itsExpirationTime = 60;  // seconds
   std::vector<std::string> itsParameterAliasFiles;
   std::vector<uint> itsDefaultGridGeometries;
 
@@ -92,25 +92,30 @@ class Config : private boost::noncopyable
 
   std::map<std::string, Engine::Gis::postgis_identifier> postgis_identifiers;
   std::string itsDefaultPostGISIdentifierKey;
-  bool itsObsEngineDisabled;
-  bool itsGridEngineDisabled;
+  bool itsObsEngineDisabled = false;
+  bool itsGridEngineDisabled = false;
   std::string itsPrimaryForecastSource;
-  bool itsPreventObsEngineDatabaseQuery;
+  bool itsPreventObsEngineDatabaseQuery = false;
 
-  unsigned long long itsMaxTimeSeriesCacheSize;
+  unsigned long long itsMaxTimeSeriesCacheSize = 10000;
 
   SupportedQueries itsSupportedQueries;  // producer->queries
   //  SupportedProducerLocations itsSupportedProducerLocations; //
   //  producer->locations
   ProducerKeywords itsProducerKeywords;  // producer->keywords
 
-  bool itsMetaDataUpdatesDisabled;  // disable updates after initial update
-  int itsMetaDataUpdateInterval;    // scan interval in seconds
+  bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
+  int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
 
   // Private helper functions
   void add_default_precisions();
   void parse_config_precisions();
   void parse_config_precision(const std::string &name);
+  void parse_config_locations();
+  void parse_config_data_queries();
+  void parse_config_geometry_tables();
+  void parse_config_grid_geometries();
+  void parse_config_parameter_aliases(const std::string &configfile);
 
 };  // class Config
 
