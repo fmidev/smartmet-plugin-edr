@@ -8,6 +8,59 @@ namespace Plugin
 {
 namespace EDR
 {
+namespace
+{
+void get_time_interval(const CoordinateFilter::AllowedTimesteps &timesteps,
+                       boost::posix_time::ptime &starttime,
+                       boost::posix_time::ptime &endtime)
+{
+  for (const auto &item : timesteps)
+  {
+    for (const auto &timestep : item.second)
+    {
+      auto timesteps = item.second;
+
+      if (starttime.is_not_a_date_time())
+      {
+        starttime = timestep;
+        endtime = timestep;
+        continue;
+      }
+
+      if (timestep < starttime)
+        starttime = timestep;
+      if (timestep > endtime)
+        endtime = timestep;
+    }
+  }
+}
+
+void get_time_interval(const CoordinateFilter::AllowedLevelsTimesteps &timesteps,
+                       boost::posix_time::ptime &starttime,
+                       boost::posix_time::ptime &endtime)
+{
+  for (const auto &coords : timesteps)
+  {
+    for (const auto &item : coords.second)
+    {
+      auto timestep = item.second;
+      if (starttime.is_not_a_date_time())
+      {
+        starttime = timestep;
+        endtime = timestep;
+        continue;
+      }
+
+      if (timestep < starttime)
+        starttime = timestep;
+      if (timestep > endtime)
+        endtime = timestep;
+    }
+  }
+}
+
+}  // namespace
+
 void CoordinateFilter::add(double longitude, double latitude, double level)
 {
   LonLat lonlat(longitude, latitude);
@@ -78,54 +131,15 @@ std::string CoordinateFilter::getDatetime() const
   boost::posix_time::ptime endtime(boost::posix_time::not_a_date_time);
 
   if (!itsAllowedTimesteps.empty())
-  {
-    for (const auto &item : itsAllowedTimesteps)
-    {
-      for (const auto &timestep : item.second)
-      {
-        auto timesteps = item.second;
-
-        if (starttime.is_not_a_date_time())
-        {
-          starttime = timestep;
-          endtime = timestep;
-          continue;
-        }
-
-        if (timestep < starttime)
-          starttime = timestep;
-        if (timestep > endtime)
-          endtime = timestep;
-      }
-    }
-  }
+    get_time_interval(itsAllowedTimesteps, starttime, endtime);
   else if (!itsAllowedLevelsTimesteps.empty())
-  {
-    for (const auto &coords : itsAllowedLevelsTimesteps)
-    {
-      for (const auto &item : coords.second)
-      {
-        auto timestep = item.second;
-        if (starttime.is_not_a_date_time())
-        {
-          starttime = timestep;
-          endtime = timestep;
-          continue;
-        }
-
-        if (timestep < starttime)
-          starttime = timestep;
-        if (timestep > endtime)
-          endtime = timestep;
-      }
-    }
-  }
+    get_time_interval(itsAllowedLevelsTimesteps, starttime, endtime);
 
   if (!starttime.is_not_a_date_time())
     return (boost::posix_time::to_iso_extended_string(starttime) + "Z/" +
             boost::posix_time::to_iso_extended_string(endtime) + "Z");
 
-  return "";
+  return {};
 }
 
 bool CoordinateFilter::accept(double longitude,

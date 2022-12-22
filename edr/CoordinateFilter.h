@@ -28,12 +28,16 @@ class CoordinateFilter
   std::string getLevels() const;
   std::string getDatetime() const;
 
- private:
   using LonLat = std::pair<double, double>;
   using LevelTimestep = std::pair<double, boost::posix_time::ptime>;
-  std::map<LonLat, std::set<double>> itsAllowedLevels;
-  std::map<LonLat, std::set<boost::posix_time::ptime>> itsAllowedTimesteps;
-  std::map<LonLat, std::set<LevelTimestep>> itsAllowedLevelsTimesteps;
+  using AllowedLevels = std::map<LonLat, std::set<double>>;
+  using AllowedTimesteps = std::map<LonLat, std::set<boost::posix_time::ptime>>;
+  using AllowedLevelsTimesteps = std::map<LonLat, std::set<LevelTimestep>>;
+
+ private:
+  AllowedLevels itsAllowedLevels;
+  AllowedTimesteps itsAllowedTimesteps;
+  AllowedLevelsTimesteps itsAllowedLevelsTimesteps;
 };
 
 }  // namespace EDR
