@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 22.12.22
+Version: 23.1.19
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -27,60 +27,60 @@ BuildRequires: fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 22.12.2
+BuildRequires: smartmet-library-spine-devel >= 23.1.16
 BuildRequires: smartmet-library-locus-devel >= 22.12.16
 BuildRequires: smartmet-library-macgyver-devel >= 22.12.16
-BuildRequires: smartmet-library-grid-content-devel >= 22.12.12
-BuildRequires: smartmet-library-grid-files-devel >= 22.12.19
+BuildRequires: smartmet-library-grid-content-devel >= 23.1.19
+BuildRequires: smartmet-library-grid-files-devel >= 23.1.19
 BuildRequires: smartmet-library-newbase-devel >= 22.11.14
-BuildRequires: smartmet-library-gis-devel >= 22.12.21
+BuildRequires: smartmet-library-gis-devel >= 23.1.5
 BuildRequires: smartmet-library-timeseries-devel >= 22.10.25
 BuildRequires: smartmet-engine-geonames-devel >= 22.12.21
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 22.12.16
+BuildRequires: smartmet-engine-observation-devel >= 23.1.11
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 22.12.15
 BuildRequires: smartmet-engine-gis-devel >= 22.12.21
-BuildRequires: smartmet-engine-grid-devel >= 22.12.12
+BuildRequires: smartmet-engine-grid-devel >= 23.1.19
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 22.12.16
+#Requires: smartmet-engine-observation >= 23.1.11
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 22.12.21
+Requires: smartmet-library-gis >= 23.1.5
 Requires: smartmet-library-locus >= 22.12.16
 Requires: smartmet-library-macgyver >= 22.12.16
 Requires: smartmet-library-newbase >= 22.11.14
-Requires: smartmet-library-spine >= 22.12.2
+Requires: smartmet-library-spine >= 23.1.16
 Requires: smartmet-library-timeseries >= 22.10.25
-Requires: smartmet-library-gis >= 22.12.21
+Requires: smartmet-library-gis >= 23.1.5
 Requires: smartmet-engine-geonames >= 22.12.21
 Requires: smartmet-engine-querydata >= 22.12.15
 Requires: smartmet-engine-gis >= 22.12.21
-Requires: smartmet-engine-grid >= 22.12.12
-Requires: smartmet-server >= 22.12.5
+Requires: smartmet-engine-grid >= 23.1.19
+Requires: smartmet-server >= 23.1.10
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
-#TestRequires: smartmet-utils-devel >= 22.12.14
-#TestRequires: smartmet-library-spine-plugin-test >= 22.12.2
+#TestRequires: smartmet-utils-devel >= 23.1.19
+#TestRequires: smartmet-library-spine-plugin-test >= 23.1.16
 #TestRequires: smartmet-library-newbase-devel >= 22.11.14
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 22.4.14
 #TestRequires: smartmet-test-data >= 20.12.1
-#TestRequires: smartmet-engine-grid-test >= 22.12.12
-#TestRequires: smartmet-library-gis >= 22.12.21
+#TestRequires: smartmet-engine-grid-test >= 23.1.19
+#TestRequires: smartmet-library-gis >= 23.1.5
 #TestRequires: smartmet-engine-geonames >= 22.12.21
 #TestRequires: smartmet-engine-gis >= 22.12.21
 #TestRequires: smartmet-engine-querydata >= 22.12.15
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 22.12.16
+#TestRequires: smartmet-engine-observation >= 23.1.11
 %endif
-#TestRequires: smartmet-engine-grid >= 22.12.12
+#TestRequires: smartmet-engine-grid >= 23.1.19
 #TestRequires: gdal34
 
 %description
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Thu Jan 19 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.1.19-1.fmi
+- Repackaged due to ABI changes in grid libraries
+
 * Thu Dec 22 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.12.22-1.fmi
 - Fixed several issues reported by CodeChecker
 
