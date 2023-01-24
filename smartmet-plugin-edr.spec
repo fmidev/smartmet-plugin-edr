@@ -82,6 +82,7 @@ Provides: %{SPECNAME}
 %endif
 #TestRequires: smartmet-engine-grid >= 22.12.12
 #TestRequires: gdal34
+#TestRequires: libwebp13
 
 %description
 SmartMet edr plugin
