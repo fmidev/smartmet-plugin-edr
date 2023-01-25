@@ -137,6 +137,7 @@ struct Query
   int numberofstations;
 #endif
 
+  size_t numberOfParameters{0};
   bool maxdistanceOptionGiven;
   bool findnearestvalidpoint;
   bool debug = false;
