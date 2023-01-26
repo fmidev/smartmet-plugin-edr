@@ -88,6 +88,7 @@ class State
                            const Engine::Querydata::OriginTime &theOriginTime) const;
   TS::LocalTimePoolPtr getLocalTimePool() const;
   EDRMetaData getProducerMetaData(const std::string &producer) const;
+  bool isValidCollection(const std::string &producer) const;
 
  private:
   const Plugin &itsPlugin;

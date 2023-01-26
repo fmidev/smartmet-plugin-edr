@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.1.19
+Version: 23.1.26
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -31,20 +31,20 @@ BuildRequires: smartmet-library-spine-devel >= 23.1.16
 BuildRequires: smartmet-library-locus-devel >= 22.12.16
 BuildRequires: smartmet-library-macgyver-devel >= 22.12.16
 BuildRequires: smartmet-library-grid-content-devel >= 23.1.19
-BuildRequires: smartmet-library-grid-files-devel >= 23.1.19
+BuildRequires: smartmet-library-grid-files-devel >= 23.1.24
 BuildRequires: smartmet-library-newbase-devel >= 22.11.14
 BuildRequires: smartmet-library-gis-devel >= 23.1.5
-BuildRequires: smartmet-library-timeseries-devel >= 22.10.25
-BuildRequires: smartmet-engine-geonames-devel >= 22.12.21
+BuildRequires: smartmet-library-timeseries-devel >= 23.1.26
+BuildRequires: smartmet-engine-geonames-devel >= 23.1.18
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 23.1.11
+BuildRequires: smartmet-engine-observation-devel >= 23.1.26
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 22.12.15
 BuildRequires: smartmet-engine-gis-devel >= 22.12.21
 BuildRequires: smartmet-engine-grid-devel >= 23.1.19
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 23.1.11
+#Requires: smartmet-engine-observation >= 23.1.26
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -53,9 +53,9 @@ Requires: smartmet-library-locus >= 22.12.16
 Requires: smartmet-library-macgyver >= 22.12.16
 Requires: smartmet-library-newbase >= 22.11.14
 Requires: smartmet-library-spine >= 23.1.16
-Requires: smartmet-library-timeseries >= 22.10.25
+Requires: smartmet-library-timeseries >= 23.1.26
 Requires: smartmet-library-gis >= 23.1.5
-Requires: smartmet-engine-geonames >= 22.12.21
+Requires: smartmet-engine-geonames >= 23.1.18
 Requires: smartmet-engine-querydata >= 22.12.15
 Requires: smartmet-engine-gis >= 22.12.21
 Requires: smartmet-engine-grid >= 23.1.19
@@ -74,14 +74,15 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-test-data >= 20.12.1
 #TestRequires: smartmet-engine-grid-test >= 23.1.19
 #TestRequires: smartmet-library-gis >= 23.1.5
-#TestRequires: smartmet-engine-geonames >= 22.12.21
+#TestRequires: smartmet-engine-geonames >= 23.1.18
 #TestRequires: smartmet-engine-gis >= 22.12.21
 #TestRequires: smartmet-engine-querydata >= 22.12.15
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 23.1.11
+#TestRequires: smartmet-engine-observation >= 23.1.26
 %endif
 #TestRequires: smartmet-engine-grid >= 23.1.19
 #TestRequires: gdal34
+#TestRequires: libwebp13
 
 %description
 SmartMet edr plugin
@@ -106,6 +107,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Thu Jan 26 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.1.26-1.fmi
+- Added support for request size limits (BRAINSTORM-2443)
+
 * Thu Jan 19 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.1.19-1.fmi
 - Repackaged due to ABI changes in grid libraries
 

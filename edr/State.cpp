@@ -217,6 +217,18 @@ EDRMetaData State::getProducerMetaData(const std::string &producer) const
   }
 }
 
+bool State::isValidCollection(const std::string &producer) const
+{
+  try
+  {
+    return itsPlugin.isValidCollection(producer);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet
