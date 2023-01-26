@@ -12,7 +12,7 @@
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
 #include <engines/grid/Engine.h>
-#include <spine/RequestLimits.h>
+#include <timeseries/RequestLimits.h>
 #include <spine/Parameter.h>
 #include <spine/TableFormatterOptions.h>
 #include <libconfig.h++>
@@ -36,7 +36,7 @@ class Config : private boost::noncopyable
   Config(const Config& other) = delete;
   Config& operator=(const Config& other) = delete;
 
-  const Spine::RequestLimits& requestLimits() const { return itsRequestLimits; };
+  const SmartMet::TimeSeries::RequestLimits& requestLimits() const { return itsRequestLimits; };
   const SupportedQueries &getSupportedQueries() const { return itsSupportedQueries; }
   const ProducerKeywords &getProducerKeywords() { return itsProducerKeywords; }
   const Precision &getPrecision(const std::string &name) const;
@@ -102,7 +102,7 @@ class Config : private boost::noncopyable
   bool itsPreventObsEngineDatabaseQuery = false;
 
   unsigned long long itsMaxTimeSeriesCacheSize = 10000;
-  Spine::RequestLimits itsRequestLimits;
+  SmartMet::TimeSeries::RequestLimits itsRequestLimits;
 
   SupportedQueries itsSupportedQueries;  // producer->queries
   //  SupportedProducerLocations itsSupportedProducerLocations; //

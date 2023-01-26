@@ -1381,11 +1381,11 @@ void Plugin::fetchQEngineValues(const State &state,
     auto itHeight = query.heights.begin();
 
 	if(loadDataLevels)
-	  check_request_limit(itsConfig.requestLimits(), query.levels.size(), Spine::RequestLimitMember::LEVELS);
+	  check_request_limit(itsConfig.requestLimits(), query.levels.size(), TS::RequestLimitMember::LEVELS);
 	if(itPressure != query.pressures.end())
-	  check_request_limit(itsConfig.requestLimits(), query.pressures.size(), Spine::RequestLimitMember::LEVELS);
+	  check_request_limit(itsConfig.requestLimits(), query.pressures.size(), TS::RequestLimitMember::LEVELS);
 	if (itHeight != query.heights.end())
-	  check_request_limit(itsConfig.requestLimits(), query.heights.size(), Spine::RequestLimitMember::LEVELS);
+	  check_request_limit(itsConfig.requestLimits(), query.heights.size(), TS::RequestLimitMember::LEVELS);
 
 	std::set<int> received_levels;
     // Loop over the levels
@@ -1410,7 +1410,7 @@ void Plugin::fetchQEngineValues(const State &state,
               continue;
           }
 		  received_levels.insert(level);
-		  check_request_limit(itsConfig.requestLimits(), received_levels.size(), Spine::RequestLimitMember::LEVELS);
+		  check_request_limit(itsConfig.requestLimits(), received_levels.size(), TS::RequestLimitMember::LEVELS);
         }
       }
 
@@ -1483,7 +1483,7 @@ void Plugin::fetchQEngineValues(const State &state,
       }
 #endif
 
-	  check_request_limit(itsConfig.requestLimits(), tlist.size(), Spine::RequestLimitMember::TIMESTEPS);
+	  check_request_limit(itsConfig.requestLimits(), tlist.size(), TS::RequestLimitMember::TIMESTEPS);
 
       auto querydata_tlist = generateQEngineQueryTimes(query, paramname);
 
@@ -1626,7 +1626,7 @@ void Plugin::fetchQEngineValues(const State &state,
               llist = get_location_list(svgPath, tloc.tag, query.step, state.getGeoEngine());
             }
 
-			check_request_limit(itsConfig.requestLimits(), llist.size(), Spine::RequestLimitMember::LOCATIONS);
+			check_request_limit(itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
 
             Spine::Parameter param = get_query_param(paramfunc.parameter);
 
@@ -1742,7 +1742,7 @@ void Plugin::fetchQEngineValues(const State &state,
             // Indexmask (indexed locations on the area)
             Spine::LocationList llist = get_indexmask_locations(mask, loc, qi, *itsGeoEngine);
 
-			check_request_limit(itsConfig.requestLimits(), llist.size(), Spine::RequestLimitMember::LOCATIONS);
+			check_request_limit(itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -3108,9 +3108,9 @@ void Plugin::processObsEngineQuery(const State &state,
         settings.localTimePool = state.getLocalTimePool();
 		settings.requestLimits = itsConfig.requestLimits();
 
-		check_request_limit(itsConfig.requestLimits(), settings.parameters.size(), Spine::RequestLimitMember::PARAMETERS);
+		check_request_limit(itsConfig.requestLimits(), settings.parameters.size(), TS::RequestLimitMember::PARAMETERS);
 		if(settings.taggedFMISIDs.size() > 0)
-		  check_request_limit(itsConfig.requestLimits(), settings.taggedFMISIDs.size(), Spine::RequestLimitMember::LOCATIONS);
+		  check_request_limit(itsConfig.requestLimits(), settings.taggedFMISIDs.size(), TS::RequestLimitMember::LOCATIONS);
 
         if (query.debug)
           settings.debug_options = Engine::Observation::Settings::DUMP_SETTINGS;
@@ -3157,7 +3157,7 @@ void Plugin::processQEngineQuery(const State &state,
     if (masterquery.groupareas == false)
       resolveAreaLocations(masterquery, state, areaproducers);
 
-	check_request_limit(itsConfig.requestLimits(), masterquery.poptions.parameterFunctions().size(), Spine::RequestLimitMember::PARAMETERS);
+	check_request_limit(itsConfig.requestLimits(), masterquery.poptions.parameterFunctions().size(), TS::RequestLimitMember::PARAMETERS);
 
     // first timestep is here in utc
     boost::posix_time::ptime first_timestep = masterquery.latestTimestep;
@@ -3212,7 +3212,7 @@ void Plugin::processQEngineQuery(const State &state,
 		auto tz = getTimeZones().time_zone_from_string(query.timezone);
 		auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
 		number_of_elements += tlist.size();
-		check_request_limit(itsConfig.requestLimits(), number_of_elements, Spine::RequestLimitMember::ELEMENTS);
+		check_request_limit(itsConfig.requestLimits(), number_of_elements, TS::RequestLimitMember::ELEMENTS);
         fetchQEngineValues(state,
                            paramfunc,
                            tloc,
@@ -3222,7 +3222,7 @@ void Plugin::processQEngineQuery(const State &state,
                            queryLevelDataCache,
                            outputData,
 						   tlist);
-		check_request_limit(itsConfig.requestLimits(), TS::number_of_elements(outputData), Spine::RequestLimitMember::ELEMENTS);
+		check_request_limit(itsConfig.requestLimits(), TS::number_of_elements(outputData), TS::RequestLimitMember::ELEMENTS);
       }
       // get the latest_timestep from previous query
       masterquery.latestTimestep = query.latestTimestep;
