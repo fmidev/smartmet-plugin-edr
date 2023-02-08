@@ -26,6 +26,7 @@
 #include <newbase/NFmiIndexMaskTools.h>
 #include <newbase/NFmiSvgTools.h>
 #include <spine/Convenience.h>
+#include <spine/HostInfo.h>
 #include <spine/SmartMet.h>
 #include <spine/TableFormatterFactory.h>
 #include <timeseries/ParameterKeywords.h>
@@ -1270,7 +1271,7 @@ void Plugin::fetchQEngineValues(const State &state,
                                 const ProducerDataPeriod &producerDataPeriod,
                                 QueryLevelDataCache &queryLevelDataCache,
                                 TS::OutputData &outputData,
-								TS::TimeSeriesGenerator::LocalTimeList& tlist)
+                                TS::TimeSeriesGenerator::LocalTimeList &tlist)
 {
   try
   {
@@ -1380,14 +1381,17 @@ void Plugin::fetchQEngineValues(const State &state,
     auto itPressure = query.pressures.begin();
     auto itHeight = query.heights.begin();
 
-	if(loadDataLevels)
-	  check_request_limit(itsConfig.requestLimits(), query.levels.size(), TS::RequestLimitMember::LEVELS);
-	if(itPressure != query.pressures.end())
-	  check_request_limit(itsConfig.requestLimits(), query.pressures.size(), TS::RequestLimitMember::LEVELS);
-	if (itHeight != query.heights.end())
-	  check_request_limit(itsConfig.requestLimits(), query.heights.size(), TS::RequestLimitMember::LEVELS);
+    if (loadDataLevels)
+      check_request_limit(
+          itsConfig.requestLimits(), query.levels.size(), TS::RequestLimitMember::LEVELS);
+    if (itPressure != query.pressures.end())
+      check_request_limit(
+          itsConfig.requestLimits(), query.pressures.size(), TS::RequestLimitMember::LEVELS);
+    if (itHeight != query.heights.end())
+      check_request_limit(
+          itsConfig.requestLimits(), query.heights.size(), TS::RequestLimitMember::LEVELS);
 
-	std::set<int> received_levels;
+    std::set<int> received_levels;
     // Loop over the levels
     for (qi->resetLevel();;)
     {
@@ -1403,14 +1407,15 @@ void Plugin::fetchQEngineValues(const State &state,
         else
         {
           // check if only some levels are chosen
-		  int level = static_cast<int>(qi->levelValue());
+          int level = static_cast<int>(qi->levelValue());
           if (!query.levels.empty())
           {
             if (query.levels.find(level) == query.levels.end())
               continue;
           }
-		  received_levels.insert(level);
-		  check_request_limit(itsConfig.requestLimits(), received_levels.size(), TS::RequestLimitMember::LEVELS);
+          received_levels.insert(level);
+          check_request_limit(
+              itsConfig.requestLimits(), received_levels.size(), TS::RequestLimitMember::LEVELS);
         }
       }
 
@@ -1433,10 +1438,10 @@ void Plugin::fetchQEngineValues(const State &state,
       // Generate the desired time steps as a new copy, since we'll modify the
       // list (???)
       // TODO: Why not just use a proper ending time???
-	  /*
-      auto tz = getTimeZones().time_zone_from_string(query.timezone);
-      auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
-	  */
+      /*
+  auto tz = getTimeZones().time_zone_from_string(query.timezone);
+  auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
+      */
 
 #ifdef MYDEBUG
       std::cout << "Generated timesteps:" << std::endl;
@@ -1483,7 +1488,8 @@ void Plugin::fetchQEngineValues(const State &state,
       }
 #endif
 
-	  check_request_limit(itsConfig.requestLimits(), tlist.size(), TS::RequestLimitMember::TIMESTEPS);
+      check_request_limit(
+          itsConfig.requestLimits(), tlist.size(), TS::RequestLimitMember::TIMESTEPS);
 
       auto querydata_tlist = generateQEngineQueryTimes(query, paramname);
 
@@ -1626,7 +1632,8 @@ void Plugin::fetchQEngineValues(const State &state,
               llist = get_location_list(svgPath, tloc.tag, query.step, state.getGeoEngine());
             }
 
-			check_request_limit(itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
+            check_request_limit(
+                itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
 
             Spine::Parameter param = get_query_param(paramfunc.parameter);
 
@@ -1742,7 +1749,8 @@ void Plugin::fetchQEngineValues(const State &state,
             // Indexmask (indexed locations on the area)
             Spine::LocationList llist = get_indexmask_locations(mask, loc, qi, *itsGeoEngine);
 
-			check_request_limit(itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
+            check_request_limit(
+                itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -3106,11 +3114,15 @@ void Plugin::processObsEngineQuery(const State &state,
       {
         Engine::Observation::Settings &settings = item.settings;
         settings.localTimePool = state.getLocalTimePool();
-		settings.requestLimits = itsConfig.requestLimits();
+        settings.requestLimits = itsConfig.requestLimits();
 
-		check_request_limit(itsConfig.requestLimits(), settings.parameters.size(), TS::RequestLimitMember::PARAMETERS);
-		if(settings.taggedFMISIDs.size() > 0)
-		  check_request_limit(itsConfig.requestLimits(), settings.taggedFMISIDs.size(), TS::RequestLimitMember::LOCATIONS);
+        check_request_limit(itsConfig.requestLimits(),
+                            settings.parameters.size(),
+                            TS::RequestLimitMember::PARAMETERS);
+        if (settings.taggedFMISIDs.size() > 0)
+          check_request_limit(itsConfig.requestLimits(),
+                              settings.taggedFMISIDs.size(),
+                              TS::RequestLimitMember::LOCATIONS);
 
         if (query.debug)
           settings.debug_options = Engine::Observation::Settings::DUMP_SETTINGS;
@@ -3157,14 +3169,16 @@ void Plugin::processQEngineQuery(const State &state,
     if (masterquery.groupareas == false)
       resolveAreaLocations(masterquery, state, areaproducers);
 
-	check_request_limit(itsConfig.requestLimits(), masterquery.poptions.parameterFunctions().size(), TS::RequestLimitMember::PARAMETERS);
+    check_request_limit(itsConfig.requestLimits(),
+                        masterquery.poptions.parameterFunctions().size(),
+                        TS::RequestLimitMember::PARAMETERS);
 
     // first timestep is here in utc
     boost::posix_time::ptime first_timestep = masterquery.latestTimestep;
 
     bool firstProducer = outputData.empty();
 
-	size_t number_of_elements = 0;
+    size_t number_of_elements = 0;
     std::set<std::string> processed_locations;
     for (const auto &tloc : masterquery.loptions->locations())
     {
@@ -3209,10 +3223,11 @@ void Plugin::processQEngineQuery(const State &state,
         {
           query.toptions.endTime = data_period_endtime.local_time();
         }
-		auto tz = getTimeZones().time_zone_from_string(query.timezone);
-		auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
-		number_of_elements += tlist.size();
-		check_request_limit(itsConfig.requestLimits(), number_of_elements, TS::RequestLimitMember::ELEMENTS);
+        auto tz = getTimeZones().time_zone_from_string(query.timezone);
+        auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
+        number_of_elements += tlist.size();
+        check_request_limit(
+            itsConfig.requestLimits(), number_of_elements, TS::RequestLimitMember::ELEMENTS);
         fetchQEngineValues(state,
                            paramfunc,
                            tloc,
@@ -3221,8 +3236,10 @@ void Plugin::processQEngineQuery(const State &state,
                            producerDataPeriod,
                            queryLevelDataCache,
                            outputData,
-						   tlist);
-		check_request_limit(itsConfig.requestLimits(), TS::number_of_elements(outputData), TS::RequestLimitMember::ELEMENTS);
+                           tlist);
+        check_request_limit(itsConfig.requestLimits(),
+                            TS::number_of_elements(outputData),
+                            TS::RequestLimitMember::ELEMENTS);
       }
       // get the latest_timestep from previous query
       masterquery.latestTimestep = query.latestTimestep;
@@ -4125,44 +4142,46 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
     Fmi::Exception ex(BCP, "Request processing exception!", nullptr);
     ex.addParameter("URI", theRequest.getURI());
     ex.addParameter("ClientIP", theRequest.getClientIP());
+    ex.addParameter("HostName", Spine::HostInfo::getHostName(theRequest.getClientIP()));
 
     std::string firstMessage = ex.what();
-	
-	if(firstMessage == "RequestLimitError" || firstMessage == "EDRException")
-	  {
-		auto exp = ex. getExceptionByParameterName("description");
-		if(exp)
-		  {
-			auto desc = exp->getParameterValue("description");
-			if(desc)
-			  {
-				auto status_code = (firstMessage == "EDRException" ? Spine::HTTP::Status::not_found : Spine::HTTP::Status::bad_request);
-				theResponse.setContent(CoverageJson::reportError(status_code, desc).toStyledString());
-				theResponse.setStatus(status_code);
-			  }
-		  }
-	  }
-	else
-	  {
-		if (isdebug)
-		  {
-			// Delivering the exception information as HTTP content
-			std::string fullMessage = ex.getHtmlStackTrace();
-			theResponse.setContent(fullMessage);
-			theResponse.setStatus(Spine::HTTP::Status::ok);
-		  }
-		else
-		  {
-			if (firstMessage.find("timeout") != std::string::npos)
-			  theResponse.setStatus(Spine::HTTP::Status::request_timeout);
-			else
-			  theResponse.setStatus(Spine::HTTP::Status::bad_request);
-		  }
-		// Adding the first exception information into the response header
-		boost::algorithm::replace_all(firstMessage, "\n", " ");
-		firstMessage = firstMessage.substr(0, 300);
-		theResponse.setHeader("X-EDR-Plugin-Error", firstMessage);
-	  }
+
+    if (firstMessage == "RequestLimitError" || firstMessage == "EDRException")
+    {
+      auto exp = ex.getExceptionByParameterName("description");
+      if (exp)
+      {
+        auto desc = exp->getParameterValue("description");
+        if (desc)
+        {
+          auto status_code = (firstMessage == "EDRException" ? Spine::HTTP::Status::not_found
+                                                             : Spine::HTTP::Status::bad_request);
+          theResponse.setContent(CoverageJson::reportError(status_code, desc).toStyledString());
+          theResponse.setStatus(status_code);
+        }
+      }
+    }
+    else
+    {
+      if (isdebug)
+      {
+        // Delivering the exception information as HTTP content
+        std::string fullMessage = ex.getHtmlStackTrace();
+        theResponse.setContent(fullMessage);
+        theResponse.setStatus(Spine::HTTP::Status::ok);
+      }
+      else
+      {
+        if (firstMessage.find("timeout") != std::string::npos)
+          theResponse.setStatus(Spine::HTTP::Status::request_timeout);
+        else
+          theResponse.setStatus(Spine::HTTP::Status::bad_request);
+      }
+      // Adding the first exception information into the response header
+      boost::algorithm::replace_all(firstMessage, "\n", " ");
+      firstMessage = firstMessage.substr(0, 300);
+      theResponse.setHeader("X-EDR-Plugin-Error", firstMessage);
+    }
   }
 }
 
