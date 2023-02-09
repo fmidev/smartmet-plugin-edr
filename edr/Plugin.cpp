@@ -3586,7 +3586,7 @@ void Plugin::processAviEngineQuery(const State &state,
 
   queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
   queryOptions.itsMessageTypes.push_back(producer);
-  queryOptions.itsMessageFormat = "TAC"; // TODO: "IWXXM";
+  queryOptions.itsMessageFormat = "IWXXM";
 
   // Time range or observation time to fetch messages
   //
