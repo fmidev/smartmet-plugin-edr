@@ -105,6 +105,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
 #endif
   EDRMetaData getProducerMetaData(const std::string &producer) const;
   const EDRProducerMetaData &getAviMetaData() const;
+  bool isValidCollection(const std::string &producer) const;
 
  protected:
   void init() override;
@@ -149,7 +150,8 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                           const AreaProducers &areaproducers,
                           const ProducerDataPeriod &producerDataPeriod,
                           QueryLevelDataCache &queryLevelDataCache,
-                          TS::OutputData &outputData);
+                          TS::OutputData &outputData,
+						  TS::TimeSeriesGenerator::LocalTimeList& tlist);
 
   bool processGridEngineQuery(const State &state,
                               Query &masterquery,

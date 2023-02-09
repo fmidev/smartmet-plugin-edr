@@ -26,6 +26,7 @@
 #include <newbase/NFmiIndexMaskTools.h>
 #include <newbase/NFmiSvgTools.h>
 #include <spine/Convenience.h>
+#include <spine/HostInfo.h>
 #include <spine/SmartMet.h>
 #include <spine/TableFormatterFactory.h>
 #include <timeseries/ParameterKeywords.h>
@@ -54,36 +55,7 @@ namespace
 #ifdef MYDEBUG
 void print_settings(const Engine::Observation::Settings &settings)
 {
-  std::cout << "settings.taggedFMISIDs: " << settings.taggedFMISIDs.size() << " kpl" << std::endl;
-  std::cout << "settings.allplaces: " << settings.allplaces << std::endl;
-  std::cout << "settings.boundingBox.size(): " << settings.boundingBox.size() << std::endl;
-  std::cout << "settings.starttime: " << settings.starttime << std::endl;
-  std::cout << "settings.endtime: " << settings.endtime << std::endl;
-  std::cout << "settings.starttimeGiven: " << settings.starttimeGiven << std::endl;
-  std::cout << "settings.format: " << settings.format << std::endl;
-  std::cout << "settings.hours.size(): " << settings.hours.size() << std::endl;
-  std::cout << "settings.language: " << settings.language << std::endl;
-  std::cout << "settings.latest: " << settings.latest << std::endl;
-  std::cout << "settings.localename: " << settings.localename << std::endl;
-  std::cout << "settings.locale.name(): " << settings.locale.name() << std::endl;
-  std::cout << "settings.maxdistance: " << settings.maxdistance << std::endl;
-  std::cout << "settings.missingtext: " << settings.missingtext << std::endl;
-  std::cout << "settings.taggedLocations.size(): " << settings.taggedLocations.size() << std::endl;
-  std::cout << "settings.numberofstations: " << settings.numberofstations << std::endl;
-  std::cout << "settings.parameters.size(): " << settings.parameters.size() << std::endl;
-  std::cout << "settings.stationtype: " << settings.stationtype << std::endl;
-  std::cout << "settings.timeformat: " << settings.timeformat << std::endl;
-  std::cout << "settings.timestep: " << settings.timestep << std::endl;
-  std::cout << "settings.timestring: " << settings.timestring << std::endl;
-  std::cout << "settings.timezone: " << settings.timezone << std::endl;
-  std::cout << "settings.weekdays.size(): " << settings.weekdays.size() << std::endl;
-  std::string wktString = settings.wktArea;
-  if (wktString.size() > 50)
-  {
-    wktString.resize(50);
-    wktString += " ... ";
-  }
-  std::cout << "settings.wktArea: " << wktString << std::endl;
+  std::cout << settings;
 }
 #endif
 
@@ -1298,8 +1270,8 @@ void Plugin::fetchQEngineValues(const State &state,
                                 const AreaProducers &areaproducers,
                                 const ProducerDataPeriod &producerDataPeriod,
                                 QueryLevelDataCache &queryLevelDataCache,
-                                TS::OutputData &outputData)
-
+                                TS::OutputData &outputData,
+                                TS::TimeSeriesGenerator::LocalTimeList &tlist)
 {
   try
   {
@@ -1409,6 +1381,17 @@ void Plugin::fetchQEngineValues(const State &state,
     auto itPressure = query.pressures.begin();
     auto itHeight = query.heights.begin();
 
+    if (loadDataLevels)
+      check_request_limit(
+          itsConfig.requestLimits(), query.levels.size(), TS::RequestLimitMember::LEVELS);
+    if (itPressure != query.pressures.end())
+      check_request_limit(
+          itsConfig.requestLimits(), query.pressures.size(), TS::RequestLimitMember::LEVELS);
+    if (itHeight != query.heights.end())
+      check_request_limit(
+          itsConfig.requestLimits(), query.heights.size(), TS::RequestLimitMember::LEVELS);
+
+    std::set<int> received_levels;
     // Loop over the levels
     for (qi->resetLevel();;)
     {
@@ -1424,12 +1407,15 @@ void Plugin::fetchQEngineValues(const State &state,
         else
         {
           // check if only some levels are chosen
+          int level = static_cast<int>(qi->levelValue());
           if (!query.levels.empty())
           {
-            int level = static_cast<int>(qi->levelValue());
             if (query.levels.find(level) == query.levels.end())
               continue;
           }
+          received_levels.insert(level);
+          check_request_limit(
+              itsConfig.requestLimits(), received_levels.size(), TS::RequestLimitMember::LEVELS);
         }
       }
 
@@ -1452,9 +1438,10 @@ void Plugin::fetchQEngineValues(const State &state,
       // Generate the desired time steps as a new copy, since we'll modify the
       // list (???)
       // TODO: Why not just use a proper ending time???
-
-      auto tz = getTimeZones().time_zone_from_string(query.timezone);
-      auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
+      /*
+  auto tz = getTimeZones().time_zone_from_string(query.timezone);
+  auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
+      */
 
 #ifdef MYDEBUG
       std::cout << "Generated timesteps:" << std::endl;
@@ -1500,6 +1487,9 @@ void Plugin::fetchQEngineValues(const State &state,
         }
       }
 #endif
+
+      check_request_limit(
+          itsConfig.requestLimits(), tlist.size(), TS::RequestLimitMember::TIMESTEPS);
 
       auto querydata_tlist = generateQEngineQueryTimes(query, paramname);
 
@@ -1642,6 +1632,9 @@ void Plugin::fetchQEngineValues(const State &state,
               llist = get_location_list(svgPath, tloc.tag, query.step, state.getGeoEngine());
             }
 
+            check_request_limit(
+                itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
+
             Spine::Parameter param = get_query_param(paramfunc.parameter);
 
             Engine::Querydata::ParameterOptions querydata_param(param,
@@ -1755,6 +1748,9 @@ void Plugin::fetchQEngineValues(const State &state,
 
             // Indexmask (indexed locations on the area)
             Spine::LocationList llist = get_indexmask_locations(mask, loc, qi, *itsGeoEngine);
+
+            check_request_limit(
+                itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -3118,6 +3114,15 @@ void Plugin::processObsEngineQuery(const State &state,
       {
         Engine::Observation::Settings &settings = item.settings;
         settings.localTimePool = state.getLocalTimePool();
+        settings.requestLimits = itsConfig.requestLimits();
+
+        check_request_limit(itsConfig.requestLimits(),
+                            settings.parameters.size(),
+                            TS::RequestLimitMember::PARAMETERS);
+        if (settings.taggedFMISIDs.size() > 0)
+          check_request_limit(itsConfig.requestLimits(),
+                              settings.taggedFMISIDs.size(),
+                              TS::RequestLimitMember::LOCATIONS);
 
         if (query.debug)
           settings.debug_options = Engine::Observation::Settings::DUMP_SETTINGS;
@@ -3164,11 +3169,16 @@ void Plugin::processQEngineQuery(const State &state,
     if (masterquery.groupareas == false)
       resolveAreaLocations(masterquery, state, areaproducers);
 
+    check_request_limit(itsConfig.requestLimits(),
+                        masterquery.poptions.parameterFunctions().size(),
+                        TS::RequestLimitMember::PARAMETERS);
+
     // first timestep is here in utc
     boost::posix_time::ptime first_timestep = masterquery.latestTimestep;
 
     bool firstProducer = outputData.empty();
 
+    size_t number_of_elements = 0;
     std::set<std::string> processed_locations;
     for (const auto &tloc : masterquery.loptions->locations())
     {
@@ -3213,6 +3223,11 @@ void Plugin::processQEngineQuery(const State &state,
         {
           query.toptions.endTime = data_period_endtime.local_time();
         }
+        auto tz = getTimeZones().time_zone_from_string(query.timezone);
+        auto tlist = *itsTimeSeriesCache->generate(query.toptions, tz);
+        number_of_elements += tlist.size();
+        check_request_limit(
+            itsConfig.requestLimits(), number_of_elements, TS::RequestLimitMember::ELEMENTS);
         fetchQEngineValues(state,
                            paramfunc,
                            tloc,
@@ -3220,7 +3235,11 @@ void Plugin::processQEngineQuery(const State &state,
                            areaproducers,
                            producerDataPeriod,
                            queryLevelDataCache,
-                           outputData);
+                           outputData,
+                           tlist);
+        check_request_limit(itsConfig.requestLimits(),
+                            TS::number_of_elements(outputData),
+                            TS::RequestLimitMember::ELEMENTS);
       }
       // get the latest_timestep from previous query
       masterquery.latestTimestep = query.latestTimestep;
@@ -3782,6 +3801,24 @@ const EDRProducerMetaData &Plugin::getAviMetaData() const
 {
   auto metadata = itsMetaData.load();
   return metadata->avi;
+}
+
+bool Plugin::isValidCollection(const std::string &producer) const
+{
+  auto metadata = itsMetaData.load();
+
+#ifndef WITHOUT_OBSERVATION
+  // Is both isObsProducer() and find() needed ?
+  if (!itsConfig.obsEngineDisabled() && isObsProducer(producer))
+    return (metadata->observation.find(producer) != metadata->observation.end());
+#endif
+  if (metadata->querydata.find(producer) != metadata->querydata.end())
+    return true;
+
+  if (metadata->grid.find(producer) != metadata->grid.end())
+    return true;
+
+  return (metadata->avi.find(producer) != metadata->avi.end());
 }
 
 Json::Value Plugin::processMetaDataQuery(const EDRQuery &edr_query)
@@ -4371,28 +4408,46 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
     Fmi::Exception ex(BCP, "Request processing exception!", nullptr);
     ex.addParameter("URI", theRequest.getURI());
     ex.addParameter("ClientIP", theRequest.getClientIP());
-    ex.printError();
+    ex.addParameter("HostName", Spine::HostInfo::getHostName(theRequest.getClientIP()));
 
     std::string firstMessage = ex.what();
-    if (isdebug)
+
+    if (firstMessage == "RequestLimitError" || firstMessage == "EDRException")
     {
-      // Delivering the exception information as HTTP content
-      std::string fullMessage = ex.getHtmlStackTrace();
-      theResponse.setContent(fullMessage);
-      theResponse.setStatus(Spine::HTTP::Status::ok);
+      auto exp = ex.getExceptionByParameterName("description");
+      if (exp)
+      {
+        auto desc = exp->getParameterValue("description");
+        if (desc)
+        {
+          auto status_code = (firstMessage == "EDRException" ? Spine::HTTP::Status::not_found
+                                                             : Spine::HTTP::Status::bad_request);
+          theResponse.setContent(CoverageJson::reportError(status_code, desc).toStyledString());
+          theResponse.setStatus(status_code);
+        }
+      }
     }
     else
     {
-      if (firstMessage.find("timeout") != std::string::npos)
-        theResponse.setStatus(Spine::HTTP::Status::request_timeout);
+      if (isdebug)
+      {
+        // Delivering the exception information as HTTP content
+        std::string fullMessage = ex.getHtmlStackTrace();
+        theResponse.setContent(fullMessage);
+        theResponse.setStatus(Spine::HTTP::Status::ok);
+      }
       else
-        theResponse.setStatus(Spine::HTTP::Status::bad_request);
+      {
+        if (firstMessage.find("timeout") != std::string::npos)
+          theResponse.setStatus(Spine::HTTP::Status::request_timeout);
+        else
+          theResponse.setStatus(Spine::HTTP::Status::bad_request);
+      }
+      // Adding the first exception information into the response header
+      boost::algorithm::replace_all(firstMessage, "\n", " ");
+      firstMessage = firstMessage.substr(0, 300);
+      theResponse.setHeader("X-EDR-Plugin-Error", firstMessage);
     }
-
-    // Adding the first exception information into the response header
-    boost::algorithm::replace_all(firstMessage, "\n", " ");
-    firstMessage = firstMessage.substr(0, 300);
-    theResponse.setHeader("X-EDR-Plugin-Error", firstMessage);
   }
 }
 

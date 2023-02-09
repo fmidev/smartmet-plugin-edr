@@ -29,6 +29,8 @@
 #include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <algorithm>
 
+#define EDRException(description) Fmi::Exception(BCP, "EDRException").addParameter("description", description)
+
 using namespace std;
 
 namespace SmartMet
@@ -187,17 +189,22 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     if (resource_parts.size() > 1 && resource_parts.at(0).empty())
       resource_parts.erase(resource_parts.begin());
     std::string data_query_list;
-
+	
     if (resource_parts.size() > 0)
     {
       if (resource_parts.at(0) == "edr")
       {
-        if (resource_parts.size() > 1 && resource_parts.at(1) == "collections")
+        if (resource_parts.size() > 1)
         {
+		  if(resource_parts.at(1) != "collections")
+			throw EDRException(("Invalid path '/edr/"+resource_parts.at(1)+"'"));
           itsEDRQuery.query_id = EDRQueryId::AllCollections;
           if (resource_parts.size() > 2 && !resource_parts.at(2).empty())
           {
             itsEDRQuery.collection_id = resource_parts.at(2);
+			if(!state.isValidCollection(itsEDRQuery.collection_id))
+			  throw EDRException(("Collection '"+itsEDRQuery.collection_id+"' not found"));
+
             itsEDRQuery.query_id = EDRQueryId::SpecifiedCollection;
             if (resource_parts.size() > 3 && !resource_parts.at(3).empty())
             {
@@ -255,10 +262,15 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     if (itsEDRQuery.query_id == EDRQueryId::DataQuery &&
         supportedQueries.find(itsEDRQuery.query_type) == supportedQueries.end())
     {
+	  throw EDRException("Invalid query type '" + to_string(itsEDRQuery.query_type) +
+                               "'. The following queries supported: " + data_query_list +
+                               " for collection " + itsEDRQuery.collection_id);
+	  /*
       throw Fmi::Exception(BCP,
                            "Invalid query type '" + to_string(itsEDRQuery.query_type) +
                                "'. The following queries supported: " + data_query_list +
                                " for collection " + itsEDRQuery.collection_id + "!");
+	  */
     }
 
     itsEDRQuery.host = resolve_host(req);
@@ -294,9 +306,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
          itsEDRQuery.query_type == EDRQueryType::Area ||
          itsEDRQuery.query_type == EDRQueryType::Corridor) &&
         coords.empty())
-      throw Fmi::Exception(BCP,
-                           "Query parameter 'coords' must be defined for Position, Radius, "
-                           "Trajectory, Area, Corridor query!");
+      throw EDRException("Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area, Corridor query");
 
     // If Trajectory + LINESTRINGZ,LINESTRINGM, LINESTRINGZM, use these
     // variables
@@ -311,18 +321,14 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       auto within_units = Spine::optional_string(req.getParameter("within-units"), "");
       if (itsEDRQuery.query_type == EDRQueryType::Radius &&
           (within.empty() || within_units.empty()))
-        throw Fmi::Exception(BCP,
-                             "Query parameter 'within' and 'within-units' "
-                             "must be defined for Radius query");
+        throw EDRException("Query parameter 'within' and 'within-units' must be defined for Radius query");
 
       if (itsEDRQuery.query_type == EDRQueryType::Corridor)
       {
         auto corridor_width = Spine::optional_string(req.getParameter("corridor-width"), "");
         auto width_units = Spine::optional_string(req.getParameter("width-units"), "");
         if (corridor_width.empty() || width_units.empty())
-          throw Fmi::Exception(BCP,
-                               "Query parameter 'corridor-width' and 'width-units' must be "
-                               "defined for Corridor query!");
+          throw EDRException("Query parameter 'corridor-width' and 'width-units' must be defined for Corridor query");
 
         within = corridor_width;
         within_units = width_units;
@@ -336,9 +342,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         if (within_units == "mi")
           radius = (radius * 1.60934);
         else if (within_units != "km")
-          throw Fmi::Exception(
-              BCP,
-              "Invalid within-units option '" + within_units + "' used, 'km' and 'mi' supported!");
+          throw EDRException("Invalid within-units option '" + within_units + "' used, 'km' and 'mi' supported");
         coords += (":" + Fmi::to_string(radius));
       }
       auto wkt = coords;
@@ -365,10 +369,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
             std::vector<string> parts;
             boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
             if (parts.size() != 3)
-              throw Fmi::Exception(BCP,
-                                   "Invalid MULTIPOINTZ definition, longitude, "
-                                   "latitude, level expected: " +
-                                       coords);
+              throw EDRException("Invalid MULTIPOINTZ definition, longitude, latitude, level expected: " + coords);
             wkt.append(parts[0] + " " + parts[1] + ",");
             itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
           }
@@ -400,10 +401,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
             std::vector<string> parts;
             boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
             if (parts.size() != 4)
-              throw Fmi::Exception(BCP,
-                                   "Invalid LINESTRINGZM definition, longitude, latitude, "
-                                   "level, epoch time expected: " +
-                                       coords);
+              throw EDRException("Invalid LINESTRINGZM definition, longitude, latitude, level, epoch time expected: " + coords);
             wkt.append(parts[0] + " " + parts[1] + ",");
             itsCoordinateFilter.add(Fmi::stod(parts[0]),
                                     Fmi::stod(parts[1]),
@@ -421,10 +419,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
             std::vector<string> parts;
             boost::algorithm::split(parts, item, boost::algorithm::is_any_of(" "));
             if (parts.size() != 3)
-              throw Fmi::Exception(BCP,
-                                   "Invalid LINESTRINGZ definition, longitude, "
-                                   "latitude, level expected: " +
-                                       coords);
+              throw EDRException("Invalid LINESTRINGZ definition, longitude, latitude, level expected: " + coords);
             wkt.append(parts[0] + " " + parts[1] + ",");
             itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
           }
@@ -439,10 +434,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
             std::vector<string> parts;
             boost::algorithm::split(parts, item, boost::algorithm::is_any_of(" "));
             if (parts.size() != 3)
-              throw Fmi::Exception(BCP,
-                                   "Invalid LINESTRINGM definition, longitude, "
-                                   "latitude, epoch time expected: " +
-                                       coords);
+              throw EDRException("Invalid LINESTRINGM definition, longitude, latitude, epoch time expected: " + coords);
             wkt.append(parts[0] + " " + parts[1] + ",");
             itsCoordinateFilter.add(Fmi::stod(parts[0]),
                                     Fmi::stod(parts[1]),
@@ -462,7 +454,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
       auto crs = Spine::optional_string(req.getParameter("crs"), "");
       if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84")
-        throw Fmi::Exception(BCP, "Invalid crs: " + crs + "! Only EPSG:4326 is supported");
+        throw EDRException("Invalid crs: " + crs + ". Only EPSG:4326 is supported");
 
       /*
             // Maybe later: support other CRSs than WGS84
@@ -480,22 +472,17 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       if (itsEDRQuery.query_type == EDRQueryType::Locations)
       {
         if (resource_parts.size() != 5)
-          throw Fmi::Exception(BCP,
-                               "Missing 'locationId' in Locations query! Format "
-                               "'/edr/collections/{collectionId}/locations/{locationId}'");
+          throw EDRException("Missing 'locationId' in Locations query! Format '/edr/collections/{collectionId}/locations/{locationId}'");
 
         const auto &location_id = resource_parts.at(4);
 
         if (!emd.locations)
-          throw Fmi::Exception(
-              BCP,
-              "Location query is not supported by collection '" + itsEDRQuery.collection_id + "'!");
+          throw EDRException("Location query is not supported by collection '" + itsEDRQuery.collection_id + "'");
 
         if (emd.locations->find(location_id) == emd.locations->end())
-          throw Fmi::Exception(BCP,
-                               "Invalid locationId '" + location_id + "' for collection '" +
-                                   itsEDRQuery.collection_id +
-                                   "'! Please check metadata for valid locationIds!");
+          throw EDRException("Invalid locationId '" + location_id + "' for collection '" +
+							 itsEDRQuery.collection_id +
+							 "'! Please check metadata for valid locationIds!");
 
         const auto &location_info = emd.locations->at(location_id);
 
@@ -511,13 +498,12 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       {
         auto bbox = Spine::optional_string(req.getParameter("bbox"), "");
         if (bbox.empty())
-          throw Fmi::Exception(BCP, "Query parameter 'bbox' must be defined for Cube!");
+          throw EDRException("Query parameter 'bbox' must be defined for Cube");
 
         std::vector<string> parts;
         boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
         if (parts.size() != 2)
-          throw Fmi::Exception(BCP,
-                               "Invalid bbox parameter, format is bbox=<lower left coordinate>, "
+          throw EDRException("Invalid bbox parameter, format is bbox=<lower left coordinate>, "
                                "<upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
         auto lower_left_coord = parts[0];
         auto upper_right_coord = parts[1];
@@ -526,16 +512,14 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         parts.clear();
         boost::algorithm::split(parts, lower_left_coord, boost::algorithm::is_any_of(" "));
         if (parts.size() != 2)
-          throw Fmi::Exception(BCP,
-                               "Invalid bbox parameter, format is bbox=<lower left coordinate>, "
+          throw EDRException("Invalid bbox parameter, format is bbox=<lower left coordinate>, "
                                "<upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
         auto lower_left_x = parts[0];
         auto lower_left_y = parts[1];
         parts.clear();
         boost::algorithm::split(parts, upper_right_coord, boost::algorithm::is_any_of(" "));
         if (parts.size() != 2)
-          throw Fmi::Exception(BCP,
-                               "Invalid bbox parameter, format is bbox=<lower left coordinate>, "
+          throw EDRException("Invalid bbox parameter, format is bbox=<lower left coordinate>, "
                                "<upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
         auto upper_right_x = parts[0];
         auto upper_right_y = parts[1];
@@ -557,7 +541,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       datetime = itsCoordinateFilter.getDatetime();
 
     if (datetime.empty())
-      throw Fmi::Exception(BCP, "Missing datetime option!");
+      throw EDRException("Missing datetime option");
 
     if (datetime.find("/") != std::string::npos)
     {
@@ -599,9 +583,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
 
     if (emd.vertical_extent.levels.empty() && itsEDRQuery.query_type == EDRQueryType::Cube)
-      throw Fmi::Exception(BCP,
-                           "Error! Cube query not possible for '" + itsEDRQuery.collection_id +
-                               "', because there is no vertical extent!");
+      throw EDRException("Error! Cube query not possible for '" + itsEDRQuery.collection_id + "', because there is no vertical extent!");
 
     std::string producerId = "";
     std::string geometryId = "";
@@ -678,6 +660,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
             p.append(":" + z);
         }
         cleaned_param_names += p;
+		numberOfParameters++;
       }
     }
     parameter_names = cleaned_param_names;
@@ -685,9 +668,9 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     if (parameter_names.empty())
     {
       if (emd.parameters.empty())
-        throw Fmi::Exception(BCP, "No metadata for " + itsEDRQuery.collection_id + "!");
+        throw EDRException("No metadata for " + itsEDRQuery.collection_id + "!");
       else
-        throw Fmi::Exception(BCP, "Missing parameter-name option!");
+        throw EDRException("Missing parameter-name option!");
     }
 
     // Longitude, latitude are always needed
@@ -729,7 +712,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       {
         loopCount++;
         if (loopCount > 10)
-          throw Fmi::Exception(BCP, "The alias definitions seem to contain an eternal loop!");
+          throw EDRException("The alias definitions seem to contain an eternal loop!");
 
         ind = false;
         std::string alias;
@@ -1013,7 +996,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       // Bounding box must contain exactly 4 elements
       if (parts.size() != 4)
       {
-        throw Fmi::Exception(BCP, "Invalid bounding box '" + bbox + "'!");
+        throw EDRException("Invalid bounding box '" + bbox + "'");
       }
 
       if (!parts[0].empty())
@@ -1065,7 +1048,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
   catch (...)
   {
     // The stack traces are useless when the user has made a typo
-    throw Fmi::Exception::Trace(BCP, "TimeSeries plugin failed to parse query string options!")
+    throw Fmi::Exception::Trace(BCP, "EDR plugin failed to parse query string options!")
         .disableStackTrace();
   }
 }
@@ -1161,7 +1144,7 @@ void Query::parse_producers(const Spine::HTTP::Request &theReq,
         ok = theGridEngine->isGridProducer(p);
 
       if (!ok)
-        throw Fmi::Exception(BCP, "Unknown producer name '" + p + "'");
+        throw EDRException("Unknown producer name '" + p + "'");
     }
 
     // Now split into location parts

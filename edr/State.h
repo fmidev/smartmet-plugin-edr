@@ -95,6 +95,7 @@ class State
   TS::LocalTimePoolPtr getLocalTimePool() const;
   EDRMetaData getProducerMetaData(const std::string &producer) const;
   const EDRProducerMetaData &getAviMetaData() const;
+  bool isValidCollection(const std::string &producer) const;
 
  private:
   const Plugin &itsPlugin;
