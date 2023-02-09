@@ -6,6 +6,7 @@
 #include <boost/optional.hpp>
 #include <map>
 #include <set>
+#include <list>
 #include <string>
 
 namespace SmartMet
@@ -26,11 +27,18 @@ namespace Observation
 class Engine;
 }
 #endif
+namespace Avi
+{
+class Engine;
+}
 }  // namespace Engine
 namespace Plugin
 {
 namespace EDR
 {
+class AviCollection;
+using AviCollections = std::list<AviCollection>;
+
 // Parameter infor from querydata-, observation-, grid-engine
 struct edr_parameter
 {
@@ -83,6 +91,7 @@ struct EDRMetaData
   const ParameterInfo *parameter_info{nullptr};  // Info about parameters from config file
   std::string language{"en"};                    // Language from configuration file
   int getPrecision(const std::string &parameter_name) const;
+  bool isAviProducer = false;
 };
 
 using EDRProducerMetaData =
@@ -93,12 +102,18 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine);
 #ifndef WITHOUT_OBSERVATION
 EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine);
 #endif
+EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
+                                         const AviCollections &aviCollections);
+void load_locations_avi(const Engine::Avi::Engine &aviEngine,
+                        const AviCollections &aviCollections,
+                        SupportedProducerLocations &spl);
 
 struct EngineMetaData
 {
   EDRProducerMetaData querydata;
   EDRProducerMetaData grid;
   EDRProducerMetaData observation;
+  EDRProducerMetaData avi;
   std::time_t update_time;
 };
 

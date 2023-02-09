@@ -2200,6 +2200,8 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       edr_md = &(emd.grid.at(producer).front());
     else if (emd.observation.find(producer) != emd.observation.end())
       edr_md = &(emd.observation.at(producer).front());
+    else if (emd.avi.find(producer) != emd.avi.end())
+      edr_md = &(emd.avi.at(producer).front());
 
     if (!edr_md || !edr_md->locations)
       return result;
@@ -2266,10 +2268,13 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
       auto edr_metadata = parse_edr_metadata(emd.querydata, edr_query);
       auto edr_metadata_grid = parse_edr_metadata(emd.grid, edr_query);
       auto edr_metadata_obs = parse_edr_metadata(emd.observation, edr_query);
+      auto edr_metadata_avi = parse_edr_metadata(emd.avi, edr_query);
       // Append grid engine metadata after QEngine metadata
       edr_metadata.append(edr_metadata_grid);
       // Append observation engine metadata in the end
       edr_metadata.append(edr_metadata_obs);
+      // Append avi engine metadata in the end
+      edr_metadata.append(edr_metadata_avi);
 
       // Add main level links
       Json::Value meta_data;
@@ -2291,6 +2296,8 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
         result = parse_edr_metadata(emd.observation, edr_query);
       else if (emd.grid.find(producer) != emd.grid.end())
         result = parse_edr_metadata(emd.grid, edr_query);
+      else if (emd.avi.find(producer) != emd.avi.end())
+        result = parse_edr_metadata(emd.avi, edr_query);
     }
     return result;
   }

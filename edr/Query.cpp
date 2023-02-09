@@ -499,11 +499,13 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
         const auto &location_info = emd.locations->at(location_id);
 
-        // Corrently locationId is either fmisid or geoid
+        // Currently locationId is either fmisid, geoid or icao code (type "avid")
         if (location_info.type == "fmisid")
           req.addParameter("fmisid", location_id);
-        else
+        else if (location_info.type != "avid")
           req.addParameter("geoid", location_id);
+        else
+          req.addParameter("icao", location_id);
       }
       else if (itsEDRQuery.query_type == EDRQueryType::Cube)
       {
@@ -756,65 +758,75 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     // attributeList.print(std::cout,0,0);
 
-    T::Attribute *v1 = attributeList.getAttributeByNameEnd("Grib1.IndicatorSection.EditionNumber");
-    T::Attribute *v2 = attributeList.getAttributeByNameEnd("Grib2.IndicatorSection.EditionNumber");
-
-    T::Attribute *lat = attributeList.getAttributeByNameEnd("LatitudeOfFirstGridPoint");
-    T::Attribute *lon = attributeList.getAttributeByNameEnd("LongitudeOfFirstGridPoint");
-
-    if (v1 != nullptr && lat != nullptr && lon != nullptr)
+    if (!emd.isAviProducer)
     {
-      // Using coordinate that is inside the GRIB1 grid
+      T::Attribute *v1 = attributeList.getAttributeByNameEnd("Grib1.IndicatorSection.EditionNumber");
+      T::Attribute *v2 = attributeList.getAttributeByNameEnd("Grib2.IndicatorSection.EditionNumber");
 
-      double latitude = toDouble(lat->mValue.c_str()) / 1000;
-      double longitude = toDouble(lon->mValue.c_str()) / 1000;
+      T::Attribute *lat = attributeList.getAttributeByNameEnd("LatitudeOfFirstGridPoint");
+      T::Attribute *lon = attributeList.getAttributeByNameEnd("LongitudeOfFirstGridPoint");
 
-      std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
-      Spine::HTTP::Request tmpReq;
-      tmpReq.addParameter("latlon", val);
-      loptions.reset(
-          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
-    }
-    else if (v2 != nullptr && lat != nullptr && lon != nullptr)
-    {
-      // Using coordinate that is inside the GRIB2 grid
-
-      double latitude = toDouble(lat->mValue.c_str()) / 1000000;
-      double longitude = toDouble(lon->mValue.c_str()) / 1000000;
-
-      std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
-      Spine::HTTP::Request tmpReq;
-      tmpReq.addParameter("latlon", val);
-      loptions.reset(
-          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
-    }
-    else
-    {
-      loptions.reset(
-          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(req)));
-
-      auto lon_coord = Spine::optional_double(req.getParameter("x"), kFloatMissing);
-      auto lat_coord = Spine::optional_double(req.getParameter("y"), kFloatMissing);
-      auto source_crs = Spine::optional_string(req.getParameter("crs"), "");
-
-      if (lon_coord != kFloatMissing && lat_coord != kFloatMissing && !source_crs.empty())
+      if (v1 != nullptr && lat != nullptr && lon != nullptr)
       {
-        // Transform lon_coord, lat_coord to lonlat parameter
-        if (source_crs != "ESPG:4326")
-        {
-          Fmi::CoordinateTransformation transformation(source_crs, "WGS84");
-          transformation.transform(lon_coord, lat_coord);
-        }
-        auto tmpReq = req;
-        tmpReq.addParameter("lonlat",
-                            (Fmi::to_string(lon_coord) + "," + Fmi::to_string(lat_coord)));
+        // Using coordinate that is inside the GRIB1 grid
+
+        double latitude = toDouble(lat->mValue.c_str()) / 1000;
+        double longitude = toDouble(lon->mValue.c_str()) / 1000;
+
+        std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
+        Spine::HTTP::Request tmpReq;
+        tmpReq.addParameter("latlon", val);
         loptions.reset(
             new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
       }
-    }
+      else if (v2 != nullptr && lat != nullptr && lon != nullptr)
+      {
+        // Using coordinate that is inside the GRIB2 grid
 
-    // Store WKT-geometries
-    wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
+        double latitude = toDouble(lat->mValue.c_str()) / 1000000;
+        double longitude = toDouble(lon->mValue.c_str()) / 1000000;
+
+        std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
+        Spine::HTTP::Request tmpReq;
+        tmpReq.addParameter("latlon", val);
+        loptions.reset(
+            new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
+      }
+      else
+      {
+        loptions.reset(
+            new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(req)));
+
+        auto lon_coord = Spine::optional_double(req.getParameter("x"), kFloatMissing);
+        auto lat_coord = Spine::optional_double(req.getParameter("y"), kFloatMissing);
+        auto source_crs = Spine::optional_string(req.getParameter("crs"), "");
+
+        if (lon_coord != kFloatMissing && lat_coord != kFloatMissing && !source_crs.empty())
+        {
+          // Transform lon_coord, lat_coord to lonlat parameter
+          if (source_crs != "ESPG:4326")
+          {
+            Fmi::CoordinateTransformation transformation(source_crs, "WGS84");
+            transformation.transform(lon_coord, lat_coord);
+          }
+          auto tmpReq = req;
+          tmpReq.addParameter("lonlat",
+                              (Fmi::to_string(lon_coord) + "," + Fmi::to_string(lat_coord)));
+          loptions.reset(
+              new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
+        }
+      }
+
+      // Store WKT-geometries
+      wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
+    }
+    else
+    {
+      loptions.reset(new SmartMet::Engine::Geonames::LocationOptions());
+      loptions->setLocations(SmartMet::Spine::TaggedLocationList());
+
+      requestWKT = Spine::optional_string(req.getParameter("wkt"), "");
+    }
 
     toptions = TS::parseTimes(req);
 
@@ -873,9 +885,10 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     }
 
 #ifndef WITHOUT_OBSERVARION
-    Query::parse_producers(req, state.getQEngine(), state.getGridEngine(), state.getObsEngine());
+    Query::parse_producers(req, state.getQEngine(), state.getGridEngine(), state.getObsEngine(),
+                             state.getAviMetaData());
 #else
-    Query::parse_producers(req, state.getQEngine(), state.getGridEngine());
+    Query::parse_producers(req, state.getQEngine(), state.getGridEngine(), state.getAviMetaData());
 #endif
 
 #ifndef WITHOUT_OBSERVATION
@@ -977,6 +990,16 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     }
 #endif
 
+    name = req.getParameter("icao");
+    if (name)
+    {
+      const string icaoreq = *name;
+      vector<string> parts;
+      boost::algorithm::split(parts, icaoreq, boost::algorithm::is_any_of(","));
+
+      this->icaos.insert(this->icaos.begin(), parts.begin(), parts.end());
+    }
+
 #ifndef WITHOUT_OBSERVATION
     if (!!req.getParameter("bbox"))
     {
@@ -1047,6 +1070,11 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
   }
 }
 
+bool Query::isAviProducer(const EDRProducerMetaData &avi, const std::string &producer) const
+{
+  return (avi.find(producer) != avi.end());
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse producer/model options
@@ -1057,11 +1085,13 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 void Query::parse_producers(const Spine::HTTP::Request &theReq,
                             const Engine::Querydata::Engine &theQEngine,
                             const Engine::Grid::Engine *theGridEngine,
-                            const Engine::Observation::Engine *theObsEngine)
+                            const Engine::Observation::Engine *theObsEngine,
+                            const EDRProducerMetaData &avi)
 #else
 void Query::parse_producers(const Spine::HTTP::Request &theReq,
                             const Engine::Querydata::Engine &theQEngine,
-                            const Engine::Grid::Engine &theGridEngine)
+                            const Engine::Grid::Engine &theGridEngine,
+                            const EDRProducerMetaData &avi)
 #endif
 {
   try
@@ -1081,6 +1111,7 @@ void Query::parse_producers(const Spine::HTTP::Request &theReq,
       opt2 = Spine::optional_string(theReq.getParameter("stationtype"), "");
 
     std::list<std::string> resultProducers;
+    const std::string &prodOpt = opt.empty() ? opt2 : opt;
 
     // Handle time separation:: either 'model' or 'producer' keyword used
     if (!opt.empty())
@@ -1090,7 +1121,20 @@ void Query::parse_producers(const Spine::HTTP::Request &theReq,
 
     for (auto &p : resultProducers)
     {
-      boost::algorithm::to_lower(p);
+      // Avi collection names are in upper case and only one producer name is allowed
+
+      if (!isAviProducer(avi, p))
+        boost::algorithm::to_lower(p);
+      else if (resultProducers.size() > 1)
+        throw Fmi::Exception(BCP, "Only one producer is allowed for avi query: '" + prodOpt + "'");
+      else
+      {
+        AreaProducers ap = { p };
+        timeproducers.push_back(ap);
+
+        return;
+      }
+
       if (p == "itmf")
       {
         p = Engine::Observation::FMI_IOT_PRODUCER;

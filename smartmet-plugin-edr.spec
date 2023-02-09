@@ -107,6 +107,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Thu Feb  9 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.2.9-1.fmi
+- Aviation message collection support (BRAINSTORM-2472)
+
 * Thu Dec 22 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.12.22-1.fmi
 - Fixed several issues reported by CodeChecker
 

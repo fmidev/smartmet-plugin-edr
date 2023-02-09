@@ -1,5 +1,6 @@
 #include "EDRMetaData.h"
 #include "EDRQuery.h"
+#include "AviCollection.h"
 
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
@@ -10,6 +11,8 @@
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
+#include <engines/avi/Engine.h>
+#include <boost/any.hpp>
 
 namespace SmartMet
 {
@@ -259,6 +262,224 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine)
 }
 #endif
 
+std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine,
+                                            const AviCollections &aviCollections)
+{
+  std::list<AviMetaData> aviMetaData;
+
+  for (auto const &aviCollection : aviCollections)
+  {
+    AviMetaData amd(aviCollection.getBBox(),
+                    aviCollection.getName(),
+                    aviCollection.getMessageTypes(),
+                    aviCollection.getLocationCheck());
+    SmartMet::Engine::Avi::QueryOptions queryOptions;
+    std::string icaoColumnName("icao");
+    std::string latColumnName("latitude");
+    std::string lonColumnName("longitude");
+
+    queryOptions.itsParameters.push_back(icaoColumnName);
+    queryOptions.itsParameters.push_back(latColumnName);
+    queryOptions.itsParameters.push_back(lonColumnName);
+
+    if (!aviCollection.getCountries().empty())
+      queryOptions.itsLocationOptions.itsCountries.insert(
+          queryOptions.itsLocationOptions.itsCountries.begin(),
+          aviCollection.getCountries().begin(),
+          aviCollection.getCountries().end());
+    else if (! aviCollection.getIcaos().empty())
+      queryOptions.itsLocationOptions.itsIcaos.insert(
+          queryOptions.itsLocationOptions.itsIcaos.begin(),
+          aviCollection.getIcaos().begin(),
+          aviCollection.getIcaos().end());
+    else if (! amd.getBBox())
+      throw Fmi::Exception(BCP, "Internal error: No metadata query location parameters set");
+    else
+    {
+      auto const &bbox = *amd.getBBox();
+
+      auto west = *bbox.getMinX();
+      auto east = *bbox.getMaxX();
+      auto south = *bbox.getMinY();
+      auto north = *bbox.getMaxY();
+
+      queryOptions.itsLocationOptions.itsBBoxes.push_back(
+          SmartMet::Engine::Avi::BBox(west, east, south, north));
+    }
+
+    auto stationData = aviEngine.queryStations(queryOptions);
+    bool useDataBBox = (! amd.getBBox()), first = true;
+    double minX = 0, minY = 0, maxX = 0, maxY = 0;
+
+    for (auto stationId : stationData.itsStationIds)
+    {
+      auto &columns = stationData.itsValues[stationId];
+      auto const &icaoCode = *(columns[icaoColumnName].cbegin());
+      auto const &latitude = *(columns[latColumnName].cbegin());
+      auto const &longitude = *(columns[lonColumnName].cbegin());
+
+      // Icao code filtering to ignore e.g. ILxx stations
+
+      auto icao = boost::get<std::string>(icaoCode);
+
+      if (aviCollection.filter(icao))
+        continue;
+
+      auto lat = boost::get<double>(latitude);
+      auto lon = boost::get<double>(longitude);
+
+      if (useDataBBox)
+      {
+        if (first)
+        {
+          minY = maxY = lat;
+          minX = maxX = lon;
+
+          first = false;
+        }
+        else
+        {
+          if (lat < minY)
+            minY = lat;
+          else if (lat > maxY)
+            maxY = lat;
+
+          if (lon < minX)
+            minX = lon;
+          else if (lon > maxX)
+            maxX = lon;
+        }
+      }
+
+      amd.addStation(
+        AviStation(stationId, icao, boost::get<double>(latitude), boost::get<double>(longitude)));
+    }
+
+    if (! amd.getStations().empty())
+    {
+      if (useDataBBox)
+        amd.setBBox(AviBBox(minX, minY, maxX, maxY));
+
+      aviMetaData.push_back(amd);
+    }
+  }
+
+  return aviMetaData;
+}
+
+EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
+                                         const AviCollections &aviCollections)
+{
+  using boost::posix_time::ptime;
+  using boost::posix_time::time_duration;
+  using boost::posix_time::hours;
+
+  try
+  {
+    EDRProducerMetaData edrProducerMetaData;
+    EDRMetaData edrMetaData;
+
+    auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections);
+    edrMetaData.isAviProducer = true;
+
+    for (const auto &amd : aviMetaData)
+    {
+      auto const &bbox = *(amd.getBBox());
+
+      edrMetaData.spatial_extent.bbox_xmin = *bbox.getMinX();
+      edrMetaData.spatial_extent.bbox_ymin = *bbox.getMinY();
+      edrMetaData.spatial_extent.bbox_xmax = *bbox.getMaxX();
+      edrMetaData.spatial_extent.bbox_ymax = *bbox.getMaxY();
+
+      // METAR's issue times are 20 and 50, for others round endtime to the start of hour
+      //
+      // TODO: Period length/adjustment and timestep from config
+
+      auto now = boost::posix_time::second_clock::universal_time();
+      auto timeOfDay = now.time_of_day();
+      uint timeStep = 60, minutes = 0;
+
+      if (amd.getProducer() == "METAR")
+      {
+        if (timeOfDay.minutes() < 20)
+        {
+          now -= time_duration(1, 0, 0);
+          timeOfDay = now.time_of_day();
+        }
+        else
+          minutes = ((timeOfDay.minutes() < 50) ? 20 : 50);
+
+        timeStep = 30;
+      }
+
+      // TODO: Set 30 day period (from config)
+      //
+      // UKMO's test site seems to have some limit in interval handling
+      //
+      // 30 day period with 30min step results e.g. into R1440/2023-01-06T13:20:00Z/PT30M,
+      // which ends up 21d 6h time range at test site, ending 2023-01-27T19:20Z
+
+      ptime endTime(now.date(), time_duration(timeOfDay.hours(), minutes, 0));
+//    ptime startTime = endTime - boost::posix_time::hours(30 * 24);
+      ptime startTime = endTime - boost::posix_time::hours(21 * 24);
+
+      edrMetaData.temporal_extent.start_time = startTime;
+      edrMetaData.temporal_extent.end_time = endTime;
+      edrMetaData.temporal_extent.timestep = timeStep;
+//    edrMetaData.temporal_extent.timesteps = (30 * 24 * (60 / timeStep));
+      edrMetaData.temporal_extent.timesteps = (21 * 24 * (60 / timeStep));
+
+      for (const auto &p : amd.getParameters())
+      {
+        auto parameter_name = p.getName();
+        boost::algorithm::to_lower(parameter_name);
+        edrMetaData.parameter_names.insert(parameter_name);
+        edrMetaData.parameters.insert(std::make_pair(
+            parameter_name,
+            edr_parameter(parameter_name, p.getDescription())));
+      }
+
+      edrMetaData.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+
+      edrProducerMetaData[amd.getProducer()].push_back(edrMetaData);
+    }
+
+    return edrProducerMetaData;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void load_locations_avi(const Engine::Avi::Engine &aviEngine,
+                        const AviCollections &aviCollections,
+                        SupportedProducerLocations &spl)
+{
+  auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections);
+
+  for (const auto &amd : aviMetaData)
+  {
+    SupportedLocations sls;
+
+    for (const auto &station : amd.getStations())
+    {
+      // TODO: Station name needed ?
+
+      location_info li;
+      li.id = station.getIcao();
+      li.longitude = station.getLongitude();
+      li.latitude = station.getLatitude();
+      li.name = Fmi::to_string(station.getId());
+      li.type = "avid";
+
+      sls[li.id] = li;
+    }
+
+    spl[amd.getProducer()] = sls;
+  }
+}
+
 int EDRMetaData::getPrecision(const std::string &parameter_name) const
 {
   try
@@ -307,6 +528,7 @@ void update_location_info(EngineMetaData &emd, const SupportedProducerLocations 
     update_location_info(emd.querydata, spl);
     update_location_info(emd.grid, spl);
     update_location_info(emd.observation, spl);
+    update_location_info(emd.avi, spl);
   }
   catch (...)
   {

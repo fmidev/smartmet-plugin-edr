@@ -398,6 +398,234 @@ void Config::parse_config_geometry_tables()
   }
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse avi collections
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_avi_collections()
+{
+  try
+  {
+    if (itsConfig.exists("avi"))
+    {
+      std::string rootPath = "avi.collections";
+
+      if (itsConfig.exists(rootPath))
+      {
+        libconfig::Setting &collections = itsConfig.lookup(rootPath);
+
+        if (!collections.isList())
+          throw Fmi::Exception(
+              BCP, "Configuration file error. " + rootPath + " must be a list of objects");
+
+        for (int i = 0; i < collections.getLength(); i++)
+        {
+          std::string path(rootPath + ".[" + Fmi::to_string(i) + "]");
+          libconfig::Setting &collectionSetting = collections[i];
+
+          if (!collectionSetting.isGroup())
+            throw Fmi::Exception(BCP, "Configuration file error. " + path + " must be an object");
+
+          AviCollection aviCollection;
+
+          try
+          {
+            std::string name;
+            collectionSetting.lookupValue("name", name);
+            aviCollection.setName(name);
+          }
+          catch (const std::exception &e)
+          {
+            throw Fmi::Exception(
+                BCP, "Configuration file error. " + path + " " + e.what());
+          }
+
+          auto name = aviCollection.getName();
+          for (auto const &collection : itsAviCollections)
+            if (name == collection.getName())
+              throw Fmi::Exception(
+                  BCP, "Configuration file error. " + path + ".name is duplicate");
+
+          aviCollection.addMessageType(name);
+
+          std::string countriesPath = path + ".countries";
+          if (itsConfig.exists(countriesPath))
+          {
+            libconfig::Setting &countrySetting = itsConfig.lookup(countriesPath);
+
+            if (!countrySetting.isArray())
+              throw Fmi::Exception(
+                  BCP, "Configuration file error. " + countriesPath + " must be an array");
+
+            for (int j = 0; j < countrySetting.getLength(); j++)
+            {
+              std::string countryPath = countriesPath + ".[" + Fmi::to_string(j) + "]", country;
+
+              if (countrySetting[j].getType() != libconfig::Setting::Type::TypeString)
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + countryPath + " must be a string");
+
+              try
+              {
+                aviCollection.addCountry(std::string((const char *) countrySetting[j]));
+              }
+              catch (const std::exception &e)
+              {
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + countryPath + " " + e.what());
+              }
+            }
+          }
+
+          std::string bboxPath = path + ".bbox";
+          if (itsConfig.exists(bboxPath))
+          {
+            libconfig::Setting &bboxSetting = itsConfig.lookup(bboxPath);
+
+            if (!bboxSetting.isGroup())
+              throw Fmi::Exception(
+                  BCP, "Configuration file error. " + bboxPath + " must be an object");
+
+            AviBBox bbox;
+            std::list<std::string> fields = { "xmin", "ymin", "xmax", "ymax" };
+            int index = 0;
+
+            for (auto const &field : fields)
+            {
+              std::string fieldPath = bboxPath + "." + field;
+
+              if (! itsConfig.exists(fieldPath))
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + fieldPath + " is missing");
+
+              libconfig::Setting &fieldSetting = itsConfig.lookup(fieldPath);
+              auto type = fieldSetting.getType();
+
+              if (type == libconfig::Setting::Type::TypeInt)
+              {
+                int value;
+                itsConfig.lookupValue(fieldPath, value);
+                bbox.setField(index, (double) value);
+
+                // Why this does not work, value is garbage ?
+                //
+                // fieldSetting.lookupValue(field, value);
+              }
+              else if (type == libconfig::Setting::Type::TypeFloat)
+              {
+                double value;
+                itsConfig.lookupValue(fieldPath, value);
+                bbox.setField(index, value);
+              }
+              else
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + fieldPath + " must be a number");
+
+              index++;
+            }
+
+            try
+            {
+              aviCollection.setBBox(bbox);
+            }
+            catch (const std::exception &e)
+            {
+              throw Fmi::Exception(
+                  BCP, "Configuration file error. " + bboxPath + " " + e.what());
+            }
+          }
+
+          std::string icaosPath = path + ".icaos";
+          if (itsConfig.exists(icaosPath))
+          {
+            libconfig::Setting &icaoSetting = itsConfig.lookup(icaosPath);
+
+            if (!icaoSetting.isArray())
+              throw Fmi::Exception(
+                  BCP, "Configuration file error. " + icaosPath + " must be an array");
+
+            for (int j = 0; j < icaoSetting.getLength(); j++)
+            {
+              std::string icaoPath = icaosPath + ".[" + Fmi::to_string(j) + "]";
+
+              if (icaoSetting[j].getType() != libconfig::Setting::Type::TypeString)
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + icaoPath + " must be a string");
+
+              try
+              {
+                aviCollection.addIcao(std::string((const char *) icaoSetting[j]));
+              }
+              catch (const std::exception &e)
+              {
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + icaoPath + " " + e.what());
+              }
+            }
+          }
+
+          std::string filtersPath = path + ".icaofilters";
+          if (itsConfig.exists(filtersPath))
+          {
+            libconfig::Setting &filterSetting = itsConfig.lookup(filtersPath);
+
+            if (!filterSetting.isArray())
+              throw Fmi::Exception(
+                  BCP, "Configuration file error. " + filtersPath + " must be an array");
+
+            for (int j = 0; j < filterSetting.getLength(); j++)
+            {
+              std::string filterPath = filtersPath + ".[" + Fmi::to_string(j) + "]";
+
+              if (filterSetting[j].getType() != libconfig::Setting::Type::TypeString)
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + filterPath + " must be a string");
+
+              try
+              {
+                aviCollection.addIcaoFilter(std::string((const char *) filterSetting[j]));
+              }
+              catch (const std::exception &e)
+              {
+                throw Fmi::Exception(
+                    BCP, "Configuration file error. " + filterPath + " " + e.what());
+              }
+            }
+          }
+
+          /* Plugin checks given location against metadata anyway, no need to check by avi
+          /
+          std::string checkLocationsPath = path + ".checklocations";
+          if (itsConfig.exists(checkLocationsPath))
+          {
+            bool checkLocations;
+            itsConfig.lookupValue(checkLocationsPath, checkLocations);
+            aviCollection.setLocationCheck(checkLocations);
+          }
+          */
+
+          if (aviCollection.getCountries().empty() && !aviCollection.getBBox() &&
+              aviCollection.getIcaos().empty())
+            throw Fmi::Exception(
+                BCP, "Configuration file error. " + path + " provides no country, bbox or icao");
+
+          itsAviCollections.push_back(aviCollection);
+        }
+      }
+    }
+  }
+  catch (const libconfig::SettingNotFoundException &e)
+  {
+    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
 void Config::parse_config_grid_geometries()
 {
   const libconfig::Setting &gridGeometries = itsConfig.lookup("defaultGridGeometries");
@@ -507,6 +735,8 @@ Config::Config(const string &configfile)
     parse_config_data_queries();
 
     parse_config_geometry_tables();
+
+    parse_config_avi_collections();
 
     // We construct the default locale only once from the string,
     // creating it from scratch for every request is very expensive

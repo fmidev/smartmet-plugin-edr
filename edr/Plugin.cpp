@@ -3433,6 +3433,245 @@ bool Plugin::processGridEngineQuery(const State &state,
   }
 }
 
+void Plugin::storeAviData(const State &state,
+                          SmartMet::Engine::Avi::StationQueryData &aviData,
+                          TS::OutputData &outputData)
+{
+  TS::TimeSeriesVectorPtr messageData(new TS::TimeSeriesVector());
+  outputData.push_back(make_pair("data", std::vector<TS::TimeSeriesData>()));
+  std::vector<TS::TimeSeriesData> &odata = (--outputData.end())->second;
+
+  for (const auto &column : aviData.itsColumns)
+  {
+    // station id and icao code are automatically returned by aviengine.
+    // messagetime is used when storing other column values
+
+    if (
+        (column.itsName == "stationid") ||
+        (column.itsName == "icao") ||
+        (column.itsName == "messagetime")
+       )
+      continue;
+
+    TS::TimeSeries ts(state.getLocalTimePool());
+
+    for (auto stationId : aviData.itsStationIds)
+    {
+      std::vector<SmartMet::TimeSeries::Value>::const_iterator timeIter =
+        aviData.itsValues[stationId]["messagetime"].cbegin();
+
+      for (auto &value : aviData.itsValues[stationId][column.itsName])
+      {
+        // TODO: Message time is in UTC
+
+        local_date_time dt = boost::get<boost::local_time::local_date_time>(*timeIter);
+        TS::TimedValue tv(dt, value);
+        ts.push_back(tv);
+
+        timeIter++;
+      }
+    }
+
+    if (! aviData.itsStationIds.empty())
+      messageData->push_back(ts);
+  }
+
+  odata.emplace_back(TS::TimeSeriesData(messageData));
+}
+
+void Plugin::checkAviEngineQuery(const Query &query,
+                                 const std::vector<EDRMetaData> &edrMetaData,
+                                 bool locationCheck,
+                                 SmartMet::Engine::Avi::QueryOptions &queryOptions)
+{
+  auto edrQuery = query.edrQuery();
+
+  if (
+      (edrQuery.query_type != EDRQueryType::Locations) &&
+      (edrQuery.query_type != EDRQueryType::Area)
+     )
+    throw Fmi::Exception(BCP, "Collection supports location and area queries only");
+
+  if (edrQuery.query_type == EDRQueryType::Locations)
+  {
+    if (query.icaos.empty())
+      throw Fmi::Exception(BCP, "No location(s) to query", NULL);
+
+    for (auto const &icao : query.icaos)
+    {
+      if (
+          locationCheck &&
+          (edrMetaData.front().locations->find(icao) == edrMetaData.front().locations->end())
+         )
+        throw Fmi::Exception(BCP, "Location is not listed in metadata", NULL);
+
+      queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
+    }
+  }
+  else
+  {
+    if (query.requestWKT.empty())
+      throw Fmi::Exception(BCP, "No area to query", NULL);
+
+    // TODO: Check wkt, only polygon is applicable (multipolygon is currently
+    //       not supported by aviengine)
+
+    queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(query.requestWKT);
+
+    /* bbox could be used too
+    /
+    if (!query.boundingBox.empty())
+    {
+      auto west = query.boundingBox.find("minx");
+      auto east = query.boundingBox.find("maxx");
+      auto south = query.boundingBox.find("miny");
+      auto north = query.boundingBox.find("maxy");
+
+      if (
+          (west == query.boundingBox.end()) ||
+          (east == query.boundingBox.end()) ||
+          (south == query.boundingBox.end()) ||
+          (north == query.boundingBox.end())
+         )
+        throw Fmi::Exception(BCP, "Invalid query bbox", NULL);
+
+      queryOptions.itsLocationOptions.itsBBoxes.push_back(
+          SmartMet::Engine::Avi::BBox(west->second, east->second, south->second, north->second));
+    }
+    */
+  }
+}
+
+void Plugin::processAviEngineQuery(const State &state,
+                                   const Query &query,
+                                   const EDRProducerMetaData &edrProducerMetaData,
+                                   const std::string &producer,
+                                   TS::OutputData &outputData)
+{
+  auto edrMetaData = edrProducerMetaData.find(producer);
+  if (edrMetaData == edrProducerMetaData.end())
+    throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, NULL);
+
+  /* Location has already been checked against metadata, no need for config controlled check
+  /
+  auto aviCollections = itsConfig.getAviCollections();
+  auto aviCollection = aviCollections.begin();
+
+  for (; aviCollection != aviCollections.end(); aviCollection++)
+  {
+    if (aviCollection->getName() == producer)
+      break;
+  }
+
+  if (aviCollection == aviCollections.end())
+    throw Fmi::Exception(BCP, "Internal error: no collection for producer " + producer, NULL);
+
+  bool locationCheck = aviCollection->getLocationCheck();
+  */
+
+  SmartMet::Engine::Avi::QueryOptions queryOptions;
+  bool locationCheck = false;
+
+  checkAviEngineQuery(query, edrMetaData->second, locationCheck, queryOptions);
+
+  // Column order must be dataparam, lon, lat for outputData handling later in the code.
+  // messagetime is needed for output.
+  //
+  // station id and icao code are automatically returned by aviengine
+
+  queryOptions.itsParameters.push_back("messagetime");
+  queryOptions.itsParameters.push_back("message");
+  queryOptions.itsParameters.push_back("longitude");
+  queryOptions.itsParameters.push_back("latitude");
+
+  queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
+  queryOptions.itsMessageTypes.push_back(producer);
+  queryOptions.itsMessageFormat = "TAC"; // TODO: "IWXXM";
+
+  // Time range or observation time to fetch messages
+  //
+  // TODO: Handle localtime vs UTC, message query times must be in UTC
+  //
+  std::string startTime, endTime;
+  bool hasStartTime = (!query.toptions.startTime.is_special());
+  bool hasEndTime = (!query.toptions.endTime.is_special());
+
+  if (hasStartTime)
+    startTime = boost::posix_time::to_iso_string(query.toptions.startTime);
+  if (hasEndTime)
+    endTime = boost::posix_time::to_iso_string(query.toptions.startTime);
+
+  if (hasStartTime && hasEndTime && (startTime != endTime))
+  {
+    queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
+    queryOptions.itsTimeOptions.itsEndTime = "timestamptz '" + endTime + "Z'";
+  }
+  else if (hasStartTime)
+    queryOptions.itsTimeOptions.itsObservationTime = "timestamptz '" + startTime + "Z'";
+  else if ((!hasStartTime) && (!hasEndTime))
+    queryOptions.itsTimeOptions.itsObservationTime = "current_timestamp";
+  else
+    throw Fmi::Exception(BCP, "Only query end time is given");
+
+  // Filter off message duplicates (same message received via multiple routes)
+  //
+  queryOptions.itsDistinctMessages = true;
+
+  // Allowed max number of stations and messages is controlled by engine configuration
+  //
+  queryOptions.itsMaxMessageStations = -1;
+  queryOptions.itsMaxMessageRows = -1;
+
+  // Query is based on message validity, not by creation time
+  //
+  queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
+
+  // Finnish METAR filtering (ignore messages not starting with 'METAR') is disabled,
+  // not applicable to IWXXM messages
+  //
+  queryOptions.itsFilterMETARs = false;
+
+  // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
+  //
+  queryOptions.itsExcludeSPECIs = true;
+
+  if (!query.icaos.empty())
+  {
+    for (auto const &icao : query.icaos)
+      queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
+  }
+  else if (!query.requestWKT.empty())
+  {
+    queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(query.requestWKT);
+  }
+  /*
+  else if (!query.boundingBox.empty())
+  {
+    auto west = query.boundingBox.find("minx");
+    auto east = query.boundingBox.find("maxx");
+    auto south = query.boundingBox.find("miny");
+    auto north = query.boundingBox.find("maxy");
+
+    if (
+        (west == query.boundingBox.end()) ||
+        (east == query.boundingBox.end()) ||
+        (south == query.boundingBox.end()) ||
+        (north == query.boundingBox.end())
+       )
+      throw Fmi::Exception(BCP, "Internal error: Invalid bbox for avi query", NULL);
+
+    queryOptions.itsLocationOptions.itsBBoxes.push_back(
+        SmartMet::Engine::Avi::BBox(west->second, east->second, south->second, north->second));
+  }
+  */
+  else
+    throw Fmi::Exception(BCP, "Internal error: No icao(s) or wkt for avi query", NULL);
+
+  auto aviData = itsAviEngine->queryStationsAndMessages(queryOptions);
+
+  storeAviData(state, aviData, outputData);
+}
+
 void Plugin::checkInKeywordLocations(Query &masterquery)
 {
   // If inkeyword given resolve locations
@@ -3533,7 +3772,16 @@ EDRMetaData Plugin::getProducerMetaData(const std::string &producer) const
   if (metadata->grid.find(producer) != metadata->grid.end())
     return metadata->grid.at(producer).front();
 
+  if (metadata->avi.find(producer) != metadata->avi.end())
+    return metadata->avi.at(producer).front();
+
   return empty_emd;
+}
+
+const EDRProducerMetaData &Plugin::getAviMetaData() const
+{
+  auto metadata = itsMetaData.load();
+  return metadata->avi;
 }
 
 Json::Value Plugin::processMetaDataQuery(const EDRQuery &edr_query)
@@ -3587,6 +3835,13 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     if (producerMissing)
       masterquery.timeproducers.emplace_back(AreaProducers());
 
+    auto metaData = itsMetaData.load();
+    std::string producerName = producerMissing ? "" : masterquery.timeproducers.front().front();
+    bool isAviProducer = (
+                          (!producerMissing) &&
+                          masterquery.isAviProducer(metaData->avi, producerName)
+                         );
+
 #ifndef WITHOUT_OBSERVATION
     const ObsParameters obsParameters = getObsParameters(masterquery);
 #endif
@@ -3620,6 +3875,13 @@ boost::shared_ptr<std::string> Plugin::processQuery(
       }
       else
 #endif
+
+      if (isAviProducer)
+      {
+        processAviEngineQuery(state, query, metaData->avi, producerName, outputData);
+      }
+      else
+
           // Grid-query is executed if the following conditions are fulfilled:
           //   1. The usage of Grid-Engine is enabled (=> timeseries
           //   configuration file)
@@ -4221,6 +4483,12 @@ void Plugin::init()
     }
 #endif
 
+    /* AviEngine */
+    engine = itsReactor->getSingleton("Avi", nullptr);
+    if (!engine)
+      throw Fmi::Exception(BCP, "Avi engine unavailable");
+    itsAviEngine = reinterpret_cast<Engine::Avi::Engine *>(engine);
+
     // Initialization done, register services. We are aware that throwing
     // from a separate thread will cause a crash, but these should never
     // fail.
@@ -4324,6 +4592,13 @@ void Plugin::updateMetaData()
         }
     }
 #endif
+    engine_meta_data->avi = get_edr_metadata_avi(*itsAviEngine, itsConfig.getAviCollections());
+    for (auto &item : engine_meta_data->avi)
+      for (auto &md : item.second)
+      {
+        md.language = itsConfig.defaultLanguage();
+        md.parameter_info = &itsParameterInfo;
+      }
     update_location_info(*engine_meta_data, itsSupportedLocations);
 
     itsMetaData.store(engine_meta_data);
@@ -4359,6 +4634,10 @@ void Plugin::updateSupportedLocations()
       if (!sls.empty())
         itsSupportedLocations[producer] = sls;
     }
+
+    // For avi producers locations/stations are loaded from avidb
+
+    load_locations_avi(*itsAviEngine, itsConfig.getAviCollections(), itsSupportedLocations);
   }
   catch (...)
   {
@@ -4382,6 +4661,10 @@ void Plugin::updateParameterInfo()
         for (const auto &pname : md.parameter_names)
           parameter_names.insert(pname);
     for (const auto &item : metadata->observation)
+      for (const auto &md : item.second)
+        for (const auto &pname : md.parameter_names)
+          parameter_names.insert(pname);
+    for (const auto &item : metadata->avi)
       for (const auto &md : item.second)
         for (const auto &pname : md.parameter_names)
           parameter_names.insert(pname);
@@ -4443,6 +4726,9 @@ void Plugin::updateParameterInfo()
       for (auto &md : item.second)
         md.parameter_info = &itsParameterInfo;
     for (auto &item : metadata->observation)
+      for (auto &md : item.second)
+        md.parameter_info = &itsParameterInfo;
+    for (auto &item : metadata->avi)
       for (auto &md : item.second)
         md.parameter_info = &itsParameterInfo;
   }

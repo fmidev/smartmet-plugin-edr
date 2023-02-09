@@ -93,6 +93,24 @@ Engine::Observation::Engine *State::getObsEngine() const
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get the Avi engine
+ */
+// ----------------------------------------------------------------------
+
+const Engine::Avi::Engine *State::getAviEngine() const
+{
+  try
+  {
+    return itsPlugin.getAviEngine();
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Access to time zone information
  */
 // ----------------------------------------------------------------------
@@ -210,6 +228,18 @@ EDRMetaData State::getProducerMetaData(const std::string &producer) const
   try
   {
     return itsPlugin.getProducerMetaData(producer);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+const EDRProducerMetaData &State::getAviMetaData() const
+{
+  try
+  {
+    return itsPlugin.getAviMetaData();
   }
   catch (...)
   {

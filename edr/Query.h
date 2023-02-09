@@ -20,6 +20,7 @@
 #include <grid-content/queryServer/definition/AliasFileCollection.h>
 #include <grid-files/common/AdditionalParameters.h>
 #include <grid-files/common/AttributeList.h>
+#include <engines/avi/Engine.h>
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/ValueFormatter.h>
 #include <newbase/NFmiPoint.h>
@@ -45,6 +46,9 @@ namespace Plugin
 namespace EDR
 {
 class Config;
+
+class EDRMetaData;
+using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>;
 
 // ----------------------------------------------------------------------
 /*!
@@ -115,6 +119,8 @@ struct Query
   std::vector<int> lpnns;
   std::vector<int> fmisids;
 #endif
+  std::vector<std::string> icaos;
+  std::string requestWKT;
 
   ParamPrecisions precisions;
   Fmi::ValueFormatter valueformatter;
@@ -162,6 +168,8 @@ struct Query
   const CoordinateFilter &coordinateFilter() const { return itsCoordinateFilter; }
   bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
 
+  bool isAviProducer(const EDRProducerMetaData &emd, const std::string &producer) const;
+
  private:
   Query();
 
@@ -175,12 +183,14 @@ struct Query
   void parse_producers(const Spine::HTTP::Request &theReq,
                        const Engine::Querydata::Engine &theQEngine,
                        const Engine::Grid::Engine *theGridEngine,
-                       const Engine::Observation::Engine *theObsEngine);
+                       const Engine::Observation::Engine *theObsEngine,
+                       const EDRProducerMetaData &avi);
 #else
   void parse_parameters(const Spine::HTTP::Request &theReq);
   void parse_producers(const Spine::HTTP::Request &theReq,
                        const Engine::Querydata::Engine &theQEngine,
-                       const Engine::Grid::Engine &theGridEngine);
+                       const Engine::Grid::Engine &theGridEngine,
+                       const EDRProducerMetaData &avi);
 
 #endif
   QueryServer::AliasFileCollection *itsAliasFileCollectionPtr;

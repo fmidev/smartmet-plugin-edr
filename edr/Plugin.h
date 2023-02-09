@@ -64,6 +64,9 @@ class GridInterface;
 
 using ObsParameters = std::vector<ObsParameter>;
 
+class EDRMetaData;
+using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>;
+
 struct SettingsInfo
 {
   Engine::Observation::Settings settings;
@@ -94,12 +97,14 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   const Engine::Querydata::Engine &getQEngine() const { return *itsQEngine; }
   const Engine::Geonames::Engine &getGeoEngine() const { return *itsGeoEngine; }
   const Engine::Grid::Engine *getGridEngine() const { return itsGridEngine; }
+  const Engine::Avi::Engine *getAviEngine() const { return itsAviEngine; }
 
 #ifndef WITHOUT_OBSERVATION
   // May return null
   Engine::Observation::Engine *getObsEngine() const { return itsObsEngine; }
 #endif
   EDRMetaData getProducerMetaData(const std::string &producer) const;
+  const EDRProducerMetaData &getAviMetaData() const;
 
  protected:
   void init() override;
@@ -206,6 +211,18 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                            Engine::Observation::Settings &settings) const;
   std::vector<ObsParameter> getObsParameters(const Query &query) const;
 #endif
+  void checkAviEngineQuery(const Query &query,
+                           const std::vector<EDRMetaData> &edrMetaData,
+                           bool locationCheck,
+                           SmartMet::Engine::Avi::QueryOptions &queryOptions);
+  void storeAviData(const State &state,
+                    SmartMet::Engine::Avi::StationQueryData &aviData,
+                    TS::OutputData &outputData);
+  void processAviEngineQuery(const State &state,
+                             const Query &query,
+                             const EDRProducerMetaData &edrProducerMetaData,
+                             const std::string &producer,
+                             TS::OutputData &outputData);
 
   TS::TimeSeriesGenerator::LocalTimeList generateQEngineQueryTimes(
       const Query &query, const std::string &paramname) const;
@@ -234,6 +251,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   Engine::Geonames::Engine *itsGeoEngine = nullptr;
   Engine::Gis::Engine *itsGisEngine = nullptr;
   Engine::Grid::Engine *itsGridEngine = nullptr;
+  Engine::Avi::Engine *itsAviEngine = nullptr;
   std::unique_ptr<GridInterface> itsGridInterface;
 #ifndef WITHOUT_OBSERVATION
   Engine::Observation::Engine *itsObsEngine = nullptr;

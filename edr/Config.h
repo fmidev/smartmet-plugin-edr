@@ -8,6 +8,7 @@
 
 #include "Precision.h"
 #include "Query.h"
+#include "AviCollection.h"
 
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
@@ -26,6 +27,7 @@ namespace EDR
 using Precisions = std::map<std::string, Precision>;
 using SupportedQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
 using ProducerKeywords = std::map<std::string, std::set<std::string>>;  // producer -> keywords
+using AviCollections = std::list<AviCollection>;
 
 class Config : private boost::noncopyable
 {
@@ -73,6 +75,8 @@ class Config : private boost::noncopyable
   QueryServer::AliasFileCollection itsAliasFileCollection;
   time_t itsLastAliasCheck;
 
+  const AviCollections &getAviCollections() const { return itsAviCollections; }
+
  private:
   libconfig::Config itsConfig;
   std::string itsDefaultPrecision = "normal";
@@ -107,6 +111,8 @@ class Config : private boost::noncopyable
   bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
 
+  AviCollections itsAviCollections;
+
   // Private helper functions
   void add_default_precisions();
   void parse_config_precisions();
@@ -114,6 +120,7 @@ class Config : private boost::noncopyable
   void parse_config_locations();
   void parse_config_data_queries();
   void parse_config_geometry_tables();
+  void parse_config_avi_collections();
   void parse_config_grid_geometries();
   void parse_config_parameter_aliases(const std::string &configfile);
 
