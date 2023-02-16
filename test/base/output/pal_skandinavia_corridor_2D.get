@@ -7284,7 +7284,7 @@
 			],
 			"system" : 
 			{
-				"calendar" : "Georgian",
+				"calendar" : "Gregorian",
 				"type" : "TemporalCRS"
 			}
 		}

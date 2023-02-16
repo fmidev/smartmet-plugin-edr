@@ -279,7 +279,7 @@ void Config::parse_config_data_queries()
         if (!defaultQueries.isArray())
           throw Fmi::Exception(BCP, "Configured value of 'data_queries.default' must be an array");
         for (int i = 0; i < defaultQueries.getLength(); i++)
-          itsSupportedQueries[DEFAULT_DATA_QUERIES].insert(defaultQueries[i]);
+          itsSupportedDataQueries[DEFAULT_DATA_QUERIES].insert(defaultQueries[i]);
       }
 
       if (itsConfig.exists("data_queries.override"))
@@ -296,17 +296,17 @@ void Config::parse_config_data_queries()
                                  "Configured overridden data_queries for "
                                  "producer must be an array");
           for (int j = 0; j < overrides.getLength(); j++)
-            itsSupportedQueries[producer].insert(overrides[j]);
+            itsSupportedDataQueries[producer].insert(overrides[j]);
         }
       }
     }
 
-    if (itsSupportedQueries.find(DEFAULT_DATA_QUERIES) == itsSupportedQueries.end())
+    if (itsSupportedDataQueries.find(DEFAULT_DATA_QUERIES) == itsSupportedDataQueries.end())
     {
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("position");
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("radius");
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("area");
-      itsSupportedQueries[DEFAULT_DATA_QUERIES].insert("locations");
+      itsSupportedDataQueries[DEFAULT_DATA_QUERIES].insert("position");
+      itsSupportedDataQueries[DEFAULT_DATA_QUERIES].insert("radius");
+      itsSupportedDataQueries[DEFAULT_DATA_QUERIES].insert("area");
+      itsSupportedDataQueries[DEFAULT_DATA_QUERIES].insert("locations");
     }
   }
   catch (const libconfig::SettingNotFoundException &e)
@@ -318,6 +318,57 @@ void Config::parse_config_data_queries()
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
+
+void Config::parse_config_output_formats()
+{
+  try
+  {
+    if (itsConfig.exists("output_formats"))
+    {
+      if (itsConfig.exists("output_formats.default"))
+      {
+        const libconfig::Setting &defaultOutputFormats = itsConfig.lookup("output_formats.default");
+        if (!defaultOutputFormats.isArray())
+          throw Fmi::Exception(BCP, "Configured value of 'output_formats.default' must be an array");
+        for (int i = 0; i < defaultOutputFormats.getLength(); i++)
+          itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(defaultOutputFormats[i]);
+      }
+
+      if (itsConfig.exists("output_formats.override"))
+      {
+        const libconfig::Setting &overriddenOutputFormats = itsConfig.lookup("output_formats.override");
+
+        for (int i = 0; i < overriddenOutputFormats.getLength(); i++)
+        {
+          std::string producer = overriddenOutputFormats[i].getName();
+          const libconfig::Setting &overrides =
+              itsConfig.lookup("output_formats.override." + producer);
+          if (!overrides.isArray())
+            throw Fmi::Exception(BCP,
+                                 "Configured overridden output_formats for "
+                                 "producer must be an array");
+          for (int j = 0; j < overrides.getLength(); j++)
+            itsSupportedOutputFormats[producer].insert(overrides[j]);
+        }
+      }
+    }
+
+    if (itsSupportedOutputFormats.find(DEFAULT_OUTPUT_FORMATS) == itsSupportedOutputFormats.end())
+    {
+      itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(COVERAGE_JSON_FORMAT);
+      itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(GEO_JSON_FORMAT);
+    }
+  }
+  catch (const libconfig::SettingNotFoundException &e)
+  {
+    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
 
 // ----------------------------------------------------------------------
 /*!
@@ -749,10 +800,9 @@ Config::Config(const string &configfile)
     if (itsProducerKeywords.empty())
       itsProducerKeywords[DEFAULT_PRODUCER_KEY].insert(DEFAULT_LOCATIONS_KEYWORD);
 
+    parse_config_output_formats();
     parse_config_data_queries();
-
     parse_config_geometry_tables();
-
     parse_config_avi_collections();
 
     // We construct the default locale only once from the string,
@@ -822,6 +872,36 @@ Engine::Gis::PostGISIdentifierVector Config::getPostGISIdentifiers() const
 unsigned long long Config::maxTimeSeriesCacheSize() const
 {
   return itsMaxTimeSeriesCacheSize;
+}
+
+const std::set<std::string>& Config::getSupportedOutputFormats(const std::string& producer) const
+{
+  try
+  {
+    if(itsSupportedOutputFormats.find(producer) != itsSupportedOutputFormats.end())
+	  return itsSupportedOutputFormats.at(producer);
+
+	return itsSupportedOutputFormats.at(DEFAULT_OUTPUT_FORMATS);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+const std::set<std::string>& Config::getSupportedDataQueries(const std::string& producer) const
+{
+  try
+  {
+    if(itsSupportedDataQueries.find(producer) != itsSupportedDataQueries.end())
+	  return itsSupportedDataQueries.at(producer);
+
+	return itsSupportedDataQueries.at(DEFAULT_DATA_QUERIES);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 }  // namespace EDR

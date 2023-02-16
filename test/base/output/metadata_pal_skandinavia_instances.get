@@ -28,7 +28,8 @@
 							"description" : "Data at the requested area",
 							"output_formats" : 
 							[
-								"CoverageJSON"
+								"CoverageJSON",
+								"GeoJSON"
 							],
 							"query_type" : "area",
 							"title" : "Area query"
@@ -58,7 +59,8 @@
 							"description" : "Data within corridor",
 							"output_formats" : 
 							[
-								"CoverageJSON"
+								"CoverageJSON",
+								"GeoJSON"
 							],
 							"query_type" : "corridor",
 							"title" : "Corridor query",
@@ -91,7 +93,8 @@
 							"description" : "Data at point location defined by a unique identifier",
 							"output_formats" : 
 							[
-								"CoverageJSON"
+								"CoverageJSON",
+								"GeoJSON"
 							],
 							"query_type" : "locations",
 							"title" : "Locations query"
@@ -120,7 +123,8 @@
 							"description" : "Data at point location",
 							"output_formats" : 
 							[
-								"CoverageJSON"
+								"CoverageJSON",
+								"GeoJSON"
 							],
 							"query_type" : "position",
 							"title" : "Position query"
@@ -149,7 +153,8 @@
 							"description" : "Data at the area specified with a geographic position and radial distance",
 							"output_formats" : 
 							[
-								"CoverageJSON"
+								"CoverageJSON",
+								"GeoJSON"
 							],
 							"query_type" : "radius",
 							"title" : "Radius query",
@@ -183,7 +188,8 @@
 							"description" : "Data along trajectory",
 							"output_formats" : 
 							[
-								"CoverageJSON"
+								"CoverageJSON",
+								"GeoJSON"
 							],
 							"query_type" : "trajectory",
 							"title" : "Trajectory query"

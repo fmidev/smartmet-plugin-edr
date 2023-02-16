@@ -278,8 +278,8 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   // Locations info is read once at startup, the used subsequent queries
   SupportedProducerLocations itsSupportedLocations;
 
-  // Parameter info read at startup
-  ParameterInfo itsParameterInfo;
+  // Parameter info read at startup from config
+  ParameterInfo itsConfigParameterInfo;
 
   // Metadata for producers (producer name -> metadata) This must be a shared
   // pointer and must be used via atomic_load and atomic_store, since CTPP::CDT

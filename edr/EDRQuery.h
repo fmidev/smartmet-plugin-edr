@@ -18,6 +18,7 @@ namespace Plugin
 namespace EDR
 {
 #define DEFAULT_DATA_QUERIES "default_data_queries"
+#define DEFAULT_OUTPUT_FORMATS "default_output_formats"
 #define DEFAULT_LOCATIONS_KEYWORD "synop_fi"
 #define DEFAULT_PRODUCER_KEY "default"
 
@@ -50,8 +51,6 @@ struct EDRQuery
   std::string collection_id;
   std::string instance_id;
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
-  std::map<std::string, std::set<EDRQueryType>>
-      data_queries;  // supported data_queries by this ollection
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;
 };

@@ -6,6 +6,7 @@
 
 #include "Plugin.h"
 #include "CoverageJson.h"
+#include "GeoJson.h"
 #include "GridInterface.h"
 #include "Hash.h"
 #include "ImageFormatter.h"
@@ -42,6 +43,7 @@ using boost::posix_time::minutes;
 using boost::posix_time::ptime;
 using boost::posix_time::seconds;
 
+
 //#define MYDEBUG ON
 
 namespace SmartMet
@@ -58,18 +60,6 @@ void print_settings(const Engine::Observation::Settings &settings)
   std::cout << settings;
 }
 #endif
-
-std::ostream &operator<<(std::ostream &os, const TimeSeries::OutputData &outputData)
-{
-  std::cout << "OUTPUTDATA: " << outputData.size() << std::endl;
-  for (const auto &item : outputData)
-  {
-    std::cout << item.first << " -> \n";
-    for (const auto &item2 : item.second)
-      std::cout << item2 << std::endl;
-  }
-  return os;
-}
 
 Spine::Parameter get_query_param(const Spine::Parameter &parameter)
 {
@@ -575,7 +565,7 @@ std::size_t Plugin::hash_value(const State &state,
     if (masterquery.isEDRMetaDataQuery())
     {
       auto metadata = itsMetaData.load();
-      Fmi::hash_combine(hash, Fmi::hash_value(metadata->update_time));
+      Fmi::hash_combine(hash, Fmi::hash_value(metadata->getUpdateTime()));
       return hash;
     }
 
@@ -2526,9 +2516,12 @@ void Plugin::fetchObsEngineValuesForPlaces(const State &state,
     // missing use minutes as timestep
     if (!query.toptions.timeStep && query.toptions.startTime == query.toptions.endTime)
     {
+      query.toptions.timeStep = 0;
+	  /*
       query.toptions.timeStep = query.toptions.startTime.time_of_day().minutes();
       if (*query.toptions.timeStep == 0)
         query.toptions.timeStep = 60;
+	  */
     }
 
     if (!query.toptions.all())
@@ -3478,11 +3471,10 @@ void Plugin::storeAviData(const State &state,
     {
       std::vector<SmartMet::TimeSeries::Value>::const_iterator timeIter =
         aviData.itsValues[stationId]["messagetime"].cbegin();
-
+	  	
       for (auto &value : aviData.itsValues[stationId][column.itsName])
       {
         // TODO: Message time is in UTC
-
         local_date_time dt = boost::get<boost::local_time::local_date_time>(*timeIter);
         TS::TimedValue tv(dt, value);
         ts.push_back(tv);
@@ -3605,7 +3597,8 @@ void Plugin::processAviEngineQuery(const State &state,
 
   queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
   queryOptions.itsMessageTypes.push_back(producer);
-  queryOptions.itsMessageFormat = "IWXXM";
+  auto message_format = (query.output_format == COVERAGE_JSON_FORMAT || query.output_format == GEO_JSON_FORMAT ? TAC_FORMAT : query.output_format);
+  queryOptions.itsMessageFormat = message_format;
 
   // Time range or observation time to fetch messages
   //
@@ -3618,7 +3611,7 @@ void Plugin::processAviEngineQuery(const State &state,
   if (hasStartTime)
     startTime = boost::posix_time::to_iso_string(query.toptions.startTime);
   if (hasEndTime)
-    endTime = boost::posix_time::to_iso_string(query.toptions.startTime);
+    endTime = boost::posix_time::to_iso_string(query.toptions.endTime);
 
   if (hasStartTime && hasEndTime && (startTime != endTime))
   {
@@ -3645,46 +3638,13 @@ void Plugin::processAviEngineQuery(const State &state,
   //
   queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
 
-  // Finnish METAR filtering (ignore messages not starting with 'METAR') is disabled,
-  // not applicable to IWXXM messages
+  // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
   //
-  queryOptions.itsFilterMETARs = false;
+  queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
 
   // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
   //
   queryOptions.itsExcludeSPECIs = true;
-
-  if (!query.icaos.empty())
-  {
-    for (auto const &icao : query.icaos)
-      queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
-  }
-  else if (!query.requestWKT.empty())
-  {
-    queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(query.requestWKT);
-  }
-  /*
-  else if (!query.boundingBox.empty())
-  {
-    auto west = query.boundingBox.find("minx");
-    auto east = query.boundingBox.find("maxx");
-    auto south = query.boundingBox.find("miny");
-    auto north = query.boundingBox.find("maxy");
-
-    if (
-        (west == query.boundingBox.end()) ||
-        (east == query.boundingBox.end()) ||
-        (south == query.boundingBox.end()) ||
-        (north == query.boundingBox.end())
-       )
-      throw Fmi::Exception(BCP, "Internal error: Invalid bbox for avi query", NULL);
-
-    queryOptions.itsLocationOptions.itsBBoxes.push_back(
-        SmartMet::Engine::Avi::BBox(west->second, east->second, south->second, north->second));
-  }
-  */
-  else
-    throw Fmi::Exception(BCP, "Internal error: No icao(s) or wkt for avi query", NULL);
 
   auto aviData = itsAviEngine->queryStationsAndMessages(queryOptions);
 
@@ -3776,6 +3736,14 @@ EDRMetaData Plugin::getProducerMetaData(const std::string &producer) const
   auto metadata = itsMetaData.load();
   EDRMetaData empty_emd;
 
+  for(const auto& item : metadata->getMetaData())
+	{
+	  const auto& engine_metadata = item.second;
+	  if(engine_metadata.find(producer) != engine_metadata.end())
+		return engine_metadata.at(producer).front();	  
+	}
+
+  /*
 #ifndef WITHOUT_OBSERVATION
   if (!itsConfig.obsEngineDisabled() && isObsProducer(producer))
   {
@@ -3793,6 +3761,7 @@ EDRMetaData Plugin::getProducerMetaData(const std::string &producer) const
 
   if (metadata->avi.find(producer) != metadata->avi.end())
     return metadata->avi.at(producer).front();
+  */
 
   return empty_emd;
 }
@@ -3800,13 +3769,17 @@ EDRMetaData Plugin::getProducerMetaData(const std::string &producer) const
 const EDRProducerMetaData &Plugin::getAviMetaData() const
 {
   auto metadata = itsMetaData.load();
-  return metadata->avi;
+  
+  return metadata->getMetaData(AVI_ENGINE);
 }
 
 bool Plugin::isValidCollection(const std::string &producer) const
 {
   auto metadata = itsMetaData.load();
 
+  return metadata->isValidCollection(producer);
+
+  /*
 #ifndef WITHOUT_OBSERVATION
   // Is both isObsProducer() and find() needed ?
   if (!itsConfig.obsEngineDisabled() && isObsProducer(producer))
@@ -3819,6 +3792,7 @@ bool Plugin::isValidCollection(const std::string &producer) const
     return true;
 
   return (metadata->avi.find(producer) != metadata->avi.end());
+  */
 }
 
 Json::Value Plugin::processMetaDataQuery(const EDRQuery &edr_query)
@@ -3874,10 +3848,13 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 
     auto metaData = itsMetaData.load();
     std::string producerName = producerMissing ? "" : masterquery.timeproducers.front().front();
+	/*
     bool isAviProducer = (
                           (!producerMissing) &&
                           masterquery.isAviProducer(metaData->avi, producerName)
                          );
+	*/
+	bool isAviProducer = metaData->isValidCollection(AVI_ENGINE, producerName);
 
 #ifndef WITHOUT_OBSERVATION
     const ObsParameters obsParameters = getObsParameters(masterquery);
@@ -3915,7 +3892,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 
       if (isAviProducer)
       {
-        processAviEngineQuery(state, query, metaData->avi, producerName, outputData);
+        processAviEngineQuery(state, query, metaData->getMetaData(AVI_ENGINE), producerName, outputData);
       }
       else
 
@@ -3977,7 +3954,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     const auto &edr_query = masterquery.edrQuery();
     const auto &producer = edr_query.collection_id;
     EDRMetaData emd = getProducerMetaData(producer);
-    emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+    emd.parameter_precisions["__DEFAULT_PRECISION__"] = SmartMet::Plugin::EDR::Json::DEFAULT_PRECISION;
 
     // Set precisions
     std::map<std::string, int> precisions;
@@ -3989,16 +3966,62 @@ boost::shared_ptr<std::string> Plugin::processQuery(
       emd.parameter_precisions[pname] = masterquery.precisions[i++];
     }
 
-    //	std::cout << "RESULT: " << outputData << std::endl;
+	//	std::cout << "RESULT: " << outputData << std::endl;
+	if(masterquery.output_format == IWXXM_FORMAT)
+	  {
+		if(!outputData.empty())
+		  {
+			const TS::TimeSeriesData& tsdata = outputData.front().second.front();
+			const TS::TimeSeriesVectorPtr avi_data = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata));
+			const TS::TimeSeries& ts = avi_data->front();
 
-    Json::Value result = CoverageJson::formatOutputData(outputData,
-                                                        emd,
-                                                        edr_query.query_type,
-                                                        masterquery.levels,
-                                                        masterquery.coordinateFilter(),
-                                                        masterquery.poptions.parameters());
+			std::string messages = "<avi>\n";
+			for(const auto ts_val : ts)
+			  messages += *(boost::get<std::string>(&ts_val.value));
+			messages += "\n</avi>";
 
-    table.set(0, 0, result.toStyledString());
+			table.set(0, 0, messages);
+		  }
+	  }
+	else if(masterquery.output_format == TAC_FORMAT)
+	  {
+		if(!outputData.empty())
+		  {
+			const TS::TimeSeriesData& tsdata = outputData.front().second.front();
+			const TS::TimeSeriesVectorPtr avi_data = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata));
+			const TS::TimeSeries& ts = avi_data->front();
+
+			std::string message;
+			for(unsigned int i = 0; i < ts.size(); i++)
+			  {
+				if(!message.empty())
+				  message += "\n";
+				message += *(boost::get<std::string>(&ts.at(i).value));
+			  }
+
+			table.set(0, 0, message);
+		  }
+	  }
+	else if(masterquery.output_format == COVERAGE_JSON_FORMAT)
+	  {
+		Json::Value result = CoverageJson::formatOutputData(outputData,
+															emd,
+															edr_query.query_type,
+															masterquery.levels,
+															masterquery.coordinateFilter(),
+															masterquery.poptions.parameters());
+		table.set(0, 0, result.toStyledString());
+	  }
+	else if(masterquery.output_format == GEO_JSON_FORMAT)	 
+	  {
+		Json::Value result = GeoJson::formatOutputData(outputData,
+													   emd,
+													   edr_query.query_type,
+													   masterquery.levels,
+													   masterquery.coordinateFilter(),
+													   masterquery.poptions.parameters());		
+		table.set(0, 0, result.toStyledString());
+	  }
 
     return nullptr;
   }
@@ -4078,7 +4101,7 @@ void Plugin::query(const State &state,
       gridEnabled = true;
 
     boost::shared_ptr<Spine::TableFormatter> formatter(fmt);
-    std::string mime = "application/json";
+    std::string mime = ((query.output_format == IWXXM_FORMAT || query.output_format == TAC_FORMAT)  ? "ascii" : "application/json");
     response.setHeader("Content-Type", mime);
 
     // Calculate the hash value for the product.
@@ -4612,6 +4635,31 @@ void Plugin::updateMetaData()
 {
   try
   {
+    boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
+
+	const auto& default_language = itsConfig.defaultLanguage();
+    const auto* parameter_info = &itsConfigParameterInfo;
+    const auto& data_queries = itsConfig.allSupportedDataQueries();
+    const auto& output_formats = itsConfig.allSupportedOutputFormats();
+	
+	auto qengine_metadata =  get_edr_metadata_qd(*itsQEngine, default_language, parameter_info, data_queries, output_formats, itsSupportedLocations);
+	engine_meta_data->addMetaData(Q_ENGINE, qengine_metadata);
+    if (!itsConfig.gridEngineDisabled())
+    {
+	  auto grid_engine_metadata =  get_edr_metadata_grid(*itsGridEngine, default_language, parameter_info, data_queries, output_formats, itsSupportedLocations);
+	  engine_meta_data->addMetaData(GRID_ENGINE, grid_engine_metadata);
+	}
+#ifndef WITHOUT_OBSERVATION
+    if (!itsConfig.obsEngineDisabled())
+    {
+	  auto obs_engine_metadata =  get_edr_metadata_obs(*itsObsEngine, default_language, parameter_info, data_queries, output_formats, itsSupportedLocations);
+	  engine_meta_data->addMetaData(OBS_ENGINE, obs_engine_metadata);
+    }
+#endif
+	auto avi_engine_metadata =  get_edr_metadata_avi(*itsAviEngine, itsConfig.getAviCollections(), default_language, parameter_info, data_queries, output_formats, itsSupportedLocations);
+	engine_meta_data->addMetaData(AVI_ENGINE, avi_engine_metadata);
+
+#ifdef LATER
     // New shared pointer which will be atomically set into production
     boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
     engine_meta_data->update_time =
@@ -4623,7 +4671,9 @@ void Plugin::updateMetaData()
       for (auto &md : item.second)
       {
         md.language = itsConfig.defaultLanguage();
-        md.parameter_info = &itsParameterInfo;
+        md.parameter_info = &itsConfigParameterInfo;
+		md.data_queries = itsConfig.getSupportedDataQueries(item.first);
+		md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
       }
     if (!itsConfig.gridEngineDisabled())
     {
@@ -4632,7 +4682,9 @@ void Plugin::updateMetaData()
         for (auto &md : item.second)
         {
           md.language = itsConfig.defaultLanguage();
-          md.parameter_info = &itsParameterInfo;
+          md.parameter_info = &itsConfigParameterInfo;
+		  md.data_queries = itsConfig.getSupportedDataQueries(item.first);
+		  md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
         }
     }
 #ifndef WITHOUT_OBSERVATION
@@ -4643,7 +4695,9 @@ void Plugin::updateMetaData()
         for (auto &md : item.second)
         {
           md.language = itsConfig.defaultLanguage();
-          md.parameter_info = &itsParameterInfo;
+          md.parameter_info = &itsConfigParameterInfo;
+		  md.data_queries = itsConfig.getSupportedDataQueries(item.first);
+		  md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
         }
     }
 #endif
@@ -4652,9 +4706,12 @@ void Plugin::updateMetaData()
       for (auto &md : item.second)
       {
         md.language = itsConfig.defaultLanguage();
-        md.parameter_info = &itsParameterInfo;
+        md.parameter_info = &itsConfigParameterInfo;
+		md.data_queries = itsConfig.getSupportedDataQueries(item.first);
+		md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
       }
     update_location_info(*engine_meta_data, itsSupportedLocations);
+#endif
 
     itsMetaData.store(engine_meta_data);
   }
@@ -4707,6 +4764,23 @@ void Plugin::updateParameterInfo()
     auto metadata = itsMetaData.load();
 
     std::set<std::string> parameter_names;
+	// Iterate metadata of engines
+    for (const auto &item : metadata->getMetaData())
+	  {
+		// Iterate metadata of producers
+		for (const auto &item2 : item.second)
+		  {
+			// Iterate metadata of single producer
+			for (const auto &md : item2.second)
+			  {
+				// Iterate parameter names
+				for (const auto &pname : md.parameter_names)
+				  parameter_names.insert(pname);
+			  }
+		  }
+	  }
+	
+	/*
     for (const auto &item : metadata->querydata)
       for (const auto &md : item.second)
         for (const auto &pname : md.parameter_names)
@@ -4723,6 +4797,7 @@ void Plugin::updateParameterInfo()
       for (const auto &md : item.second)
         for (const auto &pname : md.parameter_names)
           parameter_names.insert(pname);
+	*/
 
     const auto &lconfig = itsConfig.config();
 
@@ -4771,21 +4846,24 @@ void Plugin::updateParameterInfo()
         if (lconfig.exists(pname_key + ".unit.symbol.type"))
           lconfig.lookupValue(pname_key + ".unit.symbol.type", pinfo.unit_symbol_type);
       }
-      itsParameterInfo[pname] = pinfo;
+      itsConfigParameterInfo[pname] = pinfo;
     }
 
+
+	/*
     for (auto &item : metadata->querydata)
       for (auto &md : item.second)
-        md.parameter_info = &itsParameterInfo;
+        md.parameter_info = &itsConfigParameterInfo;
     for (auto &item : metadata->grid)
       for (auto &md : item.second)
-        md.parameter_info = &itsParameterInfo;
+        md.parameter_info = &itsConfigParameterInfo;
     for (auto &item : metadata->observation)
       for (auto &md : item.second)
-        md.parameter_info = &itsParameterInfo;
+        md.parameter_info = &itsConfigParameterInfo;
     for (auto &item : metadata->avi)
       for (auto &md : item.second)
-        md.parameter_info = &itsParameterInfo;
+        md.parameter_info = &itsConfigParameterInfo;
+	*/
   }
   catch (...)
   {

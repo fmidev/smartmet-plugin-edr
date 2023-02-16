@@ -9,6 +9,7 @@
 #include "Precision.h"
 #include "Query.h"
 #include "AviCollection.h"
+#include "EDRDefs.h"
 
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
@@ -25,10 +26,13 @@ namespace Plugin
 {
 namespace EDR
 {
+  /*
 using Precisions = std::map<std::string, Precision>;
-using SupportedQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
+using SupportedOutputFormats = std::map<std::string, std::set<std::string>>;  // producer -> output format
+using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
 using ProducerKeywords = std::map<std::string, std::set<std::string>>;  // producer -> keywords
 using AviCollections = std::list<AviCollection>;
+  */
 
 class Config : private boost::noncopyable
 {
@@ -39,7 +43,10 @@ class Config : private boost::noncopyable
   Config& operator=(const Config& other) = delete;
 
   const SmartMet::TimeSeries::RequestLimits& requestLimits() const { return itsRequestLimits; };
-  const SupportedQueries &getSupportedQueries() const { return itsSupportedQueries; }
+  const SupportedOutputFormats &allSupportedOutputFormats() const { return itsSupportedOutputFormats; }
+  const SupportedDataQueries &allSupportedDataQueries() const { return itsSupportedDataQueries; }
+  const std::set<std::string>& getSupportedOutputFormats(const std::string& producer) const;
+  const std::set<std::string>& getSupportedDataQueries(const std::string& producer) const;
   const ProducerKeywords &getProducerKeywords() { return itsProducerKeywords; }
   const Precision &getPrecision(const std::string &name) const;
 
@@ -108,9 +115,8 @@ class Config : private boost::noncopyable
   unsigned long long itsMaxTimeSeriesCacheSize = 10000;
   SmartMet::TimeSeries::RequestLimits itsRequestLimits;
 
-  SupportedQueries itsSupportedQueries;  // producer->queries
-  //  SupportedProducerLocations itsSupportedProducerLocations; //
-  //  producer->locations
+  SupportedOutputFormats itsSupportedOutputFormats;  // producer->output format
+  SupportedDataQueries itsSupportedDataQueries;  // producer->queries
   ProducerKeywords itsProducerKeywords;  // producer->keywords
 
   bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
@@ -124,6 +130,7 @@ class Config : private boost::noncopyable
   void parse_config_precision(const std::string &name);
   void parse_config_locations();
   void parse_config_data_queries();
+  void parse_config_output_formats();
   void parse_config_geometry_tables();
   void parse_config_avi_collections();
   void parse_config_grid_geometries();

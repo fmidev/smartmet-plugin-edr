@@ -9,6 +9,10 @@ plugins:
 
 engines:
 {
+	avi:
+	{
+	        configfile      = "../../cnf/avi.conf";
+	};
 	grid:
 	{
 		configfile	= "nogrid.conf";

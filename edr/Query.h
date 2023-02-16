@@ -90,6 +90,7 @@ struct Query
   std::string keyword;
   std::string timezone;
   std::string leveltype;
+  std::string output_format;
   std::string format;
   std::string timeformat;
   std::string timestring;

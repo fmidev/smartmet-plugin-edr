@@ -8,6 +8,7 @@
 #include "Config.h"
 #include "Hash.h"
 #include "State.h"
+#include "EDRDefs.h"
 #include <engines/geonames/Engine.h>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
@@ -188,8 +189,9 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
     if (resource_parts.size() > 1 && resource_parts.at(0).empty())
       resource_parts.erase(resource_parts.begin());
-    std::string data_query_list;
 	
+	// If invalid query type givem store it here
+	std::string invalid_query_type;
     if (resource_parts.size() > 0)
     {
       if (resource_parts.at(0) == "edr")
@@ -217,8 +219,9 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
                   itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;
                   if (resource_parts.size() > 5 && !resource_parts.at(5).empty())
                   {
-                    auto query_type_id = to_query_type_id(resource_parts.at(5));
-                    itsEDRQuery.query_type = query_type_id;
+                    itsEDRQuery.query_type = to_query_type_id(resource_parts.at(5));
+					if(itsEDRQuery.query_type == EDRQueryType::InvalidQueryType)
+					  invalid_query_type = resource_parts.at(5);
                     if (itsEDRQuery.query_type == EDRQueryType::Locations)
                       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
                   }
@@ -227,6 +230,8 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
               else
               {
                 itsEDRQuery.query_type = to_query_type_id(resource_parts.at(3));
+				if(itsEDRQuery.query_type == EDRQueryType::InvalidQueryType)
+				  invalid_query_type = resource_parts.at(3);
                 if (itsEDRQuery.query_type == EDRQueryType::Locations)
                   itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
                 if (resource_parts.size() > 4)
@@ -240,42 +245,27 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       }
     }
 
-    const auto &dataQueries = config.getSupportedQueries();
-    for (const auto &dataQueryItem : dataQueries)
-    {
-      const auto &producer = dataQueryItem.first;
-      const auto &queries = dataQueryItem.second;
-      for (const auto &dq : queries)
-      {
-        itsEDRQuery.data_queries[producer].insert(to_query_type_id(dq));
-        if (!data_query_list.empty())
-          data_query_list += ",";
-        data_query_list += dq;
-      }
-    }
+	if(isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id) && !itsEDRQuery.instance_id.empty() && req.getParameterCount() == 0)
+	  itsEDRQuery.query_id = EDRQueryId::DataQuery;
 
-    std::set<EDRQueryType> supportedQueries =
-        itsEDRQuery.data_queries.find(itsEDRQuery.collection_id) != itsEDRQuery.data_queries.end()
-            ? itsEDRQuery.data_queries.at(itsEDRQuery.collection_id)
-            : itsEDRQuery.data_queries.at(DEFAULT_DATA_QUERIES);
+    const auto &supportedDataQueries = config.getSupportedDataQueries(itsEDRQuery.collection_id);
 
-    if (itsEDRQuery.query_id == EDRQueryId::DataQuery &&
-        supportedQueries.find(itsEDRQuery.query_type) == supportedQueries.end())
+    if (!invalid_query_type.empty() || (itsEDRQuery.query_id == EDRQueryId::DataQuery &&
+										supportedDataQueries.find(to_string(itsEDRQuery.query_type)) == supportedDataQueries.end()))
     {
-	  throw EDRException("Invalid query type '" + to_string(itsEDRQuery.query_type) +
-                               "'. The following queries supported: " + data_query_list +
-                               " for collection " + itsEDRQuery.collection_id);
-	  /*
-      throw Fmi::Exception(BCP,
-                           "Invalid query type '" + to_string(itsEDRQuery.query_type) +
-                               "'. The following queries supported: " + data_query_list +
-                               " for collection " + itsEDRQuery.collection_id + "!");
-	  */
+	  std::string data_query_list;
+	  for(const auto& item : supportedDataQueries)
+		{
+		  if (!data_query_list.empty())
+			data_query_list += ",";
+		  data_query_list += item;
+		}
+	  auto requested_query_type = (!invalid_query_type.empty() ? invalid_query_type : to_string(itsEDRQuery.query_type));
+	  throw EDRException("Invalid query type '" + requested_query_type +
+                               "'. The following queries are supported for collection " + itsEDRQuery.collection_id + ": " + data_query_list);
     }
 
     itsEDRQuery.host = resolve_host(req);
-
-    req.removeParameter("f");  // remove f parameter, curretly only JSON is supported
 
     EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
 
@@ -480,9 +470,11 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
           throw EDRException("Location query is not supported by collection '" + itsEDRQuery.collection_id + "'");
 
         if (emd.locations->find(location_id) == emd.locations->end())
-          throw EDRException("Invalid locationId '" + location_id + "' for collection '" +
-							 itsEDRQuery.collection_id +
-							 "'! Please check metadata for valid locationIds!");
+		  {
+			throw EDRException("Invalid locationId '" + location_id + "' for collection '" +
+							   itsEDRQuery.collection_id +
+							   "'! Please check metadata for valid locationIds!");
+		  }
 
         const auto &location_info = emd.locations->at(location_id);
 
@@ -539,7 +531,10 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
-
+   
+	if (datetime.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
+	  datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
+	
     if (datetime.empty())
       throw EDRException("Missing datetime option");
 
@@ -577,6 +572,11 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     // EDR parameter-name
     auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
+	if(parameter_names.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
+	  {
+		parameter_names = "message";
+		req.addParameter("parameter-name", parameter_names);
+	  }
 
     // Check valid parameters for requested producer
     std::list<string> param_names;
@@ -672,6 +672,23 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       else
         throw EDRException("Missing parameter-name option!");
     }
+
+	// If f-option is misssing, default output formatis CoverageJSON
+	output_format = Spine::optional_string(req.getParameter("f"), COVERAGE_JSON_FORMAT);
+
+    const auto &supportedOutputFormats = config.getSupportedOutputFormats(itsEDRQuery.collection_id);
+	if(supportedOutputFormats.find(output_format) == supportedOutputFormats.end())
+	  {
+		std::string output_format_list;
+		for(const auto& item : supportedOutputFormats)
+		  {
+			if (!output_format_list.empty())
+			  output_format_list += ",";
+			output_format_list += item;
+		  }
+		throw EDRException("Invalid output format '" + output_format +
+                               "'. The following output formats are supported for collection " + itsEDRQuery.collection_id + ": "+ output_format_list);
+	  }
 
     // Longitude, latitude are always needed
     parameter_names += ",longitude,latitude";

@@ -28,23 +28,23 @@ std::string to_string(EDRQueryId id)
 std::string to_string(EDRQueryType query_type)
 {
   if (query_type == EDRQueryType::Position)
-    return "Position";
+    return "position";
   if (query_type == EDRQueryType::Radius)
-    return "Radius";
+    return "radius";
   if (query_type == EDRQueryType::Area)
-    return "Area";
+    return "area";
   if (query_type == EDRQueryType::Cube)
-    return "Cube";
+    return "cube";
   if (query_type == EDRQueryType::Trajectory)
-    return "Trajectory";
+    return "trajectory";
   if (query_type == EDRQueryType::Corridor)
-    return "Corridor";
+    return "corridor";
   if (query_type == EDRQueryType::Items)
-    return "Items";
+    return "items";
   if (query_type == EDRQueryType::Locations)
-    return "Locations";
+    return "locations";
   if (query_type == EDRQueryType::Instances)
-    return "Instances";
+    return "instances";
 
   return "InvalidQueryType";
 }
@@ -76,6 +76,7 @@ EDRQueryType to_query_type_id(const std::string &query_type)
 std::ostream &operator<<(std::ostream &out, const EDRQuery &edrQ)
 {
   out << "EDR query:";
+  /*
   if (!edrQ.data_queries.empty())
   {
     out << "\ndata_queries:";
@@ -92,6 +93,7 @@ std::ostream &operator<<(std::ostream &out, const EDRQuery &edrQ)
       out << "\n " << item.first << ": [" + data_queries + "]";
     }
   }
+  */
 
   out << "\nhost: " << edrQ.host << "\ncollection_id: " << edrQ.collection_id
       << "\ninstance_id: " << edrQ.instance_id << "\nquery_type: " << to_string(edrQ.query_type)

@@ -2,6 +2,7 @@
 
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
+#include "EDRDefs.h"
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/optional.hpp>
 #include <map>
@@ -36,9 +37,6 @@ namespace Plugin
 {
 namespace EDR
 {
-class AviCollection;
-using AviCollections = std::list<AviCollection>;
-
 // Parameter infor from querydata-, observation-, grid-engine
 struct edr_parameter
 {
@@ -86,6 +84,8 @@ struct EDRMetaData
   std::set<std::string> parameter_names;
   std::map<std::string, edr_parameter> parameters;
   std::map<std::string, int> parameter_precisions;
+  std::set<std::string> data_queries;  // Supported data_queries, defined in config file
+  std::set<std::string> output_formats;  // Supported output_formats, defined in config file
   const SupportedLocations *locations{nullptr};  // Supported locations, default keyword synop_fi
                                                  // can be overwirtten in configuration file
   const ParameterInfo *parameter_info{nullptr};  // Info about parameters from config file
@@ -97,27 +97,56 @@ struct EDRMetaData
 using EDRProducerMetaData =
     std::map<std::string, std::vector<EDRMetaData>>;  // producer-> meta data
 
-EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine);
-EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine);
+EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
+										const std::string& default_language,
+										const ParameterInfo *pinfo,
+										const SupportedDataQueries& sdq,
+										const SupportedOutputFormats& sofs,
+										const SupportedProducerLocations &spl);
+EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
+										  const std::string& default_language,
+										  const ParameterInfo *pinfo,
+										  const SupportedDataQueries& sdq,
+										  const SupportedOutputFormats& sofs,
+										  const SupportedProducerLocations &spl);
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine);
+EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
+										  const std::string& default_language,
+										  const ParameterInfo *pinfo,
+										  const SupportedDataQueries& sdq,
+										  const SupportedOutputFormats& sofs,
+										  const SupportedProducerLocations &spl);
 #endif
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
-                                         const AviCollections &aviCollections);
+										 const AviCollections &aviCollections,
+										 const std::string& default_language,
+										 const ParameterInfo *pinfo,
+										 const SupportedDataQueries& sdq,
+										 const SupportedOutputFormats& sofs,
+										 const SupportedProducerLocations &spl);
+
 void load_locations_avi(const Engine::Avi::Engine &aviEngine,
                         const AviCollections &aviCollections,
                         SupportedProducerLocations &spl);
 
-struct EngineMetaData
+class EngineMetaData
 {
-  EDRProducerMetaData querydata;
-  EDRProducerMetaData grid;
-  EDRProducerMetaData observation;
-  EDRProducerMetaData avi;
-  std::time_t update_time;
+public:
+  EngineMetaData();
+  void addMetaData(const std::string& source_name, const EDRProducerMetaData& metadata);
+  const EDRProducerMetaData& getMetaData(const std::string& source_name) const;
+  const std::map<std::string, EDRProducerMetaData>& getMetaData() const;
+  const std::time_t& getUpdateTime() const { return itsUpdateTime; }
+  bool isValidCollection(const std::string& collection_name) const;
+  bool isValidCollection(const std::string& source_name, const std::string& collection_name) const;
+
+private:
+  std::map<std::string, EDRProducerMetaData> itsMetaData;
+  std::time_t itsUpdateTime;
 };
 
 void update_location_info(EngineMetaData &emd, const SupportedProducerLocations &spl);
+
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.2.9
+Version: 23.2.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -34,7 +34,7 @@ BuildRequires: smartmet-library-grid-content-devel >= 23.1.19
 BuildRequires: smartmet-library-grid-files-devel >= 23.1.24
 BuildRequires: smartmet-library-newbase-devel >= 22.11.14
 BuildRequires: smartmet-library-gis-devel >= 23.1.5
-BuildRequires: smartmet-library-timeseries-devel >= 23.1.31
+BuildRequires: smartmet-library-timeseries-devel >= 23.2.16
 BuildRequires: smartmet-engine-geonames-devel >= 23.1.18
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 23.2.8
@@ -53,7 +53,7 @@ Requires: smartmet-library-locus >= 22.12.16
 Requires: smartmet-library-macgyver >= 22.12.16
 Requires: smartmet-library-newbase >= 22.11.14
 Requires: smartmet-library-spine >= 23.2.8
-Requires: smartmet-library-timeseries >= 23.1.31
+Requires: smartmet-library-timeseries >= 23.2.16
 Requires: smartmet-library-gis >= 23.1.5
 Requires: smartmet-engine-geonames >= 23.1.18
 Requires: smartmet-engine-querydata >= 22.12.15
@@ -107,6 +107,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Thu Feb 16 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.2.16-1.fmi
+- Support for GeoJSON format
+- Support for METAR, TAF, SIGMET location queries
+- Configuration file changed: output_formats-setting added
+- Test results updated
+
 * Thu Feb  9 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.2.9-1.fmi
 - Aviation message collection support (BRAINSTORM-2472)
 

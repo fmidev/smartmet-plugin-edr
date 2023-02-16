@@ -83,20 +83,22 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
   return temporal;
 }
 
-Json::Value get_data_queries(const EDRQuery &edr_query,
-                             const std::string &producer,
-                             bool levels_exist,
+Json::Value get_data_queries(const std::string &host,
+							 const std::string &producer,
+							 const std::set<std::string> &data_query_set,
+							 const std::set<std::string> &output_format_set,
+							 bool levels_exist,
                              bool instances_exist,
                              const std::string &instance_id = "")
 {
   auto data_queries = Json::Value(Json::ValueType::objectValue);
 
-  auto data_query_set = edr_query.data_queries.find(producer) != edr_query.data_queries.end()
-                            ? edr_query.data_queries.at(producer)
-                            : edr_query.data_queries.at(DEFAULT_DATA_QUERIES);
   auto instance_str = (!instance_id.empty() ? ("/instances/" + instance_id) : "");
-  for (const auto &query_type : data_query_set)
+
+  for (const auto &qt_str : data_query_set)
   {
+	auto query_type = to_query_type_id(qt_str);
+
     if (query_type == EDRQueryType::Cube && !levels_exist)
       continue;
 
@@ -112,7 +114,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     {
       query_info_link["title"] = Json::Value("Position query");
       query_info_link["href"] =
-          Json::Value((edr_query.host + "/collections/" + producer + instance_str + "/position"));
+          Json::Value((host + "/collections/" + producer + instance_str + "/position"));
       query_info_variables["title"] = Json::Value("Position query");
       query_info_variables["description"] = Json::Value("Data at point location");
       query_info_variables["query_type"] = Json::Value("position");
@@ -124,7 +126,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     {
       query_info_link["title"] = Json::Value("Radius query");
       query_info_link["href"] =
-          Json::Value((edr_query.host + "/collections/" + producer + instance_str + "/radius"));
+          Json::Value((host + "/collections/" + producer + instance_str + "/radius"));
       query_info_variables["title"] = Json::Value("Radius query");
       query_info_variables["description"] = Json::Value(
           "Data at the area specified with a geographic position "
@@ -142,7 +144,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     {
       query_info_link["title"] = Json::Value("Area query");
       query_info_link["href"] =
-          Json::Value((edr_query.host + "/collections/" + producer + instance_str + "/area"));
+          Json::Value((host + "/collections/" + producer + instance_str + "/area"));
       query_info_variables["title"] = Json::Value("Area query");
       query_info_variables["description"] = Json::Value("Data at the requested area");
       query_info_variables["query_type"] = Json::Value("area");
@@ -155,7 +157,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     {
       query_info_link["title"] = Json::Value("Cube query");
       query_info_link["href"] =
-          Json::Value((edr_query.host + "/collections/" + producer + instance_str + "/cube"));
+          Json::Value((host + "/collections/" + producer + instance_str + "/cube"));
       query_info_variables["title"] = Json::Value("Cube query");
       query_info_variables["description"] = Json::Value("Data inside requested bounding box");
       query_info_variables["query_type"] = Json::Value("cube");
@@ -168,7 +170,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     {
       query_info_link["title"] = Json::Value("Locations query");
       query_info_link["href"] =
-          Json::Value((edr_query.host + "/collections/" + producer + instance_str + "/locations"));
+          Json::Value((host + "/collections/" + producer + instance_str + "/locations"));
       query_info_variables["title"] = Json::Value("Locations query");
       query_info_variables["description"] =
           Json::Value("Data at point location defined by a unique identifier");
@@ -179,7 +181,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     {
       query_info_link["title"] = Json::Value("Trajectory query");
       query_info_link["href"] =
-          Json::Value((edr_query.host + "/collections/" + producer + instance_str + "/trajectory"));
+          Json::Value((host + "/collections/" + producer + instance_str + "/trajectory"));
       query_info_variables["title"] = Json::Value("Trajectory query");
       query_info_variables["description"] = Json::Value("Data along trajectory");
       query_info_variables["query_type"] = Json::Value("trajectory");
@@ -192,7 +194,7 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     {
       query_info_link["title"] = Json::Value("Corridor query");
       query_info_link["href"] =
-          Json::Value((edr_query.host + "/collections/" + producer + instance_str + "/corridor"));
+          Json::Value((host + "/collections/" + producer + instance_str + "/corridor"));
       query_info_variables["title"] = Json::Value("Corridor query");
       query_info_variables["description"] = Json::Value("Data within corridor");
       query_info_variables["corridor-width"] = Json::Value("Corridor width");
@@ -209,6 +211,9 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
 
     auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
     query_info_output_formats[0] = Json::Value("CoverageJSON");
+	unsigned int i = 0;
+	for(const auto& f : output_format_set)
+	  query_info_output_formats[i++] = Json::Value(f);
     query_info_variables["output_formats"] = query_info_output_formats;
     query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
 
@@ -235,15 +240,18 @@ Json::Value get_data_queries(const EDRQuery &edr_query,
     auto query_info_variables = Json::Value(Json::ValueType::objectValue);
     auto query_info_link = Json::Value(Json::ValueType::objectValue);
     query_info_link["href"] =
-        Json::Value((edr_query.host + "/collections/" + producer + "/instances"));
+        Json::Value((host + "/collections/" + producer + "/instances"));
     query_info_link["hreflang"] = Json::Value("en");
     query_info_link["rel"] = Json::Value("collection");
 
     query_info_variables["title"] = Json::Value("Instance query");
     query_info_variables["query_type"] = Json::Value("instances");
-    query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
     auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
-    query_info_output_formats[0] = Json::Value("CoverageJSON");
+	unsigned int i = 0;
+	for(const auto& f : output_format_set)
+	  query_info_output_formats[i++] = Json::Value(f);
+    query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
+
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
     query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
@@ -407,8 +415,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 {
   try
   {
-    const auto &engine_parameter_info = metadata.parameters;  // const std::map<std::string,
-                                                              // edr_parameter> &edr_parameters)
+    const auto &engine_parameter_info = metadata.parameters;                                                            
     const auto &config_parameter_info = *metadata.parameter_info;
 
     auto parameters = Json::Value(Json::ValueType::objectValue);
@@ -581,7 +588,7 @@ Json::Value add_prologue_one_point(boost::optional<int> level,
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_time["system"]["type"] = Json::Value("TemporalCRS");
-    referencing_time["system"]["calendar"] = Json::Value("Georgian");
+    referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (level)
     {
@@ -688,7 +695,7 @@ Json::Value add_prologue_multi_point(boost::optional<int> level,
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_time["system"]["type"] = Json::Value("TemporalCRS");
-    referencing_time["system"]["calendar"] = Json::Value("Georgian");
+    referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (level)
     {
@@ -748,7 +755,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_time["system"]["type"] = Json::Value("TemporalCRS");
-    referencing_time["system"]["calendar"] = Json::Value("Georgian");
+    referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (levels_exists)
     {
@@ -805,7 +812,7 @@ Json::Value add_prologue_coverage_collection(boost::optional<int> level,
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_time["system"]["type"] = Json::Value("TemporalCRS");
-    referencing_time["system"]["calendar"] = Json::Value("Georgian");
+    referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (level)
     {
@@ -959,8 +966,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       }
       instance["extent"] = extent;
       // Optional: data_queries
-      instance["data_queries"] = get_data_queries(
-          edr_query, producer, !emd.vertical_extent.levels.empty(), false, instance_id);
+	  instance["data_queries"] = get_data_queries(edr_query.host, producer, emd.data_queries, emd.output_formats, !emd.vertical_extent.levels.empty(), false, instance_id);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -1135,8 +1141,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
       value["extent"] = extent;
       // Optional: data_queries
-      value["data_queries"] = get_data_queries(
-          edr_query, producer, !collection_emd.vertical_extent.levels.empty(), instances_exist);
+      value["data_queries"] = get_data_queries(edr_query.host, producer, collection_emd.data_queries, collection_emd.output_formats, !collection_emd.vertical_extent.levels.empty(), instances_exist);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -1179,7 +1184,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
       value["parameter_names"] = parameter_names;
       auto output_formats = Json::Value(Json::ValueType::arrayValue);
-      output_formats[0] = Json::Value("CoverageJSON");
+	  unsigned int i = 0;
+	  for(const auto& f : collection_emd.output_formats)
+		output_formats[i++] = Json::Value(f);
       value["output_formats"] = output_formats;
 
       collections[collection_index++] = value;
@@ -1366,7 +1373,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_time["system"]["type"] = Json::Value("TemporalCRS");
-    referencing_time["system"]["calendar"] = Json::Value("Georgian");
+    referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (level_index)
     {
@@ -1815,7 +1822,7 @@ Json::Value format_coverage_collection_trajectory_alternative(
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_time["system"]["type"] = Json::Value("TemporalCRS");
-    referencing_time["system"]["calendar"] = Json::Value("Georgian");
+    referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (levels_present)
     {
@@ -2191,9 +2198,21 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     Json::Value result;
 
     const EDRMetaData *edr_md = nullptr;
+	const auto& metadata = emd.getMetaData();
+	for(const auto& item : metadata)
+	  {
+		const auto& engine_metadata = item.second;
+		if(engine_metadata.find(producer) != engine_metadata.end())
+		  {
+			edr_md = &engine_metadata.at(producer).front();
+			break;
+		  }
+	  }
+
     // 1. querydata, 2. grid, 3. observation
     // All instances of a collection share the same locations, so just get the
     // metadata of first instance
+	  /*
     if (emd.querydata.find(producer) != emd.querydata.end())
       edr_md = &(emd.querydata.at(producer).front());
     else if (emd.grid.find(producer) != emd.grid.end())
@@ -2202,6 +2221,7 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       edr_md = &(emd.observation.at(producer).front());
     else if (emd.avi.find(producer) != emd.avi.end())
       edr_md = &(emd.avi.at(producer).front());
+	  */
 
     if (!edr_md || !edr_md->locations)
       return result;
@@ -2265,6 +2285,16 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
 
     if (producer.empty())
     {
+      auto edr_metadata = Json::Value();
+	  const auto& metadata = emd.getMetaData();
+	  for(const auto& item : metadata)
+		{
+		  const auto& engine_metadata = item.second;
+		  auto md = parse_edr_metadata(engine_metadata, edr_query);
+		  edr_metadata.append(md);
+		}
+
+	  /*
       auto edr_metadata = parse_edr_metadata(emd.querydata, edr_query);
       auto edr_metadata_grid = parse_edr_metadata(emd.grid, edr_query);
       auto edr_metadata_obs = parse_edr_metadata(emd.observation, edr_query);
@@ -2275,6 +2305,7 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
       edr_metadata.append(edr_metadata_obs);
       // Append avi engine metadata in the end
       edr_metadata.append(edr_metadata_avi);
+	  */
 
       // Add main level links
       Json::Value meta_data;
@@ -2290,6 +2321,22 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
     }
     else
     {
+	  const EDRProducerMetaData* producer_metadata = nullptr;
+	  const auto& metadata = emd.getMetaData();
+	  // Iterate metadata of all engines and when producer is found parse its metadata
+	  for(const auto& item : metadata)
+		{
+		  const auto& engine_metadata = item.second;
+		  if(engine_metadata.find(producer) != engine_metadata.end())
+			{
+			  producer_metadata = &engine_metadata;
+			  break;
+			}
+		}
+	  if(producer_metadata)
+		result = parse_edr_metadata(*producer_metadata, edr_query);
+
+	  /*
       if (emd.querydata.find(producer) != emd.querydata.end())
         result = parse_edr_metadata(emd.querydata, edr_query);
       else if (emd.observation.find(producer) != emd.observation.end())
@@ -2298,6 +2345,7 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
         result = parse_edr_metadata(emd.grid, edr_query);
       else if (emd.avi.find(producer) != emd.avi.end())
         result = parse_edr_metadata(emd.avi, edr_query);
+	  */
     }
     return result;
   }

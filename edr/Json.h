@@ -13,7 +13,7 @@ namespace EDR
 {
 namespace Json
 {
-#define DEFAULT_PRECISION 4
+static unsigned int DEFAULT_PRECISION = 4;
 
 enum class ValueType
 {

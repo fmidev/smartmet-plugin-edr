@@ -21,8 +21,44 @@ namespace Plugin
 namespace EDR
 {
 #define DEFAULT_PRECISION 4
+static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
 
-EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine)
+const std::set<std::string>& get_supported_data_queries(const std::string& producer, const SupportedDataQueries& sdq)
+{
+  try
+  {
+    if(sdq.find(producer) != sdq.end())
+	  return sdq.at(producer);
+
+	return sdq.at(DEFAULT_DATA_QUERIES);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+const std::set<std::string>& get_supported_output_formats(const std::string& producer, const SupportedOutputFormats& sofs)
+{
+  try
+  {
+    if(sofs.find(producer) != sofs.end())
+	  return sofs.at(producer);
+
+	return sofs.at(DEFAULT_OUTPUT_FORMATS);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
+										const std::string& default_language,
+										const ParameterInfo *pinfo,
+										const SupportedDataQueries& sdq,
+										const SupportedOutputFormats& sofs,
+										const SupportedProducerLocations &spl)
 {
   try
   {
@@ -69,6 +105,14 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
             std::make_pair(parameter_name, edr_parameter(p.name, p.description)));
       }
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+	  producer_emd.language = default_language;
+	  producer_emd.parameter_info = pinfo;
+	  producer_emd.data_queries = get_supported_data_queries(qmd.producer, sdq);
+	  producer_emd.output_formats = get_supported_output_formats(qmd.producer, sofs);
+
+      auto producer_key = (spl.find(qmd.producer) != spl.end() ? qmd.producer : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+		producer_emd.locations = &spl.at(producer_key);
       epmd[qmd.producer].push_back(producer_emd);
     }
 
@@ -80,38 +124,22 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
   }
 }
 
-EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine)
+EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
+										  const std::string& default_language,
+										  const ParameterInfo *pinfo,
+										  const SupportedDataQueries& sdq,
+										  const SupportedOutputFormats& sofs,
+										  const SupportedProducerLocations &spl)
 {
   try
   {
     EDRProducerMetaData epmd;
 
-    /*
-    std::vector<std::string> parts;
-    boost::algorithm::split(parts, producer, boost::algorithm::is_any_of("."));
-
-    auto producerName = parts[0];
-    auto geometryId = (parts.size() > 1 ? parts[1] : "");
-    auto levelId = (parts.size() > 2 ? parts[2] : "");
-    */
-    //	  auto grid_meta_data = gEngine.getEngineMetadata(producerName.c_str());
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
     // Iterate Grid metadata and add items into collection
     for (const auto &gmd : grid_meta_data)
     {
-      /*
-      if(!geometryId.empty())
-            {
-              if(!boost::iequals(Fmi::to_string(gmd.geometryId), geometryId))
-                    continue;
-            }
-      if(!levelId.empty())
-            {
-              if(!boost::iequals(Fmi::to_string(gmd.levelId), levelId))
-                    continue;
-            }
-      */
       EDRMetaData producer_emd;
 
       if (gmd.levels.size() > 1)
@@ -179,6 +207,14 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine)
       boost::algorithm::to_lower(producerId);
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+	  producer_emd.language = default_language;
+	  producer_emd.parameter_info = pinfo;
+	  producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
+	  producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
+      auto producer_key = (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+		producer_emd.locations = &spl.at(producer_key);
+
       epmd[producerId].push_back(producer_emd);
     }
 
@@ -191,20 +227,20 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine)
 }
 
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine)
+EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
+										 const std::string& default_language,
+										 const ParameterInfo *pinfo,
+										 const SupportedDataQueries& sdq,
+										 const SupportedOutputFormats& sofs,
+										 const SupportedProducerLocations &spl)
+  
 {
   try
   {
     std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
 
     std::set<std::string> producers = obsEngine.getValidStationTypes();
-    /*
-    if (!producer.empty())
-          producers.insert(producer);
-    else
-    producers = obsEngine.getValidStationTypes();
-    */
-
+  
     for (const auto &prod : producers)
       observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
 
@@ -250,6 +286,14 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine)
       }
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+	  producer_emd.language = default_language;
+	  producer_emd.parameter_info = pinfo;
+	  producer_emd.data_queries = get_supported_data_queries(producer, sdq);
+	  producer_emd.output_formats = get_supported_output_formats(producer, sofs);
+      auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+		producer_emd.locations = &spl.at(producer_key);
+
       epmd[producer].push_back(producer_emd);
     }
 
@@ -368,7 +412,12 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
 }
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
-                                         const AviCollections &aviCollections)
+                                         const AviCollections &aviCollections,
+										 const std::string& default_language,
+										 const ParameterInfo *pinfo,
+										 const SupportedDataQueries& sdq,
+										 const SupportedOutputFormats& sofs,
+										 const SupportedProducerLocations &spl)
 {
   using boost::posix_time::ptime;
   using boost::posix_time::time_duration;
@@ -398,8 +447,9 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       auto now = boost::posix_time::second_clock::universal_time();
       auto timeOfDay = now.time_of_day();
       uint timeStep = 60, minutes = 0;
+	  auto producer = amd.getProducer();
 
-      if (amd.getProducer() == "METAR")
+      if (producer == "METAR")
       {
         if (timeOfDay.minutes() < 20)
         {
@@ -440,8 +490,15 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       }
 
       edrMetaData.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+	  edrMetaData.language = default_language;
+	  edrMetaData.parameter_info = pinfo;
+	  edrMetaData.data_queries = get_supported_data_queries(producer, sdq);
+	  edrMetaData.output_formats = get_supported_output_formats(producer, sofs);
+      auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+		edrMetaData.locations = &spl.at(producer_key);
 
-      edrProducerMetaData[amd.getProducer()].push_back(edrMetaData);
+      edrProducerMetaData[producer].push_back(edrMetaData);
     }
 
     return edrProducerMetaData;
@@ -451,6 +508,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
 
 void load_locations_avi(const Engine::Avi::Engine &aviEngine,
                         const AviCollections &aviCollections,
@@ -498,6 +556,7 @@ int EDRMetaData::getPrecision(const std::string &parameter_name) const
   }
 }
 
+#ifdef LATER
 void update_location_info(EDRProducerMetaData &pmd, const SupportedProducerLocations &spl)
 {
   try
@@ -525,16 +584,99 @@ void update_location_info(EngineMetaData &emd, const SupportedProducerLocations 
 {
   try
   {
+	auto& metadata = emd.getMetaData();
+	for(auto& item : metadata)
+	  {
+		//		const EDRProducerMetaData& pmd = item.second;
+		update_location_info(item.second, spl);
+	  }
+	
+	/*
     update_location_info(emd.querydata, spl);
     update_location_info(emd.grid, spl);
     update_location_info(emd.observation, spl);
     update_location_info(emd.avi, spl);
+	*/
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
+
+EngineMetaData::EngineMetaData()
+{
+  itsUpdateTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+}
+
+void EngineMetaData::addMetaData(const std::string& source_name, const EDRProducerMetaData& metadata)
+{
+  try
+  {
+	itsMetaData[source_name] = metadata;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+const std::map<std::string, EDRProducerMetaData>& EngineMetaData::getMetaData() const
+{
+  return itsMetaData;
+}  
+
+const EDRProducerMetaData& EngineMetaData::getMetaData(const std::string& source_name) const
+{
+  try
+  {
+	if(itsMetaData.find(source_name) != itsMetaData.end())
+	  return itsMetaData.at(source_name);
+
+	return EMPTY_PRODUCER_METADATA;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+bool EngineMetaData::isValidCollection(const std::string& collection_name) const
+{
+  try
+  {
+	for(const auto& item : itsMetaData)
+	  {
+		if(item.second.find(collection_name) != item.second.end())
+		  return true;
+	  }
+
+	return false;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+bool EngineMetaData::isValidCollection(const std::string& source_name, const std::string& collection_name) const
+{
+  try
+  {
+	if(itsMetaData.find(source_name) == itsMetaData.end())
+	  return false;
+
+	const auto& md = itsMetaData.at(source_name);
+
+	return (md.find(collection_name) != md.end());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 
 }  // namespace EDR
 }  // namespace Plugin
