@@ -1,4 +1,5 @@
 #include "GeoJson.h"
+#include "UtilityFunctions.h"
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/Hash.h>
@@ -32,7 +33,7 @@ struct time_coord_value
   std::string time;
   double lon;
   double lat;
-  boost::optional<double> value;
+  boost::optional<TS::Value> value;
 };
 
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>;  // level -> array of values
@@ -52,32 +53,6 @@ double as_double(const TS::Value &value)
 {
   return (boost::get<double>(&value) != nullptr ? *(boost::get<double>(&value))
                                                 : Fmi::stod(*(boost::get<std::string>(&value))));
-}
-
-Json::Value as_json(const TS::Value &value, unsigned int precision = SmartMet::Plugin::EDR::Json::DEFAULT_PRECISION)
-{
-  Json::Value ret;
-
-  if(boost::get<int>(&value) != nullptr)
-	{
-	  ret = Json::Value(*(boost::get<int>(&value)));
-	}
-  else if(boost::get<double>(&value) != nullptr)
-	{
-	  ret = Json::Value(*(boost::get<double>(&value)), precision);
-	}
-  else if(boost::get<std::string>(&value) != nullptr)
-	{
-	  ret = Json::Value(*(boost::get<std::string>(&value)));
-	}
-  /*
-  else if(boost::get<boost::local_time::local_date_time>(&value) != nullptr)
-	{
-	  ret = Json::Value(*(boost::local_time::local_date_time(&value)));
-	}
-  */
-
-  return ret;
 }
 
 bool lon_lat_level_param(const std::string &name)
@@ -590,7 +565,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
 		  auto key = hash_value(coord);  
           auto timestep = Json::Value(boost::posix_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
 		  timesteps_per_coordinate[key].push_back(timestep);
-		  parameter_values_per_coordinate[key].push_back(as_json(ts_data->at(k).value, parameter_precision));
+		  parameter_values_per_coordinate[key].push_back(UtilityFunctions::json_value(ts_data->at(k).value, parameter_precision));
 		  coordinates[key] = coord;
 		}
 		for(const auto& item : coordinates)
@@ -733,7 +708,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
             }
 
             if (data_value.value != TS::None())
-              tcv.value = *(boost::get<double>(&data_value.value));
+              tcv.value = data_value.value;
             bool accept =
                 coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
 
@@ -794,6 +769,7 @@ Json::Value format_output_data_feature_collection(
 	  {
 		const auto& parameter_name = item.first;
 		const auto& level_values = item.second;
+        const auto &parameter_precision = emd.getPrecision(parameter_name);
 		for(const auto& item2 : level_values)
 		  {
 			boost::optional<double> level;
@@ -802,7 +778,7 @@ Json::Value format_output_data_feature_collection(
 			const auto& time_coord_values = item2.second;
 			std::map<size_t, coordinate_xyz> coordinates;
 			std::map<size_t, std::vector<std::string>> timestamps_per_coordinate;
-			std::map<size_t, std::vector<boost::optional<double>>> values_per_coordinate;
+			std::map<size_t, std::vector<boost::optional<TS::Value>>> values_per_coordinate;
 			for(const auto& item3 : time_coord_values)
 			  {
 				coordinate_xyz coord(item3.lon, item3.lat, level);
@@ -835,7 +811,7 @@ Json::Value format_output_data_feature_collection(
 					time_values[i] = Json::Value(timeseries.at(i));
 					Json::Value parameter_value;
 					if(values.at(i))
-					  parameter_value = Json::Value(*values.at(i));
+					  parameter_value = UtilityFunctions::json_value(*values.at(i), parameter_precision);
 					parameter_values[i] = parameter_value;
 				  }
 				auto feature = Json::Value(Json::ValueType::objectValue);

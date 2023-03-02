@@ -174,6 +174,81 @@ void store_data(std::vector<TS::TimeSeriesData> &aggregatedData,
   }
 }
 
+double get_double(const TS::Value& val, double default_value = kFloatMissing)
+{
+  try
+  {
+	double ret = default_value;
+
+	if (boost::get<int>(&val) != nullptr)
+	  ret = *(boost::get<int>(&val));
+	else if (boost::get<double>(&val) != nullptr)
+	  ret = *(boost::get<double>(&val));
+
+	return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+int get_int(const TS::Value& val, int default_value = kFloatMissing)
+{
+  try
+  {	
+	int ret = default_value;
+
+	if (boost::get<int>(&val) != nullptr)
+	  ret = *(boost::get<int>(&val));
+	else if (boost::get<double>(&val) != nullptr)
+	  ret = *(boost::get<double>(&val));
+
+	return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+std::string get_string(const TS::Value& val, const std::string& default_value = "")
+{
+  try
+  {
+	std::string ret = default_value;
+
+	if (boost::get<int>(&val) != nullptr)
+	  ret = Fmi::to_string(*(boost::get<int>(&val)));
+	else if (boost::get<double>(&val) != nullptr)
+	  ret = Fmi::to_string(*(boost::get<double>(&val)));
+	else if (boost::get<std::string>(&val) != nullptr)
+	  ret = *(boost::get<std::string>(&val));
+
+	return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Json::Value json_value(const TS::Value& val, int precision)
+{
+  auto double_value = get_double(val);
+  if(double_value != kFloatMissing)
+	return Json::Value(double_value, precision);
+
+  auto int_value = get_int(val);
+  if(int_value != static_cast<int>(kFloatMissing))
+	return Json::Value(int_value);
+
+  // If value is of type string empty string is returned
+  auto string_value = get_string(val);
+  return Json::Value(string_value);  
+}
+
+
 }  // namespace UtilityFunctions
 }  // namespace EDR
 }  // namespace Plugin

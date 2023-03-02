@@ -26,6 +26,7 @@
 #include <macgyver/TimeParser.h>
 #include <newbase/NFmiPoint.h>
 #include <spine/Convenience.h>
+#include <spine/FmiApiKey.h>
 #include <timeseries/ParameterFactory.h>
 #include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <algorithm>
@@ -60,6 +61,21 @@ std::string resolve_host(const Spine::HTTP::Request &theRequest)
     std::string protocol((host_protocol ? *host_protocol : "http") + "://");
 
     std::string host = *host_header;
+
+	// Apikey
+	boost::optional<std::string> apikey;
+	try
+	  {
+		// Deduce apikey for layer filtering
+		apikey = Spine::FmiApiKey::getFmiApiKey(theRequest);
+	  }
+    catch (...)
+	  {
+		throw Fmi::Exception::Trace(BCP, "Failed to get apikey from the query");
+	  }
+
+	if(apikey)
+	  host.append(("/fmi-apikey/" + *apikey));
 
     return (protocol + host + "/edr");
   }

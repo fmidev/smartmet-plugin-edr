@@ -3465,44 +3465,49 @@ void Plugin::storeAviData(const State &state,
        )
       continue;
 
-    TS::TimeSeries ts(state.getLocalTimePool());
+	TS::TimeSeriesGroupPtr messageData(new TS::TimeSeriesGroup());
+
+	//    TS::TimeSeries ts(state.getLocalTimePool());
 
     for (auto stationId : aviData.itsStationIds)
     {
       std::vector<SmartMet::TimeSeries::Value>::const_iterator timeIter =
         aviData.itsValues[stationId]["messagetime"].cbegin();
-	  	
+	  auto longitude = boost::get<double>(*(aviData.itsValues[stationId]["longitude"].cbegin()));
+	  auto latitude = boost::get<double>(*(aviData.itsValues[stationId]["latitude"].cbegin()));
+	  TS::TimeSeries ts(state.getLocalTimePool());
       for (auto &value : aviData.itsValues[stationId][column.itsName])
       {
         // TODO: Message time is in UTC
         local_date_time dt = boost::get<boost::local_time::local_date_time>(*timeIter);
         TS::TimedValue tv(dt, value);
         ts.push_back(tv);
-
+		//		ts_anssi.push_back(tv);
         timeIter++;
       }
+	  Spine::LonLat lonlat(longitude, latitude);
+	  TS::LonLatTimeSeries ll_ts(lonlat, ts);
+	  messageData->push_back(ll_ts);
     }
-
-    if (! aviData.itsStationIds.empty())
+	/*
+    if (!aviData.itsStationIds.empty())
       messageData->push_back(ts);
+	*/
+  
+	odata.emplace_back(TS::TimeSeriesData(messageData));	
   }
-
-  odata.emplace_back(TS::TimeSeriesData(messageData));
+  
 }
 
 void Plugin::checkAviEngineQuery(const Query &query,
-                                 const std::vector<EDRMetaData> &edrMetaData,
+                                 const std::vector<EDRMetaData> &edrMetaDataVector,
                                  bool locationCheck,
                                  SmartMet::Engine::Avi::QueryOptions &queryOptions)
 {
-  auto edrQuery = query.edrQuery();
-
-  if (
-      (edrQuery.query_type != EDRQueryType::Locations) &&
-      (edrQuery.query_type != EDRQueryType::Area)
-     )
-    throw Fmi::Exception(BCP, "Collection supports location and area queries only");
-
+  const auto& edrQuery = query.edrQuery();
+  // In AVI engine there is only one metadata for each producer/collection (e.g. querydata has several instances)
+  const auto& edrMetaData = edrMetaDataVector.front(); 
+ 
   if (edrQuery.query_type == EDRQueryType::Locations)
   {
     if (query.icaos.empty())
@@ -3512,7 +3517,7 @@ void Plugin::checkAviEngineQuery(const Query &query,
     {
       if (
           locationCheck &&
-          (edrMetaData.front().locations->find(icao) == edrMetaData.front().locations->end())
+          (edrMetaData.locations->find(icao) == edrMetaData.locations->end())
          )
         throw Fmi::Exception(BCP, "Location is not listed in metadata", NULL);
 
@@ -3524,10 +3529,31 @@ void Plugin::checkAviEngineQuery(const Query &query,
     if (query.requestWKT.empty())
       throw Fmi::Exception(BCP, "No area to query", NULL);
 
+	
+	auto wkt = query.requestWKT;
+	//	if(edrQuery.query_type == EDRQueryType::Corridor)
+	  {
+		queryOptions.itsLocationOptions.itsMaxDistance = 0;
+		std::string::size_type n = wkt.find(":");
+		if(n != std::string::npos)
+		  {
+			queryOptions.itsLocationOptions.itsMaxDistance = (Fmi::stoi(wkt.substr(n+1))*1000);
+			queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
+			wkt = wkt.substr(0, n);			
+		  }
+
+		//		queryOptions.itsMaxMessageStations = 0;
+		//		queryOptions.itsMaxMessageRows = 0;
+		queryOptions.itsDistinctMessages = true;
+		queryOptions.itsFilterMETARs = true;
+		queryOptions.itsExcludeSPECIs = false;
+
+	  }
+	queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
+
     // TODO: Check wkt, only polygon is applicable (multipolygon is currently
     //       not supported by aviengine)
 
-    queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(query.requestWKT);
 
     /* bbox could be used too
     /
@@ -3624,6 +3650,8 @@ void Plugin::processAviEngineQuery(const State &state,
     queryOptions.itsTimeOptions.itsObservationTime = "current_timestamp";
   else
     throw Fmi::Exception(BCP, "Only query end time is given");
+
+  queryOptions.itsTimeOptions.itsTimeFormat = "iso";
 
   // Filter off message duplicates (same message received via multiple routes)
   //
@@ -3820,8 +3848,6 @@ boost::shared_ptr<std::string> Plugin::processQuery(
       return {};
     }
 
-    //    checkInKeywordLocations(masterquery);
-
     // if only location related parameters queried, use shortcut
     if (TS::is_plain_location_query(masterquery.poptions.parameters()))
     {
@@ -3966,40 +3992,38 @@ boost::shared_ptr<std::string> Plugin::processQuery(
       emd.parameter_precisions[pname] = masterquery.precisions[i++];
     }
 
-	//	std::cout << "RESULT: " << outputData << std::endl;
-	if(masterquery.output_format == IWXXM_FORMAT)
+	if(masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT)
 	  {
 		if(!outputData.empty())
 		  {
-			const TS::TimeSeriesData& tsdata = outputData.front().second.front();
-			const TS::TimeSeriesVectorPtr avi_data = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata));
-			const TS::TimeSeries& ts = avi_data->front();
-
-			std::string messages = "<avi>\n";
-			for(const auto ts_val : ts)
-			  messages += *(boost::get<std::string>(&ts_val.value));
-			messages += "\n</avi>";
-
-			table.set(0, 0, messages);
-		  }
-	  }
-	else if(masterquery.output_format == TAC_FORMAT)
-	  {
-		if(!outputData.empty())
-		  {
-			const TS::TimeSeriesData& tsdata = outputData.front().second.front();
-			const TS::TimeSeriesVectorPtr avi_data = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata));
-			const TS::TimeSeries& ts = avi_data->front();
-
-			std::string message;
-			for(unsigned int i = 0; i < ts.size(); i++)
+			std::string messages;
+			for (const auto &output : outputData)
 			  {
-				if(!message.empty())
-				  message += "\n";
-				message += *(boost::get<std::string>(&ts.at(i).value));
-			  }
+				const auto &outdata = output.second;
 
-			table.set(0, 0, message);
+				const auto& tsdata = outdata.at(0);
+
+				const auto& tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+
+				for (unsigned int k = 0; k < tsg_data->size(); k++)
+				  {
+					const auto &llts_data = tsg_data->at(k);
+
+					for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
+					  {
+						const auto &timed_value = llts_data.timeseries.at(l);						
+						if(!messages.empty() && masterquery.output_format == TAC_FORMAT)
+						  messages += "\n";
+						messages += *(boost::get<std::string>(&timed_value.value));
+					  }					
+				  }
+			  }
+			if(!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
+			  {
+				messages.insert(0, "<avi>\n");
+				messages.append("\n</avi>");
+			  }
+			table.set(0, 0, messages);
 		  }
 	  }
 	else if(masterquery.output_format == COVERAGE_JSON_FORMAT)

@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.2.20
+Version: 23.3.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -107,6 +107,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Thu Mar 3 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.3.3-1.fmi
+- Added apikey to links
+- Enabled corridor- and area-queries for AVI queries
+
 * Mon Feb 20 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.2.20-1.fmi
 - Support for GeoJSON format
 - Support for METAR, TAF, SIGMET location queries

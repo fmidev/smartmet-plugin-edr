@@ -1,7 +1,7 @@
 #include "CoverageJson.h"
+#include "UtilityFunctions.h"
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
-//#include <timeseries/TimeSeriesOutput.h>
 #include <boost/optional.hpp>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
@@ -23,7 +23,7 @@ struct time_coord_value
   std::string time;
   double lon;
   double lat;
-  boost::optional<double> value;
+  boost::optional<TS::Value> value;
 };
 
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>;  // level -> array of values
@@ -1613,7 +1613,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 {
   try
   {
-    //	  std::cout << "format_coverage_collection_point" << std::endl;
+	//	std::cout << "format_coverage_collection_point" << std::endl;
 
     Json::Value coverage_collection;
 
@@ -1700,13 +1700,13 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
           auto values = Json::Value(Json::ValueType::arrayValue);
           if (value.value)
           {
-            values[0] = Json::Value(*value.value, parameter_precision);
-            range_item["dataType"] = Json::Value("float");
+            values[0] = UtilityFunctions::json_value(*value.value, parameter_precision);
+            range_item["dataType"] = Json::Value(emd.isAviProducer ? "string" : "float");
           }
           else
           {
             values[0] = Json::Value();
-            range_item["dataType"] = Json::Value("float");
+            range_item["dataType"] =  Json::Value(emd.isAviProducer ? "string" : "float");
           }
           range_item["values"] = values;
           auto ranges = Json::Value(Json::ValueType::objectValue);
@@ -1716,6 +1716,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
         }
       }
     }
+			
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point");
     coverage_collection["coverages"] = coverages;
@@ -1772,7 +1773,7 @@ Json::Value format_coverage_collection_trajectory_alternative(
           if (levels_present)
             time_coord_value[3] = Json::Value(level);
           if (value.value)
-            data_values[data_values.size()] = Json::Value(*value.value, parameter_precision);
+            data_values[data_values.size()] = UtilityFunctions::json_value(*value.value, parameter_precision);
           else
             data_values[data_values.size()] = Json::Value();
           time_coord_values[time_coord_values.size()] = time_coord_value;
@@ -1912,7 +1913,7 @@ Json::Value format_coverage_collection_trajectory(
             time_coord_value[3] = Json::Value(level);
           time_coord_values[i] = time_coord_value;
           if (value.value)
-            data_values[i] = Json::Value(*value.value, parameter_precision);
+            data_values[i] = UtilityFunctions::json_value(*value.value, parameter_precision);
           else
             data_values[i] = Json::Value();
         }
@@ -1976,7 +1977,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
   {
     DataPerParameter dpp;
 
-    //	  std::cout << "get_output_data_per_parameter" << std::endl;
+	//	std::cout << "get_output_data_per_parameter" << std::endl;
 
     bool levels_present = !levels.empty();
 
@@ -2060,7 +2061,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
             }
 
             if (data_value.value != TS::None())
-              tcv.value = *(boost::get<double>(&data_value.value));
+			  tcv.value = data_value.value;
             bool accept =
                 coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
 

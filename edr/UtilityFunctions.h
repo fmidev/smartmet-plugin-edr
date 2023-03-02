@@ -7,6 +7,7 @@
 #pragma once
 
 #include "ObsParameter.h"
+#include "Json.h"
 #include "Query.h"
 #include <timeseries/TimeSeriesInclude.h>
 
@@ -22,6 +23,8 @@ void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query &query, TS::Output
 void store_data(std::vector<TS::TimeSeriesData> &aggregatedData,
                 Query &query,
                 TS::OutputData &outputData);
+
+Json::Value json_value(const TS::Value& val, int precision);
 
 }  // namespace UtilityFunctions
 }  // namespace EDR
