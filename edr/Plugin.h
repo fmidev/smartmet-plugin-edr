@@ -151,7 +151,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                           const ProducerDataPeriod &producerDataPeriod,
                           QueryLevelDataCache &queryLevelDataCache,
                           TS::OutputData &outputData,
-						  TS::TimeSeriesGenerator::LocalTimeList& tlist);
+                          TS::TimeSeriesGenerator::LocalTimeList &tlist);
 
   bool processGridEngineQuery(const State &state,
                               Query &masterquery,

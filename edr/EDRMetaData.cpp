@@ -1,6 +1,6 @@
 #include "EDRMetaData.h"
-#include "EDRQuery.h"
 #include "AviCollection.h"
+#include "EDRQuery.h"
 
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
@@ -11,8 +11,8 @@
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
-#include <engines/avi/Engine.h>
 #include <boost/any.hpp>
+#include <engines/avi/Engine.h>
 
 namespace SmartMet
 {
@@ -23,14 +23,15 @@ namespace EDR
 #define DEFAULT_PRECISION 4
 static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
 
-const std::set<std::string>& get_supported_data_queries(const std::string& producer, const SupportedDataQueries& sdq)
+const std::set<std::string> &get_supported_data_queries(const std::string &producer,
+                                                        const SupportedDataQueries &sdq)
 {
   try
   {
-    if(sdq.find(producer) != sdq.end())
-	  return sdq.at(producer);
+    if (sdq.find(producer) != sdq.end())
+      return sdq.at(producer);
 
-	return sdq.at(DEFAULT_DATA_QUERIES);
+    return sdq.at(DEFAULT_DATA_QUERIES);
   }
   catch (...)
   {
@@ -38,14 +39,15 @@ const std::set<std::string>& get_supported_data_queries(const std::string& produ
   }
 }
 
-const std::set<std::string>& get_supported_output_formats(const std::string& producer, const SupportedOutputFormats& sofs)
+const std::set<std::string> &get_supported_output_formats(const std::string &producer,
+                                                          const SupportedOutputFormats &sofs)
 {
   try
   {
-    if(sofs.find(producer) != sofs.end())
-	  return sofs.at(producer);
+    if (sofs.find(producer) != sofs.end())
+      return sofs.at(producer);
 
-	return sofs.at(DEFAULT_OUTPUT_FORMATS);
+    return sofs.at(DEFAULT_OUTPUT_FORMATS);
   }
   catch (...)
   {
@@ -54,11 +56,11 @@ const std::set<std::string>& get_supported_output_formats(const std::string& pro
 }
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
-										const std::string& default_language,
-										const ParameterInfo *pinfo,
-										const SupportedDataQueries& sdq,
-										const SupportedOutputFormats& sofs,
-										const SupportedProducerLocations &spl)
+                                        const std::string &default_language,
+                                        const ParameterInfo *pinfo,
+                                        const SupportedDataQueries &sdq,
+                                        const SupportedOutputFormats &sofs,
+                                        const SupportedProducerLocations &spl)
 {
   try
   {
@@ -105,14 +107,15 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
             std::make_pair(parameter_name, edr_parameter(p.name, p.description)));
       }
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-	  producer_emd.language = default_language;
-	  producer_emd.parameter_info = pinfo;
-	  producer_emd.data_queries = get_supported_data_queries(qmd.producer, sdq);
-	  producer_emd.output_formats = get_supported_output_formats(qmd.producer, sofs);
+      producer_emd.language = default_language;
+      producer_emd.parameter_info = pinfo;
+      producer_emd.data_queries = get_supported_data_queries(qmd.producer, sdq);
+      producer_emd.output_formats = get_supported_output_formats(qmd.producer, sofs);
 
-      auto producer_key = (spl.find(qmd.producer) != spl.end() ? qmd.producer : DEFAULT_PRODUCER_KEY);
+      auto producer_key =
+          (spl.find(qmd.producer) != spl.end() ? qmd.producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-		producer_emd.locations = &spl.at(producer_key);
+        producer_emd.locations = &spl.at(producer_key);
       epmd[qmd.producer].push_back(producer_emd);
     }
 
@@ -125,11 +128,11 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 }
 
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
-										  const std::string& default_language,
-										  const ParameterInfo *pinfo,
-										  const SupportedDataQueries& sdq,
-										  const SupportedOutputFormats& sofs,
-										  const SupportedProducerLocations &spl)
+                                          const std::string &default_language,
+                                          const ParameterInfo *pinfo,
+                                          const SupportedDataQueries &sdq,
+                                          const SupportedOutputFormats &sofs,
+                                          const SupportedProducerLocations &spl)
 {
   try
   {
@@ -207,13 +210,14 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       boost::algorithm::to_lower(producerId);
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-	  producer_emd.language = default_language;
-	  producer_emd.parameter_info = pinfo;
-	  producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
-	  producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
-      auto producer_key = (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
+      producer_emd.language = default_language;
+      producer_emd.parameter_info = pinfo;
+      producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
+      producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
+      auto producer_key =
+          (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-		producer_emd.locations = &spl.at(producer_key);
+        producer_emd.locations = &spl.at(producer_key);
 
       epmd[producerId].push_back(producer_emd);
     }
@@ -228,19 +232,19 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
 #ifndef WITHOUT_OBSERVATION
 EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
-										 const std::string& default_language,
-										 const ParameterInfo *pinfo,
-										 const SupportedDataQueries& sdq,
-										 const SupportedOutputFormats& sofs,
-										 const SupportedProducerLocations &spl)
-  
+                                         const std::string &default_language,
+                                         const ParameterInfo *pinfo,
+                                         const SupportedDataQueries &sdq,
+                                         const SupportedOutputFormats &sofs,
+                                         const SupportedProducerLocations &spl)
+
 {
   try
   {
     std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
 
     std::set<std::string> producers = obsEngine.getValidStationTypes();
-  
+
     for (const auto &prod : producers)
       observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
 
@@ -286,13 +290,13 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
       }
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-	  producer_emd.language = default_language;
-	  producer_emd.parameter_info = pinfo;
-	  producer_emd.data_queries = get_supported_data_queries(producer, sdq);
-	  producer_emd.output_formats = get_supported_output_formats(producer, sofs);
+      producer_emd.language = default_language;
+      producer_emd.parameter_info = pinfo;
+      producer_emd.data_queries = get_supported_data_queries(producer, sdq);
+      producer_emd.output_formats = get_supported_output_formats(producer, sofs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-		producer_emd.locations = &spl.at(producer_key);
+        producer_emd.locations = &spl.at(producer_key);
 
       epmd[producer].push_back(producer_emd);
     }
@@ -331,12 +335,12 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
           queryOptions.itsLocationOptions.itsCountries.begin(),
           aviCollection.getCountries().begin(),
           aviCollection.getCountries().end());
-    else if (! aviCollection.getIcaos().empty())
+    else if (!aviCollection.getIcaos().empty())
       queryOptions.itsLocationOptions.itsIcaos.insert(
           queryOptions.itsLocationOptions.itsIcaos.begin(),
           aviCollection.getIcaos().begin(),
           aviCollection.getIcaos().end());
-    else if (! amd.getBBox())
+    else if (!amd.getBBox())
       throw Fmi::Exception(BCP, "Internal error: No metadata query location parameters set");
     else
     {
@@ -352,7 +356,7 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
     }
 
     auto stationData = aviEngine.queryStations(queryOptions);
-    bool useDataBBox = (! amd.getBBox()), first = true;
+    bool useDataBBox = (!amd.getBBox()), first = true;
     double minX = 0, minY = 0, maxX = 0, maxY = 0;
 
     for (auto stationId : stationData.itsStationIds)
@@ -396,10 +400,10 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
       }
 
       amd.addStation(
-        AviStation(stationId, icao, boost::get<double>(latitude), boost::get<double>(longitude)));
+          AviStation(stationId, icao, boost::get<double>(latitude), boost::get<double>(longitude)));
     }
 
-    if (! amd.getStations().empty())
+    if (!amd.getStations().empty())
     {
       if (useDataBBox)
         amd.setBBox(AviBBox(minX, minY, maxX, maxY));
@@ -413,15 +417,15 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const AviCollections &aviCollections,
-										 const std::string& default_language,
-										 const ParameterInfo *pinfo,
-										 const SupportedDataQueries& sdq,
-										 const SupportedOutputFormats& sofs,
-										 const SupportedProducerLocations &spl)
+                                         const std::string &default_language,
+                                         const ParameterInfo *pinfo,
+                                         const SupportedDataQueries &sdq,
+                                         const SupportedOutputFormats &sofs,
+                                         const SupportedProducerLocations &spl)
 {
+  using boost::posix_time::hours;
   using boost::posix_time::ptime;
   using boost::posix_time::time_duration;
-  using boost::posix_time::hours;
 
   try
   {
@@ -447,7 +451,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       auto now = boost::posix_time::second_clock::universal_time();
       auto timeOfDay = now.time_of_day();
       uint timeStep = 60, minutes = 0;
-	  auto producer = amd.getProducer();
+      auto producer = amd.getProducer();
 
       if (producer == "METAR")
       {
@@ -470,13 +474,13 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       // which ends up 21d 6h time range at test site, ending 2023-01-27T19:20Z
 
       ptime endTime(now.date(), time_duration(timeOfDay.hours(), minutes, 0));
-//    ptime startTime = endTime - boost::posix_time::hours(30 * 24);
+      //    ptime startTime = endTime - boost::posix_time::hours(30 * 24);
       ptime startTime = endTime - boost::posix_time::hours(21 * 24);
 
       edrMetaData.temporal_extent.start_time = startTime;
       edrMetaData.temporal_extent.end_time = endTime;
       edrMetaData.temporal_extent.timestep = timeStep;
-//    edrMetaData.temporal_extent.timesteps = (30 * 24 * (60 / timeStep));
+      //    edrMetaData.temporal_extent.timesteps = (30 * 24 * (60 / timeStep));
       edrMetaData.temporal_extent.timesteps = (21 * 24 * (60 / timeStep));
 
       for (const auto &p : amd.getParameters())
@@ -484,19 +488,18 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
         auto parameter_name = p.getName();
         boost::algorithm::to_lower(parameter_name);
         edrMetaData.parameter_names.insert(parameter_name);
-        edrMetaData.parameters.insert(std::make_pair(
-            parameter_name,
-            edr_parameter(parameter_name, p.getDescription())));
+        edrMetaData.parameters.insert(
+            std::make_pair(parameter_name, edr_parameter(parameter_name, p.getDescription())));
       }
 
       edrMetaData.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-	  edrMetaData.language = default_language;
-	  edrMetaData.parameter_info = pinfo;
-	  edrMetaData.data_queries = get_supported_data_queries(producer, sdq);
-	  edrMetaData.output_formats = get_supported_output_formats(producer, sofs);
+      edrMetaData.language = default_language;
+      edrMetaData.parameter_info = pinfo;
+      edrMetaData.data_queries = get_supported_data_queries(producer, sdq);
+      edrMetaData.output_formats = get_supported_output_formats(producer, sofs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-		edrMetaData.locations = &spl.at(producer_key);
+        edrMetaData.locations = &spl.at(producer_key);
 
       edrProducerMetaData[producer].push_back(edrMetaData);
     }
@@ -508,7 +511,6 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 void load_locations_avi(const Engine::Avi::Engine &aviEngine,
                         const AviCollections &aviCollections,
@@ -584,19 +586,19 @@ void update_location_info(EngineMetaData &emd, const SupportedProducerLocations 
 {
   try
   {
-	auto& metadata = emd.getMetaData();
-	for(auto& item : metadata)
-	  {
-		//		const EDRProducerMetaData& pmd = item.second;
-		update_location_info(item.second, spl);
-	  }
-	
-	/*
-    update_location_info(emd.querydata, spl);
-    update_location_info(emd.grid, spl);
-    update_location_info(emd.observation, spl);
-    update_location_info(emd.avi, spl);
-	*/
+    auto &metadata = emd.getMetaData();
+    for (auto &item : metadata)
+    {
+      //		const EDRProducerMetaData& pmd = item.second;
+      update_location_info(item.second, spl);
+    }
+
+    /*
+update_location_info(emd.querydata, spl);
+update_location_info(emd.grid, spl);
+update_location_info(emd.observation, spl);
+update_location_info(emd.avi, spl);
+    */
   }
   catch (...)
   {
@@ -610,11 +612,12 @@ EngineMetaData::EngineMetaData()
   itsUpdateTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 }
 
-void EngineMetaData::addMetaData(const std::string& source_name, const EDRProducerMetaData& metadata)
+void EngineMetaData::addMetaData(const std::string &source_name,
+                                 const EDRProducerMetaData &metadata)
 {
   try
   {
-	itsMetaData[source_name] = metadata;
+    itsMetaData[source_name] = metadata;
   }
   catch (...)
   {
@@ -622,19 +625,19 @@ void EngineMetaData::addMetaData(const std::string& source_name, const EDRProduc
   }
 }
 
-const std::map<std::string, EDRProducerMetaData>& EngineMetaData::getMetaData() const
+const std::map<std::string, EDRProducerMetaData> &EngineMetaData::getMetaData() const
 {
   return itsMetaData;
-}  
+}
 
-const EDRProducerMetaData& EngineMetaData::getMetaData(const std::string& source_name) const
+const EDRProducerMetaData &EngineMetaData::getMetaData(const std::string &source_name) const
 {
   try
   {
-	if(itsMetaData.find(source_name) != itsMetaData.end())
-	  return itsMetaData.at(source_name);
+    if (itsMetaData.find(source_name) != itsMetaData.end())
+      return itsMetaData.at(source_name);
 
-	return EMPTY_PRODUCER_METADATA;
+    return EMPTY_PRODUCER_METADATA;
   }
   catch (...)
   {
@@ -642,17 +645,17 @@ const EDRProducerMetaData& EngineMetaData::getMetaData(const std::string& source
   }
 }
 
-bool EngineMetaData::isValidCollection(const std::string& collection_name) const
+bool EngineMetaData::isValidCollection(const std::string &collection_name) const
 {
   try
   {
-	for(const auto& item : itsMetaData)
-	  {
-		if(item.second.find(collection_name) != item.second.end())
-		  return true;
-	  }
+    for (const auto &item : itsMetaData)
+    {
+      if (item.second.find(collection_name) != item.second.end())
+        return true;
+    }
 
-	return false;
+    return false;
   }
   catch (...)
   {
@@ -660,23 +663,23 @@ bool EngineMetaData::isValidCollection(const std::string& collection_name) const
   }
 }
 
-bool EngineMetaData::isValidCollection(const std::string& source_name, const std::string& collection_name) const
+bool EngineMetaData::isValidCollection(const std::string &source_name,
+                                       const std::string &collection_name) const
 {
   try
   {
-	if(itsMetaData.find(source_name) == itsMetaData.end())
-	  return false;
+    if (itsMetaData.find(source_name) == itsMetaData.end())
+      return false;
 
-	const auto& md = itsMetaData.at(source_name);
+    const auto &md = itsMetaData.at(source_name);
 
-	return (md.find(collection_name) != md.end());
+    return (md.find(collection_name) != md.end());
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 }  // namespace EDR
 }  // namespace Plugin

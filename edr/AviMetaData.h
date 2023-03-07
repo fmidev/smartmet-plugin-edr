@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
+#include <set>
 #include <string>
 #include <vector>
-#include <set>
-#include <boost/optional.hpp>
 
 namespace SmartMet
 {
@@ -17,16 +17,12 @@ namespace Plugin
 {
 namespace EDR
 {
-
 class AviBBox
 {
  public:
-  AviBBox()
-    : minX(), minY(), maxX(), maxY()
-  {
-  }
+  AviBBox() : minX(), minY(), maxX(), maxY() {}
   AviBBox(double xMin, double yMin, double xMax, double yMax)
-    : minX(xMin), minY(yMin), maxX(xMax), maxY(yMax)
+      : minX(xMin), minY(yMin), maxX(xMax), maxY(yMax)
   {
   }
 
@@ -52,7 +48,7 @@ class AviStation
 {
  public:
   AviStation(long theId, const std::string &theIcao, double theLatitude, double theLongitude)
-    : itsId(theId), itsIcao(theIcao), itsLatitude(theLatitude), itsLongitude(theLongitude)
+      : itsId(theId), itsIcao(theIcao), itsLatitude(theLatitude), itsLongitude(theLongitude)
   {
   }
   AviStation() = delete;
@@ -73,7 +69,7 @@ class AviParameter
 {
  public:
   AviParameter(const std::string &theName, const std::string &theDescription)
-    : itsName(theName), itsDescription(theDescription)
+      : itsName(theName), itsDescription(theDescription)
   {
   }
 
@@ -92,7 +88,7 @@ class AviMetaData
               const std::string &theProducer,
               const std::set<std::string> theMessageTypes,
               bool theLocationCheck)
-             : itsBBox(theBBox), itsProducer(theProducer), itsLocationCheck(theLocationCheck)
+      : itsBBox(theBBox), itsProducer(theProducer), itsLocationCheck(theLocationCheck)
   {
     itsMessageTypes.insert(theMessageTypes.begin(), theMessageTypes.end());
     itsParameters.push_back(AviParameter("message", "Aviation message"));

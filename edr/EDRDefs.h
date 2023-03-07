@@ -6,16 +6,16 @@
 
 #pragma once
 
+#include "AviCollection.h"
 #include "Precision.h"
 #include "Query.h"
-#include "AviCollection.h"
 
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
 #include <engines/grid/Engine.h>
-#include <timeseries/RequestLimits.h>
 #include <spine/Parameter.h>
 #include <spine/TableFormatterOptions.h>
+#include <timeseries/RequestLimits.h>
 #include <libconfig.h++>
 #include <string>
 
@@ -28,9 +28,10 @@ namespace EDR
 class AviCollection;
 
 using Precisions = std::map<std::string, Precision>;
-using SupportedOutputFormats = std::map<std::string, std::set<std::string>>;  // producer -> output format
+using SupportedOutputFormats =
+    std::map<std::string, std::set<std::string>>;  // producer -> output format
 using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
-using ProducerKeywords = std::map<std::string, std::set<std::string>>;  // producer -> keywords
+using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // producer -> keywords
 using AviCollections = std::list<AviCollection>;
 
 #define Q_ENGINE "querydata_engine"

@@ -4,9 +4,9 @@
  */
 // ======================================================================
 
-#include <stdexcept>
 #include <boost/algorithm/string.hpp>
 #include <macgyver/StringConversion.h>
+#include <stdexcept>
 
 #include "AviCollection.h"
 
@@ -18,7 +18,6 @@ namespace Plugin
 {
 namespace EDR
 {
-
 void AviCollection::setName(const std::string &theName)
 {
   auto name = trim_copy(to_upper_copy(theName));
@@ -35,7 +34,7 @@ void AviCollection::addMessageType(const std::string &theMessageType)
 
   if (messageType.empty())
     throw std::runtime_error("message type expected");
-  else if (! itsMessageTypes.insert(messageType).second)
+  else if (!itsMessageTypes.insert(messageType).second)
     throw std::runtime_error("value is duplicate");
 }
 
@@ -45,7 +44,7 @@ void AviCollection::addCountry(const std::string &theCountry)
 
   if (country.empty() || (country.length() != 2))
     throw std::runtime_error("iso2 country code expected");
-  else if (! itsCountries.insert(country).second)
+  else if (!itsCountries.insert(country).second)
     throw std::runtime_error("value is duplicate");
 }
 
@@ -78,7 +77,7 @@ void AviCollection::addIcao(const std::string &theIcao)
 
   if (theIcao.length() != 4)
     throw std::runtime_error("4 letter icao code expected");
-  else if (! itsIcaos.insert(icao).second)
+  else if (!itsIcaos.insert(icao).second)
     throw std::runtime_error("value is duplicate");
 }
 
@@ -94,11 +93,9 @@ void AviCollection::addIcaoFilter(const std::string &theIcaoFilter)
   {
     auto length2 = filter.length();
 
-    if (
-        ((length == length2) && (icaoFilter == filter)) ||
+    if (((length == length2) && (icaoFilter == filter)) ||
         ((length > length2) && (icaoFilter.substr(0, length2) == filter)) ||
-        ((length < length2) && (filter.substr(0, length) == icaoFilter))
-       )
+        ((length < length2) && (filter.substr(0, length) == icaoFilter)))
       throw std::runtime_error("value is duplicate");
   }
 
@@ -123,10 +120,8 @@ bool AviCollection::filter(const std::string &theIcao) const
   {
     auto length2 = filter.length();
 
-    if (
-        ((length == length2) && (icao == filter)) ||
-        ((length > length2) && (icao.substr(0, length2) == filter))
-       )
+    if (((length == length2) && (icao == filter)) ||
+        ((length > length2) && (icao.substr(0, length2) == filter)))
       return true;
   }
 

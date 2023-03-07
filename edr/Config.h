@@ -6,17 +6,17 @@
 
 #pragma once
 
-#include "Precision.h"
-#include "Query.h"
 #include "AviCollection.h"
 #include "EDRDefs.h"
+#include "Precision.h"
+#include "Query.h"
 
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
 #include <engines/grid/Engine.h>
-#include <timeseries/RequestLimits.h>
 #include <spine/Parameter.h>
 #include <spine/TableFormatterOptions.h>
+#include <timeseries/RequestLimits.h>
 #include <libconfig.h++>
 #include <string>
 
@@ -26,27 +26,30 @@ namespace Plugin
 {
 namespace EDR
 {
-  /*
+/*
 using Precisions = std::map<std::string, Precision>;
-using SupportedOutputFormats = std::map<std::string, std::set<std::string>>;  // producer -> output format
-using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
-using ProducerKeywords = std::map<std::string, std::set<std::string>>;  // producer -> keywords
-using AviCollections = std::list<AviCollection>;
-  */
+using SupportedOutputFormats = std::map<std::string, std::set<std::string>>;  // producer -> output
+format using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer ->
+queries using ProducerKeywords = std::map<std::string, std::set<std::string>>;  // producer ->
+keywords using AviCollections = std::list<AviCollection>;
+*/
 
 class Config : private boost::noncopyable
 {
  public:
   explicit Config(const std::string &configfile);
   Config() = delete;
-  Config(const Config& other) = delete;
-  Config& operator=(const Config& other) = delete;
+  Config(const Config &other) = delete;
+  Config &operator=(const Config &other) = delete;
 
-  const SmartMet::TimeSeries::RequestLimits& requestLimits() const { return itsRequestLimits; };
-  const SupportedOutputFormats &allSupportedOutputFormats() const { return itsSupportedOutputFormats; }
+  const SmartMet::TimeSeries::RequestLimits &requestLimits() const { return itsRequestLimits; };
+  const SupportedOutputFormats &allSupportedOutputFormats() const
+  {
+    return itsSupportedOutputFormats;
+  }
   const SupportedDataQueries &allSupportedDataQueries() const { return itsSupportedDataQueries; }
-  const std::set<std::string>& getSupportedOutputFormats(const std::string& producer) const;
-  const std::set<std::string>& getSupportedDataQueries(const std::string& producer) const;
+  const std::set<std::string> &getSupportedOutputFormats(const std::string &producer) const;
+  const std::set<std::string> &getSupportedDataQueries(const std::string &producer) const;
   const ProducerKeywords &getProducerKeywords() { return itsProducerKeywords; }
   const Precision &getPrecision(const std::string &name) const;
 
@@ -116,8 +119,8 @@ class Config : private boost::noncopyable
   SmartMet::TimeSeries::RequestLimits itsRequestLimits;
 
   SupportedOutputFormats itsSupportedOutputFormats;  // producer->output format
-  SupportedDataQueries itsSupportedDataQueries;  // producer->queries
-  ProducerKeywords itsProducerKeywords;  // producer->keywords
+  SupportedDataQueries itsSupportedDataQueries;      // producer->queries
+  ProducerKeywords itsProducerKeywords;              // producer->keywords
 
   bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds

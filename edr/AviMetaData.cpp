@@ -13,7 +13,6 @@ namespace Plugin
 {
 namespace EDR
 {
-
 void AviBBox::setField(uint index, double value)
 {
   if (index == 0)

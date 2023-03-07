@@ -14,13 +14,13 @@
 #include "Producers.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/shared_ptr.hpp>
+#include <engines/avi/Engine.h>
 #include <engines/geonames/Engine.h>
 #include <engines/geonames/WktGeometry.h>
 #include <engines/grid/Engine.h>
 #include <grid-content/queryServer/definition/AliasFileCollection.h>
 #include <grid-files/common/AdditionalParameters.h>
 #include <grid-files/common/AttributeList.h>
-#include <engines/avi/Engine.h>
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/ValueFormatter.h>
 #include <newbase/NFmiPoint.h>

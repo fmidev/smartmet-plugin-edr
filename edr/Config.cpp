@@ -329,14 +329,16 @@ void Config::parse_config_output_formats()
       {
         const libconfig::Setting &defaultOutputFormats = itsConfig.lookup("output_formats.default");
         if (!defaultOutputFormats.isArray())
-          throw Fmi::Exception(BCP, "Configured value of 'output_formats.default' must be an array");
+          throw Fmi::Exception(BCP,
+                               "Configured value of 'output_formats.default' must be an array");
         for (int i = 0; i < defaultOutputFormats.getLength(); i++)
           itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(defaultOutputFormats[i]);
       }
 
       if (itsConfig.exists("output_formats.override"))
       {
-        const libconfig::Setting &overriddenOutputFormats = itsConfig.lookup("output_formats.override");
+        const libconfig::Setting &overriddenOutputFormats =
+            itsConfig.lookup("output_formats.override");
 
         for (int i = 0; i < overriddenOutputFormats.getLength(); i++)
         {
@@ -368,7 +370,6 @@ void Config::parse_config_output_formats()
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
-
 
 // ----------------------------------------------------------------------
 /*!
@@ -489,15 +490,13 @@ void Config::parse_config_avi_collections()
           }
           catch (const std::exception &e)
           {
-            throw Fmi::Exception(
-                BCP, "Configuration file error. " + path + " " + e.what());
+            throw Fmi::Exception(BCP, "Configuration file error. " + path + " " + e.what());
           }
 
           auto name = aviCollection.getName();
           for (auto const &collection : itsAviCollections)
             if (name == collection.getName())
-              throw Fmi::Exception(
-                  BCP, "Configuration file error. " + path + ".name is duplicate");
+              throw Fmi::Exception(BCP, "Configuration file error. " + path + ".name is duplicate");
 
           aviCollection.addMessageType(name);
 
@@ -520,12 +519,12 @@ void Config::parse_config_avi_collections()
 
               try
               {
-                aviCollection.addCountry(std::string((const char *) countrySetting[j]));
+                aviCollection.addCountry(std::string((const char *)countrySetting[j]));
               }
               catch (const std::exception &e)
               {
-                throw Fmi::Exception(
-                    BCP, "Configuration file error. " + countryPath + " " + e.what());
+                throw Fmi::Exception(BCP,
+                                     "Configuration file error. " + countryPath + " " + e.what());
               }
             }
           }
@@ -536,20 +535,19 @@ void Config::parse_config_avi_collections()
             libconfig::Setting &bboxSetting = itsConfig.lookup(bboxPath);
 
             if (!bboxSetting.isGroup())
-              throw Fmi::Exception(
-                  BCP, "Configuration file error. " + bboxPath + " must be an object");
+              throw Fmi::Exception(BCP,
+                                   "Configuration file error. " + bboxPath + " must be an object");
 
             AviBBox bbox;
-            std::list<std::string> fields = { "xmin", "ymin", "xmax", "ymax" };
+            std::list<std::string> fields = {"xmin", "ymin", "xmax", "ymax"};
             int index = 0;
 
             for (auto const &field : fields)
             {
               std::string fieldPath = bboxPath + "." + field;
 
-              if (! itsConfig.exists(fieldPath))
-                throw Fmi::Exception(
-                    BCP, "Configuration file error. " + fieldPath + " is missing");
+              if (!itsConfig.exists(fieldPath))
+                throw Fmi::Exception(BCP, "Configuration file error. " + fieldPath + " is missing");
 
               libconfig::Setting &fieldSetting = itsConfig.lookup(fieldPath);
               auto type = fieldSetting.getType();
@@ -558,7 +556,7 @@ void Config::parse_config_avi_collections()
               {
                 int value;
                 itsConfig.lookupValue(fieldPath, value);
-                bbox.setField(index, (double) value);
+                bbox.setField(index, (double)value);
 
                 // Why this does not work, value is garbage ?
                 //
@@ -583,8 +581,7 @@ void Config::parse_config_avi_collections()
             }
             catch (const std::exception &e)
             {
-              throw Fmi::Exception(
-                  BCP, "Configuration file error. " + bboxPath + " " + e.what());
+              throw Fmi::Exception(BCP, "Configuration file error. " + bboxPath + " " + e.what());
             }
           }
 
@@ -594,25 +591,24 @@ void Config::parse_config_avi_collections()
             libconfig::Setting &icaoSetting = itsConfig.lookup(icaosPath);
 
             if (!icaoSetting.isArray())
-              throw Fmi::Exception(
-                  BCP, "Configuration file error. " + icaosPath + " must be an array");
+              throw Fmi::Exception(BCP,
+                                   "Configuration file error. " + icaosPath + " must be an array");
 
             for (int j = 0; j < icaoSetting.getLength(); j++)
             {
               std::string icaoPath = icaosPath + ".[" + Fmi::to_string(j) + "]";
 
               if (icaoSetting[j].getType() != libconfig::Setting::Type::TypeString)
-                throw Fmi::Exception(
-                    BCP, "Configuration file error. " + icaoPath + " must be a string");
+                throw Fmi::Exception(BCP,
+                                     "Configuration file error. " + icaoPath + " must be a string");
 
               try
               {
-                aviCollection.addIcao(std::string((const char *) icaoSetting[j]));
+                aviCollection.addIcao(std::string((const char *)icaoSetting[j]));
               }
               catch (const std::exception &e)
               {
-                throw Fmi::Exception(
-                    BCP, "Configuration file error. " + icaoPath + " " + e.what());
+                throw Fmi::Exception(BCP, "Configuration file error. " + icaoPath + " " + e.what());
               }
             }
           }
@@ -636,12 +632,12 @@ void Config::parse_config_avi_collections()
 
               try
               {
-                aviCollection.addIcaoFilter(std::string((const char *) filterSetting[j]));
+                aviCollection.addIcaoFilter(std::string((const char *)filterSetting[j]));
               }
               catch (const std::exception &e)
               {
-                throw Fmi::Exception(
-                    BCP, "Configuration file error. " + filterPath + " " + e.what());
+                throw Fmi::Exception(BCP,
+                                     "Configuration file error. " + filterPath + " " + e.what());
               }
             }
           }
@@ -763,22 +759,22 @@ Config::Config(const string &configfile)
       itsDefaultMaxDistance = Fmi::to_string(value) + "km";
     }
 
-	// Request limits
-	int maxlocations = 0;
-	int maxparameters = 0;
-	int maxtimes = 0;
-	int maxlevels = 0;
-	int maxelements = 0;
-	itsConfig.lookupValue("request_limits.maxlocations", maxlocations);
-	itsConfig.lookupValue("request_limits.maxparameters", maxparameters);
-	itsConfig.lookupValue("request_limits.maxtimes", maxtimes);
-	itsConfig.lookupValue("request_limits.maxlevels", maxlevels);
-	itsConfig.lookupValue("request_limits.maxelements", maxelements);
-	itsRequestLimits.maxlocations = maxlocations;
-	itsRequestLimits.maxparameters = maxparameters;
-	itsRequestLimits.maxtimes = maxtimes;
-	itsRequestLimits.maxlevels = maxlevels;
-	itsRequestLimits.maxelements = maxelements;
+    // Request limits
+    int maxlocations = 0;
+    int maxparameters = 0;
+    int maxtimes = 0;
+    int maxlevels = 0;
+    int maxelements = 0;
+    itsConfig.lookupValue("request_limits.maxlocations", maxlocations);
+    itsConfig.lookupValue("request_limits.maxparameters", maxparameters);
+    itsConfig.lookupValue("request_limits.maxtimes", maxtimes);
+    itsConfig.lookupValue("request_limits.maxlevels", maxlevels);
+    itsConfig.lookupValue("request_limits.maxelements", maxelements);
+    itsRequestLimits.maxlocations = maxlocations;
+    itsRequestLimits.maxparameters = maxparameters;
+    itsRequestLimits.maxtimes = maxtimes;
+    itsRequestLimits.maxlevels = maxlevels;
+    itsRequestLimits.maxelements = maxelements;
 
     // TODO: Remove deprecated settings detection
     using Spine::log_time_str;
@@ -874,14 +870,14 @@ unsigned long long Config::maxTimeSeriesCacheSize() const
   return itsMaxTimeSeriesCacheSize;
 }
 
-const std::set<std::string>& Config::getSupportedOutputFormats(const std::string& producer) const
+const std::set<std::string> &Config::getSupportedOutputFormats(const std::string &producer) const
 {
   try
   {
-    if(itsSupportedOutputFormats.find(producer) != itsSupportedOutputFormats.end())
-	  return itsSupportedOutputFormats.at(producer);
+    if (itsSupportedOutputFormats.find(producer) != itsSupportedOutputFormats.end())
+      return itsSupportedOutputFormats.at(producer);
 
-	return itsSupportedOutputFormats.at(DEFAULT_OUTPUT_FORMATS);
+    return itsSupportedOutputFormats.at(DEFAULT_OUTPUT_FORMATS);
   }
   catch (...)
   {
@@ -889,14 +885,14 @@ const std::set<std::string>& Config::getSupportedOutputFormats(const std::string
   }
 }
 
-const std::set<std::string>& Config::getSupportedDataQueries(const std::string& producer) const
+const std::set<std::string> &Config::getSupportedDataQueries(const std::string &producer) const
 {
   try
   {
-    if(itsSupportedDataQueries.find(producer) != itsSupportedDataQueries.end())
-	  return itsSupportedDataQueries.at(producer);
+    if (itsSupportedDataQueries.find(producer) != itsSupportedDataQueries.end())
+      return itsSupportedDataQueries.at(producer);
 
-	return itsSupportedDataQueries.at(DEFAULT_DATA_QUERIES);
+    return itsSupportedDataQueries.at(DEFAULT_DATA_QUERIES);
   }
   catch (...)
   {

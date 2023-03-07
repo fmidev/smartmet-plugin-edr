@@ -7,6 +7,10 @@
 #pragma once
 
 #include "AviMetaData.h"
+#include <boost/optional.hpp>
+#include <list>
+#include <set>
+#include <string>
 
 namespace SmartMet
 {
@@ -14,7 +18,6 @@ namespace Plugin
 {
 namespace EDR
 {
-
 class AviCollection
 {
  public:

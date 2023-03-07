@@ -174,18 +174,18 @@ void store_data(std::vector<TS::TimeSeriesData> &aggregatedData,
   }
 }
 
-double get_double(const TS::Value& val, double default_value = kFloatMissing)
+double get_double(const TS::Value &val, double default_value = kFloatMissing)
 {
   try
   {
-	double ret = default_value;
+    double ret = default_value;
 
-	if (boost::get<int>(&val) != nullptr)
-	  ret = *(boost::get<int>(&val));
-	else if (boost::get<double>(&val) != nullptr)
-	  ret = *(boost::get<double>(&val));
+    if (boost::get<int>(&val) != nullptr)
+      ret = *(boost::get<int>(&val));
+    else if (boost::get<double>(&val) != nullptr)
+      ret = *(boost::get<double>(&val));
 
-	return ret;
+    return ret;
   }
   catch (...)
   {
@@ -193,18 +193,18 @@ double get_double(const TS::Value& val, double default_value = kFloatMissing)
   }
 }
 
-int get_int(const TS::Value& val, int default_value = kFloatMissing)
+int get_int(const TS::Value &val, int default_value = kFloatMissing)
 {
   try
-  {	
-	int ret = default_value;
+  {
+    int ret = default_value;
 
-	if (boost::get<int>(&val) != nullptr)
-	  ret = *(boost::get<int>(&val));
-	else if (boost::get<double>(&val) != nullptr)
-	  ret = *(boost::get<double>(&val));
+    if (boost::get<int>(&val) != nullptr)
+      ret = *(boost::get<int>(&val));
+    else if (boost::get<double>(&val) != nullptr)
+      ret = *(boost::get<double>(&val));
 
-	return ret;
+    return ret;
   }
   catch (...)
   {
@@ -212,20 +212,20 @@ int get_int(const TS::Value& val, int default_value = kFloatMissing)
   }
 }
 
-std::string get_string(const TS::Value& val, const std::string& default_value = "")
+std::string get_string(const TS::Value &val, const std::string &default_value = "")
 {
   try
   {
-	std::string ret = default_value;
+    std::string ret = default_value;
 
-	if (boost::get<int>(&val) != nullptr)
-	  ret = Fmi::to_string(*(boost::get<int>(&val)));
-	else if (boost::get<double>(&val) != nullptr)
-	  ret = Fmi::to_string(*(boost::get<double>(&val)));
-	else if (boost::get<std::string>(&val) != nullptr)
-	  ret = *(boost::get<std::string>(&val));
+    if (boost::get<int>(&val) != nullptr)
+      ret = Fmi::to_string(*(boost::get<int>(&val)));
+    else if (boost::get<double>(&val) != nullptr)
+      ret = Fmi::to_string(*(boost::get<double>(&val)));
+    else if (boost::get<std::string>(&val) != nullptr)
+      ret = *(boost::get<std::string>(&val));
 
-	return ret;
+    return ret;
   }
   catch (...)
   {
@@ -233,21 +233,20 @@ std::string get_string(const TS::Value& val, const std::string& default_value = 
   }
 }
 
-Json::Value json_value(const TS::Value& val, int precision)
+Json::Value json_value(const TS::Value &val, int precision)
 {
   auto double_value = get_double(val);
-  if(double_value != kFloatMissing)
-	return Json::Value(double_value, precision);
+  if (double_value != kFloatMissing)
+    return Json::Value(double_value, precision);
 
   auto int_value = get_int(val);
-  if(int_value != static_cast<int>(kFloatMissing))
-	return Json::Value(int_value);
+  if (int_value != static_cast<int>(kFloatMissing))
+    return Json::Value(int_value);
 
   // If value is of type string empty string is returned
   auto string_value = get_string(val);
-  return Json::Value(string_value);  
+  return Json::Value(string_value);
 }
-
 
 }  // namespace UtilityFunctions
 }  // namespace EDR

@@ -1,13 +1,13 @@
 #pragma once
 
+#include "EDRDefs.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
-#include "EDRDefs.h"
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/optional.hpp>
+#include <list>
 #include <map>
 #include <set>
-#include <list>
 #include <string>
 
 namespace SmartMet
@@ -84,54 +84,54 @@ struct EDRMetaData
   std::set<std::string> parameter_names;
   std::map<std::string, edr_parameter> parameters;
   std::map<std::string, int> parameter_precisions;
-  std::set<std::string> data_queries;  // Supported data_queries, defined in config file
-  std::set<std::string> output_formats;  // Supported output_formats, defined in config file
-  const SupportedLocations *locations{nullptr};  // Supported locations, default keyword synop_fi
+  std::set<std::string> data_queries;            // Supported data_queries, defined in config file
+  std::set<std::string> output_formats;          // Supported output_formats, defined in config file
+  const SupportedLocations* locations{nullptr};  // Supported locations, default keyword synop_fi
                                                  // can be overwirtten in configuration file
-  const ParameterInfo *parameter_info{nullptr};  // Info about parameters from config file
+  const ParameterInfo* parameter_info{nullptr};  // Info about parameters from config file
   std::string language{"en"};                    // Language from configuration file
-  int getPrecision(const std::string &parameter_name) const;
+  int getPrecision(const std::string& parameter_name) const;
   bool isAviProducer = false;
 };
 
 using EDRProducerMetaData =
     std::map<std::string, std::vector<EDRMetaData>>;  // producer-> meta data
 
-EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
-										const std::string& default_language,
-										const ParameterInfo *pinfo,
-										const SupportedDataQueries& sdq,
-										const SupportedOutputFormats& sofs,
-										const SupportedProducerLocations &spl);
-EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
-										  const std::string& default_language,
-										  const ParameterInfo *pinfo,
-										  const SupportedDataQueries& sdq,
-										  const SupportedOutputFormats& sofs,
-										  const SupportedProducerLocations &spl);
+EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine& qEngine,
+                                        const std::string& default_language,
+                                        const ParameterInfo* pinfo,
+                                        const SupportedDataQueries& sdq,
+                                        const SupportedOutputFormats& sofs,
+                                        const SupportedProducerLocations& spl);
+EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
+                                          const std::string& default_language,
+                                          const ParameterInfo* pinfo,
+                                          const SupportedDataQueries& sdq,
+                                          const SupportedOutputFormats& sofs,
+                                          const SupportedProducerLocations& spl);
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
-										  const std::string& default_language,
-										  const ParameterInfo *pinfo,
-										  const SupportedDataQueries& sdq,
-										  const SupportedOutputFormats& sofs,
-										  const SupportedProducerLocations &spl);
+EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine& obsEngine,
+                                         const std::string& default_language,
+                                         const ParameterInfo* pinfo,
+                                         const SupportedDataQueries& sdq,
+                                         const SupportedOutputFormats& sofs,
+                                         const SupportedProducerLocations& spl);
 #endif
-EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
-										 const AviCollections &aviCollections,
-										 const std::string& default_language,
-										 const ParameterInfo *pinfo,
-										 const SupportedDataQueries& sdq,
-										 const SupportedOutputFormats& sofs,
-										 const SupportedProducerLocations &spl);
+EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
+                                         const AviCollections& aviCollections,
+                                         const std::string& default_language,
+                                         const ParameterInfo* pinfo,
+                                         const SupportedDataQueries& sdq,
+                                         const SupportedOutputFormats& sofs,
+                                         const SupportedProducerLocations& spl);
 
-void load_locations_avi(const Engine::Avi::Engine &aviEngine,
-                        const AviCollections &aviCollections,
-                        SupportedProducerLocations &spl);
+void load_locations_avi(const Engine::Avi::Engine& aviEngine,
+                        const AviCollections& aviCollections,
+                        SupportedProducerLocations& spl);
 
 class EngineMetaData
 {
-public:
+ public:
   EngineMetaData();
   void addMetaData(const std::string& source_name, const EDRProducerMetaData& metadata);
   const EDRProducerMetaData& getMetaData(const std::string& source_name) const;
@@ -140,12 +140,12 @@ public:
   bool isValidCollection(const std::string& collection_name) const;
   bool isValidCollection(const std::string& source_name, const std::string& collection_name) const;
 
-private:
+ private:
   std::map<std::string, EDRProducerMetaData> itsMetaData;
   std::time_t itsUpdateTime;
 };
 
-void update_location_info(EngineMetaData &emd, const SupportedProducerLocations &spl);
+void update_location_info(EngineMetaData& emd, const SupportedProducerLocations& spl);
 
 }  // namespace EDR
 }  // namespace Plugin

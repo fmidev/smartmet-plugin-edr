@@ -1,8 +1,8 @@
 #include "CoverageJson.h"
 #include "UtilityFunctions.h"
+#include <boost/optional.hpp>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
-#include <boost/optional.hpp>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
@@ -84,10 +84,10 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
 }
 
 Json::Value get_data_queries(const std::string &host,
-							 const std::string &producer,
-							 const std::set<std::string> &data_query_set,
-							 const std::set<std::string> &output_format_set,
-							 bool levels_exist,
+                             const std::string &producer,
+                             const std::set<std::string> &data_query_set,
+                             const std::set<std::string> &output_format_set,
+                             bool levels_exist,
                              bool instances_exist,
                              const std::string &instance_id = "")
 {
@@ -97,7 +97,7 @@ Json::Value get_data_queries(const std::string &host,
 
   for (const auto &qt_str : data_query_set)
   {
-	auto query_type = to_query_type_id(qt_str);
+    auto query_type = to_query_type_id(qt_str);
 
     if (query_type == EDRQueryType::Cube && !levels_exist)
       continue;
@@ -211,9 +211,9 @@ Json::Value get_data_queries(const std::string &host,
 
     auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
     query_info_output_formats[0] = Json::Value("CoverageJSON");
-	unsigned int i = 0;
-	for(const auto& f : output_format_set)
-	  query_info_output_formats[i++] = Json::Value(f);
+    unsigned int i = 0;
+    for (const auto &f : output_format_set)
+      query_info_output_formats[i++] = Json::Value(f);
     query_info_variables["output_formats"] = query_info_output_formats;
     query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
 
@@ -239,17 +239,16 @@ Json::Value get_data_queries(const std::string &host,
     auto query_info = Json::Value(Json::ValueType::objectValue);
     auto query_info_variables = Json::Value(Json::ValueType::objectValue);
     auto query_info_link = Json::Value(Json::ValueType::objectValue);
-    query_info_link["href"] =
-        Json::Value((host + "/collections/" + producer + "/instances"));
+    query_info_link["href"] = Json::Value((host + "/collections/" + producer + "/instances"));
     query_info_link["hreflang"] = Json::Value("en");
     query_info_link["rel"] = Json::Value("collection");
 
     query_info_variables["title"] = Json::Value("Instance query");
     query_info_variables["query_type"] = Json::Value("instances");
     auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
-	unsigned int i = 0;
-	for(const auto& f : output_format_set)
-	  query_info_output_formats[i++] = Json::Value(f);
+    unsigned int i = 0;
+    for (const auto &f : output_format_set)
+      query_info_output_formats[i++] = Json::Value(f);
     query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
 
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
@@ -415,7 +414,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 {
   try
   {
-    const auto &engine_parameter_info = metadata.parameters;                                                            
+    const auto &engine_parameter_info = metadata.parameters;
     const auto &config_parameter_info = *metadata.parameter_info;
 
     auto parameters = Json::Value(Json::ValueType::objectValue);
@@ -966,7 +965,13 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       }
       instance["extent"] = extent;
       // Optional: data_queries
-	  instance["data_queries"] = get_data_queries(edr_query.host, producer, emd.data_queries, emd.output_formats, !emd.vertical_extent.levels.empty(), false, instance_id);
+      instance["data_queries"] = get_data_queries(edr_query.host,
+                                                  producer,
+                                                  emd.data_queries,
+                                                  emd.output_formats,
+                                                  !emd.vertical_extent.levels.empty(),
+                                                  false,
+                                                  instance_id);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -1141,7 +1146,12 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
       value["extent"] = extent;
       // Optional: data_queries
-      value["data_queries"] = get_data_queries(edr_query.host, producer, collection_emd.data_queries, collection_emd.output_formats, !collection_emd.vertical_extent.levels.empty(), instances_exist);
+      value["data_queries"] = get_data_queries(edr_query.host,
+                                               producer,
+                                               collection_emd.data_queries,
+                                               collection_emd.output_formats,
+                                               !collection_emd.vertical_extent.levels.empty(),
+                                               instances_exist);
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -1184,9 +1194,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
       value["parameter_names"] = parameter_names;
       auto output_formats = Json::Value(Json::ValueType::arrayValue);
-	  unsigned int i = 0;
-	  for(const auto& f : collection_emd.output_formats)
-		output_formats[i++] = Json::Value(f);
+      unsigned int i = 0;
+      for (const auto &f : collection_emd.output_formats)
+        output_formats[i++] = Json::Value(f);
       value["output_formats"] = output_formats;
 
       collections[collection_index++] = value;
@@ -1613,7 +1623,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 {
   try
   {
-	//	std::cout << "format_coverage_collection_point" << std::endl;
+    //	std::cout << "format_coverage_collection_point" << std::endl;
 
     Json::Value coverage_collection;
 
@@ -1706,7 +1716,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
           else
           {
             values[0] = Json::Value();
-            range_item["dataType"] =  Json::Value(emd.isAviProducer ? "string" : "float");
+            range_item["dataType"] = Json::Value(emd.isAviProducer ? "string" : "float");
           }
           range_item["values"] = values;
           auto ranges = Json::Value(Json::ValueType::objectValue);
@@ -1716,7 +1726,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
         }
       }
     }
-			
+
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point");
     coverage_collection["coverages"] = coverages;
@@ -1773,7 +1783,8 @@ Json::Value format_coverage_collection_trajectory_alternative(
           if (levels_present)
             time_coord_value[3] = Json::Value(level);
           if (value.value)
-            data_values[data_values.size()] = UtilityFunctions::json_value(*value.value, parameter_precision);
+            data_values[data_values.size()] =
+                UtilityFunctions::json_value(*value.value, parameter_precision);
           else
             data_values[data_values.size()] = Json::Value();
           time_coord_values[time_coord_values.size()] = time_coord_value;
@@ -1977,7 +1988,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
   {
     DataPerParameter dpp;
 
-	//	std::cout << "get_output_data_per_parameter" << std::endl;
+    //	std::cout << "get_output_data_per_parameter" << std::endl;
 
     bool levels_present = !levels.empty();
 
@@ -2061,7 +2072,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
             }
 
             if (data_value.value != TS::None())
-			  tcv.value = data_value.value;
+              tcv.value = data_value.value;
             bool accept =
                 coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
 
@@ -2199,30 +2210,30 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     Json::Value result;
 
     const EDRMetaData *edr_md = nullptr;
-	const auto& metadata = emd.getMetaData();
-	for(const auto& item : metadata)
-	  {
-		const auto& engine_metadata = item.second;
-		if(engine_metadata.find(producer) != engine_metadata.end())
-		  {
-			edr_md = &engine_metadata.at(producer).front();
-			break;
-		  }
-	  }
+    const auto &metadata = emd.getMetaData();
+    for (const auto &item : metadata)
+    {
+      const auto &engine_metadata = item.second;
+      if (engine_metadata.find(producer) != engine_metadata.end())
+      {
+        edr_md = &engine_metadata.at(producer).front();
+        break;
+      }
+    }
 
     // 1. querydata, 2. grid, 3. observation
     // All instances of a collection share the same locations, so just get the
     // metadata of first instance
-	  /*
-    if (emd.querydata.find(producer) != emd.querydata.end())
-      edr_md = &(emd.querydata.at(producer).front());
-    else if (emd.grid.find(producer) != emd.grid.end())
-      edr_md = &(emd.grid.at(producer).front());
-    else if (emd.observation.find(producer) != emd.observation.end())
-      edr_md = &(emd.observation.at(producer).front());
-    else if (emd.avi.find(producer) != emd.avi.end())
-      edr_md = &(emd.avi.at(producer).front());
-	  */
+    /*
+if (emd.querydata.find(producer) != emd.querydata.end())
+edr_md = &(emd.querydata.at(producer).front());
+else if (emd.grid.find(producer) != emd.grid.end())
+edr_md = &(emd.grid.at(producer).front());
+else if (emd.observation.find(producer) != emd.observation.end())
+edr_md = &(emd.observation.at(producer).front());
+else if (emd.avi.find(producer) != emd.avi.end())
+edr_md = &(emd.avi.at(producer).front());
+    */
 
     if (!edr_md || !edr_md->locations)
       return result;
@@ -2287,26 +2298,26 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
     if (producer.empty())
     {
       auto edr_metadata = Json::Value();
-	  const auto& metadata = emd.getMetaData();
-	  for(const auto& item : metadata)
-		{
-		  const auto& engine_metadata = item.second;
-		  auto md = parse_edr_metadata(engine_metadata, edr_query);
-		  edr_metadata.append(md);
-		}
+      const auto &metadata = emd.getMetaData();
+      for (const auto &item : metadata)
+      {
+        const auto &engine_metadata = item.second;
+        auto md = parse_edr_metadata(engine_metadata, edr_query);
+        edr_metadata.append(md);
+      }
 
-	  /*
-      auto edr_metadata = parse_edr_metadata(emd.querydata, edr_query);
-      auto edr_metadata_grid = parse_edr_metadata(emd.grid, edr_query);
-      auto edr_metadata_obs = parse_edr_metadata(emd.observation, edr_query);
-      auto edr_metadata_avi = parse_edr_metadata(emd.avi, edr_query);
-      // Append grid engine metadata after QEngine metadata
-      edr_metadata.append(edr_metadata_grid);
-      // Append observation engine metadata in the end
-      edr_metadata.append(edr_metadata_obs);
-      // Append avi engine metadata in the end
-      edr_metadata.append(edr_metadata_avi);
-	  */
+      /*
+  auto edr_metadata = parse_edr_metadata(emd.querydata, edr_query);
+  auto edr_metadata_grid = parse_edr_metadata(emd.grid, edr_query);
+  auto edr_metadata_obs = parse_edr_metadata(emd.observation, edr_query);
+  auto edr_metadata_avi = parse_edr_metadata(emd.avi, edr_query);
+  // Append grid engine metadata after QEngine metadata
+  edr_metadata.append(edr_metadata_grid);
+  // Append observation engine metadata in the end
+  edr_metadata.append(edr_metadata_obs);
+  // Append avi engine metadata in the end
+  edr_metadata.append(edr_metadata_avi);
+      */
 
       // Add main level links
       Json::Value meta_data;
@@ -2322,31 +2333,31 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
     }
     else
     {
-	  const EDRProducerMetaData* producer_metadata = nullptr;
-	  const auto& metadata = emd.getMetaData();
-	  // Iterate metadata of all engines and when producer is found parse its metadata
-	  for(const auto& item : metadata)
-		{
-		  const auto& engine_metadata = item.second;
-		  if(engine_metadata.find(producer) != engine_metadata.end())
-			{
-			  producer_metadata = &engine_metadata;
-			  break;
-			}
-		}
-	  if(producer_metadata)
-		result = parse_edr_metadata(*producer_metadata, edr_query);
+      const EDRProducerMetaData *producer_metadata = nullptr;
+      const auto &metadata = emd.getMetaData();
+      // Iterate metadata of all engines and when producer is found parse its metadata
+      for (const auto &item : metadata)
+      {
+        const auto &engine_metadata = item.second;
+        if (engine_metadata.find(producer) != engine_metadata.end())
+        {
+          producer_metadata = &engine_metadata;
+          break;
+        }
+      }
+      if (producer_metadata)
+        result = parse_edr_metadata(*producer_metadata, edr_query);
 
-	  /*
-      if (emd.querydata.find(producer) != emd.querydata.end())
-        result = parse_edr_metadata(emd.querydata, edr_query);
-      else if (emd.observation.find(producer) != emd.observation.end())
-        result = parse_edr_metadata(emd.observation, edr_query);
-      else if (emd.grid.find(producer) != emd.grid.end())
-        result = parse_edr_metadata(emd.grid, edr_query);
-      else if (emd.avi.find(producer) != emd.avi.end())
-        result = parse_edr_metadata(emd.avi, edr_query);
-	  */
+      /*
+  if (emd.querydata.find(producer) != emd.querydata.end())
+    result = parse_edr_metadata(emd.querydata, edr_query);
+  else if (emd.observation.find(producer) != emd.observation.end())
+    result = parse_edr_metadata(emd.observation, edr_query);
+  else if (emd.grid.find(producer) != emd.grid.end())
+    result = parse_edr_metadata(emd.grid, edr_query);
+  else if (emd.avi.find(producer) != emd.avi.end())
+    result = parse_edr_metadata(emd.avi, edr_query);
+      */
     }
     return result;
   }
