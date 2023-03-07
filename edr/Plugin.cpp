@@ -38,10 +38,6 @@
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
 
 using boost::local_time::local_date_time;
-using boost::posix_time::hours;
-using boost::posix_time::minutes;
-using boost::posix_time::ptime;
-using boost::posix_time::seconds;
 
 //#define MYDEBUG ON
 
@@ -81,7 +77,7 @@ Spine::Parameter get_query_param(const Spine::Parameter &parameter)
     number = kFmiLatitude;
   }
 
-  return Spine::Parameter(paramname, alias, type, number);
+  return {paramname, alias, type, number};
 }
 
 void transform_wgs84_coordinates(const std::string &name,
@@ -359,7 +355,7 @@ void add_missing_timesteps(TS::TimeSeries &ts, const TS::TimeSeriesGeneratorCach
 
   TS::TimeSeries ts2(ts.getLocalTimePool());
 
-  TS::TimeSeriesGenerator::LocalTimeList::const_iterator it = tlist->begin();
+  auto it = tlist->begin();
 
   for (const auto &value : ts)
   {
@@ -846,7 +842,10 @@ Spine::LocationPtr Plugin::getLocationForArea(const Spine::TaggedLocation &tloc,
 {
   try
   {
-    double bottom = 0.0, top = 0.0, left = 0.0, right = 0.0;
+    double bottom = 0.0;
+    double top = 0.0;
+    double left = 0.0;
+    double right = 0.0;
 
     const OGRGeometry *geom = get_ogr_geometry(tloc, itsGeometryStorage);
 
@@ -917,7 +916,10 @@ Spine::LocationPtr Plugin::getLocationForArea(const Spine::TaggedLocation &tloc,
   FUNCTION_TRACE
   try
   {
-    double bottom = 0.0, top = 0.0, left = 0.0, right = 0.0;
+    double bottom = 0.0;
+    double top = 0.0;
+    double left = 0.0;
+    double right = 0.0;
 
     const OGRGeometry *geom = get_ogr_geometry(tloc, itsGeometryStorage);
     std::string wktString;
@@ -1000,7 +1002,7 @@ Spine::LocationPtr Plugin::getLocationForArea(const Spine::TaggedLocation &tloc,
   }
   catch (...)
   {
-    throw Fmi::Exception(BCP, "Operation failed!", NULL);
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1159,7 +1161,7 @@ void Plugin::resolveAreaLocations(Query &query,
                                   const State &state,
                                   const AreaProducers &areaproducers)
 {
-  if (query.groupareas == true)
+  if (query.groupareas)
     return;
 
   Spine::TaggedLocationList tloclist;
@@ -1384,7 +1386,8 @@ void Plugin::fetchQEngineValues(const State &state,
     // Loop over the levels
     for (qi->resetLevel();;)
     {
-      boost::optional<float> pressure, height;
+      boost::optional<float> pressure;
+      boost::optional<float> height;
       float levelValue = 0;
 
       if (loadDataLevels)
@@ -1440,12 +1443,12 @@ void Plugin::fetchQEngineValues(const State &state,
 
       // remove timesteps that are later than last timestep in query data file
       // except from climatology
-      if (tlist.size() > 0 && !isClimatologyProducer)
+      if (!tlist.empty() && !isClimatologyProducer)
       {
         boost::local_time::local_date_time data_period_endtime =
             producerDataPeriod.getLocalEndTime(producer, query.timezone, getTimeZones());
 
-        while (tlist.size() > 0 && !data_period_endtime.is_not_a_date_time() &&
+        while (!tlist.empty() && !data_period_endtime.is_not_a_date_time() &&
                *(--tlist.end()) > data_period_endtime)
         {
           tlist.pop_back();
@@ -1463,7 +1466,7 @@ void Plugin::fetchQEngineValues(const State &state,
       // redundant steps are removed later
       if (query.toptions.timeSteps)
       {
-        if (query.toptions.timeList.size() > 0)
+        if (!query.toptions.timeList.empty())
           query.toptions.timeSteps = (*query.toptions.timeSteps) * 24;
         else
         {
@@ -1561,7 +1564,7 @@ void Plugin::fetchQEngineValues(const State &state,
                                  ? qi->valuesAtPressure(querydata_param, querydata_tlist, *pressure)
                                  : qi->valuesAtHeight(querydata_param, querydata_tlist, *height);
 
-          if (querydata_result->size() > 0)
+          if (!querydata_result->empty())
           {
             if (paramfunc.parameter.name() == "x" || paramfunc.parameter.name() == "y")
               transform_wgs84_coordinates(
@@ -1602,7 +1605,7 @@ void Plugin::fetchQEngineValues(const State &state,
                 {
                   Spine::LocationList ll =
                       get_location_list(svg, tloc.tag, query.step, state.getGeoEngine());
-                  if (ll.size() > 0)
+                  if (!ll.empty())
                     llist.insert(llist.end(), ll.begin(), ll.end());
                 }
               }
@@ -1657,7 +1660,7 @@ void Plugin::fetchQEngineValues(const State &state,
                                                 query.maxdistance_kilometers(),
                                                 *height);
 
-            if (querydata_result->size() > 0)
+            if (!querydata_result->empty())
             {
               // if the value is not dependent on location inside area
               // we just need to have the first one
@@ -1759,7 +1762,7 @@ void Plugin::fetchQEngineValues(const State &state,
                                                 *height);
 #pragma GCC diagnostic pop
 
-            if (querydata_result->size() > 0)
+            if (!querydata_result->empty())
             {
               // if the value is not dependent on location inside
               // area we just need to have the first one
@@ -1780,7 +1783,7 @@ void Plugin::fetchQEngineValues(const State &state,
           }
         }  // area handling
 
-        if (querydata_result->size() > 0)
+        if (!querydata_result->empty())
           aggregatedData.emplace_back(TS::TimeSeriesData(TS::erase_redundant_timesteps(
               TS::aggregate(querydata_result, paramfunc.functions), tlist)));
       }
@@ -2149,7 +2152,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
       {
         settings.wktArea = wktString;
       }
-      else if (stationSettings.fmisids.size() > 0)
+      else if (!stationSettings.fmisids.empty())
       {
         settings.taggedFMISIDs = itsObsEngine->translateToFMISID(
             settings.starttime, settings.endtime, producer, stationSettings);
@@ -2427,8 +2430,8 @@ void Plugin::getObsSettings(std::vector<SettingsInfo> &settingsVector,
           settings.starttime, settings.endtime, producer, stationSettings);
     }
 
-    if (settings.taggedFMISIDs.size() > 0 || settings.boundingBox.size() > 0 ||
-        settings.taggedLocations.size() > 0)
+    if (!settings.taggedFMISIDs.empty() || !settings.boundingBox.empty() ||
+        !settings.taggedLocations.empty())
       settingsVector.emplace_back(settings, false, "");
 
     if (settingsVector.empty() && is_flash_or_mobile_producer(producer))
@@ -3111,7 +3114,7 @@ void Plugin::processObsEngineQuery(const State &state,
         check_request_limit(itsConfig.requestLimits(),
                             settings.parameters.size(),
                             TS::RequestLimitMember::PARAMETERS);
-        if (settings.taggedFMISIDs.size() > 0)
+        if (!settings.taggedFMISIDs.empty())
           check_request_limit(itsConfig.requestLimits(),
                               settings.taggedFMISIDs.size(),
                               TS::RequestLimitMember::LOCATIONS);
@@ -3158,7 +3161,7 @@ void Plugin::processQEngineQuery(const State &state,
   {
     // If user wants to get grid points of area to separate lines, resolve
     // coordinates inside area
-    if (masterquery.groupareas == false)
+    if (!masterquery.groupareas)
       resolveAreaLocations(masterquery, state, areaproducers);
 
     check_request_limit(itsConfig.requestLimits(),
@@ -3247,7 +3250,7 @@ void Plugin::processQEngineQuery(const State &state,
 bool Plugin::processGridEngineQuery(const State &state,
                                     Query &query,
                                     TS::OutputData &outputData,
-                                    QueryServer::QueryStreamer_sptr queryStreamer,
+                                    const QueryServer::QueryStreamer_sptr &queryStreamer,
                                     const AreaProducers &areaproducers,
                                     const ProducerDataPeriod &producerDataPeriod)
 {
@@ -3259,7 +3262,7 @@ bool Plugin::processGridEngineQuery(const State &state,
 
     boost::posix_time::ptime latestTimestep = query.latestTimestep;
 
-    BOOST_FOREACH (auto &tloc, query.loptions->locations())
+    for (const auto &tloc : query.loptions->locations())
     {
       query.latestTimestep = latestTimestep;
 
@@ -3382,7 +3385,7 @@ bool Plugin::processGridEngineQuery(const State &state,
               const char *p = wkt.c_str();
               newGeom->importFromWkt(&p);
 
-              auto expandedGeom = Fmi::OGR::expandGeometry(newGeom, tloc.loc->radius);
+              auto *expandedGeom = Fmi::OGR::expandGeometry(newGeom, tloc.loc->radius);
               expandedGeomUptr.reset(expandedGeom);
 
               std::string wktString = Fmi::OGR::exportToWkt(*expandedGeom);
@@ -3440,7 +3443,7 @@ bool Plugin::processGridEngineQuery(const State &state,
   }
   catch (...)
   {
-    throw Fmi::Exception(BCP, "Operation failed!", NULL);
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -3467,8 +3470,7 @@ void Plugin::storeAviData(const State &state,
 
     for (auto stationId : aviData.itsStationIds)
     {
-      std::vector<SmartMet::TimeSeries::Value>::const_iterator timeIter =
-          aviData.itsValues[stationId]["messagetime"].cbegin();
+      auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
       auto longitude = boost::get<double>(*(aviData.itsValues[stationId]["longitude"].cbegin()));
       auto latitude = boost::get<double>(*(aviData.itsValues[stationId]["latitude"].cbegin()));
       TS::TimeSeries ts(state.getLocalTimePool());
@@ -3507,12 +3509,12 @@ void Plugin::checkAviEngineQuery(const Query &query,
   if (edrQuery.query_type == EDRQueryType::Locations)
   {
     if (query.icaos.empty())
-      throw Fmi::Exception(BCP, "No location(s) to query", NULL);
+      throw Fmi::Exception(BCP, "No location(s) to query", nullptr);
 
     for (auto const &icao : query.icaos)
     {
       if (locationCheck && (edrMetaData.locations->find(icao) == edrMetaData.locations->end()))
-        throw Fmi::Exception(BCP, "Location is not listed in metadata", NULL);
+        throw Fmi::Exception(BCP, "Location is not listed in metadata", nullptr);
 
       queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
     }
@@ -3520,13 +3522,13 @@ void Plugin::checkAviEngineQuery(const Query &query,
   else
   {
     if (query.requestWKT.empty())
-      throw Fmi::Exception(BCP, "No area to query", NULL);
+      throw Fmi::Exception(BCP, "No area to query", nullptr);
 
     auto wkt = query.requestWKT;
     //	if(edrQuery.query_type == EDRQueryType::Corridor)
     {
       queryOptions.itsLocationOptions.itsMaxDistance = 0;
-      std::string::size_type n = wkt.find(":");
+      std::string::size_type n = wkt.find(':');
       if (n != std::string::npos)
       {
         queryOptions.itsLocationOptions.itsMaxDistance = (Fmi::stoi(wkt.substr(n + 1)) * 1000);
@@ -3560,7 +3562,7 @@ void Plugin::checkAviEngineQuery(const Query &query,
           (south == query.boundingBox.end()) ||
           (north == query.boundingBox.end())
          )
-        throw Fmi::Exception(BCP, "Invalid query bbox", NULL);
+        throw Fmi::Exception(BCP, "Invalid query bbox", nullptr);
 
       queryOptions.itsLocationOptions.itsBBoxes.push_back(
           SmartMet::Engine::Avi::BBox(west->second, east->second, south->second, north->second));
@@ -3577,7 +3579,7 @@ void Plugin::processAviEngineQuery(const State &state,
 {
   auto edrMetaData = edrProducerMetaData.find(producer);
   if (edrMetaData == edrProducerMetaData.end())
-    throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, NULL);
+    throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, nullptr);
 
   /* Location has already been checked against metadata, no need for config controlled check
   /
@@ -3591,7 +3593,7 @@ void Plugin::processAviEngineQuery(const State &state,
   }
 
   if (aviCollection == aviCollections.end())
-    throw Fmi::Exception(BCP, "Internal error: no collection for producer " + producer, NULL);
+    throw Fmi::Exception(BCP, "Internal error: no collection for producer " + producer, nullptr);
 
   bool locationCheck = aviCollection->getLocationCheck();
   */
@@ -3623,7 +3625,8 @@ void Plugin::processAviEngineQuery(const State &state,
   //
   // TODO: Handle localtime vs UTC, message query times must be in UTC
   //
-  std::string startTime, endTime;
+  std::string startTime;
+  std::string endTime;
   bool hasStartTime = (!query.toptions.startTime.is_special());
   bool hasEndTime = (!query.toptions.endTime.is_special());
 
@@ -4136,7 +4139,7 @@ void Plugin::query(const State &state,
     catch (...)
     {
       if (!gridEnabled)
-        throw Fmi::Exception(BCP, "Operation failed!", NULL);
+        throw Fmi::Exception::Trace(BCP, "Operation failed!");
     }
 
     high_resolution_clock::time_point t3 = high_resolution_clock::now();
@@ -4458,10 +4461,10 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 
     if (firstMessage == "RequestLimitError" || firstMessage == "EDRException")
     {
-      auto exp = ex.getExceptionByParameterName("description");
+      const auto *exp = ex.getExceptionByParameterName("description");
       if (exp)
       {
-        auto desc = exp->getParameterValue("description");
+        const auto *desc = exp->getParameterValue("description");
         if (desc)
         {
           auto status_code = (firstMessage == "EDRException" ? Spine::HTTP::Status::not_found
@@ -4502,7 +4505,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 // ----------------------------------------------------------------------
 
 Plugin::Plugin(Spine::Reactor *theReactor, const char *theConfig)
-    : SmartMetPlugin(), itsModuleName("EDR"), itsConfig(theConfig), itsReactor(theReactor)
+    : itsModuleName("EDR"), itsConfig(theConfig), itsReactor(theReactor)
 {
   try
   {
@@ -4558,7 +4561,7 @@ void Plugin::init()
     /* GridEngine */
     if (!itsConfig.gridEngineDisabled())
     {
-      engine = itsReactor->getSingleton("grid", NULL);
+      engine = itsReactor->getSingleton("grid", nullptr);
       if (!engine)
         throw Fmi::Exception(BCP, "The 'grid-engine' unavailable!");
 
@@ -4863,7 +4866,7 @@ for (const auto &item : metadata->avi)
           int len = setting.getLength();
           for (int i = 0; i < len; i++)
           {
-            auto name = setting[i].getName();
+            const auto *name = setting[i].getName();
             std::string value;
             lconfig.lookupValue(desc_key + "." + name, value);
             pinfo.description[name] = value;
@@ -4877,7 +4880,7 @@ for (const auto &item : metadata->avi)
           int len = setting.getLength();
           for (int i = 0; i < len; i++)
           {
-            auto name = setting[i].getName();
+            const auto *name = setting[i].getName();
             std::string value;
             lconfig.lookupValue(unit_label_key + "." + name, value);
             pinfo.unit_label[name] = value;
@@ -4974,7 +4977,7 @@ bool Plugin::queryIsFast(const Spine::HTTP::Request &theRequest) const
  */
 // ----------------------------------------------------------------------
 
-Plugin::~Plugin() {}
+Plugin::~Plugin() = default;
 
 // ----------------------------------------------------------------------
 /*!

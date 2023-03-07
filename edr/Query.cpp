@@ -209,7 +209,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     // If invalid query type givem store it here
     std::string invalid_query_type;
-    if (resource_parts.size() > 0)
+    if (!resource_parts.empty())
     {
       if (resource_parts.at(0) == "edr")
       {
@@ -305,7 +305,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     // From here on EDR data query
     // Querydata and obervation producers do not have dots (.) in id, but grid
     // producers always do have
-    bool grid_producer = (itsEDRQuery.collection_id.find(".") != std::string::npos);
+    bool grid_producer = (itsEDRQuery.collection_id.find('.') != std::string::npos);
     if (!grid_producer)
       req.addParameter("producer", itsEDRQuery.collection_id);
 
@@ -368,12 +368,12 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         // If query_type is Position and MULTIPOINTZ
         boost::algorithm::to_upper(wkt);
         boost::algorithm::trim(wkt);
-        auto geometry_name = wkt.substr(0, wkt.find("("));
+        auto geometry_name = wkt.substr(0, wkt.find('('));
         if (geometry_name == "MULTIPOINTZ")
         {
           boost::algorithm::trim(geometry_name);
-          auto len = (wkt.rfind(")") - wkt.find("(") - 1);
-          auto geometry_values = wkt.substr(wkt.find("(") + 1, len);
+          auto len = (wkt.rfind(')') - wkt.find('(') - 1);
+          auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
           std::vector<string> coordinates;
           boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
 
@@ -402,11 +402,11 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         // If query_type is Trajectory, check if is 2D, 3D, 4D
         boost::algorithm::to_upper(wkt);
         boost::algorithm::trim(wkt);
-        auto geometry_name = wkt.substr(0, wkt.find("("));
+        auto geometry_name = wkt.substr(0, wkt.find('('));
         boost::algorithm::trim(geometry_name);
-        auto len = (wkt.rfind(")") - wkt.find("(") - 1);
-        auto geometry_values = wkt.substr(wkt.find("(") + 1, len);
-        auto radius = wkt.substr(wkt.rfind(")") + 1);
+        auto len = (wkt.rfind(')') - wkt.find('(') - 1);
+        auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
+        auto radius = wkt.substr(wkt.rfind(')') + 1);
 
         wkt = "LINESTRING(";
         if (geometry_name == "LINESTRINGZM")
@@ -578,7 +578,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     if (datetime.empty())
       throw EDRException("Missing datetime option");
 
-    if (datetime.find("/") != std::string::npos)
+    if (datetime.find('/') != std::string::npos)
     {
       std::vector<std::string> datetime_parts;
       boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
@@ -626,9 +626,9 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       throw EDRException("Error! Cube query not possible for '" + itsEDRQuery.collection_id +
                          "', because there is no vertical extent!");
 
-    std::string producerId = "";
-    std::string geometryId = "";
-    std::string levelId = "";
+    std::string producerId;
+    std::string geometryId;
+    std::string levelId;
     if (grid_producer)
     {
       std::vector<std::string> producer_parts;
@@ -647,7 +647,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     double min_level = std::numeric_limits<double>::min();
     double max_level = std::numeric_limits<double>::max();
     bool range = false;
-    if (z.find("/") != std::string::npos)
+    if (z.find('/') != std::string::npos)
     {
       std::vector<std::string> parts;
       boost::algorithm::split(parts, z, boost::algorithm::is_any_of("/"));
@@ -659,7 +659,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     if (!range && z.empty())
       z = itsCoordinateFilter.getLevels();
     // If no level given get all levels
-    if (z.empty() && emd.vertical_extent.levels.size() > 0)
+    if (z.empty() && !emd.vertical_extent.levels.empty())
     {
       for (const auto &l : emd.vertical_extent.levels)
       {
@@ -678,8 +678,8 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     for (auto p : param_names)
     {
       boost::algorithm::to_lower(p);
-      if (p.find(":") != std::string::npos)
-        p = p.substr(0, p.find(":"));
+      if (p.find(':') != std::string::npos)
+        p = p.substr(0, p.find(':'));
       if (emd.parameters.find(p) == emd.parameters.end())
       {
         std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p +
@@ -710,8 +710,8 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     {
       if (emd.parameters.empty())
         throw EDRException("No metadata for " + itsEDRQuery.collection_id + "!");
-      else
-        throw EDRException("Missing parameter-name option!");
+
+      throw EDRException("Missing parameter-name option!");
     }
 
     // If f-option is misssing, default output formatis CoverageJSON
@@ -736,7 +736,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     // Longitude, latitude are always needed
     parameter_names += ",longitude,latitude";
     // If producer has levels we need to query them
-    if (emd.vertical_extent.levels.size() > 0)
+    if (!emd.vertical_extent.levels.empty())
       parameter_names += ",level";
 
     req.addParameter("param", parameter_names);
@@ -1319,7 +1319,7 @@ void Query::parse_precision(const Spine::HTTP::Request &req, const Config &confi
 
     for (const TS::OptionParsers::ParameterList::value_type &p : poptions.parameters())
     {
-      Precision::Map::const_iterator it = prec.parameter_precisions.find(p.name());
+      const auto it = prec.parameter_precisions.find(p.name());
       if (it == prec.parameter_precisions.end())
       {
         precisions.push_back(prec.default_precision);  // unknown gets default
@@ -1377,10 +1377,8 @@ void Query::parse_parameters(const Spine::HTTP::Request &theReq)
         {
           Names tmp;
           boost::algorithm::split(tmp, alias, boost::algorithm::is_any_of(","));
-          for (auto tt = tmp.begin(); tt != tmp.end(); ++tt)
-          {
-            names.push_back(*tt);
-          }
+          for (const auto &tt : tmp)
+            names.push_back(tt);
           ind = true;
         }
         else if (itsAliasFileCollectionPtr->replaceAlias(tmpName, alias))
@@ -1440,7 +1438,7 @@ void Query::parse_parameters(const Spine::HTTP::Request &theReq)
       }
       catch (...)
       {
-        Fmi::Exception exception(BCP, "Parameter parsing failed for '" + paramname + "'!", NULL);
+        Fmi::Exception exception(BCP, "Parameter parsing failed for '" + paramname + "'!", nullptr);
         throw exception;
       }
     }

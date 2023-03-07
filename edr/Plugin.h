@@ -64,7 +64,6 @@ class GridInterface;
 
 using ObsParameters = std::vector<ObsParameter>;
 
-class EDRMetaData;
 using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>;
 
 struct SettingsInfo
@@ -73,8 +72,8 @@ struct SettingsInfo
   bool is_area = false;
   std::string area_name;
 
-  SettingsInfo(const Engine::Observation::Settings &s, bool isa, const std::string &an)
-      : settings(s), is_area(isa), area_name(an)
+  SettingsInfo(const Engine::Observation::Settings &s, bool isa, std::string an)
+      : settings(s), is_area(isa), area_name(std::move(an))
   {
   }
 };
@@ -83,7 +82,13 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
 {
  public:
   Plugin(Spine::Reactor *theReactor, const char *theConfig);
-  virtual ~Plugin();
+  ~Plugin() override;
+
+  Plugin() = delete;
+  Plugin(const Plugin &other) = delete;
+  Plugin &operator=(const Plugin &other) = delete;
+  Plugin(Plugin &&other) = delete;
+  Plugin &operator=(Plugin &&other) = delete;
 
   const std::string &getPluginName() const override;
   int getRequiredAPIVersion() const override;
@@ -115,8 +120,6 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                       Spine::HTTP::Response &theResponse) override;
 
  private:
-  Plugin();
-
   std::size_t hash_value(const State &state,
                          Query masterquery,
                          const Spine::HTTP::Request &request);
@@ -156,7 +159,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   bool processGridEngineQuery(const State &state,
                               Query &masterquery,
                               TS::OutputData &outputData,
-                              QueryServer::QueryStreamer_sptr queryStreamer,
+                              const QueryServer::QueryStreamer_sptr &queryStreamer,
                               const AreaProducers &areaproducers,
                               const ProducerDataPeriod &producerDataPeriod);
 

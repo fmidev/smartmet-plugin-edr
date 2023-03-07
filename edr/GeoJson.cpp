@@ -21,7 +21,7 @@ namespace
 {
 struct coordinate_xyz
 {
-  coordinate_xyz() {}
+  coordinate_xyz() = default;
   coordinate_xyz(double x_val, double y_val, boost::optional<double> z_val)
       : x(x_val), y(y_val), z(z_val)
   {
@@ -114,7 +114,7 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
-      ret.push_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
+      ret.emplace_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
 
     return ret;
   }
@@ -160,7 +160,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       if (boost::get<TS::TimeSeriesPtr>(&tsdata))
       {
         TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-        if (ts->size() > 0)
+        if (!ts->empty())
         {
           const TS::TimedValue &tv = ts->at(0);
           double value = as_double(tv.value);
@@ -423,7 +423,7 @@ Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, i
 
 Json::Value format_output_data_one_point(TS::OutputData &outputData,
                                          const EDRMetaData &emd,
-                                         boost::optional<int> level,
+                                         boost::optional<int> /* level */,
                                          const std::vector<Spine::Parameter> &query_parameters)
 {
   try
@@ -447,9 +447,9 @@ Json::Value format_output_data_one_point(TS::OutputData &outputData,
     point_geometry["type"] = Json::Value("Point");
     point_geometry["coordinates"] = point_coordinates;
 
-    for (unsigned int i = 0; i < outputData.size(); i++)
+    for (const auto &tmp : outputData)
     {
-      const auto &outdata = outputData[i].second;
+      const auto &outdata = tmp.second;
 
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++)
@@ -619,7 +619,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
 }
 
 DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
-                                        const EDRMetaData &emd,
+                                        const EDRMetaData & /* emd */,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
                                         const std::vector<Spine::Parameter> &query_parameters)
@@ -744,7 +744,7 @@ Json::Value format_output_data_feature_collection(
     const std::set<int> &levels,
     const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
-    EDRQueryType query_type)
+    EDRQueryType /* query_type */)
 
 {
   try
@@ -903,9 +903,9 @@ Json::Value formatOutputData(TS::OutputData &outputData,
                   << std::endl;
       std::vector<TS::TimeSeriesData> tsd;
       TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first));
-      for (unsigned int i = 0; i < tsv->size(); i++)
+      for (const auto &ts : *tsv)
       {
-        TS::TimeSeriesPtr tsp(new TS::TimeSeries(tsv->at(i)));
+        TS::TimeSeriesPtr tsp(new TS::TimeSeries(ts));
         tsd.emplace_back(tsp);
       }
       TS::OutputData od;

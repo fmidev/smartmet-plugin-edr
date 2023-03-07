@@ -70,8 +70,6 @@ class State
  public:
   // We always construct with the plugin only
   State(const Plugin &thePlugin);
-  State() = delete;
-  State(const State &other) = delete;
 
   // Access engines
   const Engine::Querydata::Engine &getQEngine() const;

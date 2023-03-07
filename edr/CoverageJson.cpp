@@ -307,7 +307,7 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
-      ret.push_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
+      ret.emplace_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
 
     return ret;
   }
@@ -353,7 +353,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       if (boost::get<TS::TimeSeriesPtr>(&tsdata))
       {
         TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-        if (ts->size() > 0)
+        if (!ts->empty())
         {
           const TS::TimedValue &tv = ts->at(0);
           double value = as_double(tv.value);
@@ -779,7 +779,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
 
 Json::Value add_prologue_coverage_collection(boost::optional<int> level,
                                              const std::string &level_type,
-                                             const std::vector<TS::LonLat> &coordinates)
+                                             const std::vector<TS::LonLat> & /* coordinates */)
 {
   try
   {
@@ -1979,7 +1979,7 @@ Json::Value format_coverage_collection_trajectory(
 }
 
 DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
-                                        const EDRMetaData &emd,
+                                        const EDRMetaData & /*emd */,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
                                         const std::vector<Spine::Parameter> &query_parameters)

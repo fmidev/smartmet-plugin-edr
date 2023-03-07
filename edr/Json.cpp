@@ -191,60 +191,60 @@ Value::Value(const NullValue &value)
 
 Value &Value::operator=(const Value &value)
 {
-  if (this != &value)
+  if (this == &value)
+    return *this;
+
+  if (parentNode != nullptr)
   {
-    if (parentNode != nullptr)
+    if (value.valueType == ValueType::objectValue)
     {
-      if (value.valueType == ValueType::objectValue)
+      //  std::cout << "Assigning object for key: " << nodeKey << std::endl;
+      // If object value -> child
+      auto &key_value = parentNode->children[nodeKey];
+      key_value.valueType = value.valueType;
+      key_value.data_value = value.data_value;
+      key_value.data_value_vector = value.data_value_vector;
+      key_value.values = value.values;
+      key_value.precision = value.precision;
+      key_value.parentNode = parentNode;
+      for (const auto &item : value.children)
       {
-        //  std::cout << "Assigning object for key: " << nodeKey << std::endl;
-        // If object value -> child
-        auto &key_value = parentNode->children[nodeKey];
-        key_value.valueType = value.valueType;
-        key_value.data_value = value.data_value;
-        key_value.data_value_vector = value.data_value_vector;
-        key_value.values = value.values;
-        key_value.precision = value.precision;
-        key_value.parentNode = parentNode;
-        for (const auto &item : value.children)
-        {
-          auto &key_value_child = key_value.children[item.first];
-          key_value_child.data_value = item.second.data_value;
-          key_value_child.data_value_vector = item.second.data_value_vector;
-          key_value_child.values = item.second.values;
-          key_value_child.children = item.second.children;
-        }
-      }
-      else
-      {
-        // data value
-        //		  std::cout << "Assgining data value for key_0 " <<
-        // std::endl;
-        auto &key_value = (nodeKey == UNINITIALIZED_KEY ? *this : parentNode->values[nodeKey]);
-        //		  std::cout << "Assgining data value for key "  <<
-        //&key_value << ", "<< nodeKey  << std::endl;
-        key_value.data_value = value.data_value;
-        key_value.data_value_vector = value.data_value_vector;
-        key_value.values = value.values;
-        key_value.precision = value.precision;
-        key_value.children = value.children;
-        key_value.valueType = value.valueType;
-        key_value.parentNode = parentNode;
+        auto &key_value_child = key_value.children[item.first];
+        key_value_child.data_value = item.second.data_value;
+        key_value_child.data_value_vector = item.second.data_value_vector;
+        key_value_child.values = item.second.values;
+        key_value_child.children = item.second.children;
       }
     }
     else
     {
-      //	  std::cout << "Assignment operator= to this (this, key, valuekey) " <<
-      // this << ", " << nodeKey << ", "  << value.nodeKey << ", "  <<
-      // value_type_to_string(valueType) << std::endl;
-      data_value = value.data_value;
-      data_value_vector = value.data_value_vector;
-      values = value.values;
-      precision = value.precision;
-      children = value.children;
-      valueType = value.valueType;
-      parentNode = value.parentNode;
+      // data value
+      //		  std::cout << "Assgining data value for key_0 " <<
+      // std::endl;
+      auto &key_value = (nodeKey == UNINITIALIZED_KEY ? *this : parentNode->values[nodeKey]);
+      //		  std::cout << "Assgining data value for key "  <<
+      //&key_value << ", "<< nodeKey  << std::endl;
+      key_value.data_value = value.data_value;
+      key_value.data_value_vector = value.data_value_vector;
+      key_value.values = value.values;
+      key_value.precision = value.precision;
+      key_value.children = value.children;
+      key_value.valueType = value.valueType;
+      key_value.parentNode = parentNode;
     }
+  }
+  else
+  {
+    //	  std::cout << "Assignment operator= to this (this, key, valuekey) " <<
+    // this << ", " << nodeKey << ", "  << value.nodeKey << ", "  <<
+    // value_type_to_string(valueType) << std::endl;
+    data_value = value.data_value;
+    data_value_vector = value.data_value_vector;
+    values = value.values;
+    precision = value.precision;
+    children = value.children;
+    valueType = value.valueType;
+    parentNode = value.parentNode;
   }
 
   return *this;
@@ -305,7 +305,7 @@ Value &Value::operator[](ArrayIndex index)
   }
 
   while (data_value_vector.size() <= index)
-    data_value_vector.push_back(Value());
+    data_value_vector.emplace_back(Value());
 
   return data_value_vector.at(index);
 }
@@ -331,7 +331,7 @@ std::string Value::values_to_string(unsigned int level) const
   {
     std::string value = (tabs(level + 1) + "\"" + item.first + "\" : ");
     const auto &value_obj = item.second;
-    if (value_obj.data_value_vector.size())
+    if (!value_obj.data_value_vector.empty())
     {
       auto value_array = std::string();
       for (const auto &val : value_obj.data_value_vector)
@@ -463,7 +463,7 @@ Value::const_iterator Value::end() const
 
 void Value::append(const Value &value)
 {
-  if (value.data_value_vector.size() > 0)
+  if (!value.data_value_vector.empty())
     data_value_vector.insert(
         data_value_vector.end(), value.data_value_vector.begin(), value.data_value_vector.end());
   else
@@ -479,8 +479,6 @@ ValueType DataValue::valueType() const
 {
   return get_value_type(*this);
 }
-
-DataValue &DataValue::operator=(const DataValue &) = default;
 
 }  // namespace Json
 }  // namespace EDR

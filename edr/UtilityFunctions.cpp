@@ -134,9 +134,9 @@ void store_data(std::vector<TS::TimeSeriesData> &aggregatedData,
       return;
 
     TS::TimeSeriesData tsdata;
-    if (boost::get<TS::TimeSeriesPtr>(&aggregatedData[0]))
+    if (boost::get<TS::TimeSeriesPtr>(aggregatedData.data()))
     {
-      TS::TimeSeriesPtr ts_first = *(boost::get<TS::TimeSeriesPtr>(&aggregatedData[0]));
+      TS::TimeSeriesPtr ts_first = *(boost::get<TS::TimeSeriesPtr>(aggregatedData.data()));
       TS::TimeSeriesPtr ts_result(new TS::TimeSeries(ts_first->getLocalTimePool()));
       // first merge timeseries of all levels of one parameter
       for (const auto &data : aggregatedData)
@@ -149,7 +149,7 @@ void store_data(std::vector<TS::TimeSeriesData> &aggregatedData,
       update_latest_timestep(query, *ts_result);
       tsdata = ts_result;
     }
-    else if (boost::get<TS::TimeSeriesGroupPtr>(&aggregatedData[0]))
+    else if (boost::get<TS::TimeSeriesGroupPtr>(aggregatedData.data()))
     {
       TS::TimeSeriesGroupPtr tsg_result(new TS::TimeSeriesGroup);
       // first merge timeseries of all levels of one parameter
@@ -237,15 +237,15 @@ Json::Value json_value(const TS::Value &val, int precision)
 {
   auto double_value = get_double(val);
   if (double_value != kFloatMissing)
-    return Json::Value(double_value, precision);
+    return {double_value, static_cast<unsigned int>(precision)};
 
   auto int_value = get_int(val);
   if (int_value != static_cast<int>(kFloatMissing))
-    return Json::Value(int_value);
+    return int_value;
 
   // If value is of type string empty string is returned
   auto string_value = get_string(val);
-  return Json::Value(string_value);
+  return string_value;
 }
 
 }  // namespace UtilityFunctions

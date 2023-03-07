@@ -511,7 +511,7 @@ void Config::parse_config_avi_collections()
 
             for (int j = 0; j < countrySetting.getLength(); j++)
             {
-              std::string countryPath = countriesPath + ".[" + Fmi::to_string(j) + "]", country;
+              std::string countryPath = countriesPath + ".[" + Fmi::to_string(j) + "]";
 
               if (countrySetting[j].getType() != libconfig::Setting::Type::TypeString)
                 throw Fmi::Exception(

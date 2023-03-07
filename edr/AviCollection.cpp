@@ -34,7 +34,7 @@ void AviCollection::addMessageType(const std::string &theMessageType)
 
   if (messageType.empty())
     throw std::runtime_error("message type expected");
-  else if (!itsMessageTypes.insert(messageType).second)
+  if (!itsMessageTypes.insert(messageType).second)
     throw std::runtime_error("value is duplicate");
 }
 
@@ -44,7 +44,7 @@ void AviCollection::addCountry(const std::string &theCountry)
 
   if (country.empty() || (country.length() != 2))
     throw std::runtime_error("iso2 country code expected");
-  else if (!itsCountries.insert(country).second)
+  if (!itsCountries.insert(country).second)
     throw std::runtime_error("value is duplicate");
 }
 
@@ -77,7 +77,7 @@ void AviCollection::addIcao(const std::string &theIcao)
 
   if (theIcao.length() != 4)
     throw std::runtime_error("4 letter icao code expected");
-  else if (!itsIcaos.insert(icao).second)
+  if (!itsIcaos.insert(icao).second)
     throw std::runtime_error("value is duplicate");
 }
 

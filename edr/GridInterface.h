@@ -28,6 +28,12 @@ class GridInterface
 
   virtual ~GridInterface();
 
+  GridInterface() = delete;
+  GridInterface(const GridInterface &other) = delete;
+  GridInterface &operator=(const GridInterface &other) = delete;
+  GridInterface(GridInterface &&other) = delete;
+  GridInterface &operator=(GridInterface &&other) = delete;
+
   void processGridQuery(const State &state,
                         Query &query,
                         TS::OutputData &outputData,

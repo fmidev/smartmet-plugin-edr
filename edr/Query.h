@@ -59,6 +59,7 @@ using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>;
 struct Query
 {
   Query(const State &state, const Spine::HTTP::Request &req, Config &config);
+  Query() = delete;
 
   // Note: Data members ordered according to the advice of Clang Analyzer to
   // avoid excessive padding
@@ -173,8 +174,6 @@ struct Query
   bool isAviProducer(const EDRProducerMetaData &emd, const std::string &producer) const;
 
  private:
-  Query();
-
   void parse_levels(const Spine::HTTP::Request &theReq);
 
   void parse_precision(const Spine::HTTP::Request &theReq, const Config &config);
@@ -202,7 +201,7 @@ struct Query
   CoordinateFilter itsCoordinateFilter;
 };
 
-std::ostream &operator<<(std::ostream &out, const EDRQuery &edrQ);
+std::ostream &operator<<(std::ostream &out, const Query &edrQ);
 
 }  // namespace EDR
 }  // namespace Plugin

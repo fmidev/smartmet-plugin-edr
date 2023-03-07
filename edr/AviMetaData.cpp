@@ -25,8 +25,6 @@ void AviBBox::setField(uint index, double value)
     setMaxY(value);
   else
     throw std::runtime_error("invalid bbox field index: " + Fmi::to_string(index));
-
-  return;
 }
 
 }  // namespace EDR

@@ -41,6 +41,8 @@ class Config : private boost::noncopyable
   Config() = delete;
   Config(const Config &other) = delete;
   Config &operator=(const Config &other) = delete;
+  Config(Config &&other) = delete;
+  Config &operator=(Config &&other) = delete;
 
   const SmartMet::TimeSeries::RequestLimits &requestLimits() const { return itsRequestLimits; };
   const SupportedOutputFormats &allSupportedOutputFormats() const

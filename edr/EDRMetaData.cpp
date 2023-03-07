@@ -356,8 +356,12 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
     }
 
     auto stationData = aviEngine.queryStations(queryOptions);
-    bool useDataBBox = (!amd.getBBox()), first = true;
-    double minX = 0, minY = 0, maxX = 0, maxY = 0;
+    bool useDataBBox = (!amd.getBBox());
+    bool first = true;
+    double minX = 0;
+    double minY = 0;
+    double maxX = 0;
+    double maxY = 0;
 
     for (auto stationId : stationData.itsStationIds)
     {
@@ -450,7 +454,8 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
 
       auto now = boost::posix_time::second_clock::universal_time();
       auto timeOfDay = now.time_of_day();
-      uint timeStep = 60, minutes = 0;
+      uint timeStep = 60;
+      uint minutes = 0;
       auto producer = amd.getProducer();
 
       if (producer == "METAR")

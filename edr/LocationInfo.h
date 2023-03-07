@@ -24,7 +24,7 @@ struct location_info
         keyword(std::move(k))
   {
   }
-  location_info(const location_info &li) = default;
+
   location_info() = default;
 
   std::string id;

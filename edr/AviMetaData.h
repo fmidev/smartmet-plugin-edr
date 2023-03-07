@@ -20,7 +20,7 @@ namespace EDR
 class AviBBox
 {
  public:
-  AviBBox() : minX(), minY(), maxX(), maxY() {}
+  AviBBox() = default;
   AviBBox(double xMin, double yMin, double xMax, double yMax)
       : minX(xMin), minY(yMin), maxX(xMax), maxY(yMax)
   {
@@ -47,8 +47,11 @@ class AviBBox
 class AviStation
 {
  public:
-  AviStation(long theId, const std::string &theIcao, double theLatitude, double theLongitude)
-      : itsId(theId), itsIcao(theIcao), itsLatitude(theLatitude), itsLongitude(theLongitude)
+  AviStation(long theId, std::string theIcao, double theLatitude, double theLongitude)
+      : itsId(theId),
+        itsIcao(std::move(theIcao)),
+        itsLatitude(theLatitude),
+        itsLongitude(theLongitude)
   {
   }
   AviStation() = delete;
@@ -68,13 +71,13 @@ class AviStation
 class AviParameter
 {
  public:
-  AviParameter(const std::string &theName, const std::string &theDescription)
-      : itsName(theName), itsDescription(theDescription)
+  AviParameter(std::string theName, std::string theDescription)
+      : itsName(std::move(theName)), itsDescription(std::move(theDescription))
   {
   }
 
-  const std::string getName() const { return itsName; }
-  const std::string getDescription() const { return itsDescription; }
+  const std::string &getName() const { return itsName; }
+  const std::string &getDescription() const { return itsDescription; }
 
  private:
   std::string itsName;
@@ -84,22 +87,24 @@ class AviParameter
 class AviMetaData
 {
  public:
-  AviMetaData(const boost::optional<AviBBox> &theBBox,
-              const std::string &theProducer,
-              const std::set<std::string> theMessageTypes,
+  AviMetaData(boost::optional<AviBBox> theBBox,
+              std::string theProducer,
+              std::set<std::string> theMessageTypes,
               bool theLocationCheck)
-      : itsBBox(theBBox), itsProducer(theProducer), itsLocationCheck(theLocationCheck)
+      : itsBBox(std::move(theBBox)),
+        itsProducer(std::move(theProducer)),
+        itsMessageTypes(std::move(theMessageTypes)),
+        itsLocationCheck(theLocationCheck)
   {
-    itsMessageTypes.insert(theMessageTypes.begin(), theMessageTypes.end());
-    itsParameters.push_back(AviParameter("message", "Aviation message"));
+    itsParameters.emplace_back(AviParameter("message", "Aviation message"));
   }
   AviMetaData() = delete;
 
   const boost::optional<AviBBox> &getBBox() const { return itsBBox; }
   const std::string &getProducer() const { return itsProducer; }
-  const std::vector<AviStation> getStations() const { return itsStations; }
-  const std::vector<AviParameter> getParameters() const { return itsParameters; }
-  const std::set<std::string> getMessageTypes() const { return itsMessageTypes; }
+  const std::vector<AviStation> &getStations() const { return itsStations; }
+  const std::vector<AviParameter> &getParameters() const { return itsParameters; }
+  const std::set<std::string> &getMessageTypes() const { return itsMessageTypes; }
   bool getLocationCheck() const { return itsLocationCheck; }
 
   void setBBox(const AviBBox &theBBox) { itsBBox = theBBox; }
