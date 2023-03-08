@@ -364,6 +364,7 @@ void add_value(const TS::TimedValue &tv,
   }
 }
 
+#if 0
 void add_value(const TS::TimedValue &tv,
                Json::Value &values_array,
                Json::Value &data_type,
@@ -382,6 +383,7 @@ void add_value(const TS::TimedValue &tv,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, int lat_precision)
 {

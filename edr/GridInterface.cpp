@@ -1130,9 +1130,9 @@ void GridInterface::processGridQuery(const State &state,
 
         case 1:
           aLevelId = 2;
-          for (auto level = masterquery.pressures.begin(); level != masterquery.pressures.end();
-               ++level)
-            levels.emplace_back((double)(*level));
+
+          for (auto level : masterquery.pressures)
+            levels.emplace_back(static_cast<double>(level));
           break;
 
         case 2:

@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.3.6
+Version: 23.3.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -27,8 +27,8 @@ BuildRequires: fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 23.2.27
-BuildRequires: smartmet-library-locus-devel >= 23.2.27
+BuildRequires: smartmet-library-spine-devel >= 23.3.7
+BuildRequires: smartmet-library-locus-devel >= 23.3.7
 BuildRequires: smartmet-library-macgyver-devel >= 23.3.3
 BuildRequires: smartmet-library-grid-content-devel >= 23.2.20
 BuildRequires: smartmet-library-grid-files-devel >= 23.2.23
@@ -49,17 +49,17 @@ BuildRequires: smartmet-engine-grid-devel >= 23.2.20
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 23.1.5
-Requires: smartmet-library-locus >= 23.2.27
+Requires: smartmet-library-locus >= 23.3.7
 Requires: smartmet-library-macgyver >= 23.3.3
 Requires: smartmet-library-newbase >= 23.2.9
-Requires: smartmet-library-spine >= 23.2.27
+Requires: smartmet-library-spine >= 23.3.7
 Requires: smartmet-library-timeseries >= 23.2.16
 Requires: smartmet-library-gis >= 23.1.5
 Requires: smartmet-engine-geonames >= 23.2.27
 Requires: smartmet-engine-querydata >= 22.12.15
 Requires: smartmet-engine-gis >= 22.12.21
 Requires: smartmet-engine-grid >= 23.2.20
-Requires: smartmet-server >= 23.2.1
+Requires: smartmet-server >= 23.3.6
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -67,7 +67,7 @@ Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 23.1.19
-#TestRequires: smartmet-library-spine-plugin-test >= 23.2.27
+#TestRequires: smartmet-library-spine-plugin-test >= 23.3.7
 #TestRequires: smartmet-library-newbase-devel >= 23.2.9
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.2.24
@@ -107,6 +107,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Wed Mar  8 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.3.8-1.fmi
+- Initialized POD data members properly
+- Silenced CodeChecker warnings
+
 * Mon Mar 6 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.3.6-1.fmi
 - Added apikey to links
 - Enabled corridor- and area-queries for AVI queries

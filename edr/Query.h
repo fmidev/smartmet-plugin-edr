@@ -47,7 +47,7 @@ namespace EDR
 {
 class Config;
 
-class EDRMetaData;
+struct EDRMetaData;
 using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>;
 
 // ----------------------------------------------------------------------
@@ -79,10 +79,10 @@ struct Query
 
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
 
-  double step;  // used with path geometry
+  double step = 0;  // used with path geometry
 
-  std::size_t startrow;    // Paging; first (0-) row to return; default 0
-  std::size_t maxresults;  // max rows to return (page length); default 0 (all)
+  std::size_t startrow = 0;    // Paging; first (0-) row to return; default 0
+  std::size_t maxresults = 0;  // max rows to return (page length); default 0 (all)
 
   std::string wmo;
   std::string fmisid;
@@ -142,26 +142,26 @@ struct Query
   TS::TimeSeriesGeneratorOptions toptions;
 
 #ifndef WITHOUT_OBSERVATION
-  int numberofstations;
+  int numberofstations = 0;
 #endif
 
-  size_t numberOfParameters{0};
-  bool maxdistanceOptionGiven;
-  bool findnearestvalidpoint;
+  size_t numberOfParameters = 0;
+  bool maxdistanceOptionGiven = false;
+  bool findnearestvalidpoint = false;
   bool debug = false;
-  bool starttimeOptionGiven;
-  bool endtimeOptionGiven;
-  bool timeAggregationRequested;
+  bool starttimeOptionGiven = false;
+  bool endtimeOptionGiven = false;
+  bool timeAggregationRequested = false;
   std::string forecastSource;
   T::AttributeList attributeList;
 
 #ifndef WITHOUT_OBSERVATION
-  bool allplaces;
-  bool latestObservation;
-  bool useDataCache;
+  bool allplaces = false;
+  bool latestObservation = false;
+  bool useDataCache = false;
 #endif
   Spine::LocationList inKeywordLocations;
-  bool groupareas{true};
+  bool groupareas = true;
 
   double maxdistance_kilometers() const;
   double maxdistance_meters() const;

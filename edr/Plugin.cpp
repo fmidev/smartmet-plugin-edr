@@ -244,15 +244,15 @@ void add_data_to_table(const TS::OptionParsers::ParameterList &paramlist,
   {
     unsigned int numberOfParameters = paramlist.size();
     // iterate different locations
-    for (unsigned int i = 0; i < outputData.size(); i++)
+    for (auto &loc_data : outputData)
     {
-      const auto &locationName = outputData[i].first;
+      const auto &locationName = loc_data.first;
       if (locationName != location_name)
         continue;
 
       startRow = tf.getCurrentRow();
 
-      std::vector<TS::TimeSeriesData> &outdata = outputData[i].second;
+      std::vector<TS::TimeSeriesData> &outdata = loc_data.second;
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++)
       {
@@ -310,6 +310,7 @@ void add_data_to_table(const TS::OptionParsers::ParameterList &paramlist,
 // ----------------------------------------------------------------------
 
 // fills the table with data
+#if 0
 void fill_table(Query &query, TS::OutputData &outputData, Spine::Table &table)
 {
   try
@@ -339,6 +340,7 @@ void fill_table(Query &query, TS::OutputData &outputData, Spine::Table &table)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 // ----------------------------------------------------------------------
 /*!
@@ -2663,11 +2665,10 @@ void Plugin::fetchObsEngineValuesForPlaces(const State &state,
       TS::TimeSeriesVectorPtr aggregated_observation_result(new TS::TimeSeriesVector());
       std::vector<TS::TimeSeriesData> aggregatedData;
       // iterate parameters and do aggregation
-      for (unsigned int i = 0; i < obsParameters.size(); i++)
+      for (const auto &obsParam : obsParameters)
       {
-        const ObsParameter &obsParam = obsParameters[i];
         std::string paramname = obsParam.param.name();
-        std::string pname_plus_snumber = get_parameter_id(obsParameters[i].param);
+        std::string pname_plus_snumber = get_parameter_id(obsParam.param);
         if (parameterResultIndexes.find(pname_plus_snumber) != parameterResultIndexes.end())
           paramname = pname_plus_snumber;
         else if (parameterResultIndexes.find(paramname) == parameterResultIndexes.end())
@@ -3909,10 +3910,10 @@ bool isAviProducer = (
         processObsEngineQuery(
             state, query, outputData, areaproducers, producerDataPeriod, obsParameters);
       }
-      else
+      else if (isAviProducer)
+#else
+      if (isAviProducer)
 #endif
-
-          if (isAviProducer)
       {
         processAviEngineQuery(
             state, query, metaData->getMetaData(AVI_ENGINE), producerName, outputData);
@@ -4002,14 +4003,10 @@ bool isAviProducer = (
           const auto &tsdata = outdata.at(0);
 
           const auto &tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-
-          for (unsigned int k = 0; k < tsg_data->size(); k++)
+          for (const auto &llts_data : *tsg_data)
           {
-            const auto &llts_data = tsg_data->at(k);
-
-            for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
+            for (const auto &timed_value : llts_data.timeseries)
             {
-              const auto &timed_value = llts_data.timeseries.at(l);
               if (!messages.empty() && masterquery.output_format == TAC_FORMAT)
                 messages += "\n";
               messages += *(boost::get<std::string>(&timed_value.value));
@@ -4596,7 +4593,13 @@ void Plugin::init()
     // fail.
     // itsConfig.defaultUrl(),
     if (!itsReactor->addContentHandler(
-            this, "/edr/", boost::bind(&Plugin::callRequestHandler, this, _1, _2, _3), true))
+            this,
+            "/edr/",
+            [this](Spine::Reactor &theReactor,
+                   const Spine::HTTP::Request &theRequest,
+                   Spine::HTTP::Response &theResponse)
+            { callRequestHandler(theReactor, theRequest, theResponse); },
+            true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
     // Get locations

@@ -777,6 +777,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
   }
 }
 
+#if 0
 Json::Value add_prologue_coverage_collection(boost::optional<int> level,
                                              const std::string &level_type,
                                              const std::vector<TS::LonLat> & /* coordinates */)
@@ -833,6 +834,7 @@ Json::Value add_prologue_coverage_collection(boost::optional<int> level,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 /*
 clang-format off
@@ -1515,6 +1517,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
   }
 }
 
+#if 0
 Json::Value format_output_data_multi_point(TS::OutputData &outputData,
                                            const EDRMetaData &emd,
                                            boost::optional<int> level,
@@ -1616,6 +1619,7 @@ Json::Value format_output_data_multi_point(TS::OutputData &outputData,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
                                              const EDRMetaData &emd,
@@ -1651,9 +1655,8 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
         auto values = dpl_item.second;
         auto data_values = Json::Value(Json::ValueType::arrayValue);
         auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
-        for (unsigned int i = 0; i < values.size(); i++)
+        for (const auto &value : values)
         {
-          const auto &value = values.at(i);
           auto coverage = Json::Value(Json::ValueType::objectValue);
           coverage["type"] = Json::Value("Coverage");
           auto domain = Json::Value(Json::ValueType::objectValue);
@@ -1739,6 +1742,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
   }
 }
 
+#if 0
 Json::Value format_coverage_collection_trajectory_alternative(
     const DataPerParameter &dpp,
     const EDRMetaData &emd,
@@ -1878,6 +1882,7 @@ Json::Value format_coverage_collection_trajectory_alternative(
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 Json::Value format_coverage_collection_trajectory(
     const DataPerParameter &dpp,
@@ -2170,9 +2175,9 @@ Json::Value formatOutputData(TS::OutputData &outputData,
                   << std::endl;
       std::vector<TS::TimeSeriesData> tsd;
       TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first));
-      for (unsigned int i = 0; i < tsv->size(); i++)
+      for (const auto &ts : *tsv)
       {
-        TS::TimeSeriesPtr tsp(new TS::TimeSeries(tsv->at(i)));
+        TS::TimeSeriesPtr tsp(new TS::TimeSeries(ts));
         tsd.emplace_back(tsp);
       }
       TS::OutputData od;

@@ -72,8 +72,8 @@ struct SettingsInfo
   bool is_area = false;
   std::string area_name;
 
-  SettingsInfo(const Engine::Observation::Settings &s, bool isa, std::string an)
-      : settings(s), is_area(isa), area_name(std::move(an))
+  SettingsInfo(Engine::Observation::Settings s, bool isa, std::string an)
+      : settings(std::move(s)), is_area(isa), area_name(std::move(an))
   {
   }
 };

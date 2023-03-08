@@ -37,6 +37,7 @@ keywords using AviCollections = std::list<AviCollection>;
 class Config : private boost::noncopyable
 {
  public:
+  ~Config() = default;
   explicit Config(const std::string &configfile);
   Config() = delete;
   Config(const Config &other) = delete;
