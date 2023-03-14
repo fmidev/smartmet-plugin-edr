@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.3.8
+Version: 23.3.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -107,6 +107,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Tue Mar 14 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.3.14-1.fmi
+- Fixed format-option bug: application/json format allowed for metadata queries (BRAINSTORM-2565)
+- Added API-definition pages (BRAINSTORM-2448)
+- Added AVI tests (BRAINSTORM-2566)
+- Enabled position- and radius-queries for AVI queries  (BRAINSTORM-2381)
+- Make sure that collection id is unique, duplicate collections are removed (BRAINSTORM-2381)
+- Added title to instances query  (BRAINSTORM-2381)
+
 * Wed Mar  8 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.3.8-1.fmi
 - Initialized POD data members properly
 - Silenced CodeChecker warnings

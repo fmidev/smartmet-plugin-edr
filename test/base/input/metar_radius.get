@@ -1,0 +1,4 @@
+GET /edr/collections/METAR/radius?coords=POINT(24.916970+60.325830)&within=2&within-units=km&datetime=2015-11-21T11:50:00Z&f=TAC HTTP/1.0
+
+
+

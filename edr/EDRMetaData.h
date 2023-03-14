@@ -139,6 +139,7 @@ class EngineMetaData
   const std::time_t& getUpdateTime() const { return itsUpdateTime; }
   bool isValidCollection(const std::string& collection_name) const;
   bool isValidCollection(const std::string& source_name, const std::string& collection_name) const;
+  void removeDuplicates(bool report_removal);
 
  private:
   std::map<std::string, EDRProducerMetaData> itsMetaData;

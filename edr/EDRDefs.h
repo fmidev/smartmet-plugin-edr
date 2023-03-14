@@ -33,6 +33,7 @@ using SupportedOutputFormats =
 using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
 using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // producer -> keywords
 using AviCollections = std::list<AviCollection>;
+using APISettings = std::map<std::string, std::string>;
 
 #define Q_ENGINE "querydata_engine"
 #define OBS_ENGINE "observation_engine"

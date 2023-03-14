@@ -6,7 +6,9 @@
 #include <engines/querydata/Engine.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <macgyver/AnsiEscapeCodes.h>
 #include <timeseries/TimeSeriesOutput.h>
+#include <spine/Convenience.h>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
@@ -23,38 +25,56 @@ namespace EDR
 #define DEFAULT_PRECISION 4
 static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
 
-const std::set<std::string> &get_supported_data_queries(const std::string &producer,
-                                                        const SupportedDataQueries &sdq)
+namespace
 {
-  try
+  std::set<std::string> get_collection_names(const EDRProducerMetaData& md)
   {
-    if (sdq.find(producer) != sdq.end())
-      return sdq.at(producer);
-
-    return sdq.at(DEFAULT_DATA_QUERIES);
+	std::set<std::string> collection_names;
+	for(const auto& item : md)
+	  collection_names.insert(item.first);
+	
+	return collection_names;
   }
-  catch (...)
+  
+  void report_duplicate_collection(const std::string& collection, const std::string& duplicate_source, const std::string& original_source)
   {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+	std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Duplicate collection '" + collection + "' removed from " + duplicate_source + ", it has already been defined in " + original_source  + ANSI_FG_DEFAULT)
+			  << std::endl;
   }
-}
-
-const std::set<std::string> &get_supported_output_formats(const std::string &producer,
-                                                          const SupportedOutputFormats &sofs)
-{
-  try
+  
+  const std::set<std::string> &get_supported_data_queries(const std::string &producer,
+														  const SupportedDataQueries &sdq)
   {
-    if (sofs.find(producer) != sofs.end())
-      return sofs.at(producer);
-
-    return sofs.at(DEFAULT_OUTPUT_FORMATS);
+	try
+	  {
+		if (sdq.find(producer) != sdq.end())
+		  return sdq.at(producer);
+		
+		return sdq.at(DEFAULT_DATA_QUERIES);
+	  }
+	catch (...)
+	  {
+		throw Fmi::Exception::Trace(BCP, "Operation failed!");
+	  }
   }
-  catch (...)
+  
+  const std::set<std::string> &get_supported_output_formats(const std::string &producer,
+															const SupportedOutputFormats &sofs)
   {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+	try
+	  {
+		if (sofs.find(producer) != sofs.end())
+		  return sofs.at(producer);
+		
+		return sofs.at(DEFAULT_OUTPUT_FORMATS);
   }
-}
-
+	catch (...)
+	  {
+		throw Fmi::Exception::Trace(BCP, "Operation failed!");
+	  }
+  }
+} // namespace
+  
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
                                         const std::string &default_language,
                                         const ParameterInfo *pinfo,
@@ -679,6 +699,82 @@ bool EngineMetaData::isValidCollection(const std::string &source_name,
     const auto &md = itsMetaData.at(source_name);
 
     return (md.find(collection_name) != md.end());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void EngineMetaData::removeDuplicates(bool report_removal)
+{
+  try
+	{
+	  // Priority order: 1)querydata, 2)grid, 3)observations, 4)avi
+	  auto qd_collections = get_collection_names(getMetaData(Q_ENGINE));
+	  auto grid_collections = get_collection_names(getMetaData(GRID_ENGINE));
+	  auto obs_collections = get_collection_names(getMetaData(OBS_ENGINE));
+	  auto avi_collections = get_collection_names(getMetaData(AVI_ENGINE));
+	  
+	  auto& grid_metadata = const_cast<EDRProducerMetaData&>(getMetaData(GRID_ENGINE));
+	  auto& obs_metadata = const_cast<EDRProducerMetaData&>(getMetaData(OBS_ENGINE));
+	  auto& avi_metadata = const_cast<EDRProducerMetaData&>(getMetaData(AVI_ENGINE));
+	  for(const auto& collection : qd_collections)
+		{
+		  // Remove collections that already are found in querydata
+		  if(grid_metadata.find(collection) != grid_metadata.end())
+			{
+			  grid_metadata.erase(collection);
+			  grid_collections.erase(collection);
+			  if(report_removal)
+				report_duplicate_collection(collection, GRID_ENGINE, Q_ENGINE);
+			}
+		  if(obs_metadata.find(collection) != obs_metadata.end())
+			{
+			  obs_metadata.erase(collection);
+			  obs_collections.erase(collection);
+			  if(report_removal)
+				report_duplicate_collection(collection, OBS_ENGINE, Q_ENGINE);
+			}
+		  if(avi_metadata.find(collection) != avi_metadata.end())
+			{
+			  avi_metadata.erase(collection);
+			  avi_collections.erase(collection);
+			  if(report_removal)
+				report_duplicate_collection(collection, AVI_ENGINE, Q_ENGINE);
+			}
+		}
+	  
+	  for(const auto& collection : grid_collections)
+		{
+		  // Remove collections that already are found in qrid engine
+		  if(obs_metadata.find(collection) != obs_metadata.end())
+			{
+			  obs_metadata.erase(collection);
+			  obs_collections.erase(collection);
+			  if(report_removal)
+				report_duplicate_collection(collection, OBS_ENGINE, GRID_ENGINE);
+			}
+		  if(avi_metadata.find(collection) != avi_metadata.end())
+			{
+			  avi_metadata.erase(collection);
+			  avi_collections.erase(collection);
+			  if(report_removal)
+				report_duplicate_collection(collection, AVI_ENGINE, GRID_ENGINE);
+			}
+		}
+	  
+	  for(const auto& collection : obs_collections)
+		{
+		  // Remove collections that already are found in observation engine
+		  if(avi_metadata.find(collection) != avi_metadata.end())
+			{
+			  avi_metadata.erase(collection);
+			  avi_collections.erase(collection);
+			  if(report_removal)
+				report_duplicate_collection(collection,AVI_ENGINE, OBS_ENGINE);
+			}
+		}
   }
   catch (...)
   {
