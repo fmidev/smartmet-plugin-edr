@@ -105,6 +105,8 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(0775,root,root,0775)
 %{_datadir}/smartmet/plugins/edr.so
+%defattr(0664,root,root,0775)
+%{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
 * Tue Mar 14 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.3.14-1.fmi
