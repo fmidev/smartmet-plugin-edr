@@ -42,7 +42,8 @@ enum class EDRQueryId
   SpecifiedCollectionAllInstances,
   SpecifiedCollectionSpecifiedInstance,
   SpecifiedCollectionLocations,
-  DataQuery
+  DataQuery,
+  APIQuery
 };
 
 struct EDRQuery

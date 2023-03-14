@@ -21,6 +21,8 @@ std::string to_string(EDRQueryId id)
     return "EDRQueryId::SpecifiedCollectionLocations";
   if (id == EDRQueryId::DataQuery)
     return "EDRQueryId::DataQuery";
+  if (id == EDRQueryId::APIQuery)
+    return "EDRQueryId::APIQuery";
 
   return "";
 }

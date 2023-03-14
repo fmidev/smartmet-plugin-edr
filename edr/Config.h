@@ -8,6 +8,7 @@
 
 #include "AviCollection.h"
 #include "EDRDefs.h"
+#include "EDRAPI.h"
 #include "Precision.h"
 #include "Query.h"
 
@@ -26,13 +27,6 @@ namespace Plugin
 {
 namespace EDR
 {
-/*
-using Precisions = std::map<std::string, Precision>;
-using SupportedOutputFormats = std::map<std::string, std::set<std::string>>;  // producer -> output
-format using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer ->
-queries using ProducerKeywords = std::map<std::string, std::set<std::string>>;  // producer ->
-keywords using AviCollections = std::list<AviCollection>;
-*/
 
 class Config : private boost::noncopyable
 {
@@ -93,6 +87,7 @@ class Config : private boost::noncopyable
   time_t itsLastAliasCheck;
 
   const AviCollections &getAviCollections() const { return itsAviCollections; }
+  const EDRAPI& getEDRAPI() const { return itsEDRAPI; }
 
  private:
   libconfig::Config itsConfig;
@@ -129,6 +124,7 @@ class Config : private boost::noncopyable
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
 
   AviCollections itsAviCollections;
+  mutable EDRAPI itsEDRAPI;
 
   // Private helper functions
   void add_default_precisions();
@@ -141,7 +137,7 @@ class Config : private boost::noncopyable
   void parse_config_avi_collections();
   void parse_config_grid_geometries();
   void parse_config_parameter_aliases(const std::string &configfile);
-
+  void parse_config_api_settings();
 };  // class Config
 
 }  // namespace EDR

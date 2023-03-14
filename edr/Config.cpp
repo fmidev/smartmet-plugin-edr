@@ -450,6 +450,67 @@ void Config::parse_config_geometry_tables()
   }
 }
 
+void Config::parse_config_api_settings()
+{
+  try
+  {
+	std::string api_key = "api";
+	std::string api_items_key = "api.items";
+	
+    if (!itsConfig.exists(api_key))
+	  return;
+
+    if (!itsConfig.exists(api_key+".templatedir"))
+	  throw Fmi::Exception(BCP, "Configuration file error. EDR api settings must contain 'templatedir'!");
+
+    if (!itsConfig.exists(api_key+".items"))
+	  throw Fmi::Exception(BCP, "Configuration file error. EDR api settings must contain 'items'!");
+	
+	libconfig::Setting &edr_api = itsConfig.lookup(api_key);
+
+	std::string templatedir;
+	edr_api.lookupValue("templatedir", templatedir);
+
+	if(templatedir.empty())
+	  throw Fmi::Exception(BCP, "Configuration file error. Settings 'api.templatedir' can not be empty!");
+	
+	libconfig::Setting& edr_api_items = itsConfig.lookup(api_items_key);
+
+	if (!edr_api_items.isList())
+	  throw Fmi::Exception(BCP, "Configuration file error. Settings 'api.items' must be a list of objects");
+
+	APISettings conf_api_settings;
+
+	for (int i = 0; i < edr_api_items.getLength(); i++)
+	  {
+		std::string path(api_items_key + ".[" + Fmi::to_string(i) + "]");
+		libconfig::Setting &api_item = edr_api_items[i];
+		
+		if (!api_item.isGroup())
+		  throw Fmi::Exception(BCP, "Configuration file error. " + path + " must be an object");
+
+          try
+          {
+            std::string url_setting;
+            std::string template_setting;
+            api_item.lookupValue("url", url_setting);
+            api_item.lookupValue("template", template_setting);
+			conf_api_settings[url_setting] = template_setting;
+          }
+          catch (const std::exception &e)
+          {
+            throw Fmi::Exception(BCP, "Configuration file error. " + path + " " + e.what());
+          }
+	  }
+	itsEDRAPI.setSettings(templatedir, conf_api_settings);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse avi collections
@@ -800,6 +861,7 @@ Config::Config(const string &configfile)
     parse_config_data_queries();
     parse_config_geometry_tables();
     parse_config_avi_collections();
+    parse_config_api_settings();
 
     // We construct the default locale only once from the string,
     // creating it from scratch for every request is very expensive

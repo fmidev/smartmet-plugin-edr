@@ -46,6 +46,31 @@ const char *default_timezone = "localtime";
 
 namespace
 {
+
+bool is_data_query(const Spine::HTTP::Request &req, const EDRQuery& edrQuery, const EDRMetaData& edrMetaData)
+{
+  try
+  {
+	auto pcount = req.getParameterCount();
+	// If more than one parameters -> data query
+	if(pcount > 1)
+	  return true;
+	if(pcount == 1)
+	  {
+		// If only one parameter and it is 'f' -> metadata query, except AVI queries
+		auto fparam = req.getParameter("f");
+		return (fparam && edrMetaData.isAviProducer && !edrQuery.instance_id.empty());
+	  }
+	
+	// If no parameters it is metadata query except for non empty AVI query
+	return (edrMetaData.isAviProducer && !edrQuery.instance_id.empty());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Resolving host failed!");
+  }
+}
+
 std::string resolve_host(const Spine::HTTP::Request &theRequest)
 {
   try
@@ -198,7 +223,15 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     format = "ascii";
     Spine::HTTP::Request req = request;
     auto resource = req.getResource();
-    //	  std::cout << "BEFORE: " << resource << ", " <<
+    itsEDRQuery.host = resolve_host(req);
+		
+	if(config.getEDRAPI().isEDRAPIQuery(resource))
+	  {
+		itsEDRQuery.query_id = EDRQueryId::APIQuery;
+		itsEDRQuery.instance_id = resource;
+		return;
+	  }
+
     // Spine::HTTP::urlencode(resource) << ", " <<
     // Spine::HTTP::urldecode(resource) << std::endl; 	  resource =
     // Spine::HTTP::urlencode(resource);
@@ -262,9 +295,15 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       }
     }
 
-    if (isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id) &&
-        !itsEDRQuery.instance_id.empty() && req.getParameterCount() == 0)
+    EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
+
+	if(is_data_query(request, itsEDRQuery, emd))
+    {
+      if (itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
+          !itsEDRQuery.instance_id.empty())
+        req.addParameter("origintime", itsEDRQuery.instance_id);
       itsEDRQuery.query_id = EDRQueryId::DataQuery;
+    }
 
     const auto &supportedDataQueries = config.getSupportedDataQueries(itsEDRQuery.collection_id);
 
@@ -286,21 +325,14 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
                          itsEDRQuery.collection_id + ": " + data_query_list);
     }
 
-    itsEDRQuery.host = resolve_host(req);
-
-    EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
-
-    if (!req.getQueryString().empty())
-    {
-      if (itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
-          !itsEDRQuery.instance_id.empty())
-        req.addParameter("origintime", itsEDRQuery.instance_id);
-      itsEDRQuery.query_id = EDRQueryId::DataQuery;
-    }
-
     // If meta data query return from here
     if (itsEDRQuery.query_id != EDRQueryId::DataQuery)
-      return;
+	  {
+		auto fparam = req.getParameter("f");
+		if(fparam && *fparam != "application/json")
+		  throw EDRException("Invalid format! Format must be 'application/json' for metadata query!");
+		return;
+	  }
 
     // From here on EDR data query
     // Querydata and obervation producers do not have dots (.) in id, but grid
@@ -682,9 +714,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         p = p.substr(0, p.find(':'));
       if (emd.parameters.find(p) == emd.parameters.end())
       {
-        std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p +
-                      "' ignored!" ANSI_FG_DEFAULT)
-                  << std::endl;
+        std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p + "' ignored!" + ANSI_FG_DEFAULT) << std::endl;
       }
       if (emd.parameters.find(p) != emd.parameters.end())
       {
@@ -714,7 +744,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       throw EDRException("Missing parameter-name option!");
     }
 
-    // If f-option is misssing, default output formatis CoverageJSON
+    // If f-option is misssing, default output format is CoverageJSON
     output_format = Spine::optional_string(req.getParameter("f"), COVERAGE_JSON_FORMAT);
 
     const auto &supportedOutputFormats =

@@ -1,0 +1,1 @@
+GET /edr/collections/METAR/position?coords=POINT(24.906970+60.315830)&datetime=2015-11-21T11:50:00Z&f=TAC HTTP/1.0

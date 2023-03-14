@@ -3520,6 +3520,43 @@ void Plugin::checkAviEngineQuery(const Query &query,
       queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
     }
   }
+ else if (edrQuery.query_type == EDRQueryType::Position || edrQuery.query_type == EDRQueryType::Radius)
+	{
+	  // For position query set maxdistance 1 km
+	  auto wkt = query.requestWKT;
+	  int radius = 1.0;
+	  if(edrQuery.query_type == EDRQueryType::Radius)
+		{
+		  std::string::size_type n = wkt.find(':');
+		  if (n == std::string::npos)
+			throw Fmi::Exception(BCP, "Error! Radius query must contain radius!", nullptr);
+	   	  
+		  radius = Fmi::stoi(wkt.substr(n + 1));
+		  wkt = wkt.substr(0, n);
+		}
+	  
+	  // Find out the point
+	  auto geom = get_ogr_geometry(wkt);
+	  if(geom->getGeometryType() != wkbPoint)
+		throw Fmi::Exception(BCP, "Error! POINT geometry must be defined in " + std::string(edrQuery.query_type == EDRQueryType::Position ? "Position query!" : "Radius query!"));
+	  
+	  auto point = geom->toPoint();
+	  auto lon = point->getX();
+	  auto lat = point->getY();
+
+	  // Lets set longitude, latitude and maxdistance
+      queryOptions.itsLocationOptions.itsLonLats.push_back({lon, lat});
+	  queryOptions.itsLocationOptions.itsMaxDistance = (radius * 1000);
+	  queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
+	  	  
+	  /*
+		// We could also create polygon and use wkt in query, result should be the same
+		auto geom = get_ogr_geometry(wkt, radius);
+		wkt = geom->exportToWkt();
+		queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
+		queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
+	  */
+	}
   else
   {
     if (query.requestWKT.empty())
@@ -3768,26 +3805,6 @@ EDRMetaData Plugin::getProducerMetaData(const std::string &producer) const
       return engine_metadata.at(producer).front();
   }
 
-  /*
-#ifndef WITHOUT_OBSERVATION
-  if (!itsConfig.obsEngineDisabled() && isObsProducer(producer))
-  {
-    if (metadata->observation.find(producer) != metadata->observation.end())
-      return metadata->observation.at(producer).front();
-    else
-      return empty_emd;
-  }
-#endif
-  if (metadata->querydata.find(producer) != metadata->querydata.end())
-    return metadata->querydata.at(producer).front();
-
-  if (metadata->grid.find(producer) != metadata->grid.end())
-    return metadata->grid.at(producer).front();
-
-  if (metadata->avi.find(producer) != metadata->avi.end())
-    return metadata->avi.at(producer).front();
-  */
-
   return empty_emd;
 }
 
@@ -3803,21 +3820,6 @@ bool Plugin::isValidCollection(const std::string &producer) const
   auto metadata = itsMetaData.load();
 
   return metadata->isValidCollection(producer);
-
-  /*
-#ifndef WITHOUT_OBSERVATION
-  // Is both isObsProducer() and find() needed ?
-  if (!itsConfig.obsEngineDisabled() && isObsProducer(producer))
-    return (metadata->observation.find(producer) != metadata->observation.end());
-#endif
-  if (metadata->querydata.find(producer) != metadata->querydata.end())
-    return true;
-
-  if (metadata->grid.find(producer) != metadata->grid.end())
-    return true;
-
-  return (metadata->avi.find(producer) != metadata->avi.end());
-  */
 }
 
 Json::Value Plugin::processMetaDataQuery(const EDRQuery &edr_query)
@@ -3840,8 +3842,16 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     if (masterquery.isEDRMetaDataQuery())
     {
       const auto &edr_query = masterquery.edrQuery();
-      auto result = processMetaDataQuery(edr_query);
-      table.set(0, 0, result.toStyledString());
+	  if(edr_query.query_id == EDRQueryId::APIQuery)
+		{
+		  auto result = itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
+		  table.set(0, 0, result);
+		}
+	  else
+		{
+		  auto result = processMetaDataQuery(edr_query);
+		  table.set(0, 0, result.toStyledString());
+		}
       return {};
     }
 
@@ -4605,7 +4615,7 @@ void Plugin::init()
     // Get locations
     updateSupportedLocations();
     // Get metadata
-    updateMetaData();
+    updateMetaData(true);
     // Update metadata parameter info from config
     updateParameterInfo();
 
@@ -4642,7 +4652,7 @@ void Plugin::metaDataUpdateLoop()
         // below?
         // TODO
         boost::this_thread::sleep_for(boost::chrono::seconds(itsConfig.metaDataUpdateInterval()));
-        updateMetaData();
+        updateMetaData(false);
       }
       catch (...)
       {
@@ -4658,7 +4668,7 @@ void Plugin::metaDataUpdateLoop()
   }
 }
 
-void Plugin::updateMetaData()
+void Plugin::updateMetaData(bool initial_phase)
 {
   try
   {
@@ -4706,60 +4716,7 @@ void Plugin::updateMetaData()
                                                     output_formats,
                                                     itsSupportedLocations);
     engine_meta_data->addMetaData(AVI_ENGINE, avi_engine_metadata);
-
-#ifdef LATER
-    // New shared pointer which will be atomically set into production
-    boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
-    engine_meta_data->update_time =
-        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
-    // Get medata of all producers
-    engine_meta_data->querydata = get_edr_metadata_qd(*itsQEngine);
-    for (auto &item : engine_meta_data->querydata)
-      for (auto &md : item.second)
-      {
-        md.language = itsConfig.defaultLanguage();
-        md.parameter_info = &itsConfigParameterInfo;
-        md.data_queries = itsConfig.getSupportedDataQueries(item.first);
-        md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
-      }
-    if (!itsConfig.gridEngineDisabled())
-    {
-      engine_meta_data->grid = get_edr_metadata_grid(*itsGridEngine);
-      for (auto &item : engine_meta_data->grid)
-        for (auto &md : item.second)
-        {
-          md.language = itsConfig.defaultLanguage();
-          md.parameter_info = &itsConfigParameterInfo;
-          md.data_queries = itsConfig.getSupportedDataQueries(item.first);
-          md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
-        }
-    }
-#ifndef WITHOUT_OBSERVATION
-    if (!itsConfig.obsEngineDisabled())
-    {
-      engine_meta_data->observation = get_edr_metadata_obs(*itsObsEngine);
-      for (auto &item : engine_meta_data->observation)
-        for (auto &md : item.second)
-        {
-          md.language = itsConfig.defaultLanguage();
-          md.parameter_info = &itsConfigParameterInfo;
-          md.data_queries = itsConfig.getSupportedDataQueries(item.first);
-          md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
-        }
-    }
-#endif
-    engine_meta_data->avi = get_edr_metadata_avi(*itsAviEngine, itsConfig.getAviCollections());
-    for (auto &item : engine_meta_data->avi)
-      for (auto &md : item.second)
-      {
-        md.language = itsConfig.defaultLanguage();
-        md.parameter_info = &itsConfigParameterInfo;
-        md.data_queries = itsConfig.getSupportedDataQueries(item.first);
-        md.output_formats = itsConfig.getSupportedOutputFormats(item.first);
-      }
-    update_location_info(*engine_meta_data, itsSupportedLocations);
-#endif
+	engine_meta_data->removeDuplicates(initial_phase);
 
     itsMetaData.store(engine_meta_data);
   }
@@ -4828,25 +4785,6 @@ void Plugin::updateParameterInfo()
       }
     }
 
-    /*
-for (const auto &item : metadata->querydata)
-  for (const auto &md : item.second)
-    for (const auto &pname : md.parameter_names)
-      parameter_names.insert(pname);
-for (const auto &item : metadata->grid)
-  for (const auto &md : item.second)
-    for (const auto &pname : md.parameter_names)
-      parameter_names.insert(pname);
-for (const auto &item : metadata->observation)
-  for (const auto &md : item.second)
-    for (const auto &pname : md.parameter_names)
-      parameter_names.insert(pname);
-for (const auto &item : metadata->avi)
-  for (const auto &md : item.second)
-    for (const auto &pname : md.parameter_names)
-      parameter_names.insert(pname);
-    */
-
     const auto &lconfig = itsConfig.config();
 
     for (const auto &pname : parameter_names)
@@ -4896,21 +4834,6 @@ for (const auto &item : metadata->avi)
       }
       itsConfigParameterInfo[pname] = pinfo;
     }
-
-    /*
-for (auto &item : metadata->querydata)
-  for (auto &md : item.second)
-    md.parameter_info = &itsConfigParameterInfo;
-for (auto &item : metadata->grid)
-  for (auto &md : item.second)
-    md.parameter_info = &itsConfigParameterInfo;
-for (auto &item : metadata->observation)
-  for (auto &md : item.second)
-    md.parameter_info = &itsConfigParameterInfo;
-for (auto &item : metadata->avi)
-  for (auto &md : item.second)
-    md.parameter_info = &itsConfigParameterInfo;
-    */
   }
   catch (...)
   {

@@ -239,11 +239,12 @@ Json::Value get_data_queries(const std::string &host,
     auto query_info = Json::Value(Json::ValueType::objectValue);
     auto query_info_variables = Json::Value(Json::ValueType::objectValue);
     auto query_info_link = Json::Value(Json::ValueType::objectValue);
+    query_info_link["title"] = Json::Value("Instances query");
     query_info_link["href"] = Json::Value((host + "/collections/" + producer + "/instances"));
     query_info_link["hreflang"] = Json::Value("en");
     query_info_link["rel"] = Json::Value("collection");
 
-    query_info_variables["title"] = Json::Value("Instance query");
+    query_info_variables["title"] = Json::Value("Instances query");
     query_info_variables["query_type"] = Json::Value("instances");
     auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
     unsigned int i = 0;

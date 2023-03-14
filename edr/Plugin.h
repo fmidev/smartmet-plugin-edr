@@ -274,7 +274,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   std::unique_ptr<Fmi::AsyncTask> itsMetaDataUpdateTask;
 
   void metaDataUpdateLoop();
-  void updateMetaData();
+  void updateMetaData(bool initial_phase);
   void updateSupportedLocations();
   void updateParameterInfo();
 

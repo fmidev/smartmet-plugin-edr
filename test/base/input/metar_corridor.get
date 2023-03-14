@@ -1,0 +1,1 @@
+GET /edr/collections/METAR/corridor?coords=LINESTRING(24.906+60.315,25.822+66.562,27.413+68.607)&corridor-width=10&width-units=km&datetime=2015-11-21T11:50:00Z&f=TAC HTTP/1.0
