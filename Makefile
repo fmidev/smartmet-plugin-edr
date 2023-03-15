@@ -75,6 +75,9 @@ format:
 install:
 	@mkdir -p $(plugindir)
 	$(INSTALL_PROG) $(LIBFILE) $(plugindir)/$(LIBFILE)
+	@mkdir -p $(sysconfdir)/smartmet/plugins/edr/tmpl
+	@list=`ls -1 tmpl/*.json`; \
+	$(INSTALL_DATA) $$list "$(sysconfdir)/smartmet/plugins/edr/tmpl";
 
 test:
 	$(MAKE) -C test test
