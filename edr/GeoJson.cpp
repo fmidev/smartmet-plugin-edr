@@ -4,10 +4,6 @@
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
-#ifndef WITHOUT_OBSERVATION
-#include <engines/observation/Engine.h>
-#include <engines/observation/ObservableProperty.h>
-#endif
 
 namespace SmartMet
 {

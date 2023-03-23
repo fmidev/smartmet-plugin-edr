@@ -14,7 +14,6 @@
 #include "Producers.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/shared_ptr.hpp>
-#include <engines/avi/Engine.h>
 #include <engines/geonames/Engine.h>
 #include <engines/geonames/WktGeometry.h>
 #include <engines/grid/Engine.h>
@@ -171,28 +170,22 @@ struct Query
   const CoordinateFilter &coordinateFilter() const { return itsCoordinateFilter; }
   bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
 
+#ifndef WITHOUT_AVI
   bool isAviProducer(const EDRProducerMetaData &emd, const std::string &producer) const;
+#endif
 
  private:
   void parse_levels(const Spine::HTTP::Request &theReq);
 
   void parse_precision(const Spine::HTTP::Request &theReq, const Config &config);
 
+  void parse_producers(const Spine::HTTP::Request &theReq, const State &theState);
+
 #ifndef WITHOUT_OBSERVATION
   void parse_parameters(const Spine::HTTP::Request &theReq,
                         const Engine::Observation::Engine *theObsEngine);
-  void parse_producers(const Spine::HTTP::Request &theReq,
-                       const Engine::Querydata::Engine &theQEngine,
-                       const Engine::Grid::Engine *theGridEngine,
-                       const Engine::Observation::Engine *theObsEngine,
-                       const EDRProducerMetaData &avi);
 #else
   void parse_parameters(const Spine::HTTP::Request &theReq);
-  void parse_producers(const Spine::HTTP::Request &theReq,
-                       const Engine::Querydata::Engine &theQEngine,
-                       const Engine::Grid::Engine &theGridEngine,
-                       const EDRProducerMetaData &avi);
-
 #endif
   QueryServer::AliasFileCollection *itsAliasFileCollectionPtr;
 

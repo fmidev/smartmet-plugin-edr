@@ -78,7 +78,10 @@ class State
 #ifndef WITHOUT_OBSERVATION
   Engine::Observation::Engine *getObsEngine() const;
 #endif
+#ifndef WITHOUT_AVI
   const Engine::Avi::Engine *getAviEngine() const;
+  const EDRProducerMetaData &getAviMetaData() const;
+#endif
 
   const Fmi::TimeZones &getTimeZones() const;
   // The fixed time during the query may also be overridden
@@ -92,7 +95,6 @@ class State
                            const Engine::Querydata::OriginTime &theOriginTime) const;
   TS::LocalTimePoolPtr getLocalTimePool() const;
   EDRMetaData getProducerMetaData(const std::string &producer) const;
-  const EDRProducerMetaData &getAviMetaData() const;
   bool isValidCollection(const std::string &producer) const;
 
  private:

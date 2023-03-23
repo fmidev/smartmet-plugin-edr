@@ -35,9 +35,11 @@ using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // p
 using AviCollections = std::list<AviCollection>;
 using APISettings = std::map<std::string, std::string>;
 
+enum class SmartMetEngine {Querydata,Grid,Observation,Avi,Undefined};
+
 #define Q_ENGINE "querydata_engine"
 #define OBS_ENGINE "observation_engine"
-#define GRID_ENGINE "grig_engine"
+#define GRID_ENGINE "grid_engine"
 #define AVI_ENGINE "avi_engine"
 
 #define IWXXM_FORMAT "IWXXM"

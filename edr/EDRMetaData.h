@@ -3,6 +3,7 @@
 #include "EDRDefs.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
+#include "CollectionInfo.h"
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/optional.hpp>
 #include <list>
@@ -28,10 +29,12 @@ namespace Observation
 class Engine;
 }
 #endif
+#ifndef WITHOUT_AVI
 namespace Avi
 {
 class Engine;
 }
+#endif
 }  // namespace Engine
 namespace Plugin
 {
@@ -87,8 +90,10 @@ struct EDRMetaData
   std::set<std::string> data_queries;            // Supported data_queries, defined in config file
   std::set<std::string> output_formats;          // Supported output_formats, defined in config file
   const SupportedLocations* locations{nullptr};  // Supported locations, default keyword synop_fi
-                                                 // can be overwirtten in configuration file
+                                                 // can be overwritten in configuration file
   const ParameterInfo* parameter_info{nullptr};  // Info about parameters from config file
+  const CollectionInfo* collection_info{nullptr};  // Info about collections from config file
+  CollectionInfo collection_info_engine;         // Info about colections from engine
   std::string language{"en"};                    // Language from configuration file
   int getPrecision(const std::string& parameter_name) const;
   bool isAviProducer = false;
@@ -100,12 +105,14 @@ using EDRProducerMetaData =
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine& qEngine,
                                         const std::string& default_language,
                                         const ParameterInfo* pinfo,
+                                        const CollectionInfoContainer &cic,
                                         const SupportedDataQueries& sdq,
                                         const SupportedOutputFormats& sofs,
                                         const SupportedProducerLocations& spl);
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
                                           const std::string& default_language,
                                           const ParameterInfo* pinfo,
+										  const CollectionInfoContainer& cic,
                                           const SupportedDataQueries& sdq,
                                           const SupportedOutputFormats& sofs,
                                           const SupportedProducerLocations& spl);
@@ -113,14 +120,17 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
 EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine& obsEngine,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
+										 const CollectionInfoContainer& cic,
                                          const SupportedDataQueries& sdq,
                                          const SupportedOutputFormats& sofs,
                                          const SupportedProducerLocations& spl);
 #endif
+#ifndef WITHOUT_AVI
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
                                          const AviCollections& aviCollections,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
+										 const CollectionInfoContainer& cic,
                                          const SupportedDataQueries& sdq,
                                          const SupportedOutputFormats& sofs,
                                          const SupportedProducerLocations& spl);
@@ -128,6 +138,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
 void load_locations_avi(const Engine::Avi::Engine& aviEngine,
                         const AviCollections& aviCollections,
                         SupportedProducerLocations& spl);
+#endif
 
 class EngineMetaData
 {

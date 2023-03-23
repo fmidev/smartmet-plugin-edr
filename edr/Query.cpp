@@ -604,8 +604,10 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
 
+#ifndef WITHOUT_AVI
     if (datetime.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
       datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
+#endif
 
     if (datetime.empty())
       throw EDRException("Missing datetime option");
@@ -644,11 +646,13 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     // EDR parameter-name
     auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
+#ifndef WITHOUT_AVI
     if (parameter_names.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
     {
       parameter_names = "message";
       req.addParameter("parameter-name", parameter_names);
     }
+#endif
 
     // Check valid parameters for requested producer
     std::list<string> param_names;
@@ -959,15 +963,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         origintime = Fmi::TimeParser::parse(*tmp);
     }
 
-#ifndef WITHOUT_OBSERVARION
-    Query::parse_producers(req,
-                           state.getQEngine(),
-                           state.getGridEngine(),
-                           state.getObsEngine(),
-                           state.getAviMetaData());
-#else
-    Query::parse_producers(req, state.getQEngine(), state.getGridEngine(), state.getAviMetaData());
-#endif
+    Query::parse_producers(req, state);
 
 #ifndef WITHOUT_OBSERVATION
     Query::parse_parameters(req, state.getObsEngine());
@@ -1148,10 +1144,12 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
   }
 }
 
+#ifndef WITHOUT_AVI
 bool Query::isAviProducer(const EDRProducerMetaData &avi, const std::string &producer) const
 {
   return (avi.find(producer) != avi.end());
 }
+#endif
 
 // ----------------------------------------------------------------------
 /*!
@@ -1159,73 +1157,67 @@ bool Query::isAviProducer(const EDRProducerMetaData &avi, const std::string &pro
  */
 // ----------------------------------------------------------------------
 
-#ifndef WITHOUT_OBSERVATION
-void Query::parse_producers(const Spine::HTTP::Request &theReq,
-                            const Engine::Querydata::Engine &theQEngine,
-                            const Engine::Grid::Engine *theGridEngine,
-                            const Engine::Observation::Engine *theObsEngine,
-                            const EDRProducerMetaData &avi)
-#else
-void Query::parse_producers(const Spine::HTTP::Request &theReq,
-                            const Engine::Querydata::Engine &theQEngine,
-                            const Engine::Grid::Engine &theGridEngine,
-                            const EDRProducerMetaData &avi)
-#endif
+void Query::parse_producers(const Spine::HTTP::Request &theReq, const State &theState)
 {
   try
-  {
-    string opt = Spine::optional_string(theReq.getParameter("model"), "");
+	{
+	  const Engine::Querydata::Engine &theQEngine = theState.getQEngine();
+	  const Engine::Grid::Engine* theGridEngine = theState.getGridEngine();
 
-    string opt2 = Spine::optional_string(theReq.getParameter("producer"), "");
+	  string opt = Spine::optional_string(theReq.getParameter("model"), "");
+	  
+	  string opt2 = Spine::optional_string(theReq.getParameter("producer"), "");
+	  
+	  if (opt == "default" || opt2 == "default")
+		{
+		  // Use default if it's forced by any option
+		  return;
+		}
+	  
+	  // observation uses stationtype-parameter
+	  if (opt.empty() && opt2.empty())
+		opt2 = Spine::optional_string(theReq.getParameter("stationtype"), "");
+	  
+	  std::list<std::string> resultProducers;
+	  const std::string &prodOpt = opt.empty() ? opt2 : opt;
+	  
+	  // Handle time separation:: either 'model' or 'producer' keyword used
+	  if (!opt.empty())
+		boost::algorithm::split(resultProducers, opt, boost::algorithm::is_any_of(";"));
+	  else if (!opt2.empty())
+		boost::algorithm::split(resultProducers, opt2, boost::algorithm::is_any_of(";"));
+	  
+	  for (auto &p : resultProducers)
+		{
+		  // Avi collection names are in upper case and only one producer name is allowed
+#ifndef WITHOUT_AVI		  
+		  if (isAviProducer(theState.getAviMetaData(), p))
+			{
+			  if (resultProducers.size() > 1)
+				throw Fmi::Exception(BCP, "Only one producer is allowed for avi query: '" + prodOpt + "'");
+			  
+			  AreaProducers ap = {p};
+			  timeproducers.push_back(ap);
+			  
+			  return;
+			}
+#endif
+		  boost::algorithm::to_lower(p);
+		  
+		  if (p == "itmf")
+			{
+			  p = Engine::Observation::FMI_IOT_PRODUCER;
+			  iot_producer_specifier = "itmf";
+			}
+		}
 
-    if (opt == "default" || opt2 == "default")
-    {
-      // Use default if it's forced by any option
-      return;
-    }
-
-    // observation uses stationtype-parameter
-    if (opt.empty() && opt2.empty())
-      opt2 = Spine::optional_string(theReq.getParameter("stationtype"), "");
-
-    std::list<std::string> resultProducers;
-    const std::string &prodOpt = opt.empty() ? opt2 : opt;
-
-    // Handle time separation:: either 'model' or 'producer' keyword used
-    if (!opt.empty())
-      boost::algorithm::split(resultProducers, opt, boost::algorithm::is_any_of(";"));
-    else if (!opt2.empty())
-      boost::algorithm::split(resultProducers, opt2, boost::algorithm::is_any_of(";"));
-
-    for (auto &p : resultProducers)
-    {
-      // Avi collection names are in upper case and only one producer name is allowed
-
-      if (!isAviProducer(avi, p))
-        boost::algorithm::to_lower(p);
-      else if (resultProducers.size() > 1)
-        throw Fmi::Exception(BCP, "Only one producer is allowed for avi query: '" + prodOpt + "'");
-      else
-      {
-        AreaProducers ap = {p};
-        timeproducers.push_back(ap);
-
-        return;
-      }
-
-      if (p == "itmf")
-      {
-        p = Engine::Observation::FMI_IOT_PRODUCER;
-        iot_producer_specifier = "itmf";
-      }
-    }
-
-    // Verify the producer names are valid
+	  // Verify the producer names are valid
 
 #ifndef WITHOUT_OBSERVATION
-    std::set<std::string> observations;
-    if (theObsEngine != nullptr)
-      observations = theObsEngine->getValidStationTypes();
+	  const Engine::Observation::Engine* theObsEngine = theState.getObsEngine();
+	  std::set<std::string> observations;
+	  if (theObsEngine != nullptr)
+		observations = theObsEngine->getValidStationTypes();
 #endif
 
     for (const auto &p : resultProducers)

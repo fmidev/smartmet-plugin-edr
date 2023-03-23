@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.3.14
+Version: 23.3.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -109,6 +109,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Thu Mar 23 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.3.23-1.fmi
+- Added title,description,keywords,crs fields to collection metadata (BRAINSTORM-2381)
+- Show fields in the collection metadata in the following order: 1)id,2)title,3)description,4)links,5)output_formats,6)keywords,7)crs
+- Made AVI-engine optional: 'aviengine_disabled' settings in configuration file and 'WITHOUT_AVI' blocks in source files
+
 * Tue Mar 14 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.3.14-1.fmi
 - Fixed format-option bug: application/json format allowed for metadata queries (BRAINSTORM-2565)
 - Added API-definition pages (BRAINSTORM-2448)

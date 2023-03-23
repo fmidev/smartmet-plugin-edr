@@ -10,6 +10,7 @@ namespace Plugin
 {
 namespace EDR
 {
+  //atic EDRProducerMetaData EMPTY_PRODUCER_METADATA
 // ----------------------------------------------------------------------
 /*!
  * \brief Initialize'the query state object
@@ -97,6 +98,7 @@ Engine::Observation::Engine *State::getObsEngine() const
  */
 // ----------------------------------------------------------------------
 
+#ifndef WITHOUT_AVI
 const Engine::Avi::Engine *State::getAviEngine() const
 {
   try
@@ -108,6 +110,19 @@ const Engine::Avi::Engine *State::getAviEngine() const
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+const EDRProducerMetaData &State::getAviMetaData() const
+{
+  try
+  {
+    return itsPlugin.getAviMetaData();
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+#endif
 
 // ----------------------------------------------------------------------
 /*!
@@ -228,18 +243,6 @@ EDRMetaData State::getProducerMetaData(const std::string &producer) const
   try
   {
     return itsPlugin.getProducerMetaData(producer);
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-const EDRProducerMetaData &State::getAviMetaData() const
-{
-  try
-  {
-    return itsPlugin.getAviMetaData();
   }
   catch (...)
   {

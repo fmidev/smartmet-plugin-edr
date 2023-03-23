@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "CollectionInfo.h"
 #include "AviCollection.h"
 #include "EDRDefs.h"
 #include "EDRAPI.h"
@@ -72,6 +73,7 @@ class Config : private boost::noncopyable
   const libconfig::Config &config() const { return itsConfig; }
   Engine::Gis::PostGISIdentifierVector getPostGISIdentifiers() const;
 
+  bool aviEngineDisabled() const { return itsAviEngineDisabled; }
   bool obsEngineDisabled() const { return itsObsEngineDisabled; }
   bool gridEngineDisabled() const { return itsGridEngineDisabled; }
   std::string primaryForecastSource() const { return itsPrimaryForecastSource; }
@@ -88,6 +90,7 @@ class Config : private boost::noncopyable
 
   const AviCollections &getAviCollections() const { return itsAviCollections; }
   const EDRAPI& getEDRAPI() const { return itsEDRAPI; }
+  const CollectionInfoContainer& getCollectionInfo() const { return itsCollectionInfo; }
 
  private:
   libconfig::Config itsConfig;
@@ -108,6 +111,7 @@ class Config : private boost::noncopyable
 
   std::map<std::string, Engine::Gis::postgis_identifier> postgis_identifiers;
   std::string itsDefaultPostGISIdentifierKey;
+  bool itsAviEngineDisabled = false;
   bool itsObsEngineDisabled = false;
   bool itsGridEngineDisabled = false;
   std::string itsPrimaryForecastSource;
@@ -124,6 +128,7 @@ class Config : private boost::noncopyable
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
 
   AviCollections itsAviCollections;
+  CollectionInfoContainer itsCollectionInfo;
   mutable EDRAPI itsEDRAPI;
 
   // Private helper functions
@@ -138,6 +143,9 @@ class Config : private boost::noncopyable
   void parse_config_grid_geometries();
   void parse_config_parameter_aliases(const std::string &configfile);
   void parse_config_api_settings();
+  void parse_config_collection_info();
+  void process_collection_info(const std::string& engine_name);
+
 };  // class Config
 
 }  // namespace EDR

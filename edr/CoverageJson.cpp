@@ -3,10 +3,6 @@
 #include <boost/optional.hpp>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
-#ifndef WITHOUT_OBSERVATION
-#include <engines/observation/Engine.h>
-#include <engines/observation/ObservableProperty.h>
-#endif
 
 namespace SmartMet
 {
@@ -975,6 +971,10 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
                                                   !emd.vertical_extent.levels.empty(),
                                                   false,
                                                   instance_id);
+	  // Optional: crs
+	  auto crs = Json::Value(Json::ValueType::arrayValue);
+	  crs[0] = Json::Value("EPSG:4326");
+	  instance["crs"] = crs;
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);
@@ -1069,24 +1069,59 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       auto value = Json::Value(Json::ValueType::objectValue);
       // Producer is Id
       value["id"] = Json::Value(producer);
-      /*
-      // Title (optional)
-      value["title"] = Json::Value(producer);
-      // Description (optional
-      value["description"] = Json::Value(producer);
-      // Keywords (optional)
+	  // Collection info, first from engine
+	  std::string title = collection_emd.collection_info_engine.title;
+	  std::string description = collection_emd.collection_info_engine.description;
+	  std::set<std::string> keyword_set = collection_emd.collection_info_engine.keywords;
+
+	  // Then ge5t collection info from configuration file, if we didn't get it from engine
+	  if(collection_emd.collection_info)
+		{
+		  // Title, description, keywords (optional)
+		  if(title.empty())
+			title = collection_emd.collection_info->title;
+		  if(description.empty())
+			description = collection_emd.collection_info->description;
+		  if(keyword_set.empty())
+			keyword_set = collection_emd.collection_info->keywords;
+		}
+
+	  value["title"] = Json::Value(title);
+	  value["description"] = Json::Value(description);
       auto keywords = Json::Value(Json::ValueType::arrayValue);
-      value["kywords"] = keywords;
-      */
+	  for (const auto &kword : keyword_set)
+		keywords[keywords.size()] = kword;
+
+	  /*
+	  if(!collection_emd.collection_info_engine.title.empty())
+		value["title"] = Json::Value(collection_emd.collection_info_engine.title);
+	  if(!collection_emd.collection_info_engine.description.empty())
+		value["description"] = Json::Value(collection_emd.collection_info_engine.description);
+	  if(!collection_emd.collection_info_engine.keywords.empty())
+		{
+		  for (const auto &kword : collection_emd.collection_info_engine.keywords)
+			keywords[keywords.size()] = kword;
+		}
+
+	  */
+
+
+	  // Add parameter names into keywords
+      for (const auto &name : collection_emd.parameter_names)
+		keywords[keywords.size()] = name;
+	  if(keywords.size() > 0)
+		value["keywords"] = keywords;
+
       // Array of links (mandatory)
       auto collection_link = Json::Value(Json::ValueType::objectValue);
       collection_link["href"] = Json::Value((edr_query.host + "/collections/" + producer));
-      if (edr_query.query_id == EDRQueryId::SpecifiedCollection)
+	  collection_link["hreflang"] = Json::Value("en");
+       if (edr_query.query_id == EDRQueryId::SpecifiedCollection)
         collection_link["rel"] = Json::Value("self");
       else
         collection_link["rel"] = Json::Value("data");
       collection_link["type"] = Json::Value("application/json");
-      collection_link["title"] = Json::Value("Collection metadata in JSON");
+	  //    collection_link["title"] = Json::Value("Collection metadata in JSON");
 
       auto links = Json::Value(Json::ValueType::arrayValue);
       links[0] = collection_link;
@@ -1100,19 +1135,6 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         instance_link["type"] = Json::Value("application/json");
         links[1] = instance_link;
       }
-      /*
-      // Add instance links if several present
-      if (emds.size() > 1) {
-      auto instance_link = Json::Value(Json::ValueType::objectValue);
-      instance_link["href"] =
-      Json::Value((edr_query.host + "/collections/" + producer +
-      "/instances"));
-      instance_link["rel"] = Json::Value("data");
-      instance_link["type"] = Json::Value("application/json");
-      instance_link["title"] = Json::Value("Instance metadata in JSON");
-      links[1] = instance_link;
-      }
-      */
 
       value["links"] = links;
       // Extent (mandatory)
@@ -1155,6 +1177,11 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                collection_emd.output_formats,
                                                !collection_emd.vertical_extent.levels.empty(),
                                                instances_exist);
+
+	  // Optional: crs
+	  auto crs = Json::Value(Json::ValueType::arrayValue);
+	  crs[0] = Json::Value("EPSG:4326");
+	  value["crs"] = crs;
 
       // Parameter names (mandatory)
       auto parameter_names = Json::Value(Json::ValueType::objectValue);

@@ -31,6 +31,9 @@
 #include <map>
 #include <queue>
 #include <string>
+#ifndef WITHOUT_AVI
+#include <engines/avi/Engine.h>
+#endif
 
 namespace SmartMet
 {
@@ -102,14 +105,15 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   const Engine::Querydata::Engine &getQEngine() const { return *itsQEngine; }
   const Engine::Geonames::Engine &getGeoEngine() const { return *itsGeoEngine; }
   const Engine::Grid::Engine *getGridEngine() const { return itsGridEngine; }
+#ifndef WITHOUT_AVI
   const Engine::Avi::Engine *getAviEngine() const { return itsAviEngine; }
-
+  const EDRProducerMetaData &getAviMetaData() const;
+#endif
 #ifndef WITHOUT_OBSERVATION
   // May return null
   Engine::Observation::Engine *getObsEngine() const { return itsObsEngine; }
 #endif
   EDRMetaData getProducerMetaData(const std::string &producer) const;
-  const EDRProducerMetaData &getAviMetaData() const;
   bool isValidCollection(const std::string &producer) const;
 
  protected:
@@ -216,6 +220,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                            Engine::Observation::Settings &settings) const;
   std::vector<ObsParameter> getObsParameters(const Query &query) const;
 #endif
+#ifndef WITHOUT_AVI
   void checkAviEngineQuery(const Query &query,
                            const std::vector<EDRMetaData> &edrMetaData,
                            bool locationCheck,
@@ -228,6 +233,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
                              const EDRProducerMetaData &edrProducerMetaData,
                              const std::string &producer,
                              TS::OutputData &outputData);
+#endif
 
   TS::TimeSeriesGenerator::LocalTimeList generateQEngineQueryTimes(
       const Query &query, const std::string &paramname) const;
@@ -256,8 +262,10 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   Engine::Geonames::Engine *itsGeoEngine = nullptr;
   Engine::Gis::Engine *itsGisEngine = nullptr;
   Engine::Grid::Engine *itsGridEngine = nullptr;
-  Engine::Avi::Engine *itsAviEngine = nullptr;
   std::unique_ptr<GridInterface> itsGridInterface;
+#ifndef WITHOUT_AVI
+  Engine::Avi::Engine *itsAviEngine = nullptr;
+#endif
 #ifndef WITHOUT_OBSERVATION
   Engine::Observation::Engine *itsObsEngine = nullptr;
 #endif

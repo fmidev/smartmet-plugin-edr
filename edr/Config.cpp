@@ -548,7 +548,7 @@ void Config::parse_config_avi_collections()
             std::string name;
             collectionSetting.lookupValue("name", name);
             aviCollection.setName(name);
-          }
+		  }
           catch (const std::exception &e)
           {
             throw Fmi::Exception(BCP, "Configuration file error. " + path + " " + e.what());
@@ -718,7 +718,7 @@ void Config::parse_config_avi_collections()
               aviCollection.getIcaos().empty())
             throw Fmi::Exception(
                 BCP, "Configuration file error. " + path + " provides no country, bbox or icao");
-
+		  
           itsAviCollections.push_back(aviCollection);
         }
       }
@@ -771,6 +771,73 @@ void Config::parse_config_parameter_aliases(const std::string &configfile)
   itsAliasFileCollection.init(itsParameterAliasFiles);
 }
 
+void Config::process_collection_info(const std::string& engine_name)
+{
+  try
+  {
+	const std::string path = ("collection_info."+engine_name);
+	
+	if(itsConfig.exists(path))
+	  {
+		const libconfig::Setting &settings = itsConfig.lookup(path);
+
+        if (!settings.isList())
+          throw Fmi::Exception(
+              BCP, "Configuration file error. " + path + " must be a list of objects");
+
+		for (int i = 0; i < settings.getLength(); ++i)
+		  {
+			libconfig::Setting &collectionSettings = settings[i];
+			std::string collectionPath = path + ".[" + Fmi::to_string(i) + "]";
+			
+            if (!collectionSettings.isGroup())
+			  {
+				throw Fmi::Exception(BCP,
+									 "Configuration file error. " + collectionPath + " must be an object");
+			  }
+			std::string id;
+			std::string title;
+			std::string description;
+			std::set<std::string> keywords;
+            collectionSettings.lookupValue("id", id);
+            collectionSettings.lookupValue("title", title);
+            collectionSettings.lookupValue("description", description);
+			if (collectionSettings.exists("keywords"))
+			  {				
+				libconfig::Setting &keywordsSetting = collectionSettings.lookup("keywords");
+				if (!keywordsSetting.isArray())
+				  throw Fmi::Exception(BCP, "Configuration file error. " + collectionPath + ".keywords must be an array");
+
+				for (int j = 0; j < keywordsSetting.getLength(); j++)
+				  {
+					std::string keywordsPath = collectionPath + ".keywords[" + Fmi::to_string(j) + "]";
+					
+					if (keywordsSetting[j].getType() != libconfig::Setting::Type::TypeString)
+					  throw Fmi::Exception(BCP, "Configuration file error. " + keywordsPath + " must be a string");
+					
+					keywords.insert((std::string((const char *)keywordsSetting[j])));
+				  }
+				
+			  }
+			if(!id.empty() && (!title.empty() || !description.empty() || !keywords.empty()))
+			  itsCollectionInfo.addInfo(engine_name, id, title, description, keywords);
+		  }
+	  }
+  }
+  catch (...)
+	{
+	  throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+	}
+}
+  
+void Config::parse_config_collection_info()
+{
+  process_collection_info(Q_ENGINE);
+  process_collection_info(GRID_ENGINE);
+  process_collection_info(OBS_ENGINE);
+  process_collection_info(AVI_ENGINE);
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Constructor
@@ -808,6 +875,7 @@ Config::Config(const string &configfile)
     itsConfig.lookupValue("timeformat", itsDefaultTimeFormat);
     itsConfig.lookupValue("url", itsDefaultUrl);
     itsConfig.lookupValue("expires", itsExpirationTime);
+    itsConfig.lookupValue("aviengine_disabled", itsAviEngineDisabled);
     itsConfig.lookupValue("observation_disabled", itsObsEngineDisabled);
     itsConfig.lookupValue("gridengine_disabled", itsGridEngineDisabled);
     itsConfig.lookupValue("primaryForecastSource", itsPrimaryForecastSource);
@@ -862,6 +930,7 @@ Config::Config(const string &configfile)
     parse_config_geometry_tables();
     parse_config_avi_collections();
     parse_config_api_settings();
+	parse_config_collection_info();
 
     // We construct the default locale only once from the string,
     // creating it from scratch for every request is very expensive

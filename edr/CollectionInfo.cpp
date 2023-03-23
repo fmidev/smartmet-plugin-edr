@@ -1,0 +1,45 @@
+#include "CollectionInfo.h"
+#include <iostream>
+
+
+namespace SmartMet
+{
+namespace Plugin
+{
+namespace EDR
+{
+static CollectionInfo EMPTY_COLLECTION_INFO;
+
+CollectionInfoContainer::CollectionInfoContainer()
+{
+}
+
+void CollectionInfoContainer::addInfo(const std::string& theSource, const std::string& theId,const std::string& theTitle,const std::string& theDescription, const std::set<std::string>& theKeywords)
+{
+  CollectionInfoItems& info_items = itsData[theSource];
+  CollectionInfo& info = info_items[theId];
+  info.title = theTitle;
+  info.description = theDescription;
+  info.keywords = theKeywords;
+}
+
+const CollectionInfo& CollectionInfoContainer::getInfo(const std::string& theSource, const std::string& theId) const
+{
+  if(itsData.find(theSource) == itsData.end())
+	{
+	  return EMPTY_COLLECTION_INFO;
+	}
+
+  const CollectionInfoItems& info_items = itsData.at(theSource);
+
+  if(info_items.find(theId) != info_items.end())
+	return info_items.at(theId);
+
+  return EMPTY_COLLECTION_INFO;
+}
+
+}  // namespace EDR
+}  // namespace Plugin
+}  // namespace SmartMet
+
+// ======================================================================

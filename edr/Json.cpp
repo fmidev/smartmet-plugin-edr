@@ -5,6 +5,7 @@
 #include <macgyver/ValueFormatter.h>
 #include <iostream>
 #include <memory>
+#include <set>
 
 namespace SmartMet
 {
@@ -327,10 +328,34 @@ std::string Value::values_to_string(unsigned int level) const
   if (values.empty())
     return data_value_vector_to_string(level);
 
+  std::vector<std::string> keys;
   for (const auto &item : values)
+	{
+	  if(!(item.first == "id" || item.first == "title" || item.first == "description"  || 
+		   item.first == "links" || item.first == "output_formats" || item.first == "keywords" || item.first == "crs"))
+		keys.push_back(item.first);
+	}
+
+  // Order of fields in output document: id,title,description,links,output_formats,keywords,crs
+  if(values.find("crs") != values.end())
+	keys.insert(keys.begin(), "crs");
+  if(values.find("keywords") != values.end())
+	keys.insert(keys.begin(), "keywords");
+  if(values.find("output_formats") != values.end())
+	keys.insert(keys.begin(), "output_formats");
+  if(values.find("links") != values.end())
+	keys.insert(keys.begin(), "links");
+  if(values.find("description") != values.end())
+	keys.insert(keys.begin(), "description");
+  if(values.find("title") != values.end())
+	keys.insert(keys.begin(), "title");
+  if(values.find("id") != values.end())
+	keys.insert(keys.begin(), "id");
+
+  for (const auto &key : keys)
   {
-    std::string value = (tabs(level + 1) + "\"" + item.first + "\" : ");
-    const auto &value_obj = item.second;
+	const auto& value_obj = values.at(key);
+    std::string value = (tabs(level + 1) + "\"" + key + "\" : ");
     if (!value_obj.data_value_vector.empty())
     {
       auto value_array = std::string();

@@ -1,11 +1,13 @@
 {
 	"id" : "pal_skandinavia",
+	"title" : "Title for collection pal_skandinavia",
+	"description" : "Description for collection pal_skandinavia",
 	"links" : 
 	[
 		{
 			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia",
+			"hreflang" : "en",
 			"rel" : "self",
-			"title" : "Collection metadata in JSON",
 			"type" : "application/json"
 		}
 	],
@@ -14,18 +16,59 @@
 		"CoverageJSON",
 		"GeoJSON"
 	],
+	"keywords" : 
+	[
+		"pal_skandinavia",
+		"dewpoint",
+		"fogintensity",
+		"highcloudcover",
+		"hourlymaximumgust",
+		"humidity",
+		"kindex",
+		"lowcloudcover",
+		"mediumcloudcover",
+		"middleandlowcloudcover",
+		"pop",
+		"precipitation1h",
+		"precipitationform",
+		"precipitationtype",
+		"pressure",
+		"probabilitythunderstorm",
+		"radiationglobal",
+		"radiationlw",
+		"temperature",
+		"totalcloudcover",
+		"weathersymbol1",
+		"weathersymbol3",
+		"winddirection",
+		"windspeedms",
+		"windums",
+		"windvectorms",
+		"windvms"
+	],
+	"crs" : 
+	[
+		"EPSG:4326"
+	],
 	"data_queries" : 
 	{
 		"area" : 
 		{
 			"link" : 
 			{
+				"title" : "Area query",
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area",
 				"hreflang" : "en",
 				"rel" : "data",
-				"title" : "Area query",
 				"variables" : 
 				{
+					"title" : "Area query",
+					"description" : "Data at the requested area",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
 					"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
 					"crs_details" : 
 					[
@@ -35,14 +78,7 @@
 						}
 					],
 					"default_output_format" : "CoverageJSON",
-					"description" : "Data at the requested area",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"query_type" : "area",
-					"title" : "Area query"
+					"query_type" : "area"
 				}
 			}
 		},
@@ -50,12 +86,19 @@
 		{
 			"link" : 
 			{
+				"title" : "Corridor query",
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/corridor",
 				"hreflang" : "en",
 				"rel" : "data",
-				"title" : "Corridor query",
 				"variables" : 
 				{
+					"title" : "Corridor query",
+					"description" : "Data within corridor",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
 					"coords" : "Well Known Text LINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
 					"corridor-width" : "Corridor width",
 					"crs_details" : 
@@ -66,14 +109,7 @@
 						}
 					],
 					"default_output_format" : "CoverageJSON",
-					"description" : "Data within corridor",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
 					"query_type" : "corridor",
-					"title" : "Corridor query",
 					"width-units" : 
 					[
 						"km",
@@ -86,12 +122,19 @@
 		{
 			"link" : 
 			{
+				"title" : "Locations query",
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/locations",
 				"hreflang" : "en",
 				"rel" : "data",
-				"title" : "Locations query",
 				"variables" : 
 				{
+					"title" : "Locations query",
+					"description" : "Data at point location defined by a unique identifier",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
 					"crs_details" : 
 					[
 						{
@@ -100,14 +143,7 @@
 						}
 					],
 					"default_output_format" : "CoverageJSON",
-					"description" : "Data at point location defined by a unique identifier",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"query_type" : "locations",
-					"title" : "Locations query"
+					"query_type" : "locations"
 				}
 			}
 		},
@@ -115,12 +151,19 @@
 		{
 			"link" : 
 			{
+				"title" : "Position query",
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position",
 				"hreflang" : "en",
 				"rel" : "data",
-				"title" : "Position query",
 				"variables" : 
 				{
+					"title" : "Position query",
+					"description" : "Data at point location",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
 					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
 					"crs_details" : 
 					[
@@ -130,14 +173,7 @@
 						}
 					],
 					"default_output_format" : "CoverageJSON",
-					"description" : "Data at point location",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"query_type" : "position",
-					"title" : "Position query"
+					"query_type" : "position"
 				}
 			}
 		},
@@ -145,12 +181,19 @@
 		{
 			"link" : 
 			{
+				"title" : "Radius query",
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/radius",
 				"hreflang" : "en",
 				"rel" : "data",
-				"title" : "Radius query",
 				"variables" : 
 				{
+					"title" : "Radius query",
+					"description" : "Data at the area specified with a geographic position and radial distance",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
 					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
 					"crs_details" : 
 					[
@@ -160,14 +203,7 @@
 						}
 					],
 					"default_output_format" : "CoverageJSON",
-					"description" : "Data at the area specified with a geographic position and radial distance",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
 					"query_type" : "radius",
-					"title" : "Radius query",
 					"within_units" : 
 					[
 						"km",
@@ -180,12 +216,19 @@
 		{
 			"link" : 
 			{
+				"title" : "Trajectory query",
 				"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/trajectory",
 				"hreflang" : "en",
 				"rel" : "data",
-				"title" : "Trajectory query",
 				"variables" : 
 				{
+					"title" : "Trajectory query",
+					"description" : "Data along trajectory",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
 					"coords" : "Well Known Text LINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
 					"crs_details" : 
 					[
@@ -195,14 +238,7 @@
 						}
 					],
 					"default_output_format" : "CoverageJSON",
-					"description" : "Data along trajectory",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"query_type" : "trajectory",
-					"title" : "Trajectory query"
+					"query_type" : "trajectory"
 				}
 			}
 		}
@@ -211,14 +247,14 @@
 	{
 		"spatial" : 
 		{
+			"crs" : "EPSG:4326",
 			"bbox" : 
 			[
 				-9.0987,
 				51.3000,
 				49.0000,
 				72.6421
-			],
-			"crs" : "EPSG:4326"
+			]
 		},
 		"temporal" : 
 		{
@@ -240,8 +276,8 @@
 	{
 		"DewPoint" : 
 		{
-			"description" : "DewPoint",
 			"id" : "DewPoint",
+			"description" : "DewPoint",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -250,8 +286,8 @@
 		},
 		"FogIntensity" : 
 		{
-			"description" : "FogIntensity",
 			"id" : "FogIntensity",
+			"description" : "FogIntensity",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -260,8 +296,8 @@
 		},
 		"HighCloudCover" : 
 		{
-			"description" : "HighCloudCover",
 			"id" : "HighCloudCover",
+			"description" : "HighCloudCover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -270,8 +306,8 @@
 		},
 		"HourlyMaximumGust" : 
 		{
-			"description" : "HourlyMaximumGust",
 			"id" : "HourlyMaximumGust",
+			"description" : "HourlyMaximumGust",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -280,8 +316,8 @@
 		},
 		"Humidity" : 
 		{
-			"description" : "Humidity",
 			"id" : "Humidity",
+			"description" : "Humidity",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -290,8 +326,8 @@
 		},
 		"KIndex" : 
 		{
-			"description" : "KIndex",
 			"id" : "KIndex",
+			"description" : "KIndex",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -300,8 +336,8 @@
 		},
 		"LowCloudCover" : 
 		{
-			"description" : "LowCloudCover",
 			"id" : "LowCloudCover",
+			"description" : "LowCloudCover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -310,8 +346,8 @@
 		},
 		"MediumCloudCover" : 
 		{
-			"description" : "MediumCloudCover",
 			"id" : "MediumCloudCover",
+			"description" : "MediumCloudCover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -320,8 +356,8 @@
 		},
 		"MiddleAndLowCloudCover" : 
 		{
-			"description" : "MiddleAndLowCloudCover",
 			"id" : "MiddleAndLowCloudCover",
+			"description" : "MiddleAndLowCloudCover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -330,8 +366,8 @@
 		},
 		"PoP" : 
 		{
-			"description" : "PoP",
 			"id" : "PoP",
+			"description" : "PoP",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -340,8 +376,8 @@
 		},
 		"Precipitation1h" : 
 		{
-			"description" : "Precipitation1h",
 			"id" : "Precipitation1h",
+			"description" : "Precipitation1h",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -350,8 +386,8 @@
 		},
 		"PrecipitationForm" : 
 		{
-			"description" : "PrecipitationForm",
 			"id" : "PrecipitationForm",
+			"description" : "PrecipitationForm",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -360,8 +396,8 @@
 		},
 		"PrecipitationType" : 
 		{
-			"description" : "PrecipitationType",
 			"id" : "PrecipitationType",
+			"description" : "PrecipitationType",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -370,8 +406,8 @@
 		},
 		"Pressure" : 
 		{
-			"description" : "Pressure",
 			"id" : "Pressure",
+			"description" : "Pressure",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -380,8 +416,8 @@
 		},
 		"ProbabilityThunderstorm" : 
 		{
-			"description" : "ProbabilityThunderstorm",
 			"id" : "ProbabilityThunderstorm",
+			"description" : "ProbabilityThunderstorm",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -390,8 +426,8 @@
 		},
 		"RadiationGlobal" : 
 		{
-			"description" : "RadiationGlobal",
 			"id" : "RadiationGlobal",
+			"description" : "RadiationGlobal",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -400,8 +436,8 @@
 		},
 		"RadiationLW" : 
 		{
-			"description" : "RadiationLW",
 			"id" : "RadiationLW",
+			"description" : "RadiationLW",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -410,8 +446,8 @@
 		},
 		"Temperature" : 
 		{
-			"description" : "Ilman lämpötila",
 			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -429,8 +465,8 @@
 		},
 		"TotalCloudCover" : 
 		{
-			"description" : "TotalCloudCover",
 			"id" : "TotalCloudCover",
+			"description" : "TotalCloudCover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -439,8 +475,8 @@
 		},
 		"WeatherSymbol1" : 
 		{
-			"description" : "WeatherSymbol1",
 			"id" : "WeatherSymbol1",
+			"description" : "WeatherSymbol1",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -449,8 +485,8 @@
 		},
 		"WeatherSymbol3" : 
 		{
-			"description" : "WeatherSymbol3",
 			"id" : "WeatherSymbol3",
+			"description" : "WeatherSymbol3",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -459,8 +495,8 @@
 		},
 		"WindDirection" : 
 		{
-			"description" : "WindDirection",
 			"id" : "WindDirection",
+			"description" : "WindDirection",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -469,8 +505,8 @@
 		},
 		"WindSpeedMS" : 
 		{
-			"description" : "WindSpeedMS",
 			"id" : "WindSpeedMS",
+			"description" : "WindSpeedMS",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -479,8 +515,8 @@
 		},
 		"WindUMS" : 
 		{
-			"description" : "WindUMS",
 			"id" : "WindUMS",
+			"description" : "WindUMS",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -489,8 +525,8 @@
 		},
 		"WindVMS" : 
 		{
-			"description" : "WindVMS",
 			"id" : "WindVMS",
+			"description" : "WindVMS",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -499,8 +535,8 @@
 		},
 		"WindVectorMS" : 
 		{
-			"description" : "WindVectorMS",
 			"id" : "WindVectorMS",
+			"description" : "WindVectorMS",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
