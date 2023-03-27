@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.3.23
+Version: 23.3.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -34,17 +34,17 @@ BuildRequires: smartmet-library-grid-content-devel >= 23.3.9
 BuildRequires: smartmet-library-grid-files-devel >= 23.3.9
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
 BuildRequires: smartmet-library-gis-devel >= 23.3.14
-BuildRequires: smartmet-library-timeseries-devel >= 23.3.14
-BuildRequires: smartmet-engine-geonames-devel >= 23.2.27
+BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
+BuildRequires: smartmet-engine-geonames-devel >= 23.3.16
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 23.3.14
+BuildRequires: smartmet-engine-observation-devel >= 23.3.22
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 23.3.9
+BuildRequires: smartmet-engine-querydata-devel >= 23.3.21
 BuildRequires: smartmet-engine-gis-devel >= 22.12.21
 BuildRequires: smartmet-engine-grid-devel >= 23.3.9
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 23.3.14
+#Requires: smartmet-engine-observation >= 23.3.22
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -53,13 +53,13 @@ Requires: smartmet-library-locus >= 23.3.7
 Requires: smartmet-library-macgyver >= 23.3.3
 Requires: smartmet-library-newbase >= 23.2.9
 Requires: smartmet-library-spine >= 23.3.14
-Requires: smartmet-library-timeseries >= 23.3.14
+Requires: smartmet-library-timeseries >= 23.3.15
 Requires: smartmet-library-gis >= 23.3.14
-Requires: smartmet-engine-geonames >= 23.2.27
-Requires: smartmet-engine-querydata >= 23.3.9
+Requires: smartmet-engine-geonames >= 23.3.16
+Requires: smartmet-engine-querydata >= 23.3.21
 Requires: smartmet-engine-gis >= 22.12.21
 Requires: smartmet-engine-grid >= 23.3.9
-Requires: smartmet-server >= 23.3.6
+Requires: smartmet-server >= 23.3.21
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -74,11 +74,11 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-test-data >= 23.2.9
 #TestRequires: smartmet-engine-grid-test >= 23.3.9
 #TestRequires: smartmet-library-gis >= 23.3.14
-#TestRequires: smartmet-engine-geonames >= 23.2.27
+#TestRequires: smartmet-engine-geonames >= 23.3.16
 #TestRequires: smartmet-engine-gis >= 22.12.21
-#TestRequires: smartmet-engine-querydata >= 23.3.9
+#TestRequires: smartmet-engine-querydata >= 23.3.21
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 23.3.14
+#TestRequires: smartmet-engine-observation >= 23.3.22
 %endif
 #TestRequires: smartmet-engine-grid >= 23.3.9
 #TestRequires: gdal34
@@ -109,7 +109,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
-* Thu Mar 23 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.3.23-1.fmi
+* Mon Mar 27 2023 Anssi Reponen <mika.heiskanen@fmi.fi> - 23.3.27-1.fmi
 - Added title,description,keywords,crs fields to collection metadata (BRAINSTORM-2381)
 - Show fields in the collection metadata in the following order: 1)id,2)title,3)description,4)links,5)output_formats,6)keywords,7)crs
 - Made AVI-engine optional: 'aviengine_disabled' settings in configuration file and 'WITHOUT_AVI' blocks in source files
