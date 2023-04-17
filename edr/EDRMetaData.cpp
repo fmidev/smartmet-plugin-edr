@@ -24,9 +24,27 @@ namespace Plugin
 {
 namespace EDR
 {
+#define MAX_TIME_PERIODS 300
 #define DEFAULT_PRECISION 4
 static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
-
+class TimePeriod
+{
+public:
+  TimePeriod(const boost::posix_time::ptime& t1, const boost::posix_time::ptime& t2) : period_start(t1), period_end(t2) {}
+  void setStartTime(const boost::posix_time::ptime& t) { period_start = t; }
+  void setEndTime(const boost::posix_time::ptime& t) { period_end = t; }
+  const boost::posix_time::ptime& getStartTime() const { return period_start; }
+  const boost::posix_time::ptime& getEndTime() const { return period_end; }
+  int length() const 
+  {
+	if(period_start.is_not_a_date_time() || period_end.is_not_a_date_time())
+	  return 0;
+	return (period_end-period_start).total_seconds(); 
+  }
+private:
+  boost::posix_time::ptime period_start = boost::posix_time::not_a_date_time;
+  boost::posix_time::ptime period_end = boost::posix_time::not_a_date_time;
+};
 namespace
 {
   std::set<std::string> get_collection_names(const EDRProducerMetaData& md)
@@ -115,11 +133,16 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       producer_emd.spatial_extent.bbox_ymin = rangeLat.getMin();
       producer_emd.spatial_extent.bbox_xmax = rangeLon.getMax();
       producer_emd.spatial_extent.bbox_ymax = rangeLat.getMax();
-      producer_emd.temporal_extent.origin_time = qmd.originTime;
-      producer_emd.temporal_extent.start_time = qmd.firstTime;
-      producer_emd.temporal_extent.end_time = qmd.lastTime;
-      producer_emd.temporal_extent.timestep = qmd.timeStep;
-      producer_emd.temporal_extent.timesteps = qmd.nTimeSteps;
+	  
+	  edr_temporal_extent temporal_extent;
+      temporal_extent.origin_time = qmd.originTime;
+	  edr_temporal_extent_period temporal_extent_period;
+      temporal_extent_period.start_time = qmd.firstTime;
+      temporal_extent_period.end_time = qmd.lastTime;
+      temporal_extent_period.timestep = qmd.timeStep;
+      temporal_extent_period.timesteps = qmd.nTimeSteps;
+	  temporal_extent.time_periods.push_back(temporal_extent_period);
+      producer_emd.temporal_extent = temporal_extent;
 
       for (const auto &p : qmd.parameters)
       {
@@ -205,8 +228,6 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
           std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
       producer_emd.spatial_extent.bbox_ymax =
           std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
-      producer_emd.temporal_extent.origin_time =
-          boost::posix_time::from_iso_string(gmd.analysisTime);
 	  
       auto begin_iter = gmd.times.begin();
       auto end_iter = gmd.times.end();
@@ -218,10 +239,15 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       const auto &start_time_plus_one = *begin_iter;
       auto timestep_duration = (boost::posix_time::from_iso_string(start_time_plus_one) -
                                 boost::posix_time::from_iso_string(start_time));
-      producer_emd.temporal_extent.start_time = boost::posix_time::from_iso_string(start_time);
-      producer_emd.temporal_extent.end_time = boost::posix_time::from_iso_string(end_time);
-      producer_emd.temporal_extent.timestep = (timestep_duration.total_seconds() / 60);
-      producer_emd.temporal_extent.timesteps = gmd.times.size();
+	  edr_temporal_extent temporal_extent;
+      temporal_extent.origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
+	  edr_temporal_extent_period temporal_extent_period;
+      temporal_extent_period.start_time = boost::posix_time::from_iso_string(start_time);
+      temporal_extent_period.end_time = boost::posix_time::from_iso_string(end_time);
+      temporal_extent_period.timestep = (timestep_duration.total_seconds() / 60);
+      temporal_extent_period.timesteps = gmd.times.size();
+	  temporal_extent.time_periods.push_back(temporal_extent_period);
+      producer_emd.temporal_extent = temporal_extent;
 
       for (const auto &p : gmd.parameters)
       {
@@ -272,7 +298,8 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
 										 const CollectionInfoContainer& cic,
                                          const SupportedDataQueries &sdq,
                                          const SupportedOutputFormats &sofs,
-                                         const SupportedProducerLocations &spl)
+                                         const SupportedProducerLocations &spl,
+										 unsigned int observation_period)
 
 {
   try
@@ -299,11 +326,22 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
       producer_emd.spatial_extent.bbox_ymin = obs_md.bbox.yMin;
       producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
       producer_emd.spatial_extent.bbox_ymax = obs_md.bbox.yMax;
-      producer_emd.temporal_extent.origin_time = boost::posix_time::second_clock::universal_time();
-      producer_emd.temporal_extent.start_time = obs_md.period.begin();
-      producer_emd.temporal_extent.end_time = obs_md.period.last();
-      producer_emd.temporal_extent.timestep = obs_md.timestep;
-      producer_emd.temporal_extent.timesteps = (obs_md.period.length().minutes() / obs_md.timestep);
+	  edr_temporal_extent temporal_extent;
+      temporal_extent.origin_time = boost::posix_time::second_clock::universal_time();
+	  edr_temporal_extent_period temporal_extent_period;
+	  auto time_of_day = obs_md.period.last().time_of_day();
+	  auto end_date = obs_md.period.last().date();
+	  // In order to get rid of fractions of a second in end_time
+	  boost::posix_time::ptime end_time(end_date, boost::posix_time::time_duration(time_of_day.hours(), time_of_day.minutes(), 0));
+	  if(observation_period > 0)
+		temporal_extent_period.start_time = (end_time - boost::posix_time::hours(observation_period));
+	  else
+		temporal_extent_period.start_time = obs_md.period.begin();
+      temporal_extent_period.end_time = end_time;
+      temporal_extent_period.timestep = obs_md.timestep;
+      temporal_extent_period.timesteps = (obs_md.period.length().minutes() / obs_md.timestep);
+	  temporal_extent.time_periods.push_back(temporal_extent_period);
+      producer_emd.temporal_extent = temporal_extent;
 
       for (const auto &p : obs_md.parameters)
       {
@@ -348,6 +386,223 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
 #endif
 
 #ifndef WITHOUT_AVI
+std::vector<std::string> time_periods(const std::set<boost::local_time::local_date_time>& timesteps)
+{
+  std::vector<std::string> ret;
+  if(timesteps.size() == 0)
+	return ret;
+  if(timesteps.size() == 1)
+	{
+	  ret.push_back(Fmi::to_iso_string(timesteps.begin()->utc_time()));
+	  return ret;
+	}
+
+  // Insert time periods into vector
+  std::vector<TimePeriod> time_periods;
+  auto it_previous = timesteps.begin();
+  auto it = timesteps.begin();
+  it++;
+  while(it != timesteps.end())
+	{
+	  time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+	  it_previous++;
+	  it++;
+	}
+
+  // Iterate vector and find out periods with even timesteps
+  TimePeriod tp = time_periods.at(0);
+  int first_period_length = tp.length();
+  bool multiple_periods = false;
+  for(unsigned int i = 1; i < time_periods.size(); i++)
+	{
+	  auto tp_current = time_periods.at(i);
+	  if(first_period_length != tp_current.length() || i == time_periods.size() - 1)
+		{
+		  if(multiple_periods)
+			{
+			  if(i == time_periods.size() - 1)
+				tp.setEndTime(tp_current.getEndTime());
+			  ret.push_back(Fmi::to_iso_string(tp.getStartTime())+"Z/"+Fmi::to_iso_string(tp.getEndTime())+"Z/"+Fmi::to_string(first_period_length));
+			  multiple_periods = false;
+			}
+		  else
+			{
+			  ret.push_back(Fmi::to_iso_string(tp.getStartTime()));
+			  ret.push_back(Fmi::to_iso_string(tp.getEndTime()));
+			  if(i == time_periods.size() - 1)
+				ret.push_back(Fmi::to_iso_string(tp_current.getEndTime()));
+			}
+		  i++;
+		  if(i < time_periods.size() - 1)
+			{
+			  tp = time_periods.at(i);
+			  first_period_length = tp.length();
+			}
+		}
+	  else
+		{
+		  tp.setEndTime(tp_current.getEndTime());
+		  multiple_periods = true;
+		}
+	}
+
+  return ret;
+}
+
+// Merge time periods when possible (even timesteps)
+edr_temporal_extent get_temporal_extent(const std::set<boost::local_time::local_date_time>& timesteps)
+{
+  edr_temporal_extent ret;
+
+  auto timper = time_periods(timesteps);
+
+  if(timesteps.size() < 2)
+	return ret;
+
+  ret.origin_time = boost::posix_time::second_clock::universal_time();
+
+  // Insert time periods into vector
+  std::vector<TimePeriod> time_periods;
+  auto it_previous = timesteps.begin();
+  auto it = timesteps.begin();
+  it++;
+  while(it != timesteps.end())
+	{
+	  time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+	  it_previous++;
+	  it++;
+	}
+
+  // Iterate vector and find out periods with even timesteps
+  TimePeriod tp = time_periods.at(0);
+  int first_period_length = tp.length();
+  bool multiple_periods = false;
+  std::vector<edr_temporal_extent_period> merged_time_periods;
+  for(unsigned int i = 1; i < time_periods.size(); i++)
+	{
+	  auto tp_current = time_periods.at(i);
+	  if(first_period_length != tp_current.length() || i == time_periods.size() - 1)
+		{
+		  if(multiple_periods)
+			{
+			  if(i == time_periods.size() - 1)
+				tp.setEndTime(tp_current.getEndTime());
+			  edr_temporal_extent_period etep;
+			  etep.start_time = tp.getStartTime();
+			  etep.end_time = tp.getEndTime();
+			  etep.timestep = first_period_length / 60; // seconds to minutes
+			  etep.timesteps = ((etep.end_time-etep.start_time).total_seconds() / first_period_length);
+			  merged_time_periods.push_back(etep);
+			  multiple_periods = false;
+			}
+		  else
+			{
+			  merged_time_periods.clear();
+			  break;
+			}
+		  i++;
+		  if(i < time_periods.size() - 1)
+			{
+			  tp = time_periods.at(i);
+			  first_period_length = tp.length();
+			}
+		}
+	  else
+		{
+		  tp.setEndTime(tp_current.getEndTime());
+		  multiple_periods = true;
+		}
+	}
+
+  if(merged_time_periods.empty())
+	{
+	  if(timesteps.size() > MAX_TIME_PERIODS)
+		{
+		  // Insert only starttime and endtime
+		  edr_temporal_extent_period etep;
+		  etep.start_time = time_periods.front().getStartTime();
+		  etep.end_time = time_periods.back().getEndTime();
+		  etep.timestep = 0;
+		  etep.timesteps = 0;
+		  ret.time_periods.push_back(etep);	  
+		}
+	  else
+		{
+		  // Insert all timesteps
+		  for(const auto& t : timesteps)
+			{
+			  edr_temporal_extent_period etep;
+			  etep.start_time = t.utc_time();
+			  etep.timestep = 0;			  
+			  etep.timesteps = 0;
+			  ret.time_periods.push_back(etep);	  
+			}
+		}
+	}
+  else
+	{
+	  ret.time_periods = merged_time_periods;	  
+	}
+
+  return ret;
+}
+
+  edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine, const std::string& message_type, int period_length)
+{
+  edr_temporal_extent ret;
+
+  SmartMet::Engine::Avi::QueryOptions queryOptions;
+
+  queryOptions.itsDistinctMessages = true;
+  queryOptions.itsFilterMETARs = true;
+  queryOptions.itsExcludeSPECIs = false;
+  queryOptions.itsLocationOptions.itsCountries.push_back("FI");
+
+  queryOptions.itsParameters.push_back("icao");
+  queryOptions.itsParameters.push_back("messagetime");
+  queryOptions.itsParameters.push_back("messagetype");
+
+  queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
+  queryOptions.itsMessageTypes.push_back(message_type);
+  queryOptions.itsMessageFormat = TAC_FORMAT;
+	  
+  auto now = boost::posix_time::second_clock::universal_time();
+  auto start_of_period = (now - boost::posix_time::hours(period_length*24)); // from config file avi.period_length (30 days default)
+  std::string startTime = boost::posix_time::to_iso_string(start_of_period);
+  std::string endTime = boost::posix_time::to_iso_string(now);
+  queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
+  queryOptions.itsTimeOptions.itsEndTime = "timestamptz '" + endTime + "Z'";
+  queryOptions.itsTimeOptions.itsTimeFormat = "iso";
+  queryOptions.itsDistinctMessages = true;
+  queryOptions.itsMaxMessageStations = -1;
+  queryOptions.itsMaxMessageRows = -1;
+  queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
+  // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
+  queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
+  // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
+  queryOptions.itsExcludeSPECIs = true;
+
+  auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
+
+  std::set<boost::local_time::local_date_time> timesteps;
+  for (auto stationId : aviData.itsStationIds)
+	{
+	  auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
+	  
+	  while(timeIter != aviData.itsValues[stationId]["messagetime"].end()) 
+		{
+		  boost::local_time::local_date_time timestep = boost::get<boost::local_time::local_date_time>(*timeIter);
+
+		  timesteps.insert(timestep);
+		  timeIter++;
+		}
+	}
+
+  ret = get_temporal_extent(timesteps);
+
+  return ret;
+}
+
 std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine,
                                             const AviCollections &aviCollections)
 {
@@ -496,41 +751,11 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       //
       // TODO: Period length/adjustment and timestep from config
 
-      auto now = boost::posix_time::second_clock::universal_time();
-      auto timeOfDay = now.time_of_day();
-      uint timeStep = 60;
-      uint minutes = 0;
       auto producer = amd.getProducer();
+	  
+	  const AviCollection& avi_collection = get_avi_collection(producer, aviCollections);
 
-      if (producer == "METAR")
-      {
-        if (timeOfDay.minutes() < 20)
-        {
-          now -= time_duration(1, 0, 0);
-          timeOfDay = now.time_of_day();
-        }
-        else
-          minutes = ((timeOfDay.minutes() < 50) ? 20 : 50);
-
-        timeStep = 30;
-      }
-
-      // TODO: Set 30 day period (from config)
-      //
-      // UKMO's test site seems to have some limit in interval handling
-      //
-      // 30 day period with 30min step results e.g. into R1440/2023-01-06T13:20:00Z/PT30M,
-      // which ends up 21d 6h time range at test site, ending 2023-01-27T19:20Z
-
-      ptime endTime(now.date(), time_duration(timeOfDay.hours(), minutes, 0));
-      //    ptime startTime = endTime - boost::posix_time::hours(30 * 24);
-      ptime startTime = endTime - boost::posix_time::hours(21 * 24);
-
-      edrMetaData.temporal_extent.start_time = startTime;
-      edrMetaData.temporal_extent.end_time = endTime;
-      edrMetaData.temporal_extent.timestep = timeStep;
-      //    edrMetaData.temporal_extent.timesteps = (30 * 24 * (60 / timeStep));
-      edrMetaData.temporal_extent.timesteps = (21 * 24 * (60 / timeStep));
+	  edrMetaData.temporal_extent = getAviTemporalExtent(aviEngine, producer, avi_collection.getPeriodLength());
 
       for (const auto &p : amd.getParameters())
       {
@@ -580,8 +805,9 @@ void load_locations_avi(const Engine::Avi::Engine &aviEngine,
       li.id = station.getIcao();
       li.longitude = station.getLongitude();
       li.latitude = station.getLatitude();
-      li.name = Fmi::to_string(station.getId());
-      li.type = "avid";
+      li.name = ("ICAO: "+station.getIcao()+"; stationId: "+Fmi::to_string(station.getId()));
+      li.type = "ICAO";
+      li.keyword = amd.getProducer();
 
       sls[li.id] = li;
     }
@@ -640,16 +866,8 @@ void update_location_info(EngineMetaData &emd, const SupportedProducerLocations 
     auto &metadata = emd.getMetaData();
     for (auto &item : metadata)
     {
-      //		const EDRProducerMetaData& pmd = item.second;
       update_location_info(item.second, spl);
     }
-
-    /*
-update_location_info(emd.querydata, spl);
-update_location_info(emd.grid, spl);
-update_location_info(emd.observation, spl);
-update_location_info(emd.avi, spl);
-    */
   }
   catch (...)
   {

@@ -128,6 +128,18 @@ bool AviCollection::filter(const std::string &theIcao) const
   return false;
 }
 
+static AviCollection empty_avi_collection;
+
+const AviCollection& get_avi_collection(const std::string& producer, const AviCollections& aviCollections)
+{
+  for(const auto& collection : aviCollections)
+	{
+	  if(producer == collection.getName())
+		return collection;
+	}
+  return empty_avi_collection;
+}
+
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

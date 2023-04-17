@@ -3468,8 +3468,6 @@ void Plugin::storeAviData(const State &state,
 
     TS::TimeSeriesGroupPtr messageData(new TS::TimeSeriesGroup());
 
-    //    TS::TimeSeries ts(state.getLocalTimePool());
-
     for (auto stationId : aviData.itsStationIds)
     {
       auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
@@ -3478,23 +3476,18 @@ void Plugin::storeAviData(const State &state,
       TS::TimeSeries ts(state.getLocalTimePool());
       for (auto &value : aviData.itsValues[stationId][column.itsName])
       {
-        // TODO: Message time is in UTC
         local_date_time dt = boost::get<boost::local_time::local_date_time>(*timeIter);
         TS::TimedValue tv(dt, value);
         ts.push_back(tv);
-        //		ts_anssi.push_back(tv);
         timeIter++;
       }
       Spine::LonLat lonlat(longitude, latitude);
       TS::LonLatTimeSeries ll_ts(lonlat, ts);
       messageData->push_back(ll_ts);
     }
-    /*
-if (!aviData.itsStationIds.empty())
-  messageData->push_back(ts);
-    */
-
-    odata.emplace_back(TS::TimeSeriesData(messageData));
+	  
+	if(!messageData->empty())
+	  odata.emplace_back(TS::TimeSeriesData(messageData));
   }
 }
 
@@ -4019,9 +4012,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
         for (const auto &output : outputData)
         {
           const auto &outdata = output.second;
-
           const auto &tsdata = outdata.at(0);
-
           const auto &tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
           for (const auto &llts_data : *tsg_data)
           {
@@ -4054,11 +4045,11 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     else if (masterquery.output_format == GEO_JSON_FORMAT)
     {
       Json::Value result = GeoJson::formatOutputData(outputData,
-                                                     emd,
-                                                     edr_query.query_type,
-                                                     masterquery.levels,
-                                                     masterquery.coordinateFilter(),
-                                                     masterquery.poptions.parameters());
+													 emd,
+													 edr_query.query_type,
+													 masterquery.levels,
+													 masterquery.coordinateFilter(),
+													 masterquery.poptions.parameters());
       table.set(0, 0, result.toStyledString());
     }
 
@@ -4603,20 +4594,23 @@ void Plugin::init()
 #endif
 
 #ifndef WITHOUT_AVI
-    /* AviEngine */
-    engine = itsReactor->getSingleton("Avi", nullptr);
-    if (!engine)
-      throw Fmi::Exception(BCP, "Avi engine unavailable");
-    itsAviEngine = reinterpret_cast<Engine::Avi::Engine *>(engine);
+    if (!itsConfig.aviEngineDisabled())
+	  {
+		/* AviEngine */
+		engine = itsReactor->getSingleton("Avi", nullptr);
+		if (!engine)
+		  throw Fmi::Exception(BCP, "Avi engine unavailable");
+		itsAviEngine = reinterpret_cast<Engine::Avi::Engine *>(engine);
+	  }
 #endif
 
     // Initialization done, register services. We are aware that throwing
     // from a separate thread will cause a crash, but these should never
     // fail.
-    // itsConfig.defaultUrl(),
+    
     if (!itsReactor->addContentHandler(
             this,
-            "/edr/",
+            itsConfig.defaultUrl(),
             [this](Spine::Reactor &theReactor,
                    const Spine::HTTP::Request &theRequest,
                    Spine::HTTP::Response &theResponse)
@@ -4691,6 +4685,7 @@ void Plugin::updateMetaData(bool initial_phase)
     const auto &data_queries = itsConfig.allSupportedDataQueries();
     const auto &output_formats = itsConfig.allSupportedOutputFormats();
     const auto &collection_info_container = itsConfig.getCollectionInfo();
+	auto observation_period = itsConfig.getObservationPeriod();
 
     auto qengine_metadata = get_edr_metadata_qd(*itsQEngine,
                                                 default_language,
@@ -4722,7 +4717,8 @@ void Plugin::updateMetaData(bool initial_phase)
 													  collection_info_container,
                                                       data_queries,
                                                       output_formats,
-                                                      itsSupportedLocations);
+                                                      itsSupportedLocations,
+													  observation_period);
       engine_meta_data->addMetaData(OBS_ENGINE, obs_engine_metadata);
     }
 #endif

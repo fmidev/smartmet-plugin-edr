@@ -523,6 +523,10 @@ void Config::parse_config_avi_collections()
   {
     if (itsConfig.exists("avi"))
     {
+	  int period_length = 30;
+	  if (itsConfig.exists("avi.period_length"))
+		itsConfig.lookupValue("avi.period_length", period_length);
+
       std::string rootPath = "avi.collections";
 
       if (itsConfig.exists(rootPath))
@@ -718,7 +722,8 @@ void Config::parse_config_avi_collections()
               aviCollection.getIcaos().empty())
             throw Fmi::Exception(
                 BCP, "Configuration file error. " + path + " provides no country, bbox or icao");
-		  
+
+		  aviCollection.setPeriodLength(period_length);
           itsAviCollections.push_back(aviCollection);
         }
       }
@@ -856,6 +861,8 @@ Config::Config(const string &configfile)
     itsConfig.setIncludeDir(p.c_str());
 
     itsConfig.readFile(configfile.c_str());
+
+    itsConfig.lookupValue("observation_period", itsObservationPeriod);
 
     // Metadata update settings
     itsConfig.lookupValue("metadata_updates_disabled", itsMetaDataUpdatesDisabled);

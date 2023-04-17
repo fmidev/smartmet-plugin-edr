@@ -45,6 +45,7 @@ class Config : private boost::noncopyable
   {
     return itsSupportedOutputFormats;
   }
+  unsigned int getObservationPeriod() const { return itsObservationPeriod; }
   const SupportedDataQueries &allSupportedDataQueries() const { return itsSupportedDataQueries; }
   const std::set<std::string> &getSupportedOutputFormats(const std::string &producer) const;
   const std::set<std::string> &getSupportedDataQueries(const std::string &producer) const;
@@ -100,7 +101,7 @@ class Config : private boost::noncopyable
   std::string itsDefaultLocaleName;
   std::unique_ptr<std::locale> itsDefaultLocale;
   std::string itsDefaultTimeFormat = "iso";
-  std::string itsDefaultUrl = "/edr";
+  std::string itsDefaultUrl = "/edr/";
   std::string itsDefaultMaxDistance = "60.0km";
   unsigned int itsExpirationTime = 60;  // seconds
   std::vector<std::string> itsParameterAliasFiles;
@@ -116,6 +117,7 @@ class Config : private boost::noncopyable
   bool itsGridEngineDisabled = false;
   std::string itsPrimaryForecastSource;
   bool itsPreventObsEngineDatabaseQuery = false;
+  unsigned int itsObservationPeriod = 0;
 
   unsigned long long itsMaxTimeSeriesCacheSize = 10000;
   SmartMet::TimeSeries::RequestLimits itsRequestLimits;

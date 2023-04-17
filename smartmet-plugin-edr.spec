@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.3.27
+Version: 23.4.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -109,6 +109,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Mon Apr 17 2023 Anssi Reponen <anssi.reponen@fmi.fi> -23.4.17-1.fmi
+- Fixed handling of 'aviengine_disabled' flag
+- Added configuration parameter 'avi.period_length' to tell valid period for METAR,TAF,SIGMET messages. Default is 30 days
+- Added 'observation_period' parameter to tell valid period for observation engine collections (in hours). When running OGC test suite this should be relatively short, for example 24 hours
+- temporal extent in metadata shows individual timesteps if there is less than 300 timesteps of varying length
+- crs in metadata changed from EPSG:4326 to CRS:84, because ODG test suite required
+- Fixed GeoJSON empty document
+- Name and detail fields updated in locations metadata of AVI engine collections
+- Configuration file 'url'-parameter used in addContentHandler function call (before hardcoded value was used)
+- Fixed bbox format in cube-request
+- Output files of test cases updated
+
 * Mon Mar 27 2023 Anssi Reponen <mika.heiskanen@fmi.fi> - 23.3.27-1.fmi
 - Added title,description,keywords,crs fields to collection metadata (BRAINSTORM-2381)
 - Show fields in the collection metadata in the following order: 1)id,2)title,3)description,4)links,5)output_formats,6)keywords,7)crs

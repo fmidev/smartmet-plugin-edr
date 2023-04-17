@@ -28,6 +28,7 @@ class AviCollection
   const std::set<std::string> &getIcaos() const { return itsIcaos; }
   const std::set<std::string> &getIcaoFilters() const { return itsIcaoFilters; }
   bool getLocationCheck() const { return itsLocationCheck; }
+  int getPeriodLength() const { return itsPeriodLength; }
 
   void setName(const std::string &theName);
   void addMessageType(const std::string &theMessageType);
@@ -36,6 +37,7 @@ class AviCollection
   void addIcaoFilter(const std::string &theIcaoFilter);
   void setBBox(const AviBBox &theBBox);
   void setLocationCheck(bool theLocationCheck) { itsLocationCheck = theLocationCheck; }
+  void setPeriodLength(int thePeriodLength) { itsPeriodLength = thePeriodLength; }
 
   bool filter(const std::string &theIcao) const;
 
@@ -47,9 +49,11 @@ class AviCollection
   std::set<std::string> itsIcaos;
   std::set<std::string> itsIcaoFilters;
   bool itsLocationCheck = false;
+  int itsPeriodLength = 30; // 30 days by default
 };  // class AviCollection
 
 using AviCollections = std::list<AviCollection>;
+const AviCollection& get_avi_collection(const std::string& producer, const AviCollections& aviCollections);
 
 }  // namespace EDR
 }  // namespace Plugin

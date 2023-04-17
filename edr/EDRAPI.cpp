@@ -13,27 +13,34 @@ static std::string EMPTY_STRING;
 
 bool EDRAPI::isEDRAPIQuery(const std::string& url) const
 {
-  return (itsAPISettings.find(url) != itsAPISettings.end());
+  std::string url_string = url;
+  if(itsAPISettings.find(url_string) == itsAPISettings.end() && url_string.back() == '/')
+	 url_string.pop_back();
+  return (itsAPISettings.find(url_string) != itsAPISettings.end());
 }
 
 const std::string& EDRAPI::getAPI(const std::string& url, const std::string& host) const
 {
   // If no API setting defined for the requested URL return empty string
-  if(itsAPISettings.find(url) == itsAPISettings.end())
+  std::string url_string = url;
+  if(itsAPISettings.find(url_string) == itsAPISettings.end() && url_string.back() == '/')
+	 url_string.pop_back();
+
+  if(itsAPISettings.find(url_string) == itsAPISettings.end())
 	return EMPTY_STRING;
 
   // If response isnt in the map insert it
   {
 	Spine::ReadLock lock(itsMutex);
-	if(itsAPIQueryResponses.find(host+url) == itsAPIQueryResponses.end())
+	if(itsAPIQueryResponses.find(host+url_string) == itsAPIQueryResponses.end())
 	  {
-		auto template_file = itsAPISettings.at(url);	  
+		auto template_file = itsAPISettings.at(url_string);	  
 		boost::algorithm::replace_all(template_file, "__HOST__", host);
-		itsAPIQueryResponses[host+url] = template_file;
+		itsAPIQueryResponses[host+url_string] = template_file;
 	  }
   }
 
-  return itsAPIQueryResponses.at(host+url);
+  return itsAPIQueryResponses.at(host+url_string);
 }
 
 void EDRAPI::setSettings(const std::string& tmpldir, const APISettings& api_settings)

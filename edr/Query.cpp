@@ -232,12 +232,9 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 		return;
 	  }
 
-    // Spine::HTTP::urlencode(resource) << ", " <<
-    // Spine::HTTP::urldecode(resource) << std::endl; 	  resource =
-    // Spine::HTTP::urlencode(resource);
     std::vector<std::string> resource_parts;
     boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
-    if (resource_parts.size() > 1 && resource_parts.at(0).empty())
+    if (resource_parts.size() > 1 && resource_parts.front().empty())
       resource_parts.erase(resource_parts.begin());
 
     // If invalid query type givem store it here
@@ -328,9 +325,11 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     // If meta data query return from here
     if (itsEDRQuery.query_id != EDRQueryId::DataQuery)
 	  {
+		/*
 		auto fparam = req.getParameter("f");
 		if(fparam && *fparam != "application/json")
 		  throw EDRException("Invalid format! Format must be 'application/json' for metadata query!");
+		*/
 		return;
 	  }
 
@@ -508,10 +507,11 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
           wkt.append(radius);
       }
 
-      auto crs = Spine::optional_string(req.getParameter("crs"), "");
-      if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84")
+      auto crs = Spine::optional_string(req.getParameter("crs"), "EPSG:4326");
+      if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84" && crs != "CRS84" && crs != "CRS:84")
         throw EDRException("Invalid crs: " + crs + ". Only EPSG:4326 is supported");
-
+	  crs = "EPSG:4326";
+	  
       /*
             // Maybe later: support other CRSs than WGS84
       if(!crs.empty() && crs != "EPSG:4326")
@@ -547,13 +547,13 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
         const auto &location_info = emd.locations->at(location_id);
 
-        // Currently locationId is either fmisid, geoid or icao code (type "avid")
-        if (location_info.type == "fmisid")
-          req.addParameter("fmisid", location_id);
-        else if (location_info.type != "avid")
-          req.addParameter("geoid", location_id);
-        else
+        // Currently locationId is either fmisid, geoid or icao code
+        if (location_info.type == "ICAO")
           req.addParameter("icao", location_id);
+        else if (location_info.type == "fmisid")
+          req.addParameter("fmisid", location_id);
+        else 
+          req.addParameter("geoid", location_id);
       }
       else if (itsEDRQuery.query_type == EDRQueryType::Cube)
       {
@@ -563,30 +563,18 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
         std::vector<string> parts;
         boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
-        if (parts.size() != 2)
+        if (parts.size() != 4)
           throw EDRException(
-              "Invalid bbox parameter, format is bbox=<lower left coordinate>, "
-              "<upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
-        auto lower_left_coord = parts[0];
-        auto upper_right_coord = parts[1];
-        boost::algorithm::trim(lower_left_coord);
-        boost::algorithm::trim(upper_right_coord);
-        parts.clear();
-        boost::algorithm::split(parts, lower_left_coord, boost::algorithm::is_any_of(" "));
-        if (parts.size() != 2)
-          throw EDRException(
-              "Invalid bbox parameter, format is bbox=<lower left coordinate>, "
-              "<upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
+              "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner y,upper left corner x,upper left corner y"
+              "<upper right coordinate>, e.g.  bbox=19.4,59.6,31.6,70.1");
         auto lower_left_x = parts[0];
         auto lower_left_y = parts[1];
-        parts.clear();
-        boost::algorithm::split(parts, upper_right_coord, boost::algorithm::is_any_of(" "));
-        if (parts.size() != 2)
-          throw EDRException(
-              "Invalid bbox parameter, format is bbox=<lower left coordinate>, "
-              "<upper right coordinate>, e.g.  bbox=19.4 59.6, 31.6 70.1");
-        auto upper_right_x = parts[0];
-        auto upper_right_y = parts[1];
+        auto upper_right_x = parts[2];
+        auto upper_right_y = parts[3];
+        boost::algorithm::trim(lower_left_x);
+        boost::algorithm::trim(lower_left_y);
+        boost::algorithm::trim(upper_right_x);
+        boost::algorithm::trim(upper_right_y);
 
         auto wkt =
             ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
@@ -600,6 +588,21 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     // EDR datetime
     auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
+
+	if(datetime == "null")
+	  {
+		if(emd.temporal_extent.time_periods.empty())
+		  {
+			datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
+		  }
+		else
+		  {
+			if(emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
+			  datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) + "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
+			else
+			  datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) + "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
+		  }
+	  }
 
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
@@ -878,7 +881,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
         auto lon_coord = Spine::optional_double(req.getParameter("x"), kFloatMissing);
         auto lat_coord = Spine::optional_double(req.getParameter("y"), kFloatMissing);
-        auto source_crs = Spine::optional_string(req.getParameter("crs"), "");
+        auto source_crs = crs;
 
         if (lon_coord != kFloatMissing && lat_coord != kFloatMissing && !source_crs.empty())
         {
@@ -932,7 +935,6 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     leveltype = Spine::optional_string(req.getParameter("leveltype"), "");
     format = Spine::optional_string(req.getParameter("format"), "ascii");
     areasource = Spine::optional_string(req.getParameter("areasource"), "");
-    crs = Spine::optional_string(req.getParameter("crs"), "");
 
     // Either create the requested locale or use the default one constructed
     // by the Config parser. TODO: If constructing from strings is slow, we

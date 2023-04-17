@@ -62,14 +62,19 @@ struct edr_spatial_extent
   std::string crs{"EPSG:4326"};
 };
 
-struct edr_temporal_extent
+struct edr_temporal_extent_period
 {
-  boost::posix_time::ptime origin_time{boost::posix_time::not_a_date_time};
   boost::posix_time::ptime start_time;
   boost::posix_time::ptime end_time;
   int timestep;
   int timesteps;
+};
+
+struct edr_temporal_extent
+{
+  boost::posix_time::ptime origin_time{boost::posix_time::not_a_date_time};
   std::string trs{"Temporal Reference System"};
+  std::vector<edr_temporal_extent_period> time_periods;
 };
 
 struct edr_vertical_extent
@@ -123,7 +128,8 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine& obsEngine,
 										 const CollectionInfoContainer& cic,
                                          const SupportedDataQueries& sdq,
                                          const SupportedOutputFormats& sofs,
-                                         const SupportedProducerLocations& spl);
+                                         const SupportedProducerLocations& spl,
+										 unsigned int observation_period);
 #endif
 #ifndef WITHOUT_AVI
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,

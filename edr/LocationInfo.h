@@ -31,7 +31,7 @@ struct location_info
   double longitude = 0.0;
   double latitude = 0.0;
   std::string name;     // From loc->name or station id for avi location (id is icao code)
-  std::string type;     // From loc->fmisid if it exists, otherwise from loc->geoid or "avid"
+  std::string type;     // From loc->fmisid if it exists, otherwise from loc->geoid or ICAO
   std::string keyword;  // Keyword used to get this location
 };
 

@@ -52,28 +52,104 @@ std::string parse_parameter_name(const std::string &name)
 
 Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
 {
+  Json::Value nullvalue;
   auto temporal = Json::Value(Json::ValueType::objectValue);
-  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
-  auto temporal_interval2 = Json::Value(Json::ValueType::arrayValue);
-  temporal_interval2[0] =
-      Json::Value(boost::posix_time::to_iso_extended_string(temporal_extent.start_time) + "Z");
-  temporal_interval2[1] =
-      Json::Value(boost::posix_time::to_iso_extended_string(temporal_extent.end_time) + "Z");
-  temporal_interval[0] = temporal_interval2;
+  if(temporal_extent.time_periods.empty())
+	{
+	  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+	  temporal_interval[0] = nullvalue;
+	  temporal_interval[1] = nullvalue;
+	  temporal["interval"] = temporal_interval;
+	}
+  else
+	{
+	  if(temporal_extent.time_periods.size() == 1)
+		{
+		  const auto& temporal_extent_period = temporal_extent.time_periods.at(0);
+		  
+		  // Show only period with starttime and endtime (probably there is too many timesteps in source data)
+		  if(temporal_extent_period.timestep == 0)
+			{
+			  /*
+			  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+			  temporal_interval[0] = Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time)+"Z/"+Fmi::to_iso_extended_string(temporal_extent_period.end_time)+"Z");
+			  temporal["interval"] = temporal_interval;
+			 */
+			  /*
+			  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+			  auto hours = ((temporal_extent_period.end_time-temporal_extent_period.start_time).total_seconds()/3600);
+			  temporal_interval[0] = Json::Value("R"+Fmi::to_string(hours)+"/"+Fmi::to_iso_extended_string(temporal_extent_period.start_time)+"Z/PT60M");			  
+			  temporal["interval"] = temporal_interval;
+*/
+			  auto hours = ((temporal_extent_period.end_time-temporal_extent_period.start_time).total_seconds()/3600);
+			  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+			  auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
+			  auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
+			  temporal_interval_array[0] = Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z");
+			  temporal_interval_array[1] = Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.end_time) + "Z");
+			  temporal_interval[0] = temporal_interval_array;
+			  temporal_interval_values[0] =
+				Json::Value("R" + Fmi::to_string(hours) + "/" +
+							Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z/PT60M");
+			  temporal["interval"] = temporal_interval;
+			  temporal["values"] = temporal_interval_values;
 
-  auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
-  temporal_interval_values[0] =
-      Json::Value("R" + Fmi::to_string(temporal_extent.timesteps) + "/" +
-                  boost::posix_time::to_iso_extended_string(temporal_extent.start_time) + "Z/PT" +
-                  Fmi::to_string(temporal_extent.timestep) + "M");
+			}
+		  else
+			{
+			  // Time period which contains timesteps with constant length
+			  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+			  auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
+			  auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
+			  temporal_interval_array[0] = Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z");
+			  temporal_interval_array[1] = Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.end_time) + "Z");
+			  temporal_interval[0] = temporal_interval_array;
+			  temporal_interval_values[0] =
+				Json::Value("R" + Fmi::to_string(temporal_extent_period.timesteps) + "/" +
+							Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z/PT" +
+							Fmi::to_string(temporal_extent_period.timestep) + "M");
+			  temporal["interval"] = temporal_interval;
+			  temporal["values"] = temporal_interval_values;
+			}
+		}
+	  else
+		{
+		  const auto& first_temporal_extent_period = temporal_extent.time_periods.at(0);
+		  // If timestep is 0, time_periods member contains just start_time, meaning there is only separate timesteps
+		  if(first_temporal_extent_period.timestep == 0)
+			{
+			  auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
+			  for(const auto& period : temporal_extent.time_periods)
+				temporal_interval_array[temporal_interval_array.size()] = Json::Value(Fmi::to_iso_extended_string(period.start_time)+"Z");
+			  temporal["interval"] = temporal_interval_array;
+			}
+		  else
+			{
+			  // Several time periods, time periods may or may not have same time step length
+			  auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+			  auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
+			  auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
+			  for(unsigned int i = 0; i < temporal_extent.time_periods.size(); i++)
+				{
+				  const auto& temporal_extent_period = temporal_extent.time_periods.at(i);
+				  temporal_interval_array[i] = Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time)+"Z/" +Fmi::to_iso_extended_string(temporal_extent_period.end_time)+"Z");
+				  temporal_interval_values[i] =
+					Json::Value("R" + Fmi::to_string(temporal_extent_period.timesteps) + "/" +
+								Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z/PT" +
+								Fmi::to_string(temporal_extent_period.timestep) + "M");
+
+				}
+			  temporal_interval[0] = temporal_interval_array;
+			  temporal["interval"] = temporal_interval;
+			  temporal["values"] = temporal_interval_values;						  
+			}
+		}
+	}
+
   auto trs = Json::Value(
       "TIMECRS[\"DateTime\",TDATUM[\"Gregorian "
       "Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time "
       "(T)\",future]");
-
-  temporal["interval"] = temporal_interval;
-
-  temporal["values"] = temporal_interval_values;
   temporal["trs"] = trs;
 
   return temporal;
@@ -215,7 +291,8 @@ Json::Value get_data_queries(const std::string &host,
 
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
-    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
+	//    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
+    query_info_crs_details_0["crs"] = Json::Value("CRS:84");
     query_info_crs_details_0["wkt"] = Json::Value(
         "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS "
         "84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT["
@@ -250,7 +327,8 @@ Json::Value get_data_queries(const std::string &host,
 
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
-    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
+	//    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
+    query_info_crs_details_0["crs"] = Json::Value("CRS:84");
     query_info_crs_details_0["wkt"] = Json::Value(
         "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS "
         "84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT["
@@ -906,20 +984,26 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       if (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
           instance_id != edr_query.instance_id)
         continue;
+
+	  if(emd.parameter_names.empty())
+		continue;
+
       auto instance = Json::Value(Json::ValueType::objectValue);
       instance["id"] = Json::Value(instance_id);
-      std::string title =
-          ("Origintime: " +
-           boost::posix_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z");
-      title += (" Starttime: " +
-                boost::posix_time::to_iso_extended_string(emd.temporal_extent.start_time) + "Z");
-      title +=
-          (" Endtime: " + boost::posix_time::to_iso_extended_string(emd.temporal_extent.end_time) +
-           "Z");
-      if (emd.temporal_extent.timestep)
-        title += (" Timestep: " + Fmi::to_string(emd.temporal_extent.timestep));
-      instance["title"] = Json::Value(title);
-
+	  if(!emd.temporal_extent.time_periods.empty())
+		{
+		  std::string title =
+			("Origintime: " +
+			 boost::posix_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z");
+		  title += (" Starttime: " +
+					boost::posix_time::to_iso_extended_string(emd.temporal_extent.time_periods.front().start_time) + "Z");
+		  title +=
+			(" Endtime: " + boost::posix_time::to_iso_extended_string(emd.temporal_extent.time_periods.front().end_time) +
+			 "Z");
+		  if (emd.temporal_extent.time_periods.front().timestep)
+			title += (" Timestep: " + Fmi::to_string(emd.temporal_extent.time_periods.front().timestep));
+		  instance["title"] = Json::Value(title);
+		}
       // Links
       /*
       auto instance_links = Json::Value(Json::ValueType::arrayValue);
@@ -943,7 +1027,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       bbox[3] = Json::Value(emd.spatial_extent.bbox_ymax);
       spatial["bbox"] = bbox;
       // CRS (mandatory)
-      spatial["crs"] = Json::Value("EPSG:4326");
+	  //      spatial["crs"] = Json::Value("EPSG:4326");
+      spatial["crs"] = Json::Value("CRS:84");
       extent["spatial"] = spatial;
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
@@ -973,7 +1058,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
                                                   instance_id);
 	  // Optional: crs
 	  auto crs = Json::Value(Json::ValueType::arrayValue);
-	  crs[0] = Json::Value("EPSG:4326");
+	  //	  crs[0] = Json::Value("EPSG:4326");
+	  crs[0] = Json::Value("CRS:84");
 	  instance["crs"] = crs;
 
       // Parameter names (mandatory)
@@ -985,6 +1071,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       // measurementType
       for (const auto &name : emd.parameter_names)
       {
+		if(name.empty())
+		  continue;
         auto pinfo = emd.parameter_info->get_parameter_info(name, emd.language);
         const auto &p = emd.parameters.at(name);
         auto param = Json::Value(Json::ValueType::objectValue);
@@ -1013,6 +1101,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
         param["observedProperty"] = observedProperty;
         parameter_names[p.name] = param;
       }
+
 
       instance["parameter_names"] = parameter_names;
 
@@ -1064,6 +1153,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
             collection_emd.temporal_extent.origin_time < emds.at(i).temporal_extent.origin_time)
           collection_emd = emds.at(i);
       }
+	  if(collection_emd.parameter_names.empty())
+		continue;
+
       bool instances_exist = (emds.size() > 1);
 
       auto value = Json::Value(Json::ValueType::objectValue);
@@ -1091,20 +1183,6 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       auto keywords = Json::Value(Json::ValueType::arrayValue);
 	  for (const auto &kword : keyword_set)
 		keywords[keywords.size()] = kword;
-
-	  /*
-	  if(!collection_emd.collection_info_engine.title.empty())
-		value["title"] = Json::Value(collection_emd.collection_info_engine.title);
-	  if(!collection_emd.collection_info_engine.description.empty())
-		value["description"] = Json::Value(collection_emd.collection_info_engine.description);
-	  if(!collection_emd.collection_info_engine.keywords.empty())
-		{
-		  for (const auto &kword : collection_emd.collection_info_engine.keywords)
-			keywords[keywords.size()] = kword;
-		}
-
-	  */
-
 
 	  // Add parameter names into keywords
       for (const auto &name : collection_emd.parameter_names)
@@ -1149,7 +1227,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       bbox[3] = Json::Value(collection_emd.spatial_extent.bbox_ymax);
       spatial["bbox"] = bbox;
       // CRS (mandatory)
-      spatial["crs"] = Json::Value("EPSG:4326");
+	  //      spatial["crs"] = Json::Value("EPSG:4326");
+      spatial["crs"] = Json::Value("CRS:84");
       extent["spatial"] = spatial;
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
@@ -1180,7 +1259,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
 	  // Optional: crs
 	  auto crs = Json::Value(Json::ValueType::arrayValue);
-	  crs[0] = Json::Value("EPSG:4326");
+	  //	  crs[0] = Json::Value("EPSG:4326");
+	  crs[0] = Json::Value("CRS:84");
 	  value["crs"] = crs;
 
       // Parameter names (mandatory)
@@ -1192,6 +1272,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       // measurementType
       for (const auto &name : collection_emd.parameter_names)
       {
+		if(name.empty())
+		  continue;
+
         auto pinfo =
             collection_emd.parameter_info->get_parameter_info(name, collection_emd.language);
         const auto &p = collection_emd.parameters.at(name);
@@ -2257,16 +2340,6 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     // 1. querydata, 2. grid, 3. observation
     // All instances of a collection share the same locations, so just get the
     // metadata of first instance
-    /*
-if (emd.querydata.find(producer) != emd.querydata.end())
-edr_md = &(emd.querydata.at(producer).front());
-else if (emd.grid.find(producer) != emd.grid.end())
-edr_md = &(emd.grid.at(producer).front());
-else if (emd.observation.find(producer) != emd.observation.end())
-edr_md = &(emd.observation.at(producer).front());
-else if (emd.avi.find(producer) != emd.avi.end())
-edr_md = &(emd.avi.at(producer).front());
-    */
 
     if (!edr_md || !edr_md->locations)
       return result;
@@ -2290,8 +2363,16 @@ edr_md = &(emd.avi.at(producer).front());
       coordinates[1] = Json::Value(loc.latitude, latitude_precision);
       auto properties = Json::Value(Json::ValueType::objectValue);
       properties["name"] = Json::Value(loc.name);
-      auto detail_string = ("Id is " + loc.type + " from keyword " + loc.keyword);
+	  auto detail_string = ("Id is " + loc.type + " from " + loc.keyword);
       properties["detail"] = Json::Value(detail_string);
+	  if(!edr_md->temporal_extent.time_periods.empty())
+		{
+		  auto start_time = edr_md->temporal_extent.time_periods.front().start_time;
+		  auto end_time = edr_md->temporal_extent.time_periods.back().end_time;
+		  if(end_time.is_not_a_date_time())
+			end_time = edr_md->temporal_extent.time_periods.back().start_time;
+		  properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time)+"Z/"+Fmi::to_iso_extended_string(end_time)+"Z");
+		}
       geometry["coordinates"] = coordinates;
       feature["geometry"] = geometry;
       feature["properties"] = properties;
@@ -2339,19 +2420,6 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
         edr_metadata.append(md);
       }
 
-      /*
-  auto edr_metadata = parse_edr_metadata(emd.querydata, edr_query);
-  auto edr_metadata_grid = parse_edr_metadata(emd.grid, edr_query);
-  auto edr_metadata_obs = parse_edr_metadata(emd.observation, edr_query);
-  auto edr_metadata_avi = parse_edr_metadata(emd.avi, edr_query);
-  // Append grid engine metadata after QEngine metadata
-  edr_metadata.append(edr_metadata_grid);
-  // Append observation engine metadata in the end
-  edr_metadata.append(edr_metadata_obs);
-  // Append avi engine metadata in the end
-  edr_metadata.append(edr_metadata_avi);
-      */
-
       // Add main level links
       Json::Value meta_data;
       auto link = Json::Value(Json::ValueType::objectValue);
@@ -2380,17 +2448,6 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
       }
       if (producer_metadata)
         result = parse_edr_metadata(*producer_metadata, edr_query);
-
-      /*
-  if (emd.querydata.find(producer) != emd.querydata.end())
-    result = parse_edr_metadata(emd.querydata, edr_query);
-  else if (emd.observation.find(producer) != emd.observation.end())
-    result = parse_edr_metadata(emd.observation, edr_query);
-  else if (emd.grid.find(producer) != emd.grid.end())
-    result = parse_edr_metadata(emd.grid, edr_query);
-  else if (emd.avi.find(producer) != emd.avi.end())
-    result = parse_edr_metadata(emd.avi, edr_query);
-      */
     }
     return result;
   }

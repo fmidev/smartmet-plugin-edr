@@ -867,9 +867,24 @@ Json::Value formatOutputData(TS::OutputData &outputData,
   try
   {
     Json::Value empty_result;
+	empty_result["type"] = Json::Value("FeatureCollection");
+    auto features_array = Json::Value(Json::ValueType::arrayValue);
+    auto empty_feature = Json::Value(Json::ValueType::objectValue);
+    auto empty_geometry = Json::Value(Json::ValueType::objectValue);
+    auto geometry_coordinates = Json::Value(Json::ValueType::arrayValue);
+	geometry_coordinates[0] = Json::Value(0.0);
+	geometry_coordinates[1] = Json::Value(0.0);
+	empty_geometry["type"] = Json::Value("Point");
+	empty_geometry["coordinates"] = geometry_coordinates;
+	empty_feature["type"] = Json::Value("Feature");
+	empty_feature["geometry"] = empty_geometry;
+	empty_feature["properties"] = Json::Value(Json::ValueType::objectValue);
+
+	features_array[0] = empty_feature;
+	empty_result["features"] = features_array;
 
     if (outputData.empty())
-      return empty_result;
+	  return empty_result;
 
     const auto &outdata_first = outputData.at(0).second;
 

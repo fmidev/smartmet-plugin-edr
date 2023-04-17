@@ -48,7 +48,7 @@
 	],
 	"crs" : 
 	[
-		"EPSG:4326"
+		"CRS:84"
 	],
 	"data_queries" : 
 	{
@@ -73,7 +73,7 @@
 					"crs_details" : 
 					[
 						{
-							"crs" : "EPSG:4326",
+							"crs" : "CRS:84",
 							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 						}
 					],
@@ -104,7 +104,7 @@
 					"crs_details" : 
 					[
 						{
-							"crs" : "EPSG:4326",
+							"crs" : "CRS:84",
 							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 						}
 					],
@@ -138,7 +138,7 @@
 					"crs_details" : 
 					[
 						{
-							"crs" : "EPSG:4326",
+							"crs" : "CRS:84",
 							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 						}
 					],
@@ -168,7 +168,7 @@
 					"crs_details" : 
 					[
 						{
-							"crs" : "EPSG:4326",
+							"crs" : "CRS:84",
 							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 						}
 					],
@@ -198,7 +198,7 @@
 					"crs_details" : 
 					[
 						{
-							"crs" : "EPSG:4326",
+							"crs" : "CRS:84",
 							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 						}
 					],
@@ -233,7 +233,7 @@
 					"crs_details" : 
 					[
 						{
-							"crs" : "EPSG:4326",
+							"crs" : "CRS:84",
 							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 						}
 					],
@@ -247,7 +247,7 @@
 	{
 		"spatial" : 
 		{
-			"crs" : "EPSG:4326",
+			"crs" : "CRS:84",
 			"bbox" : 
 			[
 				-9.0987,
