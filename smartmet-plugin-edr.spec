@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 23.4.17
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -30,21 +30,21 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 23.3.14
 BuildRequires: smartmet-library-locus-devel >= 23.3.7
 BuildRequires: smartmet-library-macgyver-devel >= 23.3.3
-BuildRequires: smartmet-library-grid-content-devel >= 23.3.9
+BuildRequires: smartmet-library-grid-content-devel >= 23.4.17
 BuildRequires: smartmet-library-grid-files-devel >= 23.3.9
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
 BuildRequires: smartmet-library-gis-devel >= 23.3.14
 BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-engine-geonames-devel >= 23.3.16
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 23.3.22
+BuildRequires: smartmet-engine-observation-devel >= 23.4.3
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 23.3.21
 BuildRequires: smartmet-engine-gis-devel >= 22.12.21
-BuildRequires: smartmet-engine-grid-devel >= 23.3.9
+BuildRequires: smartmet-engine-grid-devel >= 23.4.17
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 23.3.22
+#Requires: smartmet-engine-observation >= 23.4.3
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -58,7 +58,7 @@ Requires: smartmet-library-gis >= 23.3.14
 Requires: smartmet-engine-geonames >= 23.3.16
 Requires: smartmet-engine-querydata >= 23.3.21
 Requires: smartmet-engine-gis >= 22.12.21
-Requires: smartmet-engine-grid >= 23.3.9
+Requires: smartmet-engine-grid >= 23.4.17
 Requires: smartmet-server >= 23.3.21
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
@@ -66,21 +66,21 @@ Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
-#TestRequires: smartmet-utils-devel >= 23.1.19
+#TestRequires: smartmet-utils-devel >= 23.4.17
 #TestRequires: smartmet-library-spine-plugin-test >= 23.3.14
 #TestRequires: smartmet-library-newbase-devel >= 23.2.9
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.2.24
 #TestRequires: smartmet-test-data >= 23.2.9
-#TestRequires: smartmet-engine-grid-test >= 23.3.9
+#TestRequires: smartmet-engine-grid-test >= 23.4.17
 #TestRequires: smartmet-library-gis >= 23.3.14
 #TestRequires: smartmet-engine-geonames >= 23.3.16
 #TestRequires: smartmet-engine-gis >= 22.12.21
 #TestRequires: smartmet-engine-querydata >= 23.3.21
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 23.3.22
+#TestRequires: smartmet-engine-observation >= 23.4.3
 %endif
-#TestRequires: smartmet-engine-grid >= 23.3.9
+#TestRequires: smartmet-engine-grid >= 23.4.17
 #TestRequires: gdal34
 #TestRequires: libwebp13
 
@@ -109,7 +109,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
-* Mon Apr 17 2023 Anssi Reponen <anssi.reponen@fmi.fi> -23.4.17-1.fmi
+
+* Mon Apr 17 2023 Anssi Reponen <anssi.reponen@fmi.fi> -23.4.17-2.fmi
 - Fixed handling of 'aviengine_disabled' flag
 - Added configuration parameter 'avi.period_length' to tell valid period for METAR,TAF,SIGMET messages. Default is 30 days
 - Added 'observation_period' parameter to tell valid period for observation engine collections (in hours). When running OGC test suite this should be relatively short, for example 24 hours
@@ -120,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 - Configuration file 'url'-parameter used in addContentHandler function call (before hardcoded value was used)
 - Fixed bbox format in cube-request
 - Output files of test cases updated
+
+* Mon Apr 17 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.4.17-1.fmi
+- Repackaged due to GRID ABI changes
 
 * Mon Mar 27 2023 Anssi Reponen <mika.heiskanen@fmi.fi> - 23.3.27-1.fmi
 - Added title,description,keywords,crs fields to collection metadata (BRAINSTORM-2381)
