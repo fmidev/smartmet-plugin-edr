@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.4.17
-Release: 2%{?dist}.fmi
+Version: 23.4.18
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -109,6 +109,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+
+* Tue Apr 18 2023 Anssi Reponen <anssi.reponen@fmi.fi> -23.4.18-1.fmi
+- Fixed API-document because of OGC test suite
+- Fixed uninitalized variables and some other problems reported by CodeChecker
 
 * Mon Apr 17 2023 Anssi Reponen <anssi.reponen@fmi.fi> -23.4.17-2.fmi
 - Fixed handling of 'aviengine_disabled' flag

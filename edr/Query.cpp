@@ -47,6 +47,14 @@ const char *default_timezone = "localtime";
 namespace
 {
 
+#ifndef WITHOUT_AVI
+bool is_avi_producer(const EDRProducerMetaData &avi_metadata, const std::string &producer)
+{
+  return (avi_metadata.find(producer) != avi_metadata.end());
+}
+#endif
+
+
 bool is_data_query(const Spine::HTTP::Request &req, const EDRQuery& edrQuery, const EDRMetaData& edrMetaData)
 {
   try
@@ -147,6 +155,7 @@ Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request &req)
   return opt;
 }
 
+#ifdef LATER
 std::string transform_coordinates(const std::string &wkt, const std::string &crs)
 {
   try
@@ -206,7 +215,7 @@ std::string transform_coordinates(const std::string &wkt, const std::string &crs
                                 "Failed to transform coordinates to WGS84: " + crs + ", " + wkt);
   }
 }
-
+#endif
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -216,7 +225,7 @@ std::string transform_coordinates(const std::string &wkt, const std::string &crs
 // ----------------------------------------------------------------------
 
 Query::Query(const State &state, const Spine::HTTP::Request &request, Config &config)
-    : valueformatter(valueformatter_params(request)), timeAggregationRequested(false)
+    : valueformatter(valueformatter_params(request))
 {
   try
   {
@@ -506,6 +515,14 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         if (!radius.empty())
           wkt.append(radius);
       }
+	  else if(itsEDRQuery.query_type == EDRQueryType::Cube)
+		{
+		  auto minz = Spine::optional_string(req.getParameter("minz"), "");
+		  auto maxz = Spine::optional_string(req.getParameter("minz"), "");
+		  if(minz.empty() || maxz.empty())
+              throw EDRException("No minz, maxz parameter defined for Cube query!");
+		  req.addParameter("z", minz+"/"+maxz);
+		}
 
       auto crs = Spine::optional_string(req.getParameter("crs"), "EPSG:4326");
       if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84" && crs != "CRS84" && crs != "CRS:84")
@@ -559,28 +576,26 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       {
         auto bbox = Spine::optional_string(req.getParameter("bbox"), "");
         if (bbox.empty())
-          throw EDRException("Query parameter 'bbox' must be defined for Cube");
-
-        std::vector<string> parts;
-        boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
-        if (parts.size() != 4)
-          throw EDRException(
-              "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner y,upper left corner x,upper left corner y"
-              "<upper right coordinate>, e.g.  bbox=19.4,59.6,31.6,70.1");
-        auto lower_left_x = parts[0];
-        auto lower_left_y = parts[1];
-        auto upper_right_x = parts[2];
-        auto upper_right_y = parts[3];
-        boost::algorithm::trim(lower_left_x);
-        boost::algorithm::trim(lower_left_y);
-        boost::algorithm::trim(upper_right_x);
-        boost::algorithm::trim(upper_right_y);
-
-        auto wkt =
-            ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
-             upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x + " " +
-             lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
-
+          throw EDRException("Query parameter 'bbox' or 'coords' must be defined for Cube");
+		
+		std::vector<string> parts;
+		boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
+		if (parts.size() != 4)
+		  throw EDRException(
+							 "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner y,upper left corner x,upper left corner y"
+							 "<upper right coordinate>, e.g.  bbox=19.4,59.6,31.6,70.1");
+		auto lower_left_x = parts[0];
+		auto lower_left_y = parts[1];
+		auto upper_right_x = parts[2];
+		auto upper_right_y = parts[3];
+		boost::algorithm::trim(lower_left_x);
+		boost::algorithm::trim(lower_left_y);
+		boost::algorithm::trim(upper_right_x);
+		boost::algorithm::trim(upper_right_y);		
+		auto wkt =
+		  ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
+		   upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x + " " +
+		   lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
         req.addParameter("wkt", wkt);
         req.removeParameter("bbox");
       }
@@ -608,7 +623,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
       datetime = itsCoordinateFilter.getDatetime();
 
 #ifndef WITHOUT_AVI
-    if (datetime.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
+    if (datetime.empty() && is_avi_producer(state.getAviMetaData(), itsEDRQuery.collection_id))
       datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
 #endif
 
@@ -650,7 +665,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     // EDR parameter-name
     auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
 #ifndef WITHOUT_AVI
-    if (parameter_names.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
+    if (parameter_names.empty() && is_avi_producer(state.getAviMetaData(), itsEDRQuery.collection_id))
     {
       parameter_names = "message";
       req.addParameter("parameter-name", parameter_names);
@@ -1146,13 +1161,6 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
   }
 }
 
-#ifndef WITHOUT_AVI
-bool Query::isAviProducer(const EDRProducerMetaData &avi, const std::string &producer) const
-{
-  return (avi.find(producer) != avi.end());
-}
-#endif
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse producer/model options
@@ -1193,7 +1201,7 @@ void Query::parse_producers(const Spine::HTTP::Request &theReq, const State &the
 		{
 		  // Avi collection names are in upper case and only one producer name is allowed
 #ifndef WITHOUT_AVI		  
-		  if (isAviProducer(theState.getAviMetaData(), p))
+		  if (is_avi_producer(theState.getAviMetaData(), p))
 			{
 			  if (resultProducers.size() > 1)
 				throw Fmi::Exception(BCP, "Only one producer is allowed for avi query: '" + prodOpt + "'");

@@ -233,9 +233,17 @@ Json::Value get_data_queries(const std::string &host,
       query_info_variables["title"] = Json::Value("Cube query");
       query_info_variables["description"] = Json::Value("Data inside requested bounding box");
       query_info_variables["query_type"] = Json::Value("cube");
+      query_info_variables["coords"] = Json::Value(
+          "Well Known Text POLYGON value i.e. POLYGON((24 61,24 "
+          "61.5,24.5 61.5,24.5 61,24 61))");
+      query_info_variables["minz"] = Json::Value("Minimum level to return data for, for example 850");
+      query_info_variables["maxz"] = Json::Value("Maximum level to return data for, for example 300");
+
+	  /*
       query_info_variables["bbox"] = Json::Value(
           "BBOX value defining lower left and upper right corner coordinates "
           "i.e. Finland: bbox=19.449758 59.693749, 31.668339 70.115572");
+	  */
       query_type_string = "cube";
     }
     else if (query_type == EDRQueryType::Locations)
@@ -1194,10 +1202,10 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       auto collection_link = Json::Value(Json::ValueType::objectValue);
       collection_link["href"] = Json::Value((edr_query.host + "/collections/" + producer));
 	  collection_link["hreflang"] = Json::Value("en");
-       if (edr_query.query_id == EDRQueryId::SpecifiedCollection)
-        collection_link["rel"] = Json::Value("self");
-      else
-        collection_link["rel"] = Json::Value("data");
+	  if (edr_query.query_id == EDRQueryId::SpecifiedCollection)
+		collection_link["rel"] = Json::Value("self");
+	  else
+		collection_link["rel"] = Json::Value("data");
       collection_link["type"] = Json::Value("application/json");
 	  //    collection_link["title"] = Json::Value("Collection metadata in JSON");
 
@@ -1344,7 +1352,7 @@ Json::Value parse_edr_metadata(const EDRProducerMetaData &epmd, const EDRQuery &
   return nulljson;
 }
 
-Json::Value format_output_data_one_point(TS::OutputData &outputData,
+Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
                                          boost::optional<int> level,
                                          const std::vector<Spine::Parameter> &query_parameters)
@@ -1435,7 +1443,7 @@ Json::Value format_output_data_one_point(TS::OutputData &outputData,
   }
 }
 
-Json::Value format_output_data_position(TS::OutputData &outputData,
+Json::Value format_output_data_position(const TS::OutputData &outputData,
                                         const EDRMetaData &emd,
                                         const std::vector<Spine::Parameter> &query_parameters)
 {
@@ -1629,7 +1637,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
 }
 
 #if 0
-Json::Value format_output_data_multi_point(TS::OutputData &outputData,
+Json::Value format_output_data_multi_point(const TS::OutputData &outputData,
                                            const EDRMetaData &emd,
                                            boost::optional<int> level,
                                            const std::vector<Spine::Parameter> &query_parameters)
@@ -2094,7 +2102,7 @@ Json::Value format_coverage_collection_trajectory(
   }
 }
 
-DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
+DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
                                         const EDRMetaData & /*emd */,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
@@ -2215,7 +2223,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
 }
 
 Json::Value format_output_data_coverage_collection(
-    TS::OutputData &outputData,
+    const TS::OutputData &outputData,
     const EDRMetaData &emd,
     const std::set<int> &levels,
     const CoordinateFilter &coordinate_filter,
@@ -2242,7 +2250,7 @@ Json::Value format_output_data_coverage_collection(
 }
 }  // namespace
 
-Json::Value formatOutputData(TS::OutputData &outputData,
+Json::Value formatOutputData(const TS::OutputData &outputData,
                              const EDRMetaData &emd,
                              EDRQueryType query_type,
                              const std::set<int> &levels,

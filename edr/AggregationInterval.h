@@ -18,10 +18,11 @@ namespace EDR
 {
 struct AggregationInterval
 {
-  unsigned int behind;
-  unsigned int ahead;
+  unsigned int behind = 0;
+  unsigned int ahead = 0;
 
-  AggregationInterval(unsigned int be = 0, unsigned int ah = 0) : behind(be), ahead(ah) {}
+  AggregationInterval() {}
+  AggregationInterval(unsigned int be, unsigned int ah) : behind(be), ahead(ah) {}
   friend std::ostream &operator<<(std::ostream &out, const AggregationInterval &interval);
 };
 

@@ -170,10 +170,6 @@ struct Query
   const CoordinateFilter &coordinateFilter() const { return itsCoordinateFilter; }
   bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
 
-#ifndef WITHOUT_AVI
-  bool isAviProducer(const EDRProducerMetaData &emd, const std::string &producer) const;
-#endif
-
  private:
   void parse_levels(const Spine::HTTP::Request &theReq);
 

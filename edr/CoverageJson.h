@@ -14,7 +14,7 @@ namespace EDR
 {
 namespace CoverageJson
 {
-Json::Value formatOutputData(TS::OutputData &outputData,
+Json::Value formatOutputData(const TS::OutputData &outputData,
                              const EDRMetaData &emd,
                              EDRQueryType query_type,
                              const std::set<int> &levels,

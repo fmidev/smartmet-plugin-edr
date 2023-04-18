@@ -876,9 +876,8 @@ void update_location_info(EngineMetaData &emd, const SupportedProducerLocations 
 }
 #endif
 
-EngineMetaData::EngineMetaData()
-{
-  itsUpdateTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+EngineMetaData::EngineMetaData() : itsUpdateTime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))
+{  
 }
 
 void EngineMetaData::addMetaData(const std::string &source_name,

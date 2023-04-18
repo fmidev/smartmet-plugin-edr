@@ -133,7 +133,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
              Spine::HTTP::Response &response);
 
   boost::shared_ptr<std::string> processQuery(const State &state,
-                                              Spine::Table &data,
+                                              Spine::Table &table,
                                               Query &masterquery,
                                               const QueryServer::QueryStreamer_sptr &queryStreamer,
                                               size_t &product_hash);
@@ -221,13 +221,6 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   std::vector<ObsParameter> getObsParameters(const Query &query) const;
 #endif
 #ifndef WITHOUT_AVI
-  void checkAviEngineQuery(const Query &query,
-                           const std::vector<EDRMetaData> &edrMetaData,
-                           bool locationCheck,
-                           SmartMet::Engine::Avi::QueryOptions &queryOptions);
-  void storeAviData(const State &state,
-                    SmartMet::Engine::Avi::StationQueryData &aviData,
-                    TS::OutputData &outputData);
   void processAviEngineQuery(const State &state,
                              const Query &query,
                              const EDRProducerMetaData &edrProducerMetaData,

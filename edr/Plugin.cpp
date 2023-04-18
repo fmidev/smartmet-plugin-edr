@@ -234,114 +234,6 @@ Engine::Querydata::Producer select_producer(const Engine::Querydata::Engine &que
   }
 }
 
-void add_data_to_table(const TS::OptionParsers::ParameterList &paramlist,
-                       TS::TableFeeder &tf,
-                       TS::OutputData &outputData,
-                       const std::string &location_name,
-                       int &startRow)
-{
-  try
-  {
-    unsigned int numberOfParameters = paramlist.size();
-    // iterate different locations
-    for (auto &loc_data : outputData)
-    {
-      const auto &locationName = loc_data.first;
-      if (locationName != location_name)
-        continue;
-
-      startRow = tf.getCurrentRow();
-
-      std::vector<TS::TimeSeriesData> &outdata = loc_data.second;
-      // iterate columns (parameters)
-      for (unsigned int j = 0; j < outdata.size(); j++)
-      {
-        TS::TimeSeriesData tsdata = outdata[j];
-        tf.setCurrentRow(startRow);
-        tf.setCurrentColumn(j);
-
-        const auto &paramName = paramlist[j % numberOfParameters].name();
-        if (paramName == LATLON_PARAM || paramName == NEARLATLON_PARAM)
-        {
-          tf << TS::LonLatFormat::LATLON;
-        }
-        else if (paramName == LONLAT_PARAM || paramName == NEARLONLAT_PARAM)
-        {
-          tf << TS::LonLatFormat::LONLAT;
-        }
-
-        if (boost::get<TS::TimeSeriesPtr>(&tsdata))
-        {
-          TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-          tf << *ts;
-        }
-        else if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
-        {
-          TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata));
-          for (unsigned int k = 0; k < tsv->size(); k++)
-          {
-            tf.setCurrentColumn(k);
-            tf.setCurrentRow(startRow);
-            tf << tsv->at(k);
-          }
-          startRow = tf.getCurrentRow();
-        }
-        else if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
-        {
-          TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-          tf << *tsg;
-        }
-
-        // Reset formatting to the default value
-        tf << TS::LonLatFormat::LONLAT;
-      }
-    }
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief
- */
-// ----------------------------------------------------------------------
-
-// fills the table with data
-#if 0
-void fill_table(Query &query, TS::OutputData &outputData, Spine::Table &table)
-{
-  try
-  {
-    if (outputData.empty())
-      return;
-
-    TS::TableFeeder tf(table, query.valueformatter, query.precisions);
-    int startRow = tf.getCurrentRow();
-
-    std::string locationName(outputData[0].first);
-
-    // if observations exists they are first in the result set
-    if (locationName == "_obs_")
-      add_data_to_table(query.poptions.parameters(), tf, outputData, "_obs_", startRow);
-
-    // iterate locations
-    for (const auto &tloc : query.loptions->locations())
-    {
-      std::string locationId = get_location_id(tloc.loc);
-
-      add_data_to_table(query.poptions.parameters(), tf, outputData, locationId, startRow);
-    }
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-#endif
-
 // ----------------------------------------------------------------------
 /*!
  * \brief
@@ -3449,9 +3341,9 @@ bool Plugin::processGridEngineQuery(const State &state,
 }
 
 #ifndef WITHOUT_AVI
-void Plugin::storeAviData(const State &state,
-                          SmartMet::Engine::Avi::StationQueryData &aviData,
-                          TS::OutputData &outputData)
+void storeAviData(const State &state,
+				  SmartMet::Engine::Avi::StationQueryData &aviData,
+				  TS::OutputData &outputData)
 {
   TS::TimeSeriesVectorPtr messageData(new TS::TimeSeriesVector());
   outputData.push_back(make_pair("data", std::vector<TS::TimeSeriesData>()));
@@ -3491,10 +3383,10 @@ void Plugin::storeAviData(const State &state,
   }
 }
 
-void Plugin::checkAviEngineQuery(const Query &query,
-                                 const std::vector<EDRMetaData> &edrMetaDataVector,
-                                 bool locationCheck,
-                                 SmartMet::Engine::Avi::QueryOptions &queryOptions)
+void checkAviEngineQuery(const Query &query,
+						 const std::vector<EDRMetaData> &edrMetaDataVector,
+						 bool locationCheck,
+						 SmartMet::Engine::Avi::QueryOptions &queryOptions)
 {
   const auto &edrQuery = query.edrQuery();
   // In AVI engine there is only one metadata for each producer/collection (e.g. querydata has
@@ -3932,7 +3824,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 	  if ((queryEngine == SmartMetEngine::Undefined) &&
 		  (!itsConfig.gridEngineDisabled() && itsGridEngine->isEnabled() &&
 		   (strcasecmp(masterquery.forecastSource.c_str(), "grid") == 0 ||
-			(masterquery.forecastSource == "" &&
+			(masterquery.forecastSource.empty() &&
 			 (((!areaproducers.empty() &&
 				itsGridInterface->containsGridProducer(masterquery))) ||
 			  (itsGridInterface->containsParameterWithGridProducer(masterquery)) ||
@@ -3940,7 +3832,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
 	   strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))))))
 		queryEngine = SmartMetEngine::Grid;
 	  
-	  if ((queryEngine == SmartMetEngine::Undefined))
+	  if (queryEngine == SmartMetEngine::Undefined)
 		queryEngine = SmartMetEngine::Querydata;		 	  
 	  
 #ifndef WITHOUT_AVI

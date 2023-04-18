@@ -145,49 +145,49 @@ Value::Value(const char *value)
 }
 
 Value::Value(std::size_t value)
-    : valueType(ValueType::intValue),
-      nodeKey(UNINITIALIZED_KEY),
-      beginIter(data_value_vector.begin()),
-      endIter(data_value_vector.end())
+  : data_value(value),
+	valueType(ValueType::intValue),
+	nodeKey(UNINITIALIZED_KEY),
+	beginIter(data_value_vector.begin()),
+	endIter(data_value_vector.end())
 {
-  data_value = value;
 }
 
 Value::Value(int value)
-    : valueType(ValueType::intValue),
+    : data_value(value),
+	  valueType(ValueType::intValue),
       nodeKey(UNINITIALIZED_KEY),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
 {
-  data_value = value;
 }
 
 Value::Value(bool value)
-    : valueType(ValueType::boolValue),
-      nodeKey(UNINITIALIZED_KEY),
-      beginIter(data_value_vector.begin()),
-      endIter(data_value_vector.end())
+    : data_value(value),
+	  valueType(ValueType::boolValue),
+	  nodeKey(UNINITIALIZED_KEY),
+	  beginIter(data_value_vector.begin()),
+	  endIter(data_value_vector.end())
 {
-  data_value = value;
 }
 
 Value::Value(double value, unsigned int prec /*= DEFAULT_PRECISION*/)
-    : valueType(ValueType::doubleValue),
+    : data_value(value),
+	  valueType(ValueType::doubleValue),
       nodeKey(UNINITIALIZED_KEY),
       precision(prec),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
 {
-  data_value = value;
 }
 
 Value::Value(const NullValue &value)
-    : valueType(ValueType::nullValue),
+    : data_value(value),
+	  valueType(ValueType::nullValue),
       nodeKey(UNINITIALIZED_KEY),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
 {
-  data_value = value;
 }
 
 Value &Value::operator=(const Value &value)
@@ -280,8 +280,18 @@ Value &Value::operator[](const std::string &key)
 }
 
 Value::Value(const Value &value)
+  : data_value(value.data_value),
+	data_value_vector(value.data_value_vector),
+	values(value.values),
+	children(value.children),
+	valueType(value.valueType),
+	nodeKey(value.nodeKey),
+	precision(value.precision),
+	parentNode(value.parentNode)
+
 {
   //  std::cout << "Copy constructor\n";
+  /*
   data_value = value.data_value;
   data_value_vector = value.data_value_vector;
   values = value.values;
@@ -290,6 +300,7 @@ Value::Value(const Value &value)
   valueType = value.valueType;
   parentNode = value.parentNode;
   precision = value.precision;
+  */
 }
 
 Value &Value::operator[](ArrayIndex index)

@@ -2909,7 +2909,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -3093,7 +3094,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -3259,7 +3261,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -3441,6 +3444,15 @@
             "explode": false
           },
           {
+            "name": "coords",
+            "in": "query",
+            "description": "Polygon to retrieve data for. Defined using a Well Known Text string:\n\n```\ncoords=POLYGON((x1 y1, x2 y2, x3 y3, ...))\n```\n\nSee <http://portal.opengeospatial.org/files/?artifact_id=25355> and \n<https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry>\n\n`x` and `y` are coordinates in the coordinate system defined by the `crs` parameter.\nIf the `crs` parameter is not specified, dataset's native CRS is assumed.\n\nFor example a polygon covering South West England in WGS84 would look like: \n```\ncoords=POLYGON((-6.1 50.3,-4.35 51.4,-2.6 51.6,-2.8 50.6,-5.3 49.9,-6.1,50.3))\n```",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "z",
             "in": "query",
             "description": "Vertical coordinate(s) to retrieve data for. The following expressions are possible:\n- Single cordinate. For example `z=850`.\n- Enumeration of coordinates `z=z1,z2,z3,...`. For example `z=1000,300,850,500`.\n- Interval of coordinates. Four types of intervals are possible:\n  - Bounded `z=minz/maxz`. For example `z=1000/850`.\n  - Unbounded bottom `z=../maxz`. For example `z=../500`.\n  - Unbounded top `z=minz/..`. For example `z=850/..`.\n  - Unbounded `z=../..`.\n\n  Intervala are closed (include limit coordinates).\n  Coordinates are compared by their altitude, not numerically,\n  i.e. `minz` must be below `maxz` (in case of isobaric coordinates 1000 < 850, for example).\n\n- Arithmetic sequence `R<count>/<start>/<step>`.\n  For example `z=R5/1000/-100` represents 1000,900,800,700,600 \n\nVertical extent (available vertical coordinates) is described by the collection's/instance's metadata.\n",
@@ -3456,7 +3468,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -3646,7 +3659,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -3812,7 +3826,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -6612,7 +6627,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -6814,7 +6830,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -6998,7 +7015,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -7213,7 +7231,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -7421,7 +7440,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",
@@ -7605,7 +7625,8 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
+            },
+            "style": "form"
           },
           {
             "name": "parameter-name",

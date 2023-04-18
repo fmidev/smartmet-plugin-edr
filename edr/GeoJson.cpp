@@ -17,7 +17,7 @@ namespace
 {
 struct coordinate_xyz
 {
-  coordinate_xyz() = default;
+  coordinate_xyz() : x(0.0), y(0.0) {}
   coordinate_xyz(double x_val, double y_val, boost::optional<double> z_val)
       : x(x_val), y(y_val), z(z_val)
   {
@@ -419,7 +419,7 @@ Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, i
   return bbox;
 }
 
-Json::Value format_output_data_one_point(TS::OutputData &outputData,
+Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
                                          boost::optional<int> /* level */,
                                          const std::vector<Spine::Parameter> &query_parameters)
@@ -491,7 +491,7 @@ Json::Value format_output_data_one_point(TS::OutputData &outputData,
   }
 }
 
-Json::Value format_output_data_position(TS::OutputData &outputData,
+Json::Value format_output_data_position(const TS::OutputData &outputData,
                                         const EDRMetaData &emd,
                                         const std::vector<Spine::Parameter> &query_parameters)
 {
@@ -616,7 +616,7 @@ Json::Value format_output_data_position(TS::OutputData &outputData,
   }
 }
 
-DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
+DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
                                         const EDRMetaData & /* emd */,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
@@ -737,7 +737,7 @@ DataPerParameter get_data_per_parameter(TS::OutputData &outputData,
 }
 
 Json::Value format_output_data_feature_collection(
-    TS::OutputData &outputData,
+    const TS::OutputData &outputData,
     const EDRMetaData &emd,
     const std::set<int> &levels,
     const CoordinateFilter &coordinate_filter,
@@ -857,7 +857,7 @@ Json::Value format_output_data_feature_collection(
 
 }  // namespace
 
-Json::Value formatOutputData(TS::OutputData &outputData,
+Json::Value formatOutputData(const TS::OutputData &outputData,
                              const EDRMetaData &emd,
                              EDRQueryType query_type,
                              const std::set<int> &levels,

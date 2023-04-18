@@ -48,13 +48,13 @@ inline bool NullValue::operator==(const NullValue & /* other */) const
 class DataValue
 {
  public:
-  DataValue() { data = NullValue(); }
-  DataValue(const std::string &value) { data = value; }
-  DataValue(bool value) { data = value; }
-  DataValue(std::size_t value) { data = value; }
-  DataValue(int value) { data = std::size_t(value); }
-  DataValue(double value) { data = value; }
-  DataValue(const NullValue &value) { data = value; }
+  DataValue() : data(NullValue()) {}
+  DataValue(const std::string &value) : data(value) {}
+  DataValue(bool value) : data(value) {}
+  DataValue(std::size_t value) : data(value) {}
+  DataValue(int value) : data(std::size_t(value)) {}
+  DataValue(double value) : data(value) {}
+  DataValue(const NullValue &value) : data(value) {}
 
   std::string to_string(unsigned int precision = DEFAULT_PRECISION) const;
   ValueType valueType() const;
