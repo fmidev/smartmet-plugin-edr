@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.5.10
+Version: 23.5.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -37,14 +37,14 @@ BuildRequires: smartmet-library-gis-devel >= 23.3.14
 BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-engine-geonames-devel >= 23.4.27
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 23.5.10
+BuildRequires: smartmet-engine-observation-devel >= 23.5.11
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 23.4.27
 BuildRequires: smartmet-engine-gis-devel >= 22.12.21
 BuildRequires: smartmet-engine-grid-devel >= 23.4.17
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 23.5.10
+#Requires: smartmet-engine-observation >= 23.5.11
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -78,7 +78,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 22.12.21
 #TestRequires: smartmet-engine-querydata >= 23.4.27
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 23.5.10
+#TestRequires: smartmet-engine-observation >= 23.5.11
 %endif
 #TestRequires: smartmet-engine-grid >= 23.4.17
 #TestRequires: gdal34
@@ -109,6 +109,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Thu May 11 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.5.11-1.fmi
+- Improved observation metadata processing: Measurand info is fetched from database 
+in order to get valid parameter list for each prodcer
+- New configuration file entry 'visible_collections' added in order to limit number of collections in metadata
+
 * Wed May 10 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.5.10-1.fmi
 - Use latest obs engine API for looking for the latest observations
 

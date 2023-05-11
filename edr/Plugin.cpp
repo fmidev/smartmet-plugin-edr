@@ -3706,7 +3706,7 @@ const EDRProducerMetaData &Plugin::getAviMetaData() const
 {
   auto metadata = itsMetaData.load();
 
-  return metadata->getMetaData(AVI_ENGINE);
+  return metadata->getMetaData(SourceEngine::Avi);
 }
 #endif
 
@@ -3778,7 +3778,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     std::string producerName = producerMissing ? "" : masterquery.timeproducers.front().front();
 
 #ifndef WITHOUT_AVI
-    bool isAviProducer = metaData->isValidCollection(AVI_ENGINE, producerName);
+    bool isAviProducer = metaData->isValidCollection(SourceEngine::Avi, producerName);
 #endif
 #ifndef WITHOUT_OBSERVATION
     const ObsParameters obsParameters = getObsParameters(masterquery);
@@ -3804,18 +3804,18 @@ boost::shared_ptr<std::string> Plugin::processQuery(
         query.toptions.startTimeUTC = startTimeUTC;
       query.toptions.endTimeUTC = masterquery.toptions.endTimeUTC;
 
-      SmartMetEngine queryEngine = SmartMetEngine::Undefined;
+      SourceEngine queryEngine = SourceEngine::Undefined;
 
 #ifndef WITHOUT_OBSERVATION
       if (!areaproducers.empty() && !itsConfig.obsEngineDisabled() &&
           isObsProducer(areaproducers.front()))
       {
-        queryEngine = SmartMetEngine::Observation;
+        queryEngine = SourceEngine::Observation;
       }
 #endif
 #ifndef WITHOUT_AVI
-      if ((queryEngine == SmartMetEngine::Undefined) && isAviProducer)
-        queryEngine = SmartMetEngine::Avi;
+      if ((queryEngine == SourceEngine::Undefined) && isAviProducer)
+        queryEngine = SourceEngine::Avi;
 #endif
       // Grid-query is executed if the following conditions are fulfilled:
       //   1. The usage of Grid-Engine is enabled (=> timeseries
@@ -3829,7 +3829,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
       //       defined and at least one of the query parameters contains a
       //       grid producer d) Query source is not defined and no producers
       //       are defined and the primary forecast
-      if ((queryEngine == SmartMetEngine::Undefined) &&
+      if ((queryEngine == SourceEngine::Undefined) &&
           (!itsConfig.gridEngineDisabled() && itsGridEngine->isEnabled() &&
            (strcasecmp(masterquery.forecastSource.c_str(), "grid") == 0 ||
             (masterquery.forecastSource.empty() &&
@@ -3837,26 +3837,26 @@ boost::shared_ptr<std::string> Plugin::processQuery(
               (itsGridInterface->containsParameterWithGridProducer(masterquery)) ||
               (areaproducers.empty() &&
                strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))))))
-        queryEngine = SmartMetEngine::Grid;
+        queryEngine = SourceEngine::Grid;
 
-      if (queryEngine == SmartMetEngine::Undefined)
-        queryEngine = SmartMetEngine::Querydata;
+      if (queryEngine == SourceEngine::Undefined)
+        queryEngine = SourceEngine::Querydata;
 
 #ifndef WITHOUT_AVI
-      if (queryEngine == SmartMetEngine::Avi && !itsConfig.aviEngineDisabled())
+      if (queryEngine == SourceEngine::Avi && !itsConfig.aviEngineDisabled())
       {
         processAviEngineQuery(
-            state, query, metaData->getMetaData(AVI_ENGINE), producerName, outputData);
+            state, query, metaData->getMetaData(SourceEngine::Avi), producerName, outputData);
       }
 #endif
 #ifndef WITHOUT_OBSERVATION
-      if (queryEngine == SmartMetEngine::Observation)
+      if (queryEngine == SourceEngine::Observation)
       {
         processObsEngineQuery(
             state, query, outputData, areaproducers, producerDataPeriod, obsParameters);
       }
 #endif
-      if (queryEngine == SmartMetEngine::Grid)
+      if (queryEngine == SourceEngine::Grid)
       {
         bool processed = processGridEngineQuery(
             state, query, outputData, queryStreamer, areaproducers, producerDataPeriod);
@@ -3873,7 +3873,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
           processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
         }
       }
-      else if (queryEngine == SmartMetEngine::Querydata)
+      else if (queryEngine == SourceEngine::Querydata)
       {
         processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
       }
@@ -4596,7 +4596,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                 data_queries,
                                                 output_formats,
                                                 itsSupportedLocations);
-    engine_meta_data->addMetaData(Q_ENGINE, qengine_metadata);
+    engine_meta_data->addMetaData(SourceEngine::Querydata, qengine_metadata);
     if (!itsConfig.gridEngineDisabled())
     {
       auto grid_engine_metadata = get_edr_metadata_grid(*itsGridEngine,
@@ -4607,20 +4607,32 @@ void Plugin::updateMetaData(bool initial_phase)
                                                         output_formats,
                                                         itsSupportedLocations);
 
-      engine_meta_data->addMetaData(GRID_ENGINE, grid_engine_metadata);
+      engine_meta_data->addMetaData(SourceEngine::Grid, grid_engine_metadata);
     }
 #ifndef WITHOUT_OBSERVATION
     if (!itsConfig.obsEngineDisabled())
     {
+	  if(initial_phase)
+		{
+		  //std::shared_ptr<std::vector<ObservableProperty>>
+		  std::map<std::string, const Engine::Observation::ObservableProperty*> properties;
+		  std::vector<std::string> params;
+		  itsObservableProperties = itsObsEngine->observablePropertyQuery(params, default_language);
+		  for(const auto& prop : *itsObservableProperties)
+			itsObservablePropertiesMap[prop.gmlId] = &prop;
+		}
+
       auto obs_engine_metadata = get_edr_metadata_obs(*itsObsEngine,
                                                       default_language,
                                                       parameter_info,
-                                                      collection_info_container,
+													  itsObservablePropertiesMap,
+													  collection_info_container,
                                                       data_queries,
                                                       output_formats,
                                                       itsSupportedLocations,
-                                                      observation_period);
-      engine_meta_data->addMetaData(OBS_ENGINE, obs_engine_metadata);
+													  observation_period);
+
+      engine_meta_data->addMetaData(SourceEngine::Observation, obs_engine_metadata);
     }
 #endif
 #ifndef WITHOUT_AVI
@@ -4634,7 +4646,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                       data_queries,
                                                       output_formats,
                                                       itsSupportedLocations);
-      engine_meta_data->addMetaData(AVI_ENGINE, avi_engine_metadata);
+      engine_meta_data->addMetaData(SourceEngine::Avi, avi_engine_metadata);
     }
 #endif
     engine_meta_data->removeDuplicates(initial_phase);
@@ -4676,7 +4688,10 @@ void Plugin::updateSupportedLocations()
     // For avi producers locations/stations are loaded from avidb
 #ifndef WITHOUT_AVI
     if (!itsConfig.aviEngineDisabled())
-      load_locations_avi(*itsAviEngine, itsConfig.getAviCollections(), itsSupportedLocations);
+	  {
+		const auto &collection_info_container = itsConfig.getCollectionInfo();   
+		load_locations_avi(*itsAviEngine, itsConfig.getAviCollections(), itsSupportedLocations, collection_info_container);
+	  }
 #endif
   }
   catch (...)

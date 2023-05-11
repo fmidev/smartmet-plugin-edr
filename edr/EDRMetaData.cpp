@@ -6,11 +6,11 @@
 
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
+#include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
-#include <macgyver/AnsiEscapeCodes.h>
-#include <timeseries/TimeSeriesOutput.h>
 #include <spine/Convenience.h>
+#include <timeseries/TimeSeriesOutput.h>
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
@@ -29,76 +29,84 @@ namespace EDR
 static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
 class TimePeriod
 {
-public:
-  TimePeriod(const boost::posix_time::ptime& t1, const boost::posix_time::ptime& t2) : period_start(t1), period_end(t2) {}
-  void setStartTime(const boost::posix_time::ptime& t) { period_start = t; }
-  void setEndTime(const boost::posix_time::ptime& t) { period_end = t; }
-  const boost::posix_time::ptime& getStartTime() const { return period_start; }
-  const boost::posix_time::ptime& getEndTime() const { return period_end; }
-  int length() const 
+ public:
+  TimePeriod(const boost::posix_time::ptime &t1, const boost::posix_time::ptime &t2)
+      : period_start(t1), period_end(t2)
   {
-	if(period_start.is_not_a_date_time() || period_end.is_not_a_date_time())
-	  return 0;
-	return (period_end-period_start).total_seconds(); 
   }
-private:
+  void setStartTime(const boost::posix_time::ptime &t) { period_start = t; }
+  void setEndTime(const boost::posix_time::ptime &t) { period_end = t; }
+  const boost::posix_time::ptime &getStartTime() const { return period_start; }
+  const boost::posix_time::ptime &getEndTime() const { return period_end; }
+  int length() const
+  {
+    if (period_start.is_not_a_date_time() || period_end.is_not_a_date_time())
+      return 0;
+    return (period_end - period_start).total_seconds();
+  }
+
+ private:
   boost::posix_time::ptime period_start = boost::posix_time::not_a_date_time;
   boost::posix_time::ptime period_end = boost::posix_time::not_a_date_time;
 };
 namespace
 {
-  std::set<std::string> get_collection_names(const EDRProducerMetaData& md)
+std::set<std::string> get_collection_names(const EDRProducerMetaData &md)
+{
+  std::set<std::string> collection_names;
+  for (const auto &item : md)
+    collection_names.insert(item.first);
+
+  return collection_names;
+}
+
+void report_duplicate_collection(const std::string &collection,
+                                 const std::string &duplicate_source,
+                                 const std::string &original_source)
+{
+  std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Duplicate collection '" +
+                collection + "' removed from " + duplicate_source +
+                ", it has already been defined in " + original_source + ANSI_FG_DEFAULT)
+            << std::endl;
+}
+
+const std::set<std::string> &get_supported_data_queries(const std::string &producer,
+                                                        const SupportedDataQueries &sdq)
+{
+  try
   {
-	std::set<std::string> collection_names;
-	for(const auto& item : md)
-	  collection_names.insert(item.first);
-	
-	return collection_names;
+    if (sdq.find(producer) != sdq.end())
+      return sdq.at(producer);
+
+    return sdq.at(DEFAULT_DATA_QUERIES);
   }
-  
-  void report_duplicate_collection(const std::string& collection, const std::string& duplicate_source, const std::string& original_source)
+  catch (...)
   {
-	std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Duplicate collection '" + collection + "' removed from " + duplicate_source + ", it has already been defined in " + original_source  + ANSI_FG_DEFAULT)
-			  << std::endl;
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
-  
-  const std::set<std::string> &get_supported_data_queries(const std::string &producer,
-														  const SupportedDataQueries &sdq)
+}
+
+const std::set<std::string> &get_supported_output_formats(const std::string &producer,
+                                                          const SupportedOutputFormats &sofs)
+{
+  try
   {
-	try
-	  {
-		if (sdq.find(producer) != sdq.end())
-		  return sdq.at(producer);
-		
-		return sdq.at(DEFAULT_DATA_QUERIES);
-	  }
-	catch (...)
-	  {
-		throw Fmi::Exception::Trace(BCP, "Operation failed!");
-	  }
+    if (sofs.find(producer) != sofs.end())
+      return sofs.at(producer);
+
+    return sofs.at(DEFAULT_OUTPUT_FORMATS);
   }
-  
-  const std::set<std::string> &get_supported_output_formats(const std::string &producer,
-															const SupportedOutputFormats &sofs)
+  catch (...)
   {
-	try
-	  {
-		if (sofs.find(producer) != sofs.end())
-		  return sofs.at(producer);
-		
-		return sofs.at(DEFAULT_OUTPUT_FORMATS);
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
-	catch (...)
-	  {
-		throw Fmi::Exception::Trace(BCP, "Operation failed!");
-	  }
-  }
-} // namespace
-  
+}
+}  // namespace
+
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
                                         const std::string &default_language,
                                         const ParameterInfo *pinfo,
-                                        const CollectionInfoContainer& cic,
+                                        const CollectionInfoContainer &cic,
                                         const SupportedDataQueries &sdq,
                                         const SupportedOutputFormats &sofs,
                                         const SupportedProducerLocations &spl)
@@ -116,7 +124,11 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
+	  if(!cic.isVisibleCollection(SourceEngine::Querydata, qmd.producer))
+		continue;
+		 
       EDRMetaData producer_emd;
+      producer_emd.metadata_source = SourceEngine::Querydata;
 
       if (qmd.levels.size() > 1)
       {
@@ -133,15 +145,15 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       producer_emd.spatial_extent.bbox_ymin = rangeLat.getMin();
       producer_emd.spatial_extent.bbox_xmax = rangeLon.getMax();
       producer_emd.spatial_extent.bbox_ymax = rangeLat.getMax();
-	  
-	  edr_temporal_extent temporal_extent;
+
+      edr_temporal_extent temporal_extent;
       temporal_extent.origin_time = qmd.originTime;
-	  edr_temporal_extent_period temporal_extent_period;
+      edr_temporal_extent_period temporal_extent_period;
       temporal_extent_period.start_time = qmd.firstTime;
       temporal_extent_period.end_time = qmd.lastTime;
       temporal_extent_period.timestep = qmd.timeStep;
       temporal_extent_period.timesteps = qmd.nTimeSteps;
-	  temporal_extent.time_periods.push_back(temporal_extent_period);
+      temporal_extent.time_periods.push_back(temporal_extent_period);
       producer_emd.temporal_extent = temporal_extent;
 
       for (const auto &p : qmd.parameters)
@@ -155,7 +167,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;
       producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(Q_ENGINE, qmd.producer);
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmd.producer);
       producer_emd.data_queries = get_supported_data_queries(qmd.producer, sdq);
       producer_emd.output_formats = get_supported_output_formats(qmd.producer, sofs);
 
@@ -177,7 +189,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
                                           const std::string &default_language,
                                           const ParameterInfo *pinfo,
-										  const CollectionInfoContainer& cic,
+                                          const CollectionInfoContainer &cic,
                                           const SupportedDataQueries &sdq,
                                           const SupportedOutputFormats &sofs,
                                           const SupportedProducerLocations &spl)
@@ -189,10 +201,16 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
     // Iterate Grid metadata and add items into collection
-    for (const auto &gmd : grid_meta_data)
+    for (auto &gmd : grid_meta_data)
     {
-	
+      std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." +
+                                Fmi::to_string(gmd.levelId));
+
+	  if(!cic.isVisibleCollection(SourceEngine::Grid, producerId))
+		continue;
+
       EDRMetaData producer_emd;
+      producer_emd.metadata_source = SourceEngine::Grid;
 
       if (gmd.levels.size() > 1)
       {
@@ -228,25 +246,25 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
           std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
       producer_emd.spatial_extent.bbox_ymax =
           std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
-	  
+
       auto begin_iter = gmd.times.begin();
       auto end_iter = gmd.times.end();
       end_iter--;
       const auto &end_time = *end_iter;
       const auto &start_time = *begin_iter;
-	  if(gmd.times.size() > 1)
-		begin_iter++;
+      if (gmd.times.size() > 1)
+        begin_iter++;
       const auto &start_time_plus_one = *begin_iter;
       auto timestep_duration = (boost::posix_time::from_iso_string(start_time_plus_one) -
                                 boost::posix_time::from_iso_string(start_time));
-	  edr_temporal_extent temporal_extent;
+      edr_temporal_extent temporal_extent;
       temporal_extent.origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
-	  edr_temporal_extent_period temporal_extent_period;
+      edr_temporal_extent_period temporal_extent_period;
       temporal_extent_period.start_time = boost::posix_time::from_iso_string(start_time);
       temporal_extent_period.end_time = boost::posix_time::from_iso_string(end_time);
       temporal_extent_period.timestep = (timestep_duration.total_seconds() / 60);
       temporal_extent_period.timesteps = gmd.times.size();
-	  temporal_extent.time_periods.push_back(temporal_extent_period);
+      temporal_extent.time_periods.push_back(temporal_extent_period);
       producer_emd.temporal_extent = temporal_extent;
 
       for (const auto &p : gmd.parameters)
@@ -256,22 +274,21 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
         producer_emd.parameter_names.insert(parameter_name);
         producer_emd.parameters.insert(std::make_pair(
             parameter_name,
-            edr_parameter(parameter_name, p.parameterDescription, p.parameterUnits)));
+            edr_parameter(parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
       }
 
-      std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." +
-                                Fmi::to_string(gmd.levelId));
-
-	  producer_emd.collection_info_engine.title = ("Producer: " + gmd.producerName + "; Geometry id: " +  Fmi::to_string(gmd.geometryId) + "; Level id: " + Fmi::to_string(gmd.levelId));
-	  producer_emd.collection_info_engine.description = gmd.producerDescription;
-	  producer_emd.collection_info_engine.keywords.insert(gmd.producerName);
+      producer_emd.collection_info_engine.title =
+          ("Producer: " + gmd.producerName + "; Geometry id: " + Fmi::to_string(gmd.geometryId) +
+           "; Level id: " + Fmi::to_string(gmd.levelId));
+      producer_emd.collection_info_engine.description = gmd.producerDescription;
+      producer_emd.collection_info_engine.keywords.insert(gmd.producerName);
 
       boost::algorithm::to_lower(producerId);
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;
       producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(GRID_ENGINE, gmd.producerName);
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Grid, gmd.producerName);
 
       producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
       producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
@@ -292,81 +309,142 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 }
 
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
-                                         const std::string &default_language,
-                                         const ParameterInfo *pinfo,
-										 const CollectionInfoContainer& cic,
-                                         const SupportedDataQueries &sdq,
-                                         const SupportedOutputFormats &sofs,
-                                         const SupportedProducerLocations &spl,
-										 unsigned int observation_period)
+
+std::set<std::string> get_producer_parameters(const std::string& producer, const Engine::Observation::ProducerMeasurandInfo& pmi)
+{
+  std::set<std::string> ret;
+
+  if(pmi.find(producer) != pmi.end())
+	{
+	  const auto& mi = pmi.at(producer);
+	  for(const auto& item : mi)
+		ret.insert(item.first);
+	  }
+  
+  return ret;
+}
+
+EDRProducerMetaData get_edr_metadata_obs(
+    Engine::Observation::Engine &obsEngine,
+    const std::string &default_language,
+    const ParameterInfo *pinfo,
+    const std::map<std::string, const Engine::Observation::ObservableProperty *>
+        &observable_properties,
+    const CollectionInfoContainer &cic,
+    const SupportedDataQueries &sdq,
+    const SupportedOutputFormats &sofs,
+    const SupportedProducerLocations &spl,
+    unsigned int observation_period)
 
 {
   try
   {
     std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
-
-    std::set<std::string> producers = obsEngine.getValidStationTypes();
+    auto producers = obsEngine.getValidStationTypes();
 
     for (const auto &prod : producers)
-      observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
+	  {
+		if(cic.isVisibleCollection(SourceEngine::Observation, prod))
+		  observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
+	  }
+
+    const auto& producer_measurand_info = obsEngine.getMeasurandInfo();
 
     EDRProducerMetaData epmd;
-
+	
     // Iterate Observation engine metadata and add item into collection
-    std::vector<std::string> params{""};
     for (const auto &item : observation_meta_data)
     {
       const auto &producer = item.first;
       const auto &obs_md = item.second;
+	  auto params = obs_md.parameters;
+	  auto measurand_params = get_producer_parameters(producer, producer_measurand_info);
+
+	  params.insert(measurand_params.begin(), measurand_params.end());
 
       EDRMetaData producer_emd;
+      producer_emd.metadata_source = SourceEngine::Observation;
 
       producer_emd.spatial_extent.bbox_xmin = obs_md.bbox.xMin;
       producer_emd.spatial_extent.bbox_ymin = obs_md.bbox.yMin;
       producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
       producer_emd.spatial_extent.bbox_ymax = obs_md.bbox.yMax;
-	  edr_temporal_extent temporal_extent;
+      edr_temporal_extent temporal_extent;
       temporal_extent.origin_time = boost::posix_time::second_clock::universal_time();
-	  edr_temporal_extent_period temporal_extent_period;
-	  auto time_of_day = obs_md.period.last().time_of_day();
-	  auto end_date = obs_md.period.last().date();
-	  // In order to get rid of fractions of a second in end_time
-	  boost::posix_time::ptime end_time(end_date, boost::posix_time::time_duration(time_of_day.hours(), time_of_day.minutes(), 0));
-	  if(observation_period > 0)
-		temporal_extent_period.start_time = (end_time - boost::posix_time::hours(observation_period));
-	  else
-		temporal_extent_period.start_time = obs_md.period.begin();
+      edr_temporal_extent_period temporal_extent_period;
+      auto time_of_day = obs_md.period.last().time_of_day();
+      auto end_date = obs_md.period.last().date();
+      // In order to get rid of fractions of a second in end_time
+      boost::posix_time::ptime end_time(
+          end_date,
+          boost::posix_time::time_duration(time_of_day.hours(), time_of_day.minutes(), 0));
+      if (observation_period > 0)
+        temporal_extent_period.start_time =
+            (end_time - boost::posix_time::hours(observation_period));
+      else
+        temporal_extent_period.start_time = obs_md.period.begin();
       temporal_extent_period.end_time = end_time;
       temporal_extent_period.timestep = obs_md.timestep;
       temporal_extent_period.timesteps = (obs_md.period.length().minutes() / obs_md.timestep);
-	  temporal_extent.time_periods.push_back(temporal_extent_period);
+      temporal_extent.time_periods.push_back(temporal_extent_period);
       producer_emd.temporal_extent = temporal_extent;
 
-      for (const auto &p : obs_md.parameters)
+      for (const auto &p : params)
       {
-        params[0] = p;
-        /*
-        // This is slow and not used any more,
-        std::string description = p;
-        auto observedProperties =
-        obsEngine.observablePropertyQuery(params, "en");
-        if (observedProperties->size() > 0)
-          description = observedProperties->at(0).observablePropertyLabel;
-        */
-
-        const auto &description = p;
         auto parameter_name = p;
         boost::algorithm::to_lower(parameter_name);
+        std::string description = p;
+        std::string label = p;
+        std::string unit = "";
+
+        // Exclude external producers
+        if (producer != "netatmo" && producer != "roadcloud" && producer != "teconer" &&
+            producer != "fmi_iot")
+        {
+		  const Engine::Observation::measurand_info* mi = nullptr;
+
+		  if(producer_measurand_info.find(producer) != producer_measurand_info.end())
+			{
+			  const auto& measurands = producer_measurand_info.at(producer);
+			  if(measurands.find(parameter_name) != measurands.end())
+				mi = &measurands.at(parameter_name);
+			}
+
+			if(observable_properties.find(parameter_name) != observable_properties.end())
+			{
+			  const auto& properties = observable_properties.at(parameter_name);
+			  description = properties->observablePropertyLabel; 
+			  label = properties->uom; 
+			  unit = properties->uom;
+			  /*
+			  auto prop_desc =
+				(properties->measurandId+" -- "+ properties->measurandCode+" -- "+
+				 properties->observablePropertyId+" -- "+
+				 properties->observablePropertyLabel+" -- "+
+				 properties->uom+" -- "+
+				 properties->statisticalMeasureId+" -- "+
+				 properties->statisticalFunction+" -- "+
+				 properties->aggregationTimePeriod+" -- "+
+				 properties->gmlId);
+			  std::cout << "desc: " << prop_desc << std::endl;
+			  */
+			}
+			else if(mi)
+			{
+			  description = mi->get_description(default_language);
+			  label = mi->get_label(default_language);
+			}
+		}
+		
         producer_emd.parameter_names.insert(parameter_name);
         producer_emd.parameters.insert(
-            std::make_pair(parameter_name, edr_parameter(p, description)));
+            std::make_pair(parameter_name, edr_parameter(p, description, unit, label)));
       }
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;
       producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(OBS_ENGINE, producer);
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Observation, producer);
       producer_emd.data_queries = get_supported_data_queries(producer, sdq);
       producer_emd.output_formats = get_supported_output_formats(producer, sofs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
@@ -386,78 +464,81 @@ EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine &obsEngine,
 #endif
 
 #ifndef WITHOUT_AVI
-std::vector<std::string> time_periods(const std::set<boost::local_time::local_date_time>& timesteps)
+std::vector<std::string> time_periods(const std::set<boost::local_time::local_date_time> &timesteps)
 {
   std::vector<std::string> ret;
-  if(timesteps.size() == 0)
-	return ret;
-  if(timesteps.size() == 1)
-	{
-	  ret.push_back(Fmi::to_iso_string(timesteps.begin()->utc_time()));
-	  return ret;
-	}
+  if (timesteps.size() == 0)
+    return ret;
+  if (timesteps.size() == 1)
+  {
+    ret.push_back(Fmi::to_iso_string(timesteps.begin()->utc_time()));
+    return ret;
+  }
 
   // Insert time periods into vector
   std::vector<TimePeriod> time_periods;
   auto it_previous = timesteps.begin();
   auto it = timesteps.begin();
   it++;
-  while(it != timesteps.end())
-	{
-	  time_periods.push_back({it_previous->utc_time(), it->utc_time()});
-	  it_previous++;
-	  it++;
-	}
+  while (it != timesteps.end())
+  {
+    time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+    it_previous++;
+    it++;
+  }
 
   // Iterate vector and find out periods with even timesteps
   TimePeriod tp = time_periods.at(0);
   int first_period_length = tp.length();
   bool multiple_periods = false;
-  for(unsigned int i = 1; i < time_periods.size(); i++)
-	{
-	  auto tp_current = time_periods.at(i);
-	  if(first_period_length != tp_current.length() || i == time_periods.size() - 1)
-		{
-		  if(multiple_periods)
-			{
-			  if(i == time_periods.size() - 1)
-				tp.setEndTime(tp_current.getEndTime());
-			  ret.push_back(Fmi::to_iso_string(tp.getStartTime())+"Z/"+Fmi::to_iso_string(tp.getEndTime())+"Z/"+Fmi::to_string(first_period_length));
-			  multiple_periods = false;
-			}
-		  else
-			{
-			  ret.push_back(Fmi::to_iso_string(tp.getStartTime()));
-			  ret.push_back(Fmi::to_iso_string(tp.getEndTime()));
-			  if(i == time_periods.size() - 1)
-				ret.push_back(Fmi::to_iso_string(tp_current.getEndTime()));
-			}
-		  i++;
-		  if(i < time_periods.size() - 1)
-			{
-			  tp = time_periods.at(i);
-			  first_period_length = tp.length();
-			}
-		}
-	  else
-		{
-		  tp.setEndTime(tp_current.getEndTime());
-		  multiple_periods = true;
-		}
-	}
+  for (unsigned int i = 1; i < time_periods.size(); i++)
+  {
+    auto tp_current = time_periods.at(i);
+    if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
+    {
+      if (multiple_periods)
+      {
+        if (i == time_periods.size() - 1)
+          tp.setEndTime(tp_current.getEndTime());
+        ret.push_back(Fmi::to_iso_string(tp.getStartTime()) + "Z/" +
+                      Fmi::to_iso_string(tp.getEndTime()) + "Z/" +
+                      Fmi::to_string(first_period_length));
+        multiple_periods = false;
+      }
+      else
+      {
+        ret.push_back(Fmi::to_iso_string(tp.getStartTime()));
+        ret.push_back(Fmi::to_iso_string(tp.getEndTime()));
+        if (i == time_periods.size() - 1)
+          ret.push_back(Fmi::to_iso_string(tp_current.getEndTime()));
+      }
+      i++;
+      if (i < time_periods.size() - 1)
+      {
+        tp = time_periods.at(i);
+        first_period_length = tp.length();
+      }
+    }
+    else
+    {
+      tp.setEndTime(tp_current.getEndTime());
+      multiple_periods = true;
+    }
+  }
 
   return ret;
 }
 
 // Merge time periods when possible (even timesteps)
-edr_temporal_extent get_temporal_extent(const std::set<boost::local_time::local_date_time>& timesteps)
+edr_temporal_extent get_temporal_extent(
+    const std::set<boost::local_time::local_date_time> &timesteps)
 {
   edr_temporal_extent ret;
 
   auto timper = time_periods(timesteps);
 
-  if(timesteps.size() < 2)
-	return ret;
+  if (timesteps.size() < 2)
+    return ret;
 
   ret.origin_time = boost::posix_time::second_clock::universal_time();
 
@@ -466,88 +547,90 @@ edr_temporal_extent get_temporal_extent(const std::set<boost::local_time::local_
   auto it_previous = timesteps.begin();
   auto it = timesteps.begin();
   it++;
-  while(it != timesteps.end())
-	{
-	  time_periods.push_back({it_previous->utc_time(), it->utc_time()});
-	  it_previous++;
-	  it++;
-	}
+  while (it != timesteps.end())
+  {
+    time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+    it_previous++;
+    it++;
+  }
 
   // Iterate vector and find out periods with even timesteps
   TimePeriod tp = time_periods.at(0);
   int first_period_length = tp.length();
   bool multiple_periods = false;
   std::vector<edr_temporal_extent_period> merged_time_periods;
-  for(unsigned int i = 1; i < time_periods.size(); i++)
-	{
-	  auto tp_current = time_periods.at(i);
-	  if(first_period_length != tp_current.length() || i == time_periods.size() - 1)
-		{
-		  if(multiple_periods)
-			{
-			  if(i == time_periods.size() - 1)
-				tp.setEndTime(tp_current.getEndTime());
-			  edr_temporal_extent_period etep;
-			  etep.start_time = tp.getStartTime();
-			  etep.end_time = tp.getEndTime();
-			  etep.timestep = first_period_length / 60; // seconds to minutes
-			  etep.timesteps = ((etep.end_time-etep.start_time).total_seconds() / first_period_length);
-			  merged_time_periods.push_back(etep);
-			  multiple_periods = false;
-			}
-		  else
-			{
-			  merged_time_periods.clear();
-			  break;
-			}
-		  i++;
-		  if(i < time_periods.size() - 1)
-			{
-			  tp = time_periods.at(i);
-			  first_period_length = tp.length();
-			}
-		}
-	  else
-		{
-		  tp.setEndTime(tp_current.getEndTime());
-		  multiple_periods = true;
-		}
-	}
+  for (unsigned int i = 1; i < time_periods.size(); i++)
+  {
+    auto tp_current = time_periods.at(i);
+    if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
+    {
+      if (multiple_periods)
+      {
+        if (i == time_periods.size() - 1)
+          tp.setEndTime(tp_current.getEndTime());
+        edr_temporal_extent_period etep;
+        etep.start_time = tp.getStartTime();
+        etep.end_time = tp.getEndTime();
+        etep.timestep = first_period_length / 60;  // seconds to minutes
+        etep.timesteps = ((etep.end_time - etep.start_time).total_seconds() / first_period_length);
+        merged_time_periods.push_back(etep);
+        multiple_periods = false;
+      }
+      else
+      {
+        merged_time_periods.clear();
+        break;
+      }
+      i++;
+      if (i < time_periods.size() - 1)
+      {
+        tp = time_periods.at(i);
+        first_period_length = tp.length();
+      }
+    }
+    else
+    {
+      tp.setEndTime(tp_current.getEndTime());
+      multiple_periods = true;
+    }
+  }
 
-  if(merged_time_periods.empty())
-	{
-	  if(timesteps.size() > MAX_TIME_PERIODS)
-		{
-		  // Insert only starttime and endtime
-		  edr_temporal_extent_period etep;
-		  etep.start_time = time_periods.front().getStartTime();
-		  etep.end_time = time_periods.back().getEndTime();
-		  etep.timestep = 0;
-		  etep.timesteps = 0;
-		  ret.time_periods.push_back(etep);	  
-		}
-	  else
-		{
-		  // Insert all timesteps
-		  for(const auto& t : timesteps)
-			{
-			  edr_temporal_extent_period etep;
-			  etep.start_time = t.utc_time();
-			  etep.timestep = 0;			  
-			  etep.timesteps = 0;
-			  ret.time_periods.push_back(etep);	  
-			}
-		}
-	}
+  if (merged_time_periods.empty())
+  {
+    if (timesteps.size() > MAX_TIME_PERIODS)
+    {
+      // Insert only starttime and endtime
+      edr_temporal_extent_period etep;
+      etep.start_time = time_periods.front().getStartTime();
+      etep.end_time = time_periods.back().getEndTime();
+      etep.timestep = 0;
+      etep.timesteps = 0;
+      ret.time_periods.push_back(etep);
+    }
+    else
+    {
+      // Insert all timesteps
+      for (const auto &t : timesteps)
+      {
+        edr_temporal_extent_period etep;
+        etep.start_time = t.utc_time();
+        etep.timestep = 0;
+        etep.timesteps = 0;
+        ret.time_periods.push_back(etep);
+      }
+    }
+  }
   else
-	{
-	  ret.time_periods = merged_time_periods;	  
-	}
+  {
+    ret.time_periods = merged_time_periods;
+  }
 
   return ret;
 }
 
-  edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine, const std::string& message_type, int period_length)
+edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
+                                         const std::string &message_type,
+                                         int period_length)
 {
   edr_temporal_extent ret;
 
@@ -565,9 +648,11 @@ edr_temporal_extent get_temporal_extent(const std::set<boost::local_time::local_
   queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
   queryOptions.itsMessageTypes.push_back(message_type);
   queryOptions.itsMessageFormat = TAC_FORMAT;
-	  
+
   auto now = boost::posix_time::second_clock::universal_time();
-  auto start_of_period = (now - boost::posix_time::hours(period_length*24)); // from config file avi.period_length (30 days default)
+  auto start_of_period =
+      (now - boost::posix_time::hours(period_length *
+                                      24));  // from config file avi.period_length (30 days default)
   std::string startTime = boost::posix_time::to_iso_string(start_of_period);
   std::string endTime = boost::posix_time::to_iso_string(now);
   queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
@@ -586,17 +671,18 @@ edr_temporal_extent get_temporal_extent(const std::set<boost::local_time::local_
 
   std::set<boost::local_time::local_date_time> timesteps;
   for (auto stationId : aviData.itsStationIds)
-	{
-	  auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
-	  
-	  while(timeIter != aviData.itsValues[stationId]["messagetime"].end()) 
-		{
-		  boost::local_time::local_date_time timestep = boost::get<boost::local_time::local_date_time>(*timeIter);
+  {
+    auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
 
-		  timesteps.insert(timestep);
-		  timeIter++;
-		}
-	}
+    while (timeIter != aviData.itsValues[stationId]["messagetime"].end())
+    {
+      boost::local_time::local_date_time timestep =
+          boost::get<boost::local_time::local_date_time>(*timeIter);
+
+      timesteps.insert(timestep);
+      timeIter++;
+    }
+  }
 
   ret = get_temporal_extent(timesteps);
 
@@ -604,12 +690,16 @@ edr_temporal_extent get_temporal_extent(const std::set<boost::local_time::local_
 }
 
 std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine,
-                                            const AviCollections &aviCollections)
+                                            const AviCollections &aviCollections,
+											const CollectionInfoContainer &cic)
 {
   std::list<AviMetaData> aviMetaData;
 
   for (auto const &aviCollection : aviCollections)
   {
+	if(!cic.isVisibleCollection(SourceEngine::Avi, aviCollection.getName()))
+	  continue;
+
     AviMetaData amd(aviCollection.getBBox(),
                     aviCollection.getName(),
                     aviCollection.getMessageTypes(),
@@ -716,7 +806,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const AviCollections &aviCollections,
                                          const std::string &default_language,
                                          const ParameterInfo *pinfo,
-										 const CollectionInfoContainer& cic,
+                                         const CollectionInfoContainer &cic,
                                          const SupportedDataQueries &sdq,
                                          const SupportedOutputFormats &sofs,
                                          const SupportedProducerLocations &spl)
@@ -729,12 +819,12 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
   {
     EDRProducerMetaData edrProducerMetaData;
 
-    auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections);
+    auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
 
     for (const auto &amd : aviMetaData)
     {
-	  EDRMetaData edrMetaData;
-	  edrMetaData.isAviProducer = true;
+      EDRMetaData edrMetaData;
+      edrMetaData.metadata_source = SourceEngine::Avi;
       auto const &bbox = *(amd.getBBox());
 
       edrMetaData.spatial_extent.bbox_xmin = *bbox.getMinX();
@@ -742,20 +832,21 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       edrMetaData.spatial_extent.bbox_xmax = *bbox.getMaxX();
       edrMetaData.spatial_extent.bbox_ymax = *bbox.getMaxY();
 
-	  /*
-	  edrMetaData.title = amd.getTitle();
-	  edrMetaData.description = amd.getDescription();
-	  edrMetaData.keywords = amd.getKeywords();
-	  */
+      /*
+      edrMetaData.title = amd.getTitle();
+      edrMetaData.description = amd.getDescription();
+      edrMetaData.keywords = amd.getKeywords();
+      */
       // METAR's issue times are 20 and 50, for others round endtime to the start of hour
       //
       // TODO: Period length/adjustment and timestep from config
 
       auto producer = amd.getProducer();
-	  
-	  const AviCollection& avi_collection = get_avi_collection(producer, aviCollections);
 
-	  edrMetaData.temporal_extent = getAviTemporalExtent(aviEngine, producer, avi_collection.getPeriodLength());
+      const AviCollection &avi_collection = get_avi_collection(producer, aviCollections);
+
+      edrMetaData.temporal_extent =
+          getAviTemporalExtent(aviEngine, producer, avi_collection.getPeriodLength());
 
       for (const auto &p : amd.getParameters())
       {
@@ -769,7 +860,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       edrMetaData.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       edrMetaData.language = default_language;
       edrMetaData.parameter_info = pinfo;
-      edrMetaData.collection_info = &cic.getInfo(AVI_ENGINE, producer);
+      edrMetaData.collection_info = &cic.getInfo(SourceEngine::Avi, producer);
       edrMetaData.data_queries = get_supported_data_queries(producer, sdq);
       edrMetaData.output_formats = get_supported_output_formats(producer, sofs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
@@ -789,9 +880,11 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
 
 void load_locations_avi(const Engine::Avi::Engine &aviEngine,
                         const AviCollections &aviCollections,
-                        SupportedProducerLocations &spl)
+                        SupportedProducerLocations &spl,
+						const CollectionInfoContainer &cic)
+
 {
-  auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections);
+  auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
 
   for (const auto &amd : aviMetaData)
   {
@@ -805,7 +898,7 @@ void load_locations_avi(const Engine::Avi::Engine &aviEngine,
       li.id = station.getIcao();
       li.longitude = station.getLongitude();
       li.latitude = station.getLatitude();
-      li.name = ("ICAO: "+station.getIcao()+"; stationId: "+Fmi::to_string(station.getId()));
+      li.name = ("ICAO: " + station.getIcao() + "; stationId: " + Fmi::to_string(station.getId()));
       li.type = "ICAO";
       li.keyword = amd.getProducer();
 
@@ -835,23 +928,16 @@ int EDRMetaData::getPrecision(const std::string &parameter_name) const
   }
 }
 
-#ifdef LATER
-void update_location_info(EDRProducerMetaData &pmd, const SupportedProducerLocations &spl)
+EngineMetaData::EngineMetaData()
+    : itsUpdateTime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))
+{
+}
+
+void EngineMetaData::addMetaData(SourceEngine source_engine, const EDRProducerMetaData &metadata)
 {
   try
   {
-    for (auto &item : pmd)
-    {
-      const auto &producer = item.first;
-      //
-      auto &md_vector = item.second;
-      auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
-      if (spl.find(producer_key) != spl.end())
-      {
-        for (auto &md : md_vector)
-          md.locations = &spl.at(producer_key);
-      }
-    }
+    itsMetaData[source_engine] = metadata;
   }
   catch (...)
   {
@@ -859,51 +945,17 @@ void update_location_info(EDRProducerMetaData &pmd, const SupportedProducerLocat
   }
 }
 
-void update_location_info(EngineMetaData &emd, const SupportedProducerLocations &spl)
-{
-  try
-  {
-    auto &metadata = emd.getMetaData();
-    for (auto &item : metadata)
-    {
-      update_location_info(item.second, spl);
-    }
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-#endif
-
-EngineMetaData::EngineMetaData() : itsUpdateTime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))
-{  
-}
-
-void EngineMetaData::addMetaData(const std::string &source_name,
-                                 const EDRProducerMetaData &metadata)
-{
-  try
-  {
-    itsMetaData[source_name] = metadata;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-const std::map<std::string, EDRProducerMetaData> &EngineMetaData::getMetaData() const
+const std::map<SourceEngine, EDRProducerMetaData> &EngineMetaData::getMetaData() const
 {
   return itsMetaData;
 }
 
-const EDRProducerMetaData &EngineMetaData::getMetaData(const std::string &source_name) const
+const EDRProducerMetaData &EngineMetaData::getMetaData(SourceEngine source_engine) const
 {
   try
   {
-    if (itsMetaData.find(source_name) != itsMetaData.end())
-      return itsMetaData.at(source_name);
+    if (itsMetaData.find(source_engine) != itsMetaData.end())
+      return itsMetaData.at(source_engine);
 
     return EMPTY_PRODUCER_METADATA;
   }
@@ -931,15 +983,15 @@ bool EngineMetaData::isValidCollection(const std::string &collection_name) const
   }
 }
 
-bool EngineMetaData::isValidCollection(const std::string &source_name,
+bool EngineMetaData::isValidCollection(SourceEngine source_engine,
                                        const std::string &collection_name) const
 {
   try
   {
-    if (itsMetaData.find(source_name) == itsMetaData.end())
+    if (itsMetaData.find(source_engine) == itsMetaData.end())
       return false;
 
-    const auto &md = itsMetaData.at(source_name);
+    const auto &md = itsMetaData.at(source_engine);
 
     return (md.find(collection_name) != md.end());
   }
@@ -952,77 +1004,91 @@ bool EngineMetaData::isValidCollection(const std::string &source_name,
 void EngineMetaData::removeDuplicates(bool report_removal)
 {
   try
-	{
-	  // Priority order: 1)querydata, 2)grid, 3)observations, 4)avi
-	  auto qd_collections = get_collection_names(getMetaData(Q_ENGINE));
-	  auto grid_collections = get_collection_names(getMetaData(GRID_ENGINE));
-	  auto obs_collections = get_collection_names(getMetaData(OBS_ENGINE));
-	  auto avi_collections = get_collection_names(getMetaData(AVI_ENGINE));
-	  
-	  auto& grid_metadata = const_cast<EDRProducerMetaData&>(getMetaData(GRID_ENGINE));
-	  auto& obs_metadata = const_cast<EDRProducerMetaData&>(getMetaData(OBS_ENGINE));
-	  auto& avi_metadata = const_cast<EDRProducerMetaData&>(getMetaData(AVI_ENGINE));
-	  for(const auto& collection : qd_collections)
-		{
-		  // Remove collections that already are found in querydata
-		  if(grid_metadata.find(collection) != grid_metadata.end())
-			{
-			  grid_metadata.erase(collection);
-			  grid_collections.erase(collection);
-			  if(report_removal)
-				report_duplicate_collection(collection, GRID_ENGINE, Q_ENGINE);
-			}
-		  if(obs_metadata.find(collection) != obs_metadata.end())
-			{
-			  obs_metadata.erase(collection);
-			  obs_collections.erase(collection);
-			  if(report_removal)
-				report_duplicate_collection(collection, OBS_ENGINE, Q_ENGINE);
-			}
-		  if(avi_metadata.find(collection) != avi_metadata.end())
-			{
-			  avi_metadata.erase(collection);
-			  avi_collections.erase(collection);
-			  if(report_removal)
-				report_duplicate_collection(collection, AVI_ENGINE, Q_ENGINE);
-			}
-		}
-	  
-	  for(const auto& collection : grid_collections)
-		{
-		  // Remove collections that already are found in qrid engine
-		  if(obs_metadata.find(collection) != obs_metadata.end())
-			{
-			  obs_metadata.erase(collection);
-			  obs_collections.erase(collection);
-			  if(report_removal)
-				report_duplicate_collection(collection, OBS_ENGINE, GRID_ENGINE);
-			}
-		  if(avi_metadata.find(collection) != avi_metadata.end())
-			{
-			  avi_metadata.erase(collection);
-			  avi_collections.erase(collection);
-			  if(report_removal)
-				report_duplicate_collection(collection, AVI_ENGINE, GRID_ENGINE);
-			}
-		}
-	  
-	  for(const auto& collection : obs_collections)
-		{
-		  // Remove collections that already are found in observation engine
-		  if(avi_metadata.find(collection) != avi_metadata.end())
-			{
-			  avi_metadata.erase(collection);
-			  avi_collections.erase(collection);
-			  if(report_removal)
-				report_duplicate_collection(collection,AVI_ENGINE, OBS_ENGINE);
-			}
-		}
+  {
+    // Priority order: 1)querydata, 2)grid, 3)observations, 4)avi
+    auto qd_collections = get_collection_names(getMetaData(SourceEngine::Querydata));
+    auto grid_collections = get_collection_names(getMetaData(SourceEngine::Grid));
+    auto obs_collections = get_collection_names(getMetaData(SourceEngine::Observation));
+    auto avi_collections = get_collection_names(getMetaData(SourceEngine::Avi));
+
+    auto &grid_metadata = const_cast<EDRProducerMetaData &>(getMetaData(SourceEngine::Grid));
+    auto &obs_metadata = const_cast<EDRProducerMetaData &>(getMetaData(SourceEngine::Observation));
+    auto &avi_metadata = const_cast<EDRProducerMetaData &>(getMetaData(SourceEngine::Avi));
+    for (const auto &collection : qd_collections)
+    {
+      // Remove collections that already are found in querydata
+      if (grid_metadata.find(collection) != grid_metadata.end())
+      {
+        grid_metadata.erase(collection);
+        grid_collections.erase(collection);
+        if (report_removal)
+          report_duplicate_collection(collection, GRID_ENGINE, Q_ENGINE);
+      }
+      if (obs_metadata.find(collection) != obs_metadata.end())
+      {
+        obs_metadata.erase(collection);
+        obs_collections.erase(collection);
+        if (report_removal)
+          report_duplicate_collection(collection, OBS_ENGINE, Q_ENGINE);
+      }
+      if (avi_metadata.find(collection) != avi_metadata.end())
+      {
+        avi_metadata.erase(collection);
+        avi_collections.erase(collection);
+        if (report_removal)
+          report_duplicate_collection(collection, AVI_ENGINE, Q_ENGINE);
+      }
+    }
+
+    for (const auto &collection : grid_collections)
+    {
+      // Remove collections that already are found in qrid engine
+      if (obs_metadata.find(collection) != obs_metadata.end())
+      {
+        obs_metadata.erase(collection);
+        obs_collections.erase(collection);
+        if (report_removal)
+          report_duplicate_collection(collection, OBS_ENGINE, GRID_ENGINE);
+      }
+      if (avi_metadata.find(collection) != avi_metadata.end())
+      {
+        avi_metadata.erase(collection);
+        avi_collections.erase(collection);
+        if (report_removal)
+          report_duplicate_collection(collection, AVI_ENGINE, GRID_ENGINE);
+      }
+    }
+
+    for (const auto &collection : obs_collections)
+    {
+      // Remove collections that already are found in observation engine
+      if (avi_metadata.find(collection) != avi_metadata.end())
+      {
+        avi_metadata.erase(collection);
+        avi_collections.erase(collection);
+        if (report_removal)
+          report_duplicate_collection(collection, AVI_ENGINE, OBS_ENGINE);
+      }
+    }
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+std::string get_engine_name(SourceEngine source_engine)
+{
+  if (source_engine == SourceEngine::Querydata)
+    return Q_ENGINE;
+  if (source_engine == SourceEngine::Observation)
+    return OBS_ENGINE;
+  if (source_engine == SourceEngine::Grid)
+    return GRID_ENGINE;
+  if (source_engine == SourceEngine::Avi)
+    return AVI_ENGINE;
+
+  return "";
 }
 
 }  // namespace EDR
