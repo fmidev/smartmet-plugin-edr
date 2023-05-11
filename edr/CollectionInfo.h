@@ -9,6 +9,7 @@
 #include <string>
 #include <set>
 #include <map>
+#include "EDRDefs.h"
 
 namespace SmartMet
 {
@@ -30,11 +31,14 @@ class CollectionInfoContainer
 {
 public:
   CollectionInfoContainer();
-  void addInfo(const std::string& theSource, const std::string& theId,const std::string& theTitle,const std::string& theDescription, const std::set<std::string>& theKeywords);
-  const CollectionInfo& getInfo(const std::string& theSource, const std::string& theId) const;
+  void addInfo(SourceEngine theSource, const std::string& theId,const std::string& theTitle,const std::string& theDescription, const std::set<std::string>& theKeywords);
+  void addVisibleCollections(SourceEngine theSource, const std::set<std::string>& theCollections);
+  const CollectionInfo& getInfo(SourceEngine theSource, const std::string& theId) const;
+  bool isVisibleCollection(SourceEngine theSource, const std::string& theCollectionName) const;
 
  private:
-  std::map<std::string, CollectionInfoItems> itsData; // source -> collectionId -> info, e.g. querydata_engine -> pal_skandinavia -> info
+  std::map<SourceEngine, CollectionInfoItems> itsData; // source -> collectionId -> info, e.g. querydata_engine -> pal_skandinavia -> info
+  std::map<SourceEngine, std::set<std::string>> itsVisibleCollections; // source -> set of visible collections
 };
 
 }  // namespace EDR

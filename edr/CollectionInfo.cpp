@@ -14,7 +14,7 @@ CollectionInfoContainer::CollectionInfoContainer()
 {
 }
 
-void CollectionInfoContainer::addInfo(const std::string& theSource, const std::string& theId,const std::string& theTitle,const std::string& theDescription, const std::set<std::string>& theKeywords)
+void CollectionInfoContainer::addInfo(SourceEngine theSource, const std::string& theId,const std::string& theTitle,const std::string& theDescription, const std::set<std::string>& theKeywords)
 {
   CollectionInfoItems& info_items = itsData[theSource];
   CollectionInfo& info = info_items[theId];
@@ -23,7 +23,12 @@ void CollectionInfoContainer::addInfo(const std::string& theSource, const std::s
   info.keywords = theKeywords;
 }
 
-const CollectionInfo& CollectionInfoContainer::getInfo(const std::string& theSource, const std::string& theId) const
+void CollectionInfoContainer::addVisibleCollections(SourceEngine theSource, const std::set<std::string>& theCollections)
+{
+  itsVisibleCollections[theSource] = theCollections;
+}
+
+const CollectionInfo& CollectionInfoContainer::getInfo(SourceEngine theSource, const std::string& theId) const
 {
   if(itsData.find(theSource) == itsData.end())
 	{
@@ -36,6 +41,16 @@ const CollectionInfo& CollectionInfoContainer::getInfo(const std::string& theSou
 	return info_items.at(theId);
 
   return EMPTY_COLLECTION_INFO;
+}
+
+bool CollectionInfoContainer::isVisibleCollection(SourceEngine theSource, const std::string& theCollectionName) const
+{
+  if(itsVisibleCollections.find(theSource) == itsVisibleCollections.end())
+	return false;
+
+  const auto& visible_collections = itsVisibleCollections.at(theSource);
+
+  return (visible_collections.find(theCollectionName) != visible_collections.end() || visible_collections.find("*") != visible_collections.end());
 }
 
 }  // namespace EDR

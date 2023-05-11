@@ -67,11 +67,11 @@ bool is_data_query(const Spine::HTTP::Request &req, const EDRQuery& edrQuery, co
 	  {
 		// If only one parameter and it is 'f' -> metadata query, except AVI queries
 		auto fparam = req.getParameter("f");
-		return (fparam && edrMetaData.isAviProducer && !edrQuery.instance_id.empty());
+		return (fparam && edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
 	  }
 	
 	// If no parameters it is metadata query except for non empty AVI query
-	return (edrMetaData.isAviProducer && !edrQuery.instance_id.empty());
+	return (edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
   }
   catch (...)
   {
@@ -853,7 +853,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     // attributeList.print(std::cout,0,0);
 
-    if (!emd.isAviProducer)
+    if (!emd.isAviProducer())
     {
       T::Attribute *v1 =
           attributeList.getAttributeByNameEnd("Grib1.IndicatorSection.EditionNumber");

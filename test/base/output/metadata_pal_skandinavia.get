@@ -277,7 +277,7 @@
 		"DewPoint" : 
 		{
 			"id" : "DewPoint",
-			"description" : "DewPoint",
+			"description" : "Kastepiste",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -287,7 +287,7 @@
 		"FogIntensity" : 
 		{
 			"id" : "FogIntensity",
-			"description" : "FogIntensity",
+			"description" : "Density of Fog",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -297,7 +297,7 @@
 		"HighCloudCover" : 
 		{
 			"id" : "HighCloudCover",
-			"description" : "HighCloudCover",
+			"description" : "High Cloud Cover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -307,7 +307,7 @@
 		"HourlyMaximumGust" : 
 		{
 			"id" : "HourlyMaximumGust",
-			"description" : "HourlyMaximumGust",
+			"description" : "MaxGustMS",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -317,7 +317,7 @@
 		"Humidity" : 
 		{
 			"id" : "Humidity",
-			"description" : "Humidity",
+			"description" : "Suhteellinen kosteus",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -327,7 +327,7 @@
 		"KIndex" : 
 		{
 			"id" : "KIndex",
-			"description" : "KIndex",
+			"description" : "K-indeksi",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -337,7 +337,7 @@
 		"LowCloudCover" : 
 		{
 			"id" : "LowCloudCover",
-			"description" : "LowCloudCover",
+			"description" : "Low Cloud Cover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -347,7 +347,7 @@
 		"MediumCloudCover" : 
 		{
 			"id" : "MediumCloudCover",
-			"description" : "MediumCloudCover",
+			"description" : "Medium Cloud Cover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -357,7 +357,7 @@
 		"MiddleAndLowCloudCover" : 
 		{
 			"id" : "MiddleAndLowCloudCover",
-			"description" : "MiddleAndLowCloudCover",
+			"description" : "Middle+Low Cloud Cover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -377,7 +377,7 @@
 		"Precipitation1h" : 
 		{
 			"id" : "Precipitation1h",
-			"description" : "Precipitation1h",
+			"description" : "Precipitation mm/h",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -387,7 +387,7 @@
 		"PrecipitationForm" : 
 		{
 			"id" : "PrecipitationForm",
-			"description" : "PrecipitationForm",
+			"description" : "Precipitation Form",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -397,7 +397,7 @@
 		"PrecipitationType" : 
 		{
 			"id" : "PrecipitationType",
-			"description" : "PrecipitationType",
+			"description" : "Precipitation Type",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -407,7 +407,7 @@
 		"Pressure" : 
 		{
 			"id" : "Pressure",
-			"description" : "Pressure",
+			"description" : "Pintapaine",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -417,7 +417,7 @@
 		"ProbabilityThunderstorm" : 
 		{
 			"id" : "ProbabilityThunderstorm",
-			"description" : "ProbabilityThunderstorm",
+			"description" : "Probability of Thunder",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -427,7 +427,7 @@
 		"RadiationGlobal" : 
 		{
 			"id" : "RadiationGlobal",
-			"description" : "RadiationGlobal",
+			"description" : "Auringon säteily",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -437,7 +437,7 @@
 		"RadiationLW" : 
 		{
 			"id" : "RadiationLW",
-			"description" : "RadiationLW",
+			"description" : "Pitkäaaltoinen säteily",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -447,26 +447,17 @@
 		"Temperature" : 
 		{
 			"id" : "Temperature",
-			"description" : "Ilman lÃ¤mpÃ¶tila",
+			"description" : "Lämpötila",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"label" : "Temperature"
-			},
-			"unit" : 
-			{
-				"label" : "Celsius",
-				"symbol" : 
-				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "ËšC"
-				}
+				"label" : "Celsius"
 			}
 		},
 		"TotalCloudCover" : 
 		{
 			"id" : "TotalCloudCover",
-			"description" : "TotalCloudCover",
+			"description" : "Total Cloud Cover",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -476,7 +467,7 @@
 		"WeatherSymbol1" : 
 		{
 			"id" : "WeatherSymbol1",
-			"description" : "WeatherSymbol1",
+			"description" : "Precipitation Symbol",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -486,7 +477,7 @@
 		"WeatherSymbol3" : 
 		{
 			"id" : "WeatherSymbol3",
-			"description" : "WeatherSymbol3",
+			"description" : "Weather Symbol",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -496,7 +487,7 @@
 		"WindDirection" : 
 		{
 			"id" : "WindDirection",
-			"description" : "WindDirection",
+			"description" : "Wind dir",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -506,7 +497,7 @@
 		"WindSpeedMS" : 
 		{
 			"id" : "WindSpeedMS",
-			"description" : "WindSpeedMS",
+			"description" : "Wind speed",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -516,7 +507,7 @@
 		"WindUMS" : 
 		{
 			"id" : "WindUMS",
-			"description" : "WindUMS",
+			"description" : "U",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -526,7 +517,7 @@
 		"WindVMS" : 
 		{
 			"id" : "WindVMS",
-			"description" : "WindVMS",
+			"description" : "V",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -536,7 +527,7 @@
 		"WindVectorMS" : 
 		{
 			"id" : "WindVectorMS",
-			"description" : "WindVectorMS",
+			"description" : "Wind vector",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{

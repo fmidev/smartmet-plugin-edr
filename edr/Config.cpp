@@ -776,10 +776,11 @@ void Config::parse_config_parameter_aliases(const std::string &configfile)
   itsAliasFileCollection.init(itsParameterAliasFiles);
 }
 
-void Config::process_collection_info(const std::string& engine_name)
+void Config::process_collection_info(SourceEngine source_engine)
 {
   try
   {
+	std::string engine_name = get_engine_name(source_engine);
 	const std::string path = ("collection_info."+engine_name);
 	
 	if(itsConfig.exists(path))
@@ -825,9 +826,32 @@ void Config::process_collection_info(const std::string& engine_name)
 				
 			  }
 			if(!id.empty() && (!title.empty() || !description.empty() || !keywords.empty()))
-			  itsCollectionInfo.addInfo(engine_name, id, title, description, keywords);
+			  itsCollectionInfo.addInfo(source_engine, id, title, description, keywords);
 		  }
 	  }
+	// Visible collections
+	std::set<std::string> visible_collections;
+	bool engine_configured = false;
+	auto engine_collection_key = ("visible_collections."+engine_name);
+	if(itsConfig.exists(engine_collection_key))
+	  {
+		engine_configured = true;
+		const libconfig::Setting &engineCollections = itsConfig.lookup(engine_collection_key);
+        if (!engineCollections.isArray())
+          throw Fmi::Exception(BCP, "Configured value of '" + engine_collection_key + "' must be an array");
+        for (int i = 0; i < engineCollections.getLength(); i++)
+		  {
+			auto collection_name = std::string((const char *)engineCollections[i]);
+			if(collection_name.empty())
+			  continue;
+			visible_collections.insert(collection_name);
+		  }
+	  }
+	// If engine is not configured -> show all collections in metadata
+	if(visible_collections.empty() && !engine_configured)
+	  visible_collections.insert("*");
+	
+	itsCollectionInfo.addVisibleCollections(source_engine, visible_collections);
   }
   catch (...)
 	{
@@ -837,10 +861,10 @@ void Config::process_collection_info(const std::string& engine_name)
   
 void Config::parse_config_collection_info()
 {
-  process_collection_info(Q_ENGINE);
-  process_collection_info(GRID_ENGINE);
-  process_collection_info(OBS_ENGINE);
-  process_collection_info(AVI_ENGINE);
+  process_collection_info(SourceEngine::Querydata);
+  process_collection_info(SourceEngine::Grid);
+  process_collection_info(SourceEngine::Observation);
+  process_collection_info(SourceEngine::Avi);
 }
 
 // ----------------------------------------------------------------------

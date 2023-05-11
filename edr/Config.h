@@ -146,7 +146,7 @@ class Config : private boost::noncopyable
   void parse_config_parameter_aliases(const std::string &configfile);
   void parse_config_api_settings();
   void parse_config_collection_info();
-  void process_collection_info(const std::string& engine_name);
+  void process_collection_info(SourceEngine source_engine);
 
 };  // class Config
 

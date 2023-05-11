@@ -40,17 +40,22 @@ namespace Plugin
 {
 namespace EDR
 {
-// Parameter infor from querydata-, observation-, grid-engine
+// Parameter info from querydata-, observation-, grid-engine
 struct edr_parameter
 {
   edr_parameter(std::string n, std::string d) : name(std::move(n)), description(std::move(d)) {}
   edr_parameter(std::string n, std::string d, std::string u)
-      : name(std::move(n)), description(std::move(d)), unit(std::move(u))
+	: name(std::move(n)), description(std::move(d)), unit(std::move(u))
+  {
+  }
+  edr_parameter(std::string n, std::string d, std::string u, std::string l)
+	: name(std::move(n)), description(std::move(d)), unit(std::move(u)), label(std::move(l))
   {
   }
   std::string name;
   std::string description;
   std::string unit;
+  std::string label;
 };
 
 struct edr_spatial_extent
@@ -104,8 +109,9 @@ struct EDRMetaData
   const CollectionInfo* collection_info = nullptr;  // Info about collections from config file
   CollectionInfo collection_info_engine;         // Info about colections from engine
   std::string language = "en";                    // Language from configuration file
+  SourceEngine metadata_source = SourceEngine::Undefined;
   int getPrecision(const std::string& parameter_name) const;
-  bool isAviProducer = false;
+  bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
 };
 
 using EDRProducerMetaData =
@@ -129,6 +135,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
 EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine& obsEngine,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
+										 const std::map<std::string, const Engine::Observation::ObservableProperty*>& observable_properties,
 										 const CollectionInfoContainer& cic,
                                          const SupportedDataQueries& sdq,
                                          const SupportedOutputFormats& sofs,
@@ -147,27 +154,26 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
 
 void load_locations_avi(const Engine::Avi::Engine& aviEngine,
                         const AviCollections& aviCollections,
-                        SupportedProducerLocations& spl);
+                        SupportedProducerLocations& spl,
+						const CollectionInfoContainer &cic);
 #endif
 
 class EngineMetaData
 {
  public:
   EngineMetaData();
-  void addMetaData(const std::string& source_name, const EDRProducerMetaData& metadata);
-  const EDRProducerMetaData& getMetaData(const std::string& source_name) const;
-  const std::map<std::string, EDRProducerMetaData>& getMetaData() const;
+  void addMetaData(SourceEngine source_engine, const EDRProducerMetaData& metadata);
+  const EDRProducerMetaData& getMetaData(SourceEngine source_engine) const;
+  const std::map<SourceEngine, EDRProducerMetaData>& getMetaData() const;
   const std::time_t& getUpdateTime() const { return itsUpdateTime; }
   bool isValidCollection(const std::string& collection_name) const;
-  bool isValidCollection(const std::string& source_name, const std::string& collection_name) const;
+  bool isValidCollection(SourceEngine source_engine, const std::string& collection_name) const;
   void removeDuplicates(bool report_removal);
 
  private:
-  std::map<std::string, EDRProducerMetaData> itsMetaData;
+  std::map<SourceEngine, EDRProducerMetaData> itsMetaData; // Source engine -> metadata
   std::time_t itsUpdateTime;
 };
-
-void update_location_info(EngineMetaData& emd, const SupportedProducerLocations& spl);
 
 }  // namespace EDR
 }  // namespace Plugin

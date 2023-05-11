@@ -1174,7 +1174,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 	  std::string description = collection_emd.collection_info_engine.description;
 	  std::set<std::string> keyword_set = collection_emd.collection_info_engine.keywords;
 
-	  // Then ge5t collection info from configuration file, if we didn't get it from engine
+	  // Then get collection info from configuration file, if we didn't get it from engine
 	  if(collection_emd.collection_info)
 		{
 		  // Title, description, keywords (optional)
@@ -1285,32 +1285,35 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
         auto pinfo =
             collection_emd.parameter_info->get_parameter_info(name, collection_emd.language);
-        const auto &p = collection_emd.parameters.at(name);
+        const auto &edr_param = collection_emd.parameters.at(name);
         auto param = Json::Value(Json::ValueType::objectValue);
-        param["id"] = Json::Value(p.name);
+        param["id"] = Json::Value(edr_param.name);
         param["type"] = Json::Value("Parameter");
-        // Set parameter name to description field
-        param["description"] = Json::Value(!pinfo.description.empty() ? pinfo.description : p.name);
-        if (!pinfo.unit_label.empty() || !pinfo.unit_symbol_value.empty() ||
+        // Description field: 1) from engine 2) from config 3) parameter name
+		param["description"] = Json::Value(!edr_param.description.empty() ? edr_param.description : (!pinfo.description.empty() ? pinfo.description : edr_param.name));
+		auto label = (!edr_param.label.empty() ? edr_param.label : (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_param.name));
+		/*
+        if (!label.empty() || !pinfo.unit_symbol_value.empty() ||
             !pinfo.unit_symbol_type.empty())
         {
           auto unit = Json::Value(Json::ValueType::objectValue);
-          unit["label"] = pinfo.unit_label;
+          unit["label"] = JsonValue(pinfo.unit_label);
           auto unit_symbol = Json::Value(Json::ValueType::objectValue);
           unit_symbol["value"] = pinfo.unit_symbol_value;
           unit_symbol["type"] = pinfo.unit_symbol_type;
           unit["symbol"] = unit_symbol;
           param["unit"] = unit;
         }
+		*/
 
         // Observed property: Mandatory: label, Optional: id, description
         auto observedProperty = Json::Value(Json::ValueType::objectValue);
-        observedProperty["label"] = Json::Value(p.name);
+        observedProperty["label"] = Json::Value(label);
         //		  observedProperty["id"] = Json::Value("http://....");
         //		  observedProperty["description"] =
         // Json::Value("Description of property...");
         param["observedProperty"] = observedProperty;
-        parameter_names[p.name] = param;
+        parameter_names[edr_param.name] = param;
       }
 
       value["parameter_names"] = parameter_names;
@@ -1833,12 +1836,12 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
           if (value.value)
           {
             values[0] = UtilityFunctions::json_value(*value.value, parameter_precision);
-            range_item["dataType"] = Json::Value(emd.isAviProducer ? "string" : "float");
+            range_item["dataType"] = Json::Value(emd.isAviProducer() ? "string" : "float");
           }
           else
           {
             values[0] = Json::Value();
-            range_item["dataType"] = Json::Value(emd.isAviProducer ? "string" : "float");
+            range_item["dataType"] = Json::Value(emd.isAviProducer() ? "string" : "float");
           }
           range_item["values"] = values;
           auto ranges = Json::Value(Json::ValueType::objectValue);
