@@ -37,14 +37,14 @@ BuildRequires: smartmet-library-gis-devel >= 23.3.14
 BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-engine-geonames-devel >= 23.4.27
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 23.5.11
+BuildRequires: smartmet-engine-observation-devel >= 23.5.16
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 23.4.27
 BuildRequires: smartmet-engine-gis-devel >= 22.12.21
 BuildRequires: smartmet-engine-grid-devel >= 23.4.17
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 23.5.11
+#Requires: smartmet-engine-observation >= 23.5.16
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -71,14 +71,14 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-newbase-devel >= 23.2.9
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.2.24
-#TestRequires: smartmet-test-data >= 23.2.9
+#TestRequires: smartmet-test-data >= 23.5.15
 #TestRequires: smartmet-engine-grid-test >= 23.4.17
 #TestRequires: smartmet-library-gis >= 23.3.14
 #TestRequires: smartmet-engine-geonames >= 23.4.27
 #TestRequires: smartmet-engine-gis >= 22.12.21
 #TestRequires: smartmet-engine-querydata >= 23.4.27
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 23.5.11
+#TestRequires: smartmet-engine-observation >= 23.5.16
 %endif
 #TestRequires: smartmet-engine-grid >= 23.4.17
 #TestRequires: gdal34
