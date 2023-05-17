@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.5.11
+Version: 23.5.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -109,6 +109,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Wed May 17 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.5.17-1.fmi
+- Use VerticalProfile domain type in CoverageJSON output when there is one point, one timestep and several levels
+
 * Thu May 11 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.5.11-1.fmi
 - Improved observation metadata processing: Measurand info is fetched from database 
 in order to get valid parameter list for each prodcer

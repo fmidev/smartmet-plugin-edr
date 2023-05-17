@@ -1,0 +1,137 @@
+{
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "VerticalProfile",
+		"referencing" : 
+		[
+			{
+				"coordinates" : 
+				[
+					"y",
+					"x"
+				],
+				"system" : 
+				{
+					"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
+					"type" : "GeographicCRS"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"z"
+				],
+				"system" : 
+				{
+					"id" : "PressureLevel",
+					"type" : "VerticalCRS"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
+				{
+					"calendar" : "Gregorian",
+					"type" : "TemporalCRS"
+				}
+			}
+		],
+		"type" : "Domain",
+		"axes" : 
+		{
+			"t" : 
+			{
+				"values" : 
+				[
+					"2008-09-09T09:00:00Z"
+				]
+			},
+			"x" : 
+			{
+				"values" : 
+				[
+					24.93840
+				]
+			},
+			"y" : 
+			{
+				"values" : 
+				[
+					60.16990
+				]
+			},
+			"z" : 
+			{
+				"values" : 
+				[
+					1000,
+					925,
+					850,
+					700,
+					500,
+					300
+				]
+			}
+		}
+	},
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
+				}
+			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"z"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				6
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				11.9,
+				6.9,
+				4.9,
+				0.8,
+				-13.1,
+				-41.9
+			]
+		}
+	}
+}

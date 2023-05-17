@@ -2232,7 +2232,6 @@ Json::Value format_output_data_coverage_collection(
     const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
     EDRQueryType query_type)
-
 {
   try
   {
@@ -2251,6 +2250,173 @@ Json::Value format_output_data_coverage_collection(
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+Json::Value format_output_data_vertical_profile(
+    const TS::OutputData &outputData,
+    const EDRMetaData &emd,
+    const std::set<int> &levels,
+    const CoordinateFilter &coordinate_filter,
+    const std::vector<Spine::Parameter> &query_parameters,
+    EDRQueryType query_type)
+{
+  try
+  {
+    if (outputData.empty())
+      Json::Value();
+
+	Json::Value coverage;
+	
+    const auto &longitude_precision = emd.getPrecision("longitude");
+    const auto &latitude_precision = emd.getPrecision("latitude");
+    auto level_precision = 0;
+    const auto &last_param = query_parameters.back();
+    auto last_param_name = last_param.name();
+    boost::algorithm::to_lower(last_param_name);
+	unsigned int level_index = (query_parameters.size() - 1);
+	unsigned int latitude_index = (query_parameters.size() - 2);
+	unsigned int longitude_index = (query_parameters.size() - 3);
+
+	// Only one position
+	const auto &outdata = outputData.front().second;
+	
+	std::map<std::string, Json::Value> parameter_data_values;
+	std::map<std::string, Json::Value> parameter_data_type;
+	//	std::map<std::string, Json::Value> parameter_level_values;
+	auto level_values = Json::Value(Json::ValueType::arrayValue);
+	// iterate columns (parameters)
+	for (unsigned int j = 0; j < outdata.size(); j++)
+	  {
+        auto parameter_name = query_parameters[j].name();
+        const auto &parameter_precision = emd.getPrecision(parameter_name);
+        boost::algorithm::to_lower(parameter_name);
+        if (lon_lat_level_param(parameter_name))
+          continue;
+
+        auto tsdata = outdata.at(j);
+		auto tslevel = outdata.at(level_index);
+        TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
+        TS::TimeSeriesPtr ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
+
+		auto values_array = Json::Value(Json::ValueType::arrayValue);
+
+		Json::Value data_type_level;
+		Json::Value data_type_data;
+		unsigned int data_index = 0;
+        for (unsigned int k = 0; k < ts_data->size(); k++)
+        {
+          const auto &data_value = ts_data->at(k);
+		  const auto &level_value = ts_level->at(k);
+          add_value(data_value, values_array, data_type_data, data_index, parameter_precision);
+		  // All parameters have the same levels
+		  if(j == 0)
+			add_value(level_value, level_values, data_type_level, data_index, level_precision);
+		  if(parameter_data_type.find(parameter_name) == parameter_data_type.end())
+			parameter_data_type[parameter_name] = data_type_data;
+		  data_index++;
+        }
+		parameter_data_values[parameter_name] = values_array;
+      }
+
+	if(parameter_data_values.empty())
+	  return coverage;
+	
+	auto tslon = outdata.at(longitude_index);
+	auto tslat = outdata.at(latitude_index);
+	TS::TimeSeriesPtr ts_lon = *(boost::get<TS::TimeSeriesPtr>(&tslon));
+	TS::TimeSeriesPtr ts_lat = *(boost::get<TS::TimeSeriesPtr>(&tslat));
+	// Only one position, timestep
+	const auto &lon_timed_value = ts_lon->front();
+	const auto &lat_timed_value = ts_lat->front();
+	std::string timestep = (boost::posix_time::to_iso_extended_string(lon_timed_value.time.utc_time()) + "Z");
+	auto t_array = Json::Value(Json::ValueType::arrayValue);
+	t_array[0] = Json::Value(timestep);
+	
+	coverage["type"] = Json::Value("Coverage");
+	auto domain = Json::Value(Json::ValueType::objectValue);
+	
+	domain["type"] = Json::Value("Domain");
+	domain["domainType"] = Json::Value("VerticalProfile");
+	
+	domain["axes"] = Json::Value(Json::ValueType::objectValue);
+	
+	domain["axes"]["x"] = Json::Value(Json::ValueType::objectValue);
+	domain["axes"]["x"]["values"] = Json::Value(Json::ValueType::arrayValue);
+	auto &x_array = domain["axes"]["x"]["values"];
+	domain["axes"]["y"] = Json::Value(Json::ValueType::objectValue);
+	domain["axes"]["y"]["values"] = Json::Value(Json::ValueType::arrayValue);
+	auto &y_array = domain["axes"]["y"]["values"];
+	auto coordinates = get_coordinates(outputData, query_parameters);
+	
+	// One position coordinates do not change
+	x_array[0] = UtilityFunctions::json_value(lon_timed_value.value, longitude_precision);
+	y_array[0] = UtilityFunctions::json_value(lat_timed_value.value, latitude_precision);
+	// One timestep
+	domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
+	domain["axes"]["t"]["values"] = t_array;
+	domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
+	domain["axes"]["z"]["values"] = level_values;
+	
+	// Referencing x,y coordinates
+	auto referencing = Json::Value(Json::ValueType::arrayValue);
+	auto referencing_xy = Json::Value(Json::ValueType::objectValue);
+	referencing_xy["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+	referencing_xy["coordinates"][0] = Json::Value("y");
+	referencing_xy["coordinates"][1] = Json::Value("x");
+	referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
+	referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
+	referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/EPSG/0/4326");
+	
+	// Referencing z coordinate
+	auto referencing_z = Json::Value(Json::ValueType::objectValue);
+	referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+	referencing_z["coordinates"][0] = Json::Value("z");
+	referencing_z["system"] = Json::Value(Json::ValueType::objectValue);
+	referencing_z["system"]["type"] = Json::Value("VerticalCRS");
+	referencing_z["system"]["id"] = Json::Value(emd.vertical_extent.level_type);
+	
+	auto referencing_time = Json::Value(Json::ValueType::objectValue);
+	referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+	referencing_time["coordinates"][0] = Json::Value("t");
+	referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
+	referencing_time["system"]["type"] = Json::Value("TemporalCRS");
+	referencing_time["system"]["calendar"] = Json::Value("Gregorian");
+	
+	referencing[0] = referencing_xy;	
+	referencing[1] = referencing_z;
+	referencing[2] = referencing_time;
+	
+	domain["referencing"] = referencing;
+	coverage["domain"] = domain;
+	coverage["parameters"] = get_edr_series_parameters(query_parameters, emd);
+	
+	auto ranges = Json::Value(Json::ValueType::objectValue);
+	for(const auto& item : parameter_data_values)
+	  {
+		const auto& param_name = item.first;
+		
+		auto param_range = Json::Value(Json::ValueType::objectValue);
+		param_range["type"] = Json::Value("NdArray");
+		param_range["dataType"] = parameter_data_type.at(param_name);//Json::Value("float");
+		auto axis_names = Json::Value(Json::ValueType::arrayValue);
+		axis_names[0] = Json::Value("z");
+		auto shape = Json::Value(Json::ValueType::arrayValue);
+		shape[0] = Json::Value(item.second.size());
+		param_range["axisNames"] = axis_names;
+		param_range["shape"] = shape;
+		param_range["values"] = item.second;
+		ranges[param_name] = param_range;
+	  }
+	coverage["ranges"] = ranges;
+
+	return coverage;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+
+}
+
 }  // namespace
 
 Json::Value formatOutputData(const TS::OutputData &outputData,
@@ -2286,7 +2452,8 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       }
 
       // More than one level
-      return format_output_data_position(outputData, emd, query_parameters);
+	  return format_output_data_vertical_profile(outputData, emd, levels, coordinate_filter, query_parameters, query_type);
+	  //      return format_output_data_position(outputData, emd, query_parameters);
     }
 
     if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first))
