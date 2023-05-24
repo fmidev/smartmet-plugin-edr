@@ -15,7 +15,10 @@ This page describes more indepth EDR API
 - [Parameter info](#parameter-info)
 - [URL, language](#url-language)
 - [Observation period](#observation-period)
+<<<<<<< HEAD
 - [Timeseries plugin settings](#timeseries-plugin-settings)
+=======
+>>>>>>> 7a3f2ca39ff6c2f426f6266c7ac5e01041d3a1c7
 
 
 
@@ -258,4 +261,8 @@ observation_period = 24; // hours
 
 # Timeseries plugin settings
 
+<<<<<<< HEAD
 Since EDR plugin is build on timeseries plugin code base there are some common settings in configuration file, for example precision settings. For more information see timeseries plugin configuration guide: https://github.com/fmidev/smartmet-plugin-timeseries/blob/master/docs/Using-the-Timeseries-API.md#plugin-configuration-file
+=======
+Since EDR plugin is build on timeseries plugin code base there are some common settings in configuration file, for example precision setting. For more information see timeseries plugin configuration guide: https://github.com/fmidev/smartmet-plugin-timeseries/blob/master/docs/Using-the-Timeseries-API.md#plugin-configuration-file
+>>>>>>> 7a3f2ca39ff6c2f426f6266c7ac5e01041d3a1c7
