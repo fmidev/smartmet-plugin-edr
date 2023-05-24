@@ -1289,22 +1289,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         auto param = Json::Value(Json::ValueType::objectValue);
         param["id"] = Json::Value(edr_param.name);
         param["type"] = Json::Value("Parameter");
-        // Description field: 1) from engine 2) from config 3) parameter name
-		param["description"] = Json::Value(!edr_param.description.empty() ? edr_param.description : (!pinfo.description.empty() ? pinfo.description : edr_param.name));
-		auto label = (!edr_param.label.empty() ? edr_param.label : (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_param.name));
-		/*
-        if (!label.empty() || !pinfo.unit_symbol_value.empty() ||
-            !pinfo.unit_symbol_type.empty())
-        {
-          auto unit = Json::Value(Json::ValueType::objectValue);
-          unit["label"] = JsonValue(pinfo.unit_label);
-          auto unit_symbol = Json::Value(Json::ValueType::objectValue);
-          unit_symbol["value"] = pinfo.unit_symbol_value;
-          unit_symbol["type"] = pinfo.unit_symbol_type;
-          unit["symbol"] = unit_symbol;
-          param["unit"] = unit;
-        }
-		*/
+        // Description field: 1) from config 2) from engine 3) parameter name
+		param["description"] = Json::Value(!pinfo.description.empty() ? pinfo.description : (!edr_param.description.empty() ? edr_param.description : edr_param.name));
+		auto label = (!pinfo.unit_label.empty() ? pinfo.unit_label : (!edr_param.label.empty() ? edr_param.label : edr_param.name));
 
         // Observed property: Mandatory: label, Optional: id, description
         auto observedProperty = Json::Value(Json::ValueType::objectValue);
