@@ -447,7 +447,7 @@
 		"Temperature" : 
 		{
 			"id" : "Temperature",
-			"description" : "Lämpötila",
+			"description" : "Ilman lÃ¤mpÃ¶tila",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{

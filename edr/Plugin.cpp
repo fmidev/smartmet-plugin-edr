@@ -3897,7 +3897,6 @@ boost::shared_ptr<std::string> Plugin::processQuery(
         SmartMet::Plugin::EDR::Json::DEFAULT_PRECISION;
 
     // Set precisions
-    std::map<std::string, int> precisions;
     unsigned int i = 0;
     for (const TS::OptionParsers::ParameterList::value_type &p : masterquery.poptions.parameters())
     {

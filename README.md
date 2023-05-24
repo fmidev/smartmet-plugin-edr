@@ -12,3 +12,5 @@ The EDR plugin implements Environmental Data Retrieval (EDR) Application Program
 Following pages describe how use and configure EDR-plugin.
 
 [Using the EDR Plugin](docs/Using-EDR-Plugin.md)
+
+[EDR Plugin Configuration Guide](docs/EDR-Plugin-Configuration-Guide.md)
