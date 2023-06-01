@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.5.24
+Version: 23.6.1
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -109,6 +109,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Thu Jun  1 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.1-1.fmi
+- New ObsEngine API with stationgroups setting forced a recompile
+
 * Wed May 24 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.5.24-1.fmi
 - Configuration document added
 - Parameter info in configuration file is prioritized over info from database
