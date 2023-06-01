@@ -1912,8 +1912,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
           }
         }
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (loc->type == Spine::Location::Area)
       {
@@ -1948,8 +1947,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         }
 
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (loc->type == Spine::Location::BoundingBox && !is_flash_producer(producer))
       {
@@ -1979,8 +1977,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         std::unique_ptr<OGRGeometry> geom = get_ogr_geometry(wkt, loc->radius);
         wktString = Fmi::OGR::exportToWkt(*geom);
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (!is_flash_producer(producer) && loc->type == Spine::Location::Place &&
                loc->radius > 0)
@@ -1998,8 +1995,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         std::unique_ptr<OGRGeometry> geom = get_ogr_geometry(wkt, loc->radius);
         wktString = Fmi::OGR::exportToWkt(*geom);
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (!is_flash_producer(producer) && loc->type == Spine::Location::CoordinatePoint &&
                loc->radius > 0)
@@ -2030,8 +2026,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         }
 
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
 
 #ifdef MYDEBUG
@@ -2047,8 +2042,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
       }
       else if (!stationSettings.fmisids.empty())
       {
-        settings.taggedFMISIDs = itsObsEngine->translateToFMISID(
-            settings.starttime, settings.endtime, producer, stationSettings);
+        settings.taggedFMISIDs = itsObsEngine->translateToFMISID(settings, stationSettings);
 
         name = loc->name;
         if (loc->type == Spine::Location::Wkt)
@@ -2323,8 +2317,7 @@ void Plugin::getObsSettings(std::vector<SettingsInfo> &settingsVector,
 
     if (!is_flash_or_mobile_producer(producer))
     {
-      settings.taggedFMISIDs = itsObsEngine->translateToFMISID(
-          settings.starttime, settings.endtime, producer, stationSettings);
+      settings.taggedFMISIDs = itsObsEngine->translateToFMISID(settings, stationSettings);
     }
 
     if (!settings.taggedFMISIDs.empty() || !settings.boundingBox.empty() ||
@@ -4611,25 +4604,25 @@ void Plugin::updateMetaData(bool initial_phase)
 #ifndef WITHOUT_OBSERVATION
     if (!itsConfig.obsEngineDisabled())
     {
-	  if(initial_phase)
-		{
-		  //std::shared_ptr<std::vector<ObservableProperty>>
-		  std::map<std::string, const Engine::Observation::ObservableProperty*> properties;
-		  std::vector<std::string> params;
-		  itsObservableProperties = itsObsEngine->observablePropertyQuery(params, default_language);
-		  for(const auto& prop : *itsObservableProperties)
-			itsObservablePropertiesMap[prop.gmlId] = &prop;
-		}
+      if (initial_phase)
+      {
+        // std::shared_ptr<std::vector<ObservableProperty>>
+        std::map<std::string, const Engine::Observation::ObservableProperty *> properties;
+        std::vector<std::string> params;
+        itsObservableProperties = itsObsEngine->observablePropertyQuery(params, default_language);
+        for (const auto &prop : *itsObservableProperties)
+          itsObservablePropertiesMap[prop.gmlId] = &prop;
+      }
 
       auto obs_engine_metadata = get_edr_metadata_obs(*itsObsEngine,
                                                       default_language,
                                                       parameter_info,
-													  itsObservablePropertiesMap,
-													  collection_info_container,
+                                                      itsObservablePropertiesMap,
+                                                      collection_info_container,
                                                       data_queries,
                                                       output_formats,
                                                       itsSupportedLocations,
-													  observation_period);
+                                                      observation_period);
 
       engine_meta_data->addMetaData(SourceEngine::Observation, obs_engine_metadata);
     }
@@ -4687,10 +4680,13 @@ void Plugin::updateSupportedLocations()
     // For avi producers locations/stations are loaded from avidb
 #ifndef WITHOUT_AVI
     if (!itsConfig.aviEngineDisabled())
-	  {
-		const auto &collection_info_container = itsConfig.getCollectionInfo();   
-		load_locations_avi(*itsAviEngine, itsConfig.getAviCollections(), itsSupportedLocations, collection_info_container);
-	  }
+    {
+      const auto &collection_info_container = itsConfig.getCollectionInfo();
+      load_locations_avi(*itsAviEngine,
+                         itsConfig.getAviCollections(),
+                         itsSupportedLocations,
+                         collection_info_container);
+    }
 #endif
   }
   catch (...)
