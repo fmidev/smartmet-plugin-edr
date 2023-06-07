@@ -427,7 +427,7 @@
 		"RadiationGlobal" : 
 		{
 			"id" : "RadiationGlobal",
-			"description" : "Auringon s‰teily",
+			"description" : "Auringon s\u00e4teily",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -437,7 +437,7 @@
 		"RadiationLW" : 
 		{
 			"id" : "RadiationLW",
-			"description" : "Pitk‰aaltoinen s‰teily",
+			"description" : "Pitk\u00e4aaltoinen s\u00e4teily",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -447,7 +447,7 @@
 		"Temperature" : 
 		{
 			"id" : "Temperature",
-			"description" : "Ilman l√§mp√∂tila",
+			"description" : "Ilman l\u00c3\u00a4mp\u00c3\u00b6tila",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{

@@ -1,6 +1,6 @@
 #include "Json.h"
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/replace.hpp>
+#include <fmt/format.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/ValueFormatter.h>
 #include <iostream>
@@ -49,6 +49,11 @@ std::string value_type_to_string(ValueType type)
 
 namespace
 {
+std::string tabs(unsigned int level)
+{
+  return std::string(level, '\t');
+}
+
 ValueType get_value_type(const DataValue &dv)
 {
   const auto &data = dv.get_data();
@@ -68,6 +73,46 @@ ValueType get_value_type(const DataValue &dv)
   return ValueType::nullValue;
 }
 
+std::string json_encode(const std::string &input)
+{
+  std::string output;
+  for (unsigned char c : input)
+  {
+    switch (c)
+    {
+      case '"':
+        output += "\\\"";
+        break;
+      case '\\':
+        output += "\\\\";
+        break;
+      case '\b':
+        output += "\\b";
+        break;
+      case '\f':
+        output += "\\f";
+        break;
+      case '\n':
+        output += "\\n";
+        break;
+      case '\r':
+        output += "\\r";
+        break;
+      case '\t':
+        output += "\\t";
+        break;
+      default:
+        if (c < 0x20 || c > 0x7F)
+          output += fmt::format("\\u{:04x}", c);
+        else
+          output += c;
+        break;
+    }
+  }
+
+  return output;
+}
+
 std::string data_value_to_string(const DataValue &dv, unsigned int precision)
 {
   std::string ret;
@@ -78,7 +123,8 @@ std::string data_value_to_string(const DataValue &dv, unsigned int precision)
 
   if (vt == ValueType::stringValue)
   {
-    ret = ("\"" + *(boost::get<std::string>(&data)) + "\"");
+    auto str = *(boost::get<std::string>(&data));
+    ret = "\"" + json_encode(str) + "\"";
   }
   else if (vt == ValueType::intValue)
   {
@@ -123,39 +169,33 @@ Value::Value(ValueType type)
 }
 
 Value::Value(const std::string &value)
-    : valueType(ValueType::stringValue),
+    : data_value(value),
+      valueType(ValueType::stringValue),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
 {
-  // " -> \"
-  std::string string_value = value;
-  boost::algorithm::replace_all(string_value, "\"", "\\\"");
-  data_value = string_value;
 }
 
 Value::Value(const char *value)
-    : valueType(ValueType::stringValue),
+    : data_value(std::string(value)),
+      valueType(ValueType::stringValue),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
 {
-  // " -> \"
-  std::string string_value = value;
-  boost::algorithm::replace_all(string_value, "\"", "\\\"");
-  data_value = string_value;
 }
 
 Value::Value(std::size_t value)
-  : data_value(value),
-	valueType(ValueType::intValue),
-	nodeKey(UNINITIALIZED_KEY),
-	beginIter(data_value_vector.begin()),
-	endIter(data_value_vector.end())
+    : data_value(value),
+      valueType(ValueType::intValue),
+      nodeKey(UNINITIALIZED_KEY),
+      beginIter(data_value_vector.begin()),
+      endIter(data_value_vector.end())
 {
 }
 
 Value::Value(int value)
     : data_value(value),
-	  valueType(ValueType::intValue),
+      valueType(ValueType::intValue),
       nodeKey(UNINITIALIZED_KEY),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
@@ -164,16 +204,16 @@ Value::Value(int value)
 
 Value::Value(bool value)
     : data_value(value),
-	  valueType(ValueType::boolValue),
-	  nodeKey(UNINITIALIZED_KEY),
-	  beginIter(data_value_vector.begin()),
-	  endIter(data_value_vector.end())
+      valueType(ValueType::boolValue),
+      nodeKey(UNINITIALIZED_KEY),
+      beginIter(data_value_vector.begin()),
+      endIter(data_value_vector.end())
 {
 }
 
 Value::Value(double value, unsigned int prec /*= DEFAULT_PRECISION*/)
     : data_value(value),
-	  valueType(ValueType::doubleValue),
+      valueType(ValueType::doubleValue),
       nodeKey(UNINITIALIZED_KEY),
       precision(prec),
       beginIter(data_value_vector.begin()),
@@ -183,7 +223,7 @@ Value::Value(double value, unsigned int prec /*= DEFAULT_PRECISION*/)
 
 Value::Value(const NullValue &value)
     : data_value(value),
-	  valueType(ValueType::nullValue),
+      valueType(ValueType::nullValue),
       nodeKey(UNINITIALIZED_KEY),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
@@ -280,14 +320,14 @@ Value &Value::operator[](const std::string &key)
 }
 
 Value::Value(const Value &value)
-  : data_value(value.data_value),
-	data_value_vector(value.data_value_vector),
-	values(value.values),
-	children(value.children),
-	valueType(value.valueType),
-	nodeKey(value.nodeKey),
-	precision(value.precision),
-	parentNode(value.parentNode)
+    : data_value(value.data_value),
+      data_value_vector(value.data_value_vector),
+      values(value.values),
+      children(value.children),
+      valueType(value.valueType),
+      nodeKey(value.nodeKey),
+      precision(value.precision),
+      parentNode(value.parentNode)
 
 {
   //  std::cout << "Copy constructor\n";
@@ -322,16 +362,6 @@ Value &Value::operator[](ArrayIndex index)
   return data_value_vector.at(index);
 }
 
-std::string tabs(unsigned int level)
-{
-  std::string ret;
-
-  for (unsigned int i = 0; i < level; i++)
-    ret.append("\t");
-
-  return ret;
-}
-
 std::string Value::values_to_string(unsigned int level) const
 {
   std::string result;
@@ -341,31 +371,32 @@ std::string Value::values_to_string(unsigned int level) const
 
   std::vector<std::string> keys;
   for (const auto &item : values)
-	{
-	  if(!(item.first == "id" || item.first == "title" || item.first == "description"  || 
-		   item.first == "links" || item.first == "output_formats" || item.first == "keywords" || item.first == "crs"))
-		keys.push_back(item.first);
-	}
+  {
+    if (!(item.first == "id" || item.first == "title" || item.first == "description" ||
+          item.first == "links" || item.first == "output_formats" || item.first == "keywords" ||
+          item.first == "crs"))
+      keys.push_back(item.first);
+  }
 
   // Order of fields in output document: id,title,description,links,output_formats,keywords,crs
-  if(values.find("crs") != values.end())
-	keys.insert(keys.begin(), "crs");
-  if(values.find("keywords") != values.end())
-	keys.insert(keys.begin(), "keywords");
-  if(values.find("output_formats") != values.end())
-	keys.insert(keys.begin(), "output_formats");
-  if(values.find("links") != values.end())
-	keys.insert(keys.begin(), "links");
-  if(values.find("description") != values.end())
-	keys.insert(keys.begin(), "description");
-  if(values.find("title") != values.end())
-	keys.insert(keys.begin(), "title");
-  if(values.find("id") != values.end())
-	keys.insert(keys.begin(), "id");
+  if (values.find("crs") != values.end())
+    keys.insert(keys.begin(), "crs");
+  if (values.find("keywords") != values.end())
+    keys.insert(keys.begin(), "keywords");
+  if (values.find("output_formats") != values.end())
+    keys.insert(keys.begin(), "output_formats");
+  if (values.find("links") != values.end())
+    keys.insert(keys.begin(), "links");
+  if (values.find("description") != values.end())
+    keys.insert(keys.begin(), "description");
+  if (values.find("title") != values.end())
+    keys.insert(keys.begin(), "title");
+  if (values.find("id") != values.end())
+    keys.insert(keys.begin(), "id");
 
   for (const auto &key : keys)
   {
-	const auto& value_obj = values.at(key);
+    const auto &value_obj = values.at(key);
     std::string value = (tabs(level + 1) + "\"" + key + "\" : ");
     if (!value_obj.data_value_vector.empty())
     {
