@@ -15,15 +15,15 @@ namespace Plugin
 {
 namespace EDR
 {
-
 class EDRAPI
 {
-public:
+ public:
   EDRAPI() {}
   void setSettings(const std::string& tmpldir, const APISettings& api_settings);
   const std::string& getAPI(const std::string& url, const std::string& host) const;
   bool isEDRAPIQuery(const std::string& url) const;
-private:
+
+ private:
   APISettings itsAPISettings;
   std::string itsTemplateDir;
   mutable Spine::MutexType itsMutex;
@@ -33,4 +33,3 @@ private:
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet
-

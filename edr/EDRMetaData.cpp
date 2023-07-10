@@ -124,9 +124,9 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
-	  if(!cic.isVisibleCollection(SourceEngine::Querydata, qmd.producer))
-		continue;
-		 
+      if (!cic.isVisibleCollection(SourceEngine::Querydata, qmd.producer))
+        continue;
+
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Querydata;
 
@@ -206,8 +206,8 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." +
                                 Fmi::to_string(gmd.levelId));
 
-	  if(!cic.isVisibleCollection(SourceEngine::Grid, producerId))
-		continue;
+      if (!cic.isVisibleCollection(SourceEngine::Grid, producerId))
+        continue;
 
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Grid;
@@ -274,7 +274,8 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
         producer_emd.parameter_names.insert(parameter_name);
         producer_emd.parameters.insert(std::make_pair(
             parameter_name,
-            edr_parameter(parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
+            edr_parameter(
+                parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
       }
 
       producer_emd.collection_info_engine.title =
@@ -310,17 +311,18 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
 #ifndef WITHOUT_OBSERVATION
 
-std::set<std::string> get_producer_parameters(const std::string& producer, const Engine::Observation::ProducerMeasurandInfo& pmi)
+std::set<std::string> get_producer_parameters(const std::string &producer,
+                                              const Engine::Observation::ProducerMeasurandInfo &pmi)
 {
   std::set<std::string> ret;
 
-  if(pmi.find(producer) != pmi.end())
-	{
-	  const auto& mi = pmi.at(producer);
-	  for(const auto& item : mi)
-		ret.insert(item.first);
-	  }
-  
+  if (pmi.find(producer) != pmi.end())
+  {
+    const auto &mi = pmi.at(producer);
+    for (const auto &item : mi)
+      ret.insert(item.first);
+  }
+
   return ret;
 }
 
@@ -343,24 +345,24 @@ EDRProducerMetaData get_edr_metadata_obs(
     auto producers = obsEngine.getValidStationTypes();
 
     for (const auto &prod : producers)
-	  {
-		if(cic.isVisibleCollection(SourceEngine::Observation, prod))
-		  observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
-	  }
+    {
+      if (cic.isVisibleCollection(SourceEngine::Observation, prod))
+        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
+    }
 
-    const auto& producer_measurand_info = obsEngine.getMeasurandInfo();
+    const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
 
     EDRProducerMetaData epmd;
-	
+
     // Iterate Observation engine metadata and add item into collection
     for (const auto &item : observation_meta_data)
     {
       const auto &producer = item.first;
       const auto &obs_md = item.second;
-	  auto params = obs_md.parameters;
-	  auto measurand_params = get_producer_parameters(producer, producer_measurand_info);
+      auto params = obs_md.parameters;
+      auto measurand_params = get_producer_parameters(producer, producer_measurand_info);
 
-	  params.insert(measurand_params.begin(), measurand_params.end());
+      params.insert(measurand_params.begin(), measurand_params.end());
 
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Observation;
@@ -401,41 +403,41 @@ EDRProducerMetaData get_edr_metadata_obs(
         if (producer != "netatmo" && producer != "roadcloud" && producer != "teconer" &&
             producer != "fmi_iot")
         {
-		  const Engine::Observation::measurand_info* mi = nullptr;
+          const Engine::Observation::measurand_info *mi = nullptr;
 
-		  if(producer_measurand_info.find(producer) != producer_measurand_info.end())
-			{
-			  const auto& measurands = producer_measurand_info.at(producer);
-			  if(measurands.find(parameter_name) != measurands.end())
-				mi = &measurands.at(parameter_name);
-			}
+          if (producer_measurand_info.find(producer) != producer_measurand_info.end())
+          {
+            const auto &measurands = producer_measurand_info.at(producer);
+            if (measurands.find(parameter_name) != measurands.end())
+              mi = &measurands.at(parameter_name);
+          }
 
-			if(observable_properties.find(parameter_name) != observable_properties.end())
-			{
-			  const auto& properties = observable_properties.at(parameter_name);
-			  description = properties->observablePropertyLabel; 
-			  label = properties->uom; 
-			  unit = properties->uom;
-			  /*
-			  auto prop_desc =
-				(properties->measurandId+" -- "+ properties->measurandCode+" -- "+
-				 properties->observablePropertyId+" -- "+
-				 properties->observablePropertyLabel+" -- "+
-				 properties->uom+" -- "+
-				 properties->statisticalMeasureId+" -- "+
-				 properties->statisticalFunction+" -- "+
-				 properties->aggregationTimePeriod+" -- "+
-				 properties->gmlId);
-			  std::cout << "desc: " << prop_desc << std::endl;
-			  */
-			}
-			else if(mi)
-			{
-			  description = mi->get_description(default_language);
-			  label = mi->get_label(default_language);
-			}
-		}
-		
+          if (observable_properties.find(parameter_name) != observable_properties.end())
+          {
+            const auto &properties = observable_properties.at(parameter_name);
+            description = properties->observablePropertyLabel;
+            label = properties->uom;
+            unit = properties->uom;
+            /*
+            auto prop_desc =
+                  (properties->measurandId+" -- "+ properties->measurandCode+" -- "+
+                   properties->observablePropertyId+" -- "+
+                   properties->observablePropertyLabel+" -- "+
+                   properties->uom+" -- "+
+                   properties->statisticalMeasureId+" -- "+
+                   properties->statisticalFunction+" -- "+
+                   properties->aggregationTimePeriod+" -- "+
+                   properties->gmlId);
+            std::cout << "desc: " << prop_desc << std::endl;
+            */
+          }
+          else if (mi)
+          {
+            description = mi->get_description(default_language);
+            label = mi->get_label(default_language);
+          }
+        }
+
         producer_emd.parameter_names.insert(parameter_name);
         producer_emd.parameters.insert(
             std::make_pair(parameter_name, edr_parameter(p, description, unit, label)));
@@ -691,14 +693,14 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
 std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine,
                                             const AviCollections &aviCollections,
-											const CollectionInfoContainer &cic)
+                                            const CollectionInfoContainer &cic)
 {
   std::list<AviMetaData> aviMetaData;
 
   for (auto const &aviCollection : aviCollections)
   {
-	if(!cic.isVisibleCollection(SourceEngine::Avi, aviCollection.getName()))
-	  continue;
+    if (!cic.isVisibleCollection(SourceEngine::Avi, aviCollection.getName()))
+      continue;
 
     AviMetaData amd(aviCollection.getBBox(),
                     aviCollection.getName(),
@@ -881,7 +883,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
 void load_locations_avi(const Engine::Avi::Engine &aviEngine,
                         const AviCollections &aviCollections,
                         SupportedProducerLocations &spl,
-						const CollectionInfoContainer &cic)
+                        const CollectionInfoContainer &cic)
 
 {
   auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);

@@ -49,11 +49,12 @@ class AviCollection
   std::set<std::string> itsIcaos;
   std::set<std::string> itsIcaoFilters;
   bool itsLocationCheck = false;
-  int itsPeriodLength = 30; // 30 days by default
-};  // class AviCollection
+  int itsPeriodLength = 30;  // 30 days by default
+};                           // class AviCollection
 
 using AviCollections = std::list<AviCollection>;
-const AviCollection& get_avi_collection(const std::string& producer, const AviCollections& aviCollections);
+const AviCollection &get_avi_collection(const std::string &producer,
+                                        const AviCollections &aviCollections);
 
 }  // namespace EDR
 }  // namespace Plugin

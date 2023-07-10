@@ -46,7 +46,6 @@ const char *default_timezone = "localtime";
 
 namespace
 {
-
 #ifndef WITHOUT_AVI
 bool is_avi_producer(const EDRProducerMetaData &avi_metadata, const std::string &producer)
 {
@@ -54,24 +53,25 @@ bool is_avi_producer(const EDRProducerMetaData &avi_metadata, const std::string 
 }
 #endif
 
-
-bool is_data_query(const Spine::HTTP::Request &req, const EDRQuery& edrQuery, const EDRMetaData& edrMetaData)
+bool is_data_query(const Spine::HTTP::Request &req,
+                   const EDRQuery &edrQuery,
+                   const EDRMetaData &edrMetaData)
 {
   try
   {
-	auto pcount = req.getParameterCount();
-	// If more than one parameters -> data query
-	if(pcount > 1)
-	  return true;
-	if(pcount == 1)
-	  {
-		// If only one parameter and it is 'f' -> metadata query, except AVI queries
-		auto fparam = req.getParameter("f");
-		return (fparam && edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
-	  }
-	
-	// If no parameters it is metadata query except for non empty AVI query
-	return (edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
+    auto pcount = req.getParameterCount();
+    // If more than one parameters -> data query
+    if (pcount > 1)
+      return true;
+    if (pcount == 1)
+    {
+      // If only one parameter and it is 'f' -> metadata query, except AVI queries
+      auto fparam = req.getParameter("f");
+      return (fparam && edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
+    }
+
+    // If no parameters it is metadata query except for non empty AVI query
+    return (edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
   }
   catch (...)
   {
@@ -233,13 +233,13 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     Spine::HTTP::Request req = request;
     auto resource = req.getResource();
     itsEDRQuery.host = resolve_host(req);
-		
-	if(config.getEDRAPI().isEDRAPIQuery(resource))
-	  {
-		itsEDRQuery.query_id = EDRQueryId::APIQuery;
-		itsEDRQuery.instance_id = resource;
-		return;
-	  }
+
+    if (config.getEDRAPI().isEDRAPIQuery(resource))
+    {
+      itsEDRQuery.query_id = EDRQueryId::APIQuery;
+      itsEDRQuery.instance_id = resource;
+      return;
+    }
 
     std::vector<std::string> resource_parts;
     boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
@@ -303,7 +303,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
 
-	if(is_data_query(request, itsEDRQuery, emd))
+    if (is_data_query(request, itsEDRQuery, emd))
     {
       if (itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
           !itsEDRQuery.instance_id.empty())
@@ -333,14 +333,14 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     // If meta data query return from here
     if (itsEDRQuery.query_id != EDRQueryId::DataQuery)
-	  {
-		/*
-		auto fparam = req.getParameter("f");
-		if(fparam && *fparam != "application/json")
-		  throw EDRException("Invalid format! Format must be 'application/json' for metadata query!");
-		*/
-		return;
-	  }
+    {
+      /*
+      auto fparam = req.getParameter("f");
+      if(fparam && *fparam != "application/json")
+        throw EDRException("Invalid format! Format must be 'application/json' for metadata query!");
+      */
+      return;
+    }
 
     // From here on EDR data query
     // Querydata and obervation producers do not have dots (.) in id, but grid
@@ -515,20 +515,20 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         if (!radius.empty())
           wkt.append(radius);
       }
-	  else if(itsEDRQuery.query_type == EDRQueryType::Cube)
-		{
-		  auto minz = Spine::optional_string(req.getParameter("minz"), "");
-		  auto maxz = Spine::optional_string(req.getParameter("minz"), "");
-		  if(minz.empty() || maxz.empty())
-              throw EDRException("No minz, maxz parameter defined for Cube query!");
-		  req.addParameter("z", minz+"/"+maxz);
-		}
+      else if (itsEDRQuery.query_type == EDRQueryType::Cube)
+      {
+        auto minz = Spine::optional_string(req.getParameter("minz"), "");
+        auto maxz = Spine::optional_string(req.getParameter("minz"), "");
+        if (minz.empty() || maxz.empty())
+          throw EDRException("No minz, maxz parameter defined for Cube query!");
+        req.addParameter("z", minz + "/" + maxz);
+      }
 
       auto crs = Spine::optional_string(req.getParameter("crs"), "EPSG:4326");
       if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84" && crs != "CRS84" && crs != "CRS:84")
         throw EDRException("Invalid crs: " + crs + ". Only EPSG:4326 is supported");
-	  crs = "EPSG:4326";
-	  
+      crs = "EPSG:4326";
+
       /*
             // Maybe later: support other CRSs than WGS84
       if(!crs.empty() && crs != "EPSG:4326")
@@ -569,7 +569,7 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
           req.addParameter("icao", location_id);
         else if (location_info.type == "fmisid")
           req.addParameter("fmisid", location_id);
-        else 
+        else
           req.addParameter("geoid", location_id);
       }
       else if (itsEDRQuery.query_type == EDRQueryType::Cube)
@@ -577,25 +577,26 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         auto bbox = Spine::optional_string(req.getParameter("bbox"), "");
         if (bbox.empty())
           throw EDRException("Query parameter 'bbox' or 'coords' must be defined for Cube");
-		
-		std::vector<string> parts;
-		boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
-		if (parts.size() != 4)
-		  throw EDRException(
-							 "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner y,upper left corner x,upper left corner y"
-							 "<upper right coordinate>, e.g.  bbox=19.4,59.6,31.6,70.1");
-		auto lower_left_x = parts[0];
-		auto lower_left_y = parts[1];
-		auto upper_right_x = parts[2];
-		auto upper_right_y = parts[3];
-		boost::algorithm::trim(lower_left_x);
-		boost::algorithm::trim(lower_left_y);
-		boost::algorithm::trim(upper_right_x);
-		boost::algorithm::trim(upper_right_y);		
-		auto wkt =
-		  ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
-		   upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x + " " +
-		   lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
+
+        std::vector<string> parts;
+        boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
+        if (parts.size() != 4)
+          throw EDRException(
+              "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner "
+              "y,upper left corner x,upper left corner y"
+              "<upper right coordinate>, e.g.  bbox=19.4,59.6,31.6,70.1");
+        auto lower_left_x = parts[0];
+        auto lower_left_y = parts[1];
+        auto upper_right_x = parts[2];
+        auto upper_right_y = parts[3];
+        boost::algorithm::trim(lower_left_x);
+        boost::algorithm::trim(lower_left_y);
+        boost::algorithm::trim(upper_right_x);
+        boost::algorithm::trim(upper_right_y);
+        auto wkt =
+            ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
+             upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x + " " +
+             lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
         req.addParameter("wkt", wkt);
         req.removeParameter("bbox");
       }
@@ -604,20 +605,22 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     // EDR datetime
     auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
 
-	if(datetime == "null")
-	  {
-		if(emd.temporal_extent.time_periods.empty())
-		  {
-			datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
-		  }
-		else
-		  {
-			if(emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
-			  datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) + "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
-			else
-			  datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) + "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
-		  }
-	  }
+    if (datetime == "null")
+    {
+      if (emd.temporal_extent.time_periods.empty())
+      {
+        datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
+      }
+      else
+      {
+        if (emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
+          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
+                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
+        else
+          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
+                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
+      }
+    }
 
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
@@ -665,7 +668,8 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     // EDR parameter-name
     auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
 #ifndef WITHOUT_AVI
-    if (parameter_names.empty() && is_avi_producer(state.getAviMetaData(), itsEDRQuery.collection_id))
+    if (parameter_names.empty() &&
+        is_avi_producer(state.getAviMetaData(), itsEDRQuery.collection_id))
     {
       parameter_names = "message";
       req.addParameter("parameter-name", parameter_names);
@@ -736,7 +740,9 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
         p = p.substr(0, p.find(':'));
       if (emd.parameters.find(p) == emd.parameters.end())
       {
-        std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p + "' ignored!" + ANSI_FG_DEFAULT) << std::endl;
+        std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p +
+                      "' ignored!" + ANSI_FG_DEFAULT)
+                  << std::endl;
       }
       if (emd.parameters.find(p) != emd.parameters.end())
       {
@@ -1170,64 +1176,65 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 void Query::parse_producers(const Spine::HTTP::Request &theReq, const State &theState)
 {
   try
-	{
-	  const Engine::Querydata::Engine &theQEngine = theState.getQEngine();
-	  const Engine::Grid::Engine* theGridEngine = theState.getGridEngine();
+  {
+    const Engine::Querydata::Engine &theQEngine = theState.getQEngine();
+    const Engine::Grid::Engine *theGridEngine = theState.getGridEngine();
 
-	  string opt = Spine::optional_string(theReq.getParameter("model"), "");
-	  
-	  string opt2 = Spine::optional_string(theReq.getParameter("producer"), "");
-	  
-	  if (opt == "default" || opt2 == "default")
-		{
-		  // Use default if it's forced by any option
-		  return;
-		}
-	  
-	  // observation uses stationtype-parameter
-	  if (opt.empty() && opt2.empty())
-		opt2 = Spine::optional_string(theReq.getParameter("stationtype"), "");
-	  
-	  std::list<std::string> resultProducers;
-	  const std::string &prodOpt = opt.empty() ? opt2 : opt;
-	  
-	  // Handle time separation:: either 'model' or 'producer' keyword used
-	  if (!opt.empty())
-		boost::algorithm::split(resultProducers, opt, boost::algorithm::is_any_of(";"));
-	  else if (!opt2.empty())
-		boost::algorithm::split(resultProducers, opt2, boost::algorithm::is_any_of(";"));
-	  
-	  for (auto &p : resultProducers)
-		{
-		  // Avi collection names are in upper case and only one producer name is allowed
-#ifndef WITHOUT_AVI		  
-		  if (is_avi_producer(theState.getAviMetaData(), p))
-			{
-			  if (resultProducers.size() > 1)
-				throw Fmi::Exception(BCP, "Only one producer is allowed for avi query: '" + prodOpt + "'");
-			  
-			  AreaProducers ap = {p};
-			  timeproducers.push_back(ap);
-			  
-			  return;
-			}
+    string opt = Spine::optional_string(theReq.getParameter("model"), "");
+
+    string opt2 = Spine::optional_string(theReq.getParameter("producer"), "");
+
+    if (opt == "default" || opt2 == "default")
+    {
+      // Use default if it's forced by any option
+      return;
+    }
+
+    // observation uses stationtype-parameter
+    if (opt.empty() && opt2.empty())
+      opt2 = Spine::optional_string(theReq.getParameter("stationtype"), "");
+
+    std::list<std::string> resultProducers;
+    const std::string &prodOpt = opt.empty() ? opt2 : opt;
+
+    // Handle time separation:: either 'model' or 'producer' keyword used
+    if (!opt.empty())
+      boost::algorithm::split(resultProducers, opt, boost::algorithm::is_any_of(";"));
+    else if (!opt2.empty())
+      boost::algorithm::split(resultProducers, opt2, boost::algorithm::is_any_of(";"));
+
+    for (auto &p : resultProducers)
+    {
+      // Avi collection names are in upper case and only one producer name is allowed
+#ifndef WITHOUT_AVI
+      if (is_avi_producer(theState.getAviMetaData(), p))
+      {
+        if (resultProducers.size() > 1)
+          throw Fmi::Exception(BCP,
+                               "Only one producer is allowed for avi query: '" + prodOpt + "'");
+
+        AreaProducers ap = {p};
+        timeproducers.push_back(ap);
+
+        return;
+      }
 #endif
-		  boost::algorithm::to_lower(p);
-		  
-		  if (p == "itmf")
-			{
-			  p = Engine::Observation::FMI_IOT_PRODUCER;
-			  iot_producer_specifier = "itmf";
-			}
-		}
+      boost::algorithm::to_lower(p);
 
-	  // Verify the producer names are valid
+      if (p == "itmf")
+      {
+        p = Engine::Observation::FMI_IOT_PRODUCER;
+        iot_producer_specifier = "itmf";
+      }
+    }
+
+    // Verify the producer names are valid
 
 #ifndef WITHOUT_OBSERVATION
-	  const Engine::Observation::Engine* theObsEngine = theState.getObsEngine();
-	  std::set<std::string> observations;
-	  if (theObsEngine != nullptr)
-		observations = theObsEngine->getValidStationTypes();
+    const Engine::Observation::Engine *theObsEngine = theState.getObsEngine();
+    std::set<std::string> observations;
+    if (theObsEngine != nullptr)
+      observations = theObsEngine->getValidStationTypes();
 #endif
 
     for (const auto &p : resultProducers)

@@ -35,7 +35,14 @@ using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // p
 using AviCollections = std::list<AviCollection>;
 using APISettings = std::map<std::string, std::string>;
 
-enum class SourceEngine {Querydata,Grid,Observation,Avi,Undefined};
+enum class SourceEngine
+{
+  Querydata,
+  Grid,
+  Observation,
+  Avi,
+  Undefined
+};
 
 #define Q_ENGINE "querydata_engine"
 #define OBS_ENGINE "observation_engine"

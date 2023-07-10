@@ -1,9 +1,9 @@
 #pragma once
 
+#include "CollectionInfo.h"
 #include "EDRDefs.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
-#include "CollectionInfo.h"
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <boost/optional.hpp>
 #include <list>
@@ -45,11 +45,11 @@ struct edr_parameter
 {
   edr_parameter(std::string n, std::string d) : name(std::move(n)), description(std::move(d)) {}
   edr_parameter(std::string n, std::string d, std::string u)
-	: name(std::move(n)), description(std::move(d)), unit(std::move(u))
+      : name(std::move(n)), description(std::move(d)), unit(std::move(u))
   {
   }
   edr_parameter(std::string n, std::string d, std::string u, std::string l)
-	: name(std::move(n)), description(std::move(d)), unit(std::move(u)), label(std::move(l))
+      : name(std::move(n)), description(std::move(d)), unit(std::move(u)), label(std::move(l))
   {
   }
   std::string name;
@@ -60,7 +60,10 @@ struct edr_parameter
 
 struct edr_spatial_extent
 {
-  edr_spatial_extent() : bbox_xmin(0.0), bbox_ymin(0.0), bbox_xmax(0.0), bbox_ymax(0.0), crs("EPSG:4326") {}
+  edr_spatial_extent()
+      : bbox_xmin(0.0), bbox_ymin(0.0), bbox_xmax(0.0), bbox_ymax(0.0), crs("EPSG:4326")
+  {
+  }
   double bbox_xmin;
   double bbox_ymin;
   double bbox_xmax;
@@ -70,7 +73,13 @@ struct edr_spatial_extent
 
 struct edr_temporal_extent_period
 {
-  edr_temporal_extent_period() : start_time(boost::posix_time::not_a_date_time), end_time(boost::posix_time::not_a_date_time), timestep(0), timesteps(0) {}
+  edr_temporal_extent_period()
+      : start_time(boost::posix_time::not_a_date_time),
+        end_time(boost::posix_time::not_a_date_time),
+        timestep(0),
+        timesteps(0)
+  {
+  }
   boost::posix_time::ptime start_time;
   boost::posix_time::ptime end_time;
   int timestep;
@@ -79,7 +88,10 @@ struct edr_temporal_extent_period
 
 struct edr_temporal_extent
 {
-  edr_temporal_extent() : origin_time(boost::posix_time::not_a_date_time), trs("Temporal Reference System") {}
+  edr_temporal_extent()
+      : origin_time(boost::posix_time::not_a_date_time), trs("Temporal Reference System")
+  {
+  }
   boost::posix_time::ptime origin_time;
   std::string trs;
   std::vector<edr_temporal_extent_period> time_periods;
@@ -101,14 +113,14 @@ struct EDRMetaData
   std::set<std::string> parameter_names;
   std::map<std::string, edr_parameter> parameters;
   std::map<std::string, int> parameter_precisions;
-  std::set<std::string> data_queries;            // Supported data_queries, defined in config file
-  std::set<std::string> output_formats;          // Supported output_formats, defined in config file
-  const SupportedLocations* locations = nullptr;  // Supported locations, default keyword synop_fi
-                                                 // can be overwritten in configuration file
-  const ParameterInfo* parameter_info = nullptr;  // Info about parameters from config file
+  std::set<std::string> data_queries;    // Supported data_queries, defined in config file
+  std::set<std::string> output_formats;  // Supported output_formats, defined in config file
+  const SupportedLocations* locations = nullptr;    // Supported locations, default keyword synop_fi
+                                                    // can be overwritten in configuration file
+  const ParameterInfo* parameter_info = nullptr;    // Info about parameters from config file
   const CollectionInfo* collection_info = nullptr;  // Info about collections from config file
-  CollectionInfo collection_info_engine;         // Info about colections from engine
-  std::string language = "en";                    // Language from configuration file
+  CollectionInfo collection_info_engine;            // Info about colections from engine
+  std::string language = "en";                      // Language from configuration file
   SourceEngine metadata_source = SourceEngine::Undefined;
   int getPrecision(const std::string& parameter_name) const;
   bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
@@ -120,34 +132,36 @@ using EDRProducerMetaData =
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine& qEngine,
                                         const std::string& default_language,
                                         const ParameterInfo* pinfo,
-                                        const CollectionInfoContainer &cic,
+                                        const CollectionInfoContainer& cic,
                                         const SupportedDataQueries& sdq,
                                         const SupportedOutputFormats& sofs,
                                         const SupportedProducerLocations& spl);
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
                                           const std::string& default_language,
                                           const ParameterInfo* pinfo,
-										  const CollectionInfoContainer& cic,
+                                          const CollectionInfoContainer& cic,
                                           const SupportedDataQueries& sdq,
                                           const SupportedOutputFormats& sofs,
                                           const SupportedProducerLocations& spl);
 #ifndef WITHOUT_OBSERVATION
-EDRProducerMetaData get_edr_metadata_obs(Engine::Observation::Engine& obsEngine,
-                                         const std::string& default_language,
-                                         const ParameterInfo* pinfo,
-										 const std::map<std::string, const Engine::Observation::ObservableProperty*>& observable_properties,
-										 const CollectionInfoContainer& cic,
-                                         const SupportedDataQueries& sdq,
-                                         const SupportedOutputFormats& sofs,
-                                         const SupportedProducerLocations& spl,
-										 unsigned int observation_period);
+EDRProducerMetaData get_edr_metadata_obs(
+    Engine::Observation::Engine& obsEngine,
+    const std::string& default_language,
+    const ParameterInfo* pinfo,
+    const std::map<std::string, const Engine::Observation::ObservableProperty*>&
+        observable_properties,
+    const CollectionInfoContainer& cic,
+    const SupportedDataQueries& sdq,
+    const SupportedOutputFormats& sofs,
+    const SupportedProducerLocations& spl,
+    unsigned int observation_period);
 #endif
 #ifndef WITHOUT_AVI
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
                                          const AviCollections& aviCollections,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
-										 const CollectionInfoContainer& cic,
+                                         const CollectionInfoContainer& cic,
                                          const SupportedDataQueries& sdq,
                                          const SupportedOutputFormats& sofs,
                                          const SupportedProducerLocations& spl);
@@ -155,7 +169,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
 void load_locations_avi(const Engine::Avi::Engine& aviEngine,
                         const AviCollections& aviCollections,
                         SupportedProducerLocations& spl,
-						const CollectionInfoContainer &cic);
+                        const CollectionInfoContainer& cic);
 #endif
 
 class EngineMetaData
@@ -171,7 +185,7 @@ class EngineMetaData
   void removeDuplicates(bool report_removal);
 
  private:
-  std::map<SourceEngine, EDRProducerMetaData> itsMetaData; // Source engine -> metadata
+  std::map<SourceEngine, EDRProducerMetaData> itsMetaData;  // Source engine -> metadata
   std::time_t itsUpdateTime;
 };
 

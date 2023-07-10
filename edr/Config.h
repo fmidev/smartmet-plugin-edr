@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "CollectionInfo.h"
 #include "AviCollection.h"
-#include "EDRDefs.h"
+#include "CollectionInfo.h"
 #include "EDRAPI.h"
+#include "EDRDefs.h"
 #include "Precision.h"
 #include "Query.h"
 
@@ -28,7 +28,6 @@ namespace Plugin
 {
 namespace EDR
 {
-
 class Config : private boost::noncopyable
 {
  public:
@@ -90,8 +89,8 @@ class Config : private boost::noncopyable
   time_t itsLastAliasCheck;
 
   const AviCollections &getAviCollections() const { return itsAviCollections; }
-  const EDRAPI& getEDRAPI() const { return itsEDRAPI; }
-  const CollectionInfoContainer& getCollectionInfo() const { return itsCollectionInfo; }
+  const EDRAPI &getEDRAPI() const { return itsEDRAPI; }
+  const CollectionInfoContainer &getCollectionInfo() const { return itsCollectionInfo; }
 
  private:
   libconfig::Config itsConfig;

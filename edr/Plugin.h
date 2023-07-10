@@ -264,7 +264,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   // Observable properties read from observation engine once
   std::shared_ptr<std::vector<Engine::Observation::ObservableProperty>> itsObservableProperties;
   // Parameter name -> observable property
-  std::map<std::string, const Engine::Observation::ObservableProperty*> itsObservablePropertiesMap;
+  std::map<std::string, const Engine::Observation::ObservableProperty *> itsObservablePropertiesMap;
 #endif
 
   // station types (producers) supported by observation
