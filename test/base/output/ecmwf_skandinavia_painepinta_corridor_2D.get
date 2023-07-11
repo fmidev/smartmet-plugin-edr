@@ -2627,7 +2627,7 @@
 				"symbol" : 
 				{
 					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"value" : "\u00cb\u009aC"
 				}
 			}
 		}

@@ -11,6 +11,7 @@
 #include <grid-files/common/ShowFunction.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <spine/ConfigTools.h>
 #include <spine/Convenience.h>
 #include <spine/Exceptions.h>
 #include <ogr_geometry.h>
@@ -454,61 +455,63 @@ void Config::parse_config_api_settings()
 {
   try
   {
-	std::string api_key = "api";
-	std::string api_items_key = "api.items";
-	
+    std::string api_key = "api";
+    std::string api_items_key = "api.items";
+
     if (!itsConfig.exists(api_key))
-	  return;
+      return;
 
-    if (!itsConfig.exists(api_key+".templatedir"))
-	  throw Fmi::Exception(BCP, "Configuration file error. EDR api settings must contain 'templatedir'!");
+    if (!itsConfig.exists(api_key + ".templatedir"))
+      throw Fmi::Exception(
+          BCP, "Configuration file error. EDR api settings must contain 'templatedir'!");
 
-    if (!itsConfig.exists(api_key+".items"))
-	  throw Fmi::Exception(BCP, "Configuration file error. EDR api settings must contain 'items'!");
-	
-	libconfig::Setting &edr_api = itsConfig.lookup(api_key);
+    if (!itsConfig.exists(api_key + ".items"))
+      throw Fmi::Exception(BCP, "Configuration file error. EDR api settings must contain 'items'!");
 
-	std::string templatedir;
-	edr_api.lookupValue("templatedir", templatedir);
+    libconfig::Setting &edr_api = itsConfig.lookup(api_key);
 
-	if(templatedir.empty())
-	  throw Fmi::Exception(BCP, "Configuration file error. Settings 'api.templatedir' can not be empty!");
-	
-	libconfig::Setting& edr_api_items = itsConfig.lookup(api_items_key);
+    std::string templatedir;
+    edr_api.lookupValue("templatedir", templatedir);
 
-	if (!edr_api_items.isList())
-	  throw Fmi::Exception(BCP, "Configuration file error. Settings 'api.items' must be a list of objects");
+    if (templatedir.empty())
+      throw Fmi::Exception(
+          BCP, "Configuration file error. Settings 'api.templatedir' can not be empty!");
 
-	APISettings conf_api_settings;
+    libconfig::Setting &edr_api_items = itsConfig.lookup(api_items_key);
 
-	for (int i = 0; i < edr_api_items.getLength(); i++)
-	  {
-		std::string path(api_items_key + ".[" + Fmi::to_string(i) + "]");
-		libconfig::Setting &api_item = edr_api_items[i];
-		
-		if (!api_item.isGroup())
-		  throw Fmi::Exception(BCP, "Configuration file error. " + path + " must be an object");
+    if (!edr_api_items.isList())
+      throw Fmi::Exception(
+          BCP, "Configuration file error. Settings 'api.items' must be a list of objects");
 
-          try
-          {
-            std::string url_setting;
-            std::string template_setting;
-            api_item.lookupValue("url", url_setting);
-            api_item.lookupValue("template", template_setting);
-			conf_api_settings[url_setting] = template_setting;
-          }
-          catch (const std::exception &e)
-          {
-            throw Fmi::Exception(BCP, "Configuration file error. " + path + " " + e.what());
-          }
-	  }
-	itsEDRAPI.setSettings(templatedir, conf_api_settings);
+    APISettings conf_api_settings;
+
+    for (int i = 0; i < edr_api_items.getLength(); i++)
+    {
+      std::string path(api_items_key + ".[" + Fmi::to_string(i) + "]");
+      libconfig::Setting &api_item = edr_api_items[i];
+
+      if (!api_item.isGroup())
+        throw Fmi::Exception(BCP, "Configuration file error. " + path + " must be an object");
+
+      try
+      {
+        std::string url_setting;
+        std::string template_setting;
+        api_item.lookupValue("url", url_setting);
+        api_item.lookupValue("template", template_setting);
+        conf_api_settings[url_setting] = template_setting;
+      }
+      catch (const std::exception &e)
+      {
+        throw Fmi::Exception(BCP, "Configuration file error. " + path + " " + e.what());
+      }
+    }
+    itsEDRAPI.setSettings(templatedir, conf_api_settings);
   }
   catch (...)
   {
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
-
 }
 
 // ----------------------------------------------------------------------
@@ -523,9 +526,9 @@ void Config::parse_config_avi_collections()
   {
     if (itsConfig.exists("avi"))
     {
-	  int period_length = 30;
-	  if (itsConfig.exists("avi.period_length"))
-		itsConfig.lookupValue("avi.period_length", period_length);
+      int period_length = 30;
+      if (itsConfig.exists("avi.period_length"))
+        itsConfig.lookupValue("avi.period_length", period_length);
 
       std::string rootPath = "avi.collections";
 
@@ -552,7 +555,7 @@ void Config::parse_config_avi_collections()
             std::string name;
             collectionSetting.lookupValue("name", name);
             aviCollection.setName(name);
-		  }
+          }
           catch (const std::exception &e)
           {
             throw Fmi::Exception(BCP, "Configuration file error. " + path + " " + e.what());
@@ -723,7 +726,7 @@ void Config::parse_config_avi_collections()
             throw Fmi::Exception(
                 BCP, "Configuration file error. " + path + " provides no country, bbox or icao");
 
-		  aviCollection.setPeriodLength(period_length);
+          aviCollection.setPeriodLength(period_length);
           itsAviCollections.push_back(aviCollection);
         }
       }
@@ -776,71 +779,97 @@ void Config::parse_config_parameter_aliases(const std::string &configfile)
   itsAliasFileCollection.init(itsParameterAliasFiles);
 }
 
-void Config::process_collection_info(const std::string& engine_name)
+void Config::process_collection_info(SourceEngine source_engine)
 {
   try
   {
-	const std::string path = ("collection_info."+engine_name);
-	
-	if(itsConfig.exists(path))
-	  {
-		const libconfig::Setting &settings = itsConfig.lookup(path);
+    std::string engine_name = get_engine_name(source_engine);
+    const std::string path = ("collection_info." + engine_name);
 
-        if (!settings.isList())
+    if (itsConfig.exists(path))
+    {
+      const libconfig::Setting &settings = itsConfig.lookup(path);
+
+      if (!settings.isList())
+        throw Fmi::Exception(BCP,
+                             "Configuration file error. " + path + " must be a list of objects");
+
+      for (int i = 0; i < settings.getLength(); ++i)
+      {
+        libconfig::Setting &collectionSettings = settings[i];
+        std::string collectionPath = path + ".[" + Fmi::to_string(i) + "]";
+
+        if (!collectionSettings.isGroup())
+        {
           throw Fmi::Exception(
-              BCP, "Configuration file error. " + path + " must be a list of objects");
+              BCP, "Configuration file error. " + collectionPath + " must be an object");
+        }
+        std::string id;
+        std::string title;
+        std::string description;
+        std::set<std::string> keywords;
+        collectionSettings.lookupValue("id", id);
+        collectionSettings.lookupValue("title", title);
+        collectionSettings.lookupValue("description", description);
+        if (collectionSettings.exists("keywords"))
+        {
+          libconfig::Setting &keywordsSetting = collectionSettings.lookup("keywords");
+          if (!keywordsSetting.isArray())
+            throw Fmi::Exception(
+                BCP, "Configuration file error. " + collectionPath + ".keywords must be an array");
 
-		for (int i = 0; i < settings.getLength(); ++i)
-		  {
-			libconfig::Setting &collectionSettings = settings[i];
-			std::string collectionPath = path + ".[" + Fmi::to_string(i) + "]";
-			
-            if (!collectionSettings.isGroup())
-			  {
-				throw Fmi::Exception(BCP,
-									 "Configuration file error. " + collectionPath + " must be an object");
-			  }
-			std::string id;
-			std::string title;
-			std::string description;
-			std::set<std::string> keywords;
-            collectionSettings.lookupValue("id", id);
-            collectionSettings.lookupValue("title", title);
-            collectionSettings.lookupValue("description", description);
-			if (collectionSettings.exists("keywords"))
-			  {				
-				libconfig::Setting &keywordsSetting = collectionSettings.lookup("keywords");
-				if (!keywordsSetting.isArray())
-				  throw Fmi::Exception(BCP, "Configuration file error. " + collectionPath + ".keywords must be an array");
+          for (int j = 0; j < keywordsSetting.getLength(); j++)
+          {
+            std::string keywordsPath = collectionPath + ".keywords[" + Fmi::to_string(j) + "]";
 
-				for (int j = 0; j < keywordsSetting.getLength(); j++)
-				  {
-					std::string keywordsPath = collectionPath + ".keywords[" + Fmi::to_string(j) + "]";
-					
-					if (keywordsSetting[j].getType() != libconfig::Setting::Type::TypeString)
-					  throw Fmi::Exception(BCP, "Configuration file error. " + keywordsPath + " must be a string");
-					
-					keywords.insert((std::string((const char *)keywordsSetting[j])));
-				  }
-				
-			  }
-			if(!id.empty() && (!title.empty() || !description.empty() || !keywords.empty()))
-			  itsCollectionInfo.addInfo(engine_name, id, title, description, keywords);
-		  }
-	  }
+            if (keywordsSetting[j].getType() != libconfig::Setting::Type::TypeString)
+              throw Fmi::Exception(
+                  BCP, "Configuration file error. " + keywordsPath + " must be a string");
+
+            keywords.insert((std::string((const char *)keywordsSetting[j])));
+          }
+        }
+        if (!id.empty() && (!title.empty() || !description.empty() || !keywords.empty()))
+          itsCollectionInfo.addInfo(source_engine, id, title, description, keywords);
+      }
+    }
+    // Visible collections
+    std::set<std::string> visible_collections;
+    bool engine_configured = false;
+    auto engine_collection_key = ("visible_collections." + engine_name);
+    if (itsConfig.exists(engine_collection_key))
+    {
+      engine_configured = true;
+      const libconfig::Setting &engineCollections = itsConfig.lookup(engine_collection_key);
+      if (!engineCollections.isArray())
+        throw Fmi::Exception(
+            BCP, "Configured value of '" + engine_collection_key + "' must be an array");
+      for (int i = 0; i < engineCollections.getLength(); i++)
+      {
+        auto collection_name = std::string((const char *)engineCollections[i]);
+        if (collection_name.empty())
+          continue;
+        visible_collections.insert(collection_name);
+      }
+    }
+    // If engine is not configured -> show all collections in metadata
+    if (visible_collections.empty() && !engine_configured)
+      visible_collections.insert("*");
+
+    itsCollectionInfo.addVisibleCollections(source_engine, visible_collections);
   }
   catch (...)
-	{
-	  throw Fmi::Exception(BCP, "Operation failed!", nullptr);
-	}
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
 }
-  
+
 void Config::parse_config_collection_info()
 {
-  process_collection_info(Q_ENGINE);
-  process_collection_info(GRID_ENGINE);
-  process_collection_info(OBS_ENGINE);
-  process_collection_info(AVI_ENGINE);
+  process_collection_info(SourceEngine::Querydata);
+  process_collection_info(SourceEngine::Grid);
+  process_collection_info(SourceEngine::Observation);
+  process_collection_info(SourceEngine::Avi);
 }
 
 // ----------------------------------------------------------------------
@@ -861,6 +890,7 @@ Config::Config(const string &configfile)
     itsConfig.setIncludeDir(p.c_str());
 
     itsConfig.readFile(configfile.c_str());
+    Spine::expandVariables(itsConfig);
 
     itsConfig.lookupValue("observation_period", itsObservationPeriod);
 
@@ -937,7 +967,7 @@ Config::Config(const string &configfile)
     parse_config_geometry_tables();
     parse_config_avi_collections();
     parse_config_api_settings();
-	parse_config_collection_info();
+    parse_config_collection_info();
 
     // We construct the default locale only once from the string,
     // creating it from scratch for every request is very expensive

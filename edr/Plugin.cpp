@@ -1802,7 +1802,6 @@ void Plugin::getCommonObsSettings(Engine::Observation::Settings &settings,
     // initialized??
     settings.localename = query.localename;
     settings.numberofstations = query.numberofstations;
-    settings.latest = query.latestObservation;
     settings.useDataCache = query.useDataCache;
     // Data filtering settings
     settings.dataFilter = query.dataFilter;
@@ -1913,8 +1912,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
           }
         }
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (loc->type == Spine::Location::Area)
       {
@@ -1949,8 +1947,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         }
 
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (loc->type == Spine::Location::BoundingBox && !is_flash_producer(producer))
       {
@@ -1980,8 +1977,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         std::unique_ptr<OGRGeometry> geom = get_ogr_geometry(wkt, loc->radius);
         wktString = Fmi::OGR::exportToWkt(*geom);
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (!is_flash_producer(producer) && loc->type == Spine::Location::Place &&
                loc->radius > 0)
@@ -1999,8 +1995,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         std::unique_ptr<OGRGeometry> geom = get_ogr_geometry(wkt, loc->radius);
         wktString = Fmi::OGR::exportToWkt(*geom);
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
       else if (!is_flash_producer(producer) && loc->type == Spine::Location::CoordinatePoint &&
                loc->radius > 0)
@@ -2031,8 +2026,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
         }
 
         if (!is_flash_or_mobile_producer(producer))
-          stationSettings.fmisids = get_fmisids_for_wkt(
-              itsObsEngine, producer, settings.starttime, settings.endtime, wktString);
+          stationSettings.fmisids = get_fmisids_for_wkt(itsObsEngine, settings, wktString);
       }
 
 #ifdef MYDEBUG
@@ -2048,8 +2042,7 @@ bool Plugin::resolveAreaStations(const Spine::LocationPtr &location,
       }
       else if (!stationSettings.fmisids.empty())
       {
-        settings.taggedFMISIDs = itsObsEngine->translateToFMISID(
-            settings.starttime, settings.endtime, producer, stationSettings);
+        settings.taggedFMISIDs = itsObsEngine->translateToFMISID(settings, stationSettings);
 
         name = loc->name;
         if (loc->type == Spine::Location::Wkt)
@@ -2261,6 +2254,10 @@ void Plugin::getObsSettings(std::vector<SettingsInfo> &settingsVector,
                         aggregationIntervalAhead,
                         settings);
 
+    // Handle endtime=now
+    if (query.latestObservation)
+      settings.wantedtime = settings.endtime;
+
     Engine::Observation::StationSettings stationSettings;
 
     for (const auto &tloc : query.loptions->locations())
@@ -2320,8 +2317,7 @@ void Plugin::getObsSettings(std::vector<SettingsInfo> &settingsVector,
 
     if (!is_flash_or_mobile_producer(producer))
     {
-      settings.taggedFMISIDs = itsObsEngine->translateToFMISID(
-          settings.starttime, settings.endtime, producer, stationSettings);
+      settings.taggedFMISIDs = itsObsEngine->translateToFMISID(settings, stationSettings);
     }
 
     if (!settings.taggedFMISIDs.empty() || !settings.boundingBox.empty() ||
@@ -3342,8 +3338,8 @@ bool Plugin::processGridEngineQuery(const State &state,
 
 #ifndef WITHOUT_AVI
 void storeAviData(const State &state,
-				  SmartMet::Engine::Avi::StationQueryData &aviData,
-				  TS::OutputData &outputData)
+                  SmartMet::Engine::Avi::StationQueryData &aviData,
+                  TS::OutputData &outputData)
 {
   TS::TimeSeriesVectorPtr messageData(new TS::TimeSeriesVector());
   outputData.push_back(make_pair("data", std::vector<TS::TimeSeriesData>()));
@@ -3377,16 +3373,16 @@ void storeAviData(const State &state,
       TS::LonLatTimeSeries ll_ts(lonlat, ts);
       messageData->push_back(ll_ts);
     }
-	  
-	if(!messageData->empty())
-	  odata.emplace_back(TS::TimeSeriesData(messageData));
+
+    if (!messageData->empty())
+      odata.emplace_back(TS::TimeSeriesData(messageData));
   }
 }
 
 void checkAviEngineQuery(const Query &query,
-						 const std::vector<EDRMetaData> &edrMetaDataVector,
-						 bool locationCheck,
-						 SmartMet::Engine::Avi::QueryOptions &queryOptions)
+                         const std::vector<EDRMetaData> &edrMetaDataVector,
+                         bool locationCheck,
+                         SmartMet::Engine::Avi::QueryOptions &queryOptions)
 {
   const auto &edrQuery = query.edrQuery();
   // In AVI engine there is only one metadata for each producer/collection (e.g. querydata has
@@ -3406,43 +3402,48 @@ void checkAviEngineQuery(const Query &query,
       queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
     }
   }
- else if (edrQuery.query_type == EDRQueryType::Position || edrQuery.query_type == EDRQueryType::Radius)
-	{
-	  // For position query set maxdistance 1 km
-	  auto wkt = query.requestWKT;
-	  int radius = 1.0;
-	  if(edrQuery.query_type == EDRQueryType::Radius)
-		{
-		  std::string::size_type n = wkt.find(':');
-		  if (n == std::string::npos)
-			throw Fmi::Exception(BCP, "Error! Radius query must contain radius!", nullptr);
-	   	  
-		  radius = Fmi::stoi(wkt.substr(n + 1));
-		  wkt = wkt.substr(0, n);
-		}
-	  
-	  // Find out the point
-	  auto geom = get_ogr_geometry(wkt);
-	  if(geom->getGeometryType() != wkbPoint)
-		throw Fmi::Exception(BCP, "Error! POINT geometry must be defined in " + std::string(edrQuery.query_type == EDRQueryType::Position ? "Position query!" : "Radius query!"));
-	  
-	  auto point = geom->toPoint();
-	  auto lon = point->getX();
-	  auto lat = point->getY();
+  else if (edrQuery.query_type == EDRQueryType::Position ||
+           edrQuery.query_type == EDRQueryType::Radius)
+  {
+    // For position query set maxdistance 1 km
+    auto wkt = query.requestWKT;
+    int radius = 1.0;
+    if (edrQuery.query_type == EDRQueryType::Radius)
+    {
+      std::string::size_type n = wkt.find(':');
+      if (n == std::string::npos)
+        throw Fmi::Exception(BCP, "Error! Radius query must contain radius!", nullptr);
 
-	  // Lets set longitude, latitude and maxdistance
-      queryOptions.itsLocationOptions.itsLonLats.push_back({lon, lat});
-	  queryOptions.itsLocationOptions.itsMaxDistance = (radius * 1000);
-	  queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
-	  	  
-	  /*
-		// We could also create polygon and use wkt in query, result should be the same
-		auto geom = get_ogr_geometry(wkt, radius);
-		wkt = geom->exportToWkt();
-		queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
-		queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
-	  */
-	}
+      radius = Fmi::stoi(wkt.substr(n + 1));
+      wkt = wkt.substr(0, n);
+    }
+
+    // Find out the point
+    auto geom = get_ogr_geometry(wkt);
+    if (geom->getGeometryType() != wkbPoint)
+      throw Fmi::Exception(
+          BCP,
+          "Error! POINT geometry must be defined in " +
+              std::string(edrQuery.query_type == EDRQueryType::Position ? "Position query!"
+                                                                        : "Radius query!"));
+
+    auto point = geom->toPoint();
+    auto lon = point->getX();
+    auto lat = point->getY();
+
+    // Lets set longitude, latitude and maxdistance
+    queryOptions.itsLocationOptions.itsLonLats.push_back({lon, lat});
+    queryOptions.itsLocationOptions.itsMaxDistance = (radius * 1000);
+    queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
+
+    /*
+          // We could also create polygon and use wkt in query, result should be the same
+          auto geom = get_ogr_geometry(wkt, radius);
+          wkt = geom->exportToWkt();
+          queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
+          queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
+    */
+  }
   else
   {
     if (query.requestWKT.empty())
@@ -3698,7 +3699,7 @@ const EDRProducerMetaData &Plugin::getAviMetaData() const
 {
   auto metadata = itsMetaData.load();
 
-  return metadata->getMetaData(AVI_ENGINE);
+  return metadata->getMetaData(SourceEngine::Avi);
 }
 #endif
 
@@ -3729,16 +3730,16 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     if (masterquery.isEDRMetaDataQuery())
     {
       const auto &edr_query = masterquery.edrQuery();
-	  if(edr_query.query_id == EDRQueryId::APIQuery)
-		{
-		  auto result = itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
-		  table.set(0, 0, result);
-		}
-	  else
-		{
-		  auto result = processMetaDataQuery(edr_query);
-		  table.set(0, 0, result.toStyledString());
-		}
+      if (edr_query.query_id == EDRQueryId::APIQuery)
+      {
+        auto result = itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
+        table.set(0, 0, result);
+      }
+      else
+      {
+        auto result = processMetaDataQuery(edr_query);
+        table.set(0, 0, result.toStyledString());
+      }
       return {};
     }
 
@@ -3770,7 +3771,7 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     std::string producerName = producerMissing ? "" : masterquery.timeproducers.front().front();
 
 #ifndef WITHOUT_AVI
-    bool isAviProducer = metaData->isValidCollection(AVI_ENGINE, producerName);
+    bool isAviProducer = metaData->isValidCollection(SourceEngine::Avi, producerName);
 #endif
 #ifndef WITHOUT_OBSERVATION
     const ObsParameters obsParameters = getObsParameters(masterquery);
@@ -3796,77 +3797,79 @@ boost::shared_ptr<std::string> Plugin::processQuery(
         query.toptions.startTimeUTC = startTimeUTC;
       query.toptions.endTimeUTC = masterquery.toptions.endTimeUTC;
 
-	  SmartMetEngine queryEngine = SmartMetEngine::Undefined;
+      SourceEngine queryEngine = SourceEngine::Undefined;
 
 #ifndef WITHOUT_OBSERVATION
       if (!areaproducers.empty() && !itsConfig.obsEngineDisabled() &&
-		  isObsProducer(areaproducers.front()))
-		{
-		  queryEngine = SmartMetEngine::Observation;	  
-		}
+          isObsProducer(areaproducers.front()))
+      {
+        queryEngine = SourceEngine::Observation;
+      }
 #endif
 #ifndef WITHOUT_AVI
-	  if ((queryEngine == SmartMetEngine::Undefined) && isAviProducer)
-		queryEngine = SmartMetEngine::Avi;
+      if ((queryEngine == SourceEngine::Undefined) && isAviProducer)
+        queryEngine = SourceEngine::Avi;
 #endif
-	  // Grid-query is executed if the following conditions are fulfilled:
-	  //   1. The usage of Grid-Engine is enabled (=> timeseries
-	  //   configuration file)
-	  //   2. The actual Grid-Engine is enabled (=> grid-engine
-	  //   configuration file)
-	  //   3. If the one of the following conditions is true:
-	  //       a) Grid-query is requested by the query parameter
-	  //       (source=grid) b) Query source is not defined and at least one
-	  //       of the producers is a grid producer c) Query source is not
-	  //       defined and at least one of the query parameters contains a
-	  //       grid producer d) Query source is not defined and no producers
-	  //       are defined and the primary forecast
-	  if ((queryEngine == SmartMetEngine::Undefined) &&
-		  (!itsConfig.gridEngineDisabled() && itsGridEngine->isEnabled() &&
-		   (strcasecmp(masterquery.forecastSource.c_str(), "grid") == 0 ||
-			(masterquery.forecastSource.empty() &&
-			 (((!areaproducers.empty() &&
-				itsGridInterface->containsGridProducer(masterquery))) ||
-			  (itsGridInterface->containsParameterWithGridProducer(masterquery)) ||
-	  (areaproducers.empty() &&
-	   strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))))))
-		queryEngine = SmartMetEngine::Grid;
-	  
-	  if (queryEngine == SmartMetEngine::Undefined)
-		queryEngine = SmartMetEngine::Querydata;		 	  
-	  
+      // Grid-query is executed if the following conditions are fulfilled:
+      //   1. The usage of Grid-Engine is enabled (=> timeseries
+      //   configuration file)
+      //   2. The actual Grid-Engine is enabled (=> grid-engine
+      //   configuration file)
+      //   3. If the one of the following conditions is true:
+      //       a) Grid-query is requested by the query parameter
+      //       (source=grid) b) Query source is not defined and at least one
+      //       of the producers is a grid producer c) Query source is not
+      //       defined and at least one of the query parameters contains a
+      //       grid producer d) Query source is not defined and no producers
+      //       are defined and the primary forecast
+      if ((queryEngine == SourceEngine::Undefined) &&
+          (!itsConfig.gridEngineDisabled() && itsGridEngine->isEnabled() &&
+           (strcasecmp(masterquery.forecastSource.c_str(), "grid") == 0 ||
+            (masterquery.forecastSource.empty() &&
+             (((!areaproducers.empty() && itsGridInterface->containsGridProducer(masterquery))) ||
+              (itsGridInterface->containsParameterWithGridProducer(masterquery)) ||
+              (areaproducers.empty() &&
+               strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))))))
+        queryEngine = SourceEngine::Grid;
+
+      if (queryEngine == SourceEngine::Undefined)
+        queryEngine = SourceEngine::Querydata;
+
 #ifndef WITHOUT_AVI
-	  if(queryEngine == SmartMetEngine::Avi && !itsConfig.aviEngineDisabled())
-		{
-		  processAviEngineQuery(state, query, metaData->getMetaData(AVI_ENGINE), producerName, outputData);
-		}
+      if (queryEngine == SourceEngine::Avi && !itsConfig.aviEngineDisabled())
+      {
+        processAviEngineQuery(
+            state, query, metaData->getMetaData(SourceEngine::Avi), producerName, outputData);
+      }
 #endif
 #ifndef WITHOUT_OBSERVATION
-	  if(queryEngine == SmartMetEngine::Observation)
-		{
-		  processObsEngineQuery(state, query, outputData, areaproducers, producerDataPeriod, obsParameters);
-		}
+      if (queryEngine == SourceEngine::Observation)
+      {
+        processObsEngineQuery(
+            state, query, outputData, areaproducers, producerDataPeriod, obsParameters);
+      }
 #endif
-	  if(queryEngine == SmartMetEngine::Grid)
-		{
-		  bool processed = processGridEngineQuery(state, query, outputData, queryStreamer, areaproducers, producerDataPeriod);
-		  
-		  if (processed)
-			{
-			  // We need different hash calculcations for the grid requests.
-			  product_hash = Fmi::bad_hash;
-			}
-		  // If the query was not processed then we should call the QEngine
-		  // instead.
-		  else
-			{
-			  processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
-			}
-		}
-	  else if(queryEngine == SmartMetEngine::Querydata)
-		{
-		  processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
-		}
+      if (queryEngine == SourceEngine::Grid)
+      {
+        bool processed = processGridEngineQuery(
+            state, query, outputData, queryStreamer, areaproducers, producerDataPeriod);
+
+        if (processed)
+        {
+          // We need different hash calculcations for the grid requests.
+          product_hash = Fmi::bad_hash;
+        }
+        // If the query was not processed then we should call the QEngine
+        // instead.
+        else
+        {
+          processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
+        }
+      }
+      else if (queryEngine == SourceEngine::Querydata)
+      {
+        processQEngineQuery(state, query, outputData, areaproducers, producerDataPeriod);
+      }
 
       // get the latestTimestep from previous query
       latestTimestep = query.latestTimestep;
@@ -3887,7 +3890,6 @@ boost::shared_ptr<std::string> Plugin::processQuery(
         SmartMet::Plugin::EDR::Json::DEFAULT_PRECISION;
 
     // Set precisions
-    std::map<std::string, int> precisions;
     unsigned int i = 0;
     for (const TS::OptionParsers::ParameterList::value_type &p : masterquery.poptions.parameters())
     {
@@ -3937,11 +3939,11 @@ boost::shared_ptr<std::string> Plugin::processQuery(
     else if (masterquery.output_format == GEO_JSON_FORMAT)
     {
       Json::Value result = GeoJson::formatOutputData(outputData,
-													 emd,
-													 edr_query.query_type,
-													 masterquery.levels,
-													 masterquery.coordinateFilter(),
-													 masterquery.poptions.parameters());
+                                                     emd,
+                                                     edr_query.query_type,
+                                                     masterquery.levels,
+                                                     masterquery.coordinateFilter(),
+                                                     masterquery.poptions.parameters());
       table.set(0, 0, result.toStyledString());
     }
 
@@ -4487,19 +4489,19 @@ void Plugin::init()
 
 #ifndef WITHOUT_AVI
     if (!itsConfig.aviEngineDisabled())
-	  {
-		/* AviEngine */
-		engine = itsReactor->getSingleton("Avi", nullptr);
-		if (!engine)
-		  throw Fmi::Exception(BCP, "Avi engine unavailable");
-		itsAviEngine = reinterpret_cast<Engine::Avi::Engine *>(engine);
-	  }
+    {
+      /* AviEngine */
+      engine = itsReactor->getSingleton("Avi", nullptr);
+      if (!engine)
+        throw Fmi::Exception(BCP, "Avi engine unavailable");
+      itsAviEngine = reinterpret_cast<Engine::Avi::Engine *>(engine);
+    }
 #endif
 
     // Initialization done, register services. We are aware that throwing
     // from a separate thread will cause a crash, but these should never
     // fail.
-    
+
     if (!itsReactor->addContentHandler(
             this,
             itsConfig.defaultUrl(),
@@ -4577,58 +4579,69 @@ void Plugin::updateMetaData(bool initial_phase)
     const auto &data_queries = itsConfig.allSupportedDataQueries();
     const auto &output_formats = itsConfig.allSupportedOutputFormats();
     const auto &collection_info_container = itsConfig.getCollectionInfo();
-	auto observation_period = itsConfig.getObservationPeriod();
+    auto observation_period = itsConfig.getObservationPeriod();
 
     auto qengine_metadata = get_edr_metadata_qd(*itsQEngine,
                                                 default_language,
                                                 parameter_info,
-												collection_info_container,
+                                                collection_info_container,
                                                 data_queries,
                                                 output_formats,
                                                 itsSupportedLocations);
-    engine_meta_data->addMetaData(Q_ENGINE, qengine_metadata);
+    engine_meta_data->addMetaData(SourceEngine::Querydata, qengine_metadata);
     if (!itsConfig.gridEngineDisabled())
     {
       auto grid_engine_metadata = get_edr_metadata_grid(*itsGridEngine,
                                                         default_language,
                                                         parameter_info,
-														collection_info_container,
+                                                        collection_info_container,
                                                         data_queries,
                                                         output_formats,
                                                         itsSupportedLocations);
 
-
-      engine_meta_data->addMetaData(GRID_ENGINE, grid_engine_metadata);
+      engine_meta_data->addMetaData(SourceEngine::Grid, grid_engine_metadata);
     }
 #ifndef WITHOUT_OBSERVATION
     if (!itsConfig.obsEngineDisabled())
     {
+      if (initial_phase)
+      {
+        // std::shared_ptr<std::vector<ObservableProperty>>
+        std::map<std::string, const Engine::Observation::ObservableProperty *> properties;
+        std::vector<std::string> params;
+        itsObservableProperties = itsObsEngine->observablePropertyQuery(params, default_language);
+        for (const auto &prop : *itsObservableProperties)
+          itsObservablePropertiesMap[prop.gmlId] = &prop;
+      }
+
       auto obs_engine_metadata = get_edr_metadata_obs(*itsObsEngine,
                                                       default_language,
                                                       parameter_info,
-													  collection_info_container,
+                                                      itsObservablePropertiesMap,
+                                                      collection_info_container,
                                                       data_queries,
                                                       output_formats,
                                                       itsSupportedLocations,
-													  observation_period);
-      engine_meta_data->addMetaData(OBS_ENGINE, obs_engine_metadata);
+                                                      observation_period);
+
+      engine_meta_data->addMetaData(SourceEngine::Observation, obs_engine_metadata);
     }
 #endif
 #ifndef WITHOUT_AVI
-	if(!itsConfig.aviEngineDisabled())
-	  {
-		auto avi_engine_metadata = get_edr_metadata_avi(*itsAviEngine,
-														itsConfig.getAviCollections(),
-														default_language,
-														parameter_info,
-														collection_info_container,
-														data_queries,
-														output_formats,
-														itsSupportedLocations);
-		engine_meta_data->addMetaData(AVI_ENGINE, avi_engine_metadata);
-	  }
+    if (!itsConfig.aviEngineDisabled())
+    {
+      auto avi_engine_metadata = get_edr_metadata_avi(*itsAviEngine,
+                                                      itsConfig.getAviCollections(),
+                                                      default_language,
+                                                      parameter_info,
+                                                      collection_info_container,
+                                                      data_queries,
+                                                      output_formats,
+                                                      itsSupportedLocations);
+      engine_meta_data->addMetaData(SourceEngine::Avi, avi_engine_metadata);
+    }
 #endif
-	engine_meta_data->removeDuplicates(initial_phase);
+    engine_meta_data->removeDuplicates(initial_phase);
 
     itsMetaData.store(engine_meta_data);
   }
@@ -4666,8 +4679,14 @@ void Plugin::updateSupportedLocations()
 
     // For avi producers locations/stations are loaded from avidb
 #ifndef WITHOUT_AVI
-	if(!itsConfig.aviEngineDisabled())
-	  load_locations_avi(*itsAviEngine, itsConfig.getAviCollections(), itsSupportedLocations);
+    if (!itsConfig.aviEngineDisabled())
+    {
+      const auto &collection_info_container = itsConfig.getCollectionInfo();
+      load_locations_avi(*itsAviEngine,
+                         itsConfig.getAviCollections(),
+                         itsSupportedLocations,
+                         collection_info_container);
+    }
 #endif
   }
   catch (...)

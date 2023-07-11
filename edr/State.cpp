@@ -10,7 +10,7 @@ namespace Plugin
 {
 namespace EDR
 {
-  //atic EDRProducerMetaData EMPTY_PRODUCER_METADATA
+// atic EDRProducerMetaData EMPTY_PRODUCER_METADATA
 // ----------------------------------------------------------------------
 /*!
  * \brief Initialize'the query state object

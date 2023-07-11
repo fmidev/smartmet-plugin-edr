@@ -2,7 +2,7 @@
 	"type" : "Coverage",
 	"domain" : 
 	{
-		"domainType" : "PointSeries",
+		"domainType" : "VerticalProfile",
 		"referencing" : 
 		[
 			{
@@ -24,7 +24,7 @@
 				],
 				"system" : 
 				{
-					"id" : "TODO: PressureLevel",
+					"id" : "PressureLevel",
 					"type" : "VerticalCRS"
 				}
 			},
@@ -47,13 +47,7 @@
 			{
 				"values" : 
 				[
-					"2008-09-09T09:00:00Z",
-					"2008-09-09T10:00:00Z",
-					"2008-09-09T11:00:00Z",
-					"2008-09-09T12:00:00Z",
-					"2008-09-09T13:00:00Z",
-					"2008-09-09T14:00:00Z",
-					"2008-09-09T15:00:00Z"
+					"2008-09-09T09:00:00Z"
 				]
 			},
 			"x" : 
@@ -74,7 +68,12 @@
 			{
 				"values" : 
 				[
-					700
+					1000,
+					925,
+					850,
+					700,
+					500,
+					300
 				]
 			}
 		}
@@ -116,29 +115,22 @@
 		{
 			"axisNames" : 
 			[
-				"t",
-				"x",
-				"y",
 				"z"
 			],
 			"dataType" : "float",
 			"shape" : 
 			[
-				7,
-				1,
-				1,
-				1
+				6
 			],
 			"type" : "NdArray",
 			"values" : 
 			[
+				11.9,
+				6.9,
+				4.9,
 				0.8,
-				0.7,
-				0.6,
-				0.5,
-				0.3,
-				0.1,
-				-0.1
+				-13.1,
+				-41.9
 			]
 		}
 	}

@@ -413,7 +413,7 @@
 				"Temperature" : 
 				{
 					"id" : "Temperature",
-					"description" : "Ilman lämpötila",
+					"description" : "Ilman l\u00c3\u00a4mp\u00c3\u00b6tila",
 					"type" : "Parameter",
 					"observedProperty" : 
 					{
@@ -425,7 +425,7 @@
 						"symbol" : 
 						{
 							"type" : "http://codes.wmo.int/common/unit/_degC",
-							"value" : "˚C"
+							"value" : "\u00cb\u009aC"
 						}
 					}
 				},

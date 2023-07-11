@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.4.27
+Version: 23.7.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -29,7 +29,7 @@ BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 23.7.10
 BuildRequires: smartmet-library-locus-devel >= 23.7.10
-BuildRequires: smartmet-library-macgyver-devel >= 23.3.3
+BuildRequires: smartmet-library-macgyver-devel >= 23.6.30
 BuildRequires: smartmet-library-grid-content-devel >= 23.7.10
 BuildRequires: smartmet-library-grid-files-devel >= 23.7.10
 BuildRequires: smartmet-library-newbase-devel >= 23.7.10
@@ -50,7 +50,7 @@ Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 23.7.10
 Requires: smartmet-library-locus >= 23.7.10
-Requires: smartmet-library-macgyver >= 23.3.3
+Requires: smartmet-library-macgyver >= 23.6.30
 Requires: smartmet-library-newbase >= 23.7.10
 Requires: smartmet-library-spine >= 23.7.10
 Requires: smartmet-library-timeseries >= 23.7.10
@@ -91,7 +91,7 @@ SmartMet edr plugin
 rm -rf $RPM_BUILD_ROOT
 
 %setup -q -n %{SPECNAME}
- 
+
 %build -q -n %{SPECNAME}
 make %{_smp_mflags} \
      %{?!with_observation:CFLAGS=-DWITHOUT_OBSERVATION}
@@ -109,9 +109,38 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Tue Jul 11 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.7.11-1.fmi
+- Repackaged due to QEngine API changes
+
+* Tue Jun 13 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.13-1.fmi
+- Support internal and environment variables in configuration files
+
+* Wed Jun  7 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.7-1.fmi
+- Fixed JSON strings to be properly encoded
+
+* Tue Jun  6 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.6-1.fmi
+- Repackaged due to GRID ABI changes
+
+* Thu Jun  1 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.1-1.fmi
+- New ObsEngine API with stationgroups setting forced a recompile
+
+* Wed May 24 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.5.24-1.fmi
+- Configuration document added
+- Parameter info in configuration file is prioritized over info from database
+
+* Wed May 17 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.5.17-1.fmi
+- Use VerticalProfile domain type in CoverageJSON output when there is one point, one timestep and several levels
+
+* Thu May 11 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.5.11-1.fmi
+- Improved observation metadata processing: Measurand info is fetched from database 
+in order to get valid parameter list for each prodcer
+- New configuration file entry 'visible_collections' added in order to limit number of collections in metadata
+
+* Wed May 10 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.5.10-1.fmi
+- Use latest obs engine API for looking for the latest observations
+
 * Thu Apr 27 2023 Andris Pavēnis <andris.pavenis@fmi.fi> 23.4.27-1.fmi
 - Repackage due to macgyver ABI changes (AsyncTask, AsyncTaskGroup)
-
 
 * Tue Apr 18 2023 Anssi Reponen <anssi.reponen@fmi.fi> -23.4.18-1.fmi
 - Fixed API-document because of OGC test suite
