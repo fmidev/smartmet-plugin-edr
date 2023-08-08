@@ -282,6 +282,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   void updateMetaData(bool initial_phase);
   void updateSupportedLocations();
   void updateParameterInfo();
+  void checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) const;
 
   // Locations info is read once at startup, the used subsequent queries
   SupportedProducerLocations itsSupportedLocations;

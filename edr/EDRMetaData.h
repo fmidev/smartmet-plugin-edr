@@ -122,6 +122,7 @@ struct EDRMetaData
   CollectionInfo collection_info_engine;            // Info about colections from engine
   std::string language = "en";                      // Language from configuration file
   SourceEngine metadata_source = SourceEngine::Undefined;
+  boost::posix_time::ptime latest_data_update_time;
   int getPrecision(const std::string& parameter_name) const;
   bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
 };
@@ -172,6 +173,8 @@ void load_locations_avi(const Engine::Avi::Engine& aviEngine,
                         const CollectionInfoContainer& cic);
 #endif
 
+const boost::posix_time::ptime& get_latest_data_update_time(const EDRProducerMetaData& pmd, const std::string& producer);
+
 class EngineMetaData
 {
  public:
@@ -179,14 +182,16 @@ class EngineMetaData
   void addMetaData(SourceEngine source_engine, const EDRProducerMetaData& metadata);
   const EDRProducerMetaData& getMetaData(SourceEngine source_engine) const;
   const std::map<SourceEngine, EDRProducerMetaData>& getMetaData() const;
-  const std::time_t& getUpdateTime() const { return itsUpdateTime; }
+  const std::time_t& getMetaDataUpdateTime() const { return itsMetaDataUpdateTime; }
+  const boost::posix_time::ptime& getLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer) const;
+  void setLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer, const boost::posix_time::ptime& t);
   bool isValidCollection(const std::string& collection_name) const;
   bool isValidCollection(SourceEngine source_engine, const std::string& collection_name) const;
   void removeDuplicates(bool report_removal);
 
  private:
   std::map<SourceEngine, EDRProducerMetaData> itsMetaData;  // Source engine -> metadata
-  std::time_t itsUpdateTime;
+  std::time_t itsMetaDataUpdateTime;
 };
 
 }  // namespace EDR
