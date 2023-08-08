@@ -454,7 +454,7 @@ std::size_t Plugin::hash_value(const State &state,
     if (masterquery.isEDRMetaDataQuery())
     {
       auto metadata = itsMetaData.load();
-      Fmi::hash_combine(hash, Fmi::hash_value(metadata->getUpdateTime()));
+      Fmi::hash_combine(hash, Fmi::hash_value(metadata->getMetaDataUpdateTime()));
       return hash;
     }
 
@@ -3435,14 +3435,6 @@ void checkAviEngineQuery(const Query &query,
     queryOptions.itsLocationOptions.itsLonLats.push_back({lon, lat});
     queryOptions.itsLocationOptions.itsMaxDistance = (radius * 1000);
     queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
-
-    /*
-          // We could also create polygon and use wkt in query, result should be the same
-          auto geom = get_ogr_geometry(wkt, radius);
-          wkt = geom->exportToWkt();
-          queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
-          queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
-    */
   }
   else
   {
@@ -3466,31 +3458,6 @@ void checkAviEngineQuery(const Query &query,
       queryOptions.itsExcludeSPECIs = false;
     }
     queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
-
-    // TODO: Check wkt, only polygon is applicable (multipolygon is currently
-    //       not supported by aviengine)
-
-    /* bbox could be used too
-    /
-    if (!query.boundingBox.empty())
-    {
-      auto west = query.boundingBox.find("minx");
-      auto east = query.boundingBox.find("maxx");
-      auto south = query.boundingBox.find("miny");
-      auto north = query.boundingBox.find("maxy");
-
-      if (
-          (west == query.boundingBox.end()) ||
-          (east == query.boundingBox.end()) ||
-          (south == query.boundingBox.end()) ||
-          (north == query.boundingBox.end())
-         )
-        throw Fmi::Exception(BCP, "Invalid query bbox", nullptr);
-
-      queryOptions.itsLocationOptions.itsBBoxes.push_back(
-          SmartMet::Engine::Avi::BBox(west->second, east->second, south->second, north->second));
-    }
-    */
   }
 }
 
@@ -3503,23 +3470,6 @@ void Plugin::processAviEngineQuery(const State &state,
   auto edrMetaData = edrProducerMetaData.find(producer);
   if (edrMetaData == edrProducerMetaData.end())
     throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, nullptr);
-
-  /* Location has already been checked against metadata, no need for config controlled check
-  /
-  auto aviCollections = itsConfig.getAviCollections();
-  auto aviCollection = aviCollections.begin();
-
-  for (; aviCollection != aviCollections.end(); aviCollection++)
-  {
-    if (aviCollection->getName() == producer)
-      break;
-  }
-
-  if (aviCollection == aviCollections.end())
-    throw Fmi::Exception(BCP, "Internal error: no collection for producer " + producer, nullptr);
-
-  bool locationCheck = aviCollection->getLocationCheck();
-  */
 
   SmartMet::Engine::Avi::QueryOptions queryOptions;
   bool locationCheck = false;
@@ -4643,12 +4593,117 @@ void Plugin::updateMetaData(bool initial_phase)
 #endif
     engine_meta_data->removeDuplicates(initial_phase);
 
+	// checkNewDataAndNotify(engine_meta_data);
+
     itsMetaData.store(engine_meta_data);
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+/*
+// class for storing subscriptions and sending notifications
+class NewDataNotifier
+{
+public:
+  void notify(const std::map<std::string, boost::posix_time::ptime>& newDataTimes) const; // collection -> latest update time
+  void subscribe(const std::string& subscriber_address, const std::list<std::string>& collection_ids);
+  void unSubscribe(const std::string& subscriber_address, const std::list<std::string>& collection_ids);
+private:
+  std::map<std::string, const std::list<std::string>> itsSubscriptions; // subscriber_address -> list of collection ids
+};
+  */
+
+void Plugin::checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) const
+{
+  try
+  {
+	//std::cout << " Plugin::checkNewMetaData\n";
+
+	/*
+	  1) querydata: check origintimes
+	  2) grid-engine: check origintimes (analysisTime)
+	  3) avi-engine: endtime of avi engine metadata temporal extet is the latest data_time
+	  4) observation-engine: get latest data_time of each producer, either from cache or from database
+	*/
+
+	// TODO: Pitää varmaan käydä hakemassa kaikki vanhat tuottajakohtaiset päivitysajat itsMetaData:sa ennen kuin haetaan uusia
+	auto old_emd = itsMetaData.load();
+
+	if(!old_emd)
+	  return;
+
+
+	std::map<SourceEngine, std::map<std::string, boost::posix_time::ptime>> times_to_notify; // engine -> producer -> latest update time
+	SourceEngine source_engines[] = {SourceEngine::Querydata,SourceEngine::Grid,SourceEngine::Observation,SourceEngine::Avi}; 
+	auto now = boost::posix_time::second_clock::universal_time();
+
+	for(auto source_engine : source_engines)
+	  {
+		const auto& new_md = new_emd->getMetaData(source_engine);
+
+		std::map<std::string, boost::posix_time::ptime> producer_notification_times;
+
+		for(const auto& producer_md_item : new_md)
+		  {
+			const auto& producer = producer_md_item.first;
+			const auto& producer_new_md = producer_md_item.second;
+
+			// Latest update time from previous round
+			auto old_latest_data_update_time = old_emd->getLatestDataUpdateTime(source_engine, producer);
+			if(source_engine == SourceEngine::Observation)
+			  {
+				// Latest update time since old_latest_data_update_time
+				auto new_latest_data_update_time = itsObsEngine->getLatestDataUpdateTime(producer, old_latest_data_update_time);
+				if(new_latest_data_update_time.is_not_a_date_time())
+				  new_latest_data_update_time = now;
+				else if(old_latest_data_update_time.is_not_a_date_time() || new_latest_data_update_time > old_latest_data_update_time)
+				  producer_notification_times[producer] = (new_latest_data_update_time <= now ? new_latest_data_update_time : now); // check that timestamp is not in the future
+				new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
+			  }
+			else if(source_engine == SourceEngine::Querydata || source_engine == SourceEngine::Grid || source_engine == SourceEngine::Avi)
+			  {
+				if(!producer_new_md.empty())
+				  {
+					auto new_latest_data_update_time = producer_new_md.front().latest_data_update_time;
+					if(new_latest_data_update_time.is_not_a_date_time())
+					  new_latest_data_update_time = boost::posix_time::second_clock::universal_time();
+					else if(old_latest_data_update_time.is_not_a_date_time() || new_latest_data_update_time > old_latest_data_update_time)
+					  producer_notification_times[producer] = new_latest_data_update_time;
+					new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
+				  }
+			  }
+		  }
+		times_to_notify[source_engine] = producer_notification_times;
+	  }
+	
+	/*
+	if(times_to_notify.empty())
+	  std::cout << "Nothing to notify\n";
+
+	for(const auto& item : times_to_notify)
+	  {
+		std::cout << "Notifications of " << get_engine_name(item.first) << std::endl;
+		if(item.second.empty())
+		  {
+			std::cout << "- none" << std::endl;
+		  }
+		else
+		  {
+			for(const auto& item2 : item.second)
+			  std::cout << "- "  << item2.first << " -> " << item2.second << std::endl;
+		  }		
+	  }
+	*/
+	
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+
 }
 
 void Plugin::updateSupportedLocations()
