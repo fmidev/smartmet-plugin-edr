@@ -900,7 +900,8 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       if (spl.find(producer_key) != spl.end())
         edrMetaData.locations = &spl.at(producer_key);
 
-	  edrMetaData.latest_data_update_time = edrMetaData.temporal_extent.time_periods.back().end_time;
+	  if(!edrMetaData.temporal_extent.time_periods.empty())
+		edrMetaData.latest_data_update_time = edrMetaData.temporal_extent.time_periods.back().end_time;
       edrProducerMetaData[producer].push_back(edrMetaData);
     }
 

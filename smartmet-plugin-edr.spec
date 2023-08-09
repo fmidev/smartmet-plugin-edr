@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 23.8.9
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -109,6 +109,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Wed Aug 9 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.8.9-2.fmi
+- Fixed AVI-engine metadata handling bug that crashed regression tests
+
 * Wed Aug 9 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.8.9-1.fmi
 - Preparations for new data notification of collections (BRAINSTORM-2613)
 
