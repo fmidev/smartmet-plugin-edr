@@ -452,7 +452,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
       }
 
       startTimeUTC = false;
-      grid_startTime = startTime.substr(0, 9) + "000000";
+      grid_startTime = startT.substr(0, 9) + "000000";
 
       while (grid_startTime < startT)
       {
