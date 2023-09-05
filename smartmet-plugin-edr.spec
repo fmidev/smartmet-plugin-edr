@@ -35,6 +35,7 @@ BuildRequires: smartmet-library-grid-files-devel >= 23.8.4
 BuildRequires: smartmet-library-newbase-devel >= 23.7.31
 BuildRequires: smartmet-library-gis-devel >= 23.8.4
 BuildRequires: smartmet-library-timeseries-devel >= 23.7.28
+BuildRequires: smartmet-engine-avi-devel >= 23.7.28
 BuildRequires: smartmet-engine-geonames-devel >= 23.7.28
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 23.8.9
@@ -55,6 +56,7 @@ Requires: smartmet-library-newbase >= 23.7.31
 Requires: smartmet-library-spine >= 23.8.8
 Requires: smartmet-library-timeseries >= 23.7.28
 Requires: smartmet-library-gis >= 23.8.4
+Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.7.28
 Requires: smartmet-engine-querydata >= 23.7.28
 Requires: smartmet-engine-gis >= 23.7.28
@@ -74,6 +76,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-test-data >= 23.7.14
 #TestRequires: smartmet-engine-grid-test >= 23.7.28
 #TestRequires: smartmet-library-gis >= 23.8.4
+#TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 23.7.28
 #TestRequires: smartmet-engine-gis >= 23.7.28
 #TestRequires: smartmet-engine-querydata >= 23.7.28
