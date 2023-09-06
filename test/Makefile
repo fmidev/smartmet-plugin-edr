@@ -1,6 +1,6 @@
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
-TEST_PREPARE_TARGETS := cnf/geonames.conf cnf/gis.conf
+TEST_PREPARE_TARGETS := cnf/avi.conf cnf/geonames.conf cnf/gis.conf
 TEST_FINISH_TARGETS := dummy
 
 TEST_DB_DIR := $(shell pwd)/tmp-geonames-db
@@ -73,8 +73,9 @@ stop-test-db:
 		/usr/share/smartmet/test/db/test-db-ctl.sh $(TEST_DB_DIR) stop; \
 		true
 
-cnf/geonames.conf cnf/gis.conf:
+cnf/avi.conf cnf/geonames.conf cnf/gis.conf:
 	$(GEONAMES_HOST_EDIT) $@.in >$@
+	diff -u $@.in $@; true
 
 dummy:
 

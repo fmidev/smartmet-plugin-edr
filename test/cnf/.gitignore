@@ -1,7 +1,6 @@
-/database_info.conf
-/local.conf
 /geonames.conf
 /gis.conf
+/avi.conf
 
 # Remove later following 2 lines
 /grid
