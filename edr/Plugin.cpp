@@ -80,42 +80,6 @@ Spine::Parameter get_query_param(const Spine::Parameter &parameter)
   return {paramname, alias, type, number};
 }
 
-void transform_wgs84_coordinates(const std::string &name,
-                                 const std::string &target_crs,
-                                 const Spine::Location &loc,
-                                 TS::TimeSeries &tseries)
-{
-  if (target_crs.empty() || target_crs == "EPSG:4326")
-    return;
-
-  double longitude = loc.longitude;
-  double latitude = loc.latitude;
-  Fmi::CoordinateTransformation transformation("WGS84", target_crs);
-  transformation.transform(longitude, latitude);
-
-  if (name == "x")
-  {
-    for (auto &item : tseries)
-      item.value = longitude;
-  }
-  else if (name == "y")
-  {
-    for (auto &item : tseries)
-      item.value = latitude;
-  }
-}
-
-void transform_wgs84_coordinates(const std::string &name,
-                                 const std::string &crs,
-                                 TS::TimeSeriesGroup &tsg)
-{
-  for (auto &item : tsg)
-  {
-    Spine::Location loc(item.lonlat.lon, item.lonlat.lat);
-    transform_wgs84_coordinates(name, crs, loc, item.timeseries);
-  }
-}
-
 std::string get_parameter_id(const Spine::Parameter &parameter)
 {
   try
