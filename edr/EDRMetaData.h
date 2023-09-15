@@ -173,7 +173,8 @@ void load_locations_avi(const Engine::Avi::Engine& aviEngine,
                         const CollectionInfoContainer& cic);
 #endif
 
-const boost::posix_time::ptime& get_latest_data_update_time(const EDRProducerMetaData& pmd, const std::string& producer);
+const boost::posix_time::ptime& get_latest_data_update_time(const EDRProducerMetaData& pmd,
+                                                            const std::string& producer);
 
 class EngineMetaData
 {
@@ -183,8 +184,11 @@ class EngineMetaData
   const EDRProducerMetaData& getMetaData(SourceEngine source_engine) const;
   const std::map<SourceEngine, EDRProducerMetaData>& getMetaData() const;
   const std::time_t& getMetaDataUpdateTime() const { return itsMetaDataUpdateTime; }
-  const boost::posix_time::ptime& getLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer) const;
-  void setLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer, const boost::posix_time::ptime& t);
+  const boost::posix_time::ptime& getLatestDataUpdateTime(SourceEngine source_engine,
+                                                          const std::string& producer) const;
+  void setLatestDataUpdateTime(SourceEngine source_engine,
+                               const std::string& producer,
+                               const boost::posix_time::ptime& t);
   bool isValidCollection(const std::string& collection_name) const;
   bool isValidCollection(SourceEngine source_engine, const std::string& collection_name) const;
   void removeDuplicates(bool report_removal);

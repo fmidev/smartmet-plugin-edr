@@ -26,7 +26,7 @@
 #include <spine/Reactor.h>
 #include <spine/SmartMetPlugin.h>
 #include <timeseries/TimeSeriesInclude.h>
-//#include <json/json.h>
+// #include <json/json.h>
 #include "Json.h"
 #include <map>
 #include <queue>
@@ -282,7 +282,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
   void updateMetaData(bool initial_phase);
   void updateSupportedLocations();
   void updateParameterInfo();
-  void checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) const;
+  void checkNewDataAndNotify(boost::shared_ptr<EngineMetaData> &new_emd) const;
 
   // Locations info is read once at startup, the used subsequent queries
   SupportedProducerLocations itsSupportedLocations;

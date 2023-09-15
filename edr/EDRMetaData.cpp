@@ -104,13 +104,14 @@ const std::set<std::string> &get_supported_output_formats(const std::string &pro
 }
 }  // namespace
 
-const boost::posix_time::ptime& get_latest_data_update_time(const EDRProducerMetaData& pmd, const std::string& producer)
+const boost::posix_time::ptime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
+                                                            const std::string &producer)
 {
-  if(pmd.find(producer) != pmd.end())
-	{
-	  // Latest update time is same for all metadata instances of the same producer
-	  return pmd.at(producer).front().latest_data_update_time;
-	}
+  if (pmd.find(producer) != pmd.end())
+  {
+    // Latest update time is same for all metadata instances of the same producer
+    return pmd.at(producer).front().latest_data_update_time;
+  }
   return NOT_A_DATE_TIME;
 }
 
@@ -132,7 +133,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
     if (qd_meta_data.empty())
       return epmd;
 
-	std::map<std::string, boost::posix_time::ptime> latest_update_times;
+    std::map<std::string, boost::posix_time::ptime> latest_update_times;
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
@@ -188,15 +189,16 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       if (spl.find(producer_key) != spl.end())
         producer_emd.locations = &spl.at(producer_key);
       epmd[qmd.producer].push_back(producer_emd);
-	  // Update latest data update time
-	  if(latest_update_times.find(qmd.producer) == latest_update_times.end() || latest_update_times.at(qmd.producer) < qmd.originTime)
-		latest_update_times[qmd.producer] = qmd.originTime;
+      // Update latest data update time
+      if (latest_update_times.find(qmd.producer) == latest_update_times.end() ||
+          latest_update_times.at(qmd.producer) < qmd.originTime)
+        latest_update_times[qmd.producer] = qmd.originTime;
     }
-	for(auto& item : epmd)
-	  {
-		for(auto& producer_meta_data : item.second)
-		  producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);		
-	  }
+    for (auto &item : epmd)
+    {
+      for (auto &producer_meta_data : item.second)
+        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
+    }
 
     return epmd;
   }
@@ -220,7 +222,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
-	std::map<std::string, boost::posix_time::ptime> latest_update_times;
+    std::map<std::string, boost::posix_time::ptime> latest_update_times;
     // Iterate Grid metadata and add items into collection
     for (auto &gmd : grid_meta_data)
     {
@@ -320,17 +322,17 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
         producer_emd.locations = &spl.at(producer_key);
 
       epmd[producerId].push_back(producer_emd);
-	  // Update latest data update time
-	  auto origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
-	  if(latest_update_times.find(producerId) == latest_update_times.end() || latest_update_times.at(producerId) < origin_time)
-		latest_update_times[producerId] = origin_time;
+      // Update latest data update time
+      auto origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
+      if (latest_update_times.find(producerId) == latest_update_times.end() ||
+          latest_update_times.at(producerId) < origin_time)
+        latest_update_times[producerId] = origin_time;
     }
-	for(auto& item : epmd)
-	  {
-		for(auto& producer_meta_data : item.second)
-		  producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);		
-	  }
-
+    for (auto &item : epmd)
+    {
+      for (auto &producer_meta_data : item.second)
+        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
+    }
 
     return epmd;
   }
@@ -378,7 +380,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     for (const auto &prod : producers)
     {
       if (cic.isVisibleCollection(SourceEngine::Observation, prod))
-		observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
+        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
     }
 
     const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
@@ -900,8 +902,9 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       if (spl.find(producer_key) != spl.end())
         edrMetaData.locations = &spl.at(producer_key);
 
-	  if(!edrMetaData.temporal_extent.time_periods.empty())
-		edrMetaData.latest_data_update_time = edrMetaData.temporal_extent.time_periods.back().end_time;
+      if (!edrMetaData.temporal_extent.time_periods.empty())
+        edrMetaData.latest_data_update_time =
+            edrMetaData.temporal_extent.time_periods.back().end_time;
       edrProducerMetaData[producer].push_back(edrMetaData);
     }
 
@@ -1112,33 +1115,36 @@ void EngineMetaData::removeDuplicates(bool report_removal)
   }
 }
 
-const boost::posix_time::ptime& EngineMetaData::getLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer) const
+const boost::posix_time::ptime &EngineMetaData::getLatestDataUpdateTime(
+    SourceEngine source_engine, const std::string &producer) const
 {
   const auto &producer_meta_data = getMetaData(source_engine);
-  
+
   return get_latest_data_update_time(producer_meta_data, producer);
   /*
   if(producer_meta_data.find(producer) != producer_meta_data.end())
-	{
-	  // Latest update time is same for all metadata instances of the same producer
-	  return producer_meta_data.at(producer).front().latest_data_update_time;
-	}
+        {
+          // Latest update time is same for all metadata instances of the same producer
+          return producer_meta_data.at(producer).front().latest_data_update_time;
+        }
   return NOT_A_DATE_TIME;
   */
 }
 
-void EngineMetaData::setLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer, const boost::posix_time::ptime& t)
+void EngineMetaData::setLatestDataUpdateTime(SourceEngine source_engine,
+                                             const std::string &producer,
+                                             const boost::posix_time::ptime &t)
 {
   if (itsMetaData.find(source_engine) != itsMetaData.end())
-	{
-	  auto& engine_meta_data = itsMetaData.at(source_engine);
-	  if(engine_meta_data.find(producer) != engine_meta_data.end())
-		{
-		  auto& producer_meta_data = engine_meta_data.at(producer);
-		  for(auto& md : producer_meta_data)
-			md.latest_data_update_time = t;
-		}
-	}
+  {
+    auto &engine_meta_data = itsMetaData.at(source_engine);
+    if (engine_meta_data.find(producer) != engine_meta_data.end())
+    {
+      auto &producer_meta_data = engine_meta_data.at(producer);
+      for (auto &md : producer_meta_data)
+        md.latest_data_update_time = t;
+    }
+  }
 }
 
 std::string get_engine_name(SourceEngine source_engine)
