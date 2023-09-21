@@ -6,6 +6,8 @@
 
 #include "Config.h"
 #include "Precision.h"
+#include "EDRQuery.h"
+#include <timeseries/TimeSeriesInclude.h>
 #include <boost/foreach.hpp>
 #include <grid-files/common/GeneralFunctions.h>
 #include <grid-files/common/ShowFunction.h>

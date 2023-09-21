@@ -17,6 +17,8 @@
 
 #pragma once
 #include "EDRMetaData.h"
+#include "Engines.h"
+#include <macgyver/TimeZones.h>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <engines/querydata/OriginTime.h>
 #include <engines/querydata/Producer.h>
@@ -30,35 +32,6 @@ class TimeZones;
 
 namespace SmartMet
 {
-namespace Engine
-{
-namespace Querydata
-{
-class Engine;
-}
-namespace Grid
-{
-class Engine;
-}
-
-#ifndef WITHOUT_OBSERVATION
-namespace Observation
-{
-class Engine;
-}
-#endif
-
-namespace Avi
-{
-class Engine;
-}
-
-namespace Geonames
-{
-class Engine;
-}
-}  // namespace Engine
-
 namespace Plugin
 {
 namespace EDR
@@ -69,41 +42,47 @@ class State
 {
  public:
   // We always construct with the plugin only
-  State(const Plugin &thePlugin);
+  explicit State(const Plugin& thePlugin);
+  ~State() = default;
+  State() = delete;
+  State(const State& other) = delete;
+  State(State&& other) = delete;
+  State& operator=(const State& other) = delete;
+  State& operator=(State&& other) = delete;
 
   // Access engines
-  const Engine::Querydata::Engine &getQEngine() const;
-  const Engine::Geonames::Engine &getGeoEngine() const;
-  const Engine::Grid::Engine *getGridEngine() const;
+  const Engine::Querydata::Engine& getQEngine() const;
+  const Engine::Geonames::Engine& getGeoEngine() const;
+  const Engine::Grid::Engine* getGridEngine() const;
 #ifndef WITHOUT_OBSERVATION
-  Engine::Observation::Engine *getObsEngine() const;
+  Engine::Observation::Engine* getObsEngine() const;
 #endif
 #ifndef WITHOUT_AVI
   const Engine::Avi::Engine *getAviEngine() const;
   const EDRProducerMetaData &getAviMetaData() const;
 #endif
+  const Plugin& getPlugin() const;
 
-  const Fmi::TimeZones &getTimeZones() const;
+  const Fmi::TimeZones& getTimeZones() const;
   // The fixed time during the query may also be overridden
   // for testing purposes
-  const boost::posix_time::ptime &getTime() const;
-  void setTime(const boost::posix_time::ptime &theTime);
+  const boost::posix_time::ptime& getTime() const;
+  void setTime(const boost::posix_time::ptime& theTime);
 
   // Get querydata for the given input
-  Engine::Querydata::Q get(const Engine::Querydata::Producer &theProducer) const;
-  Engine::Querydata::Q get(const Engine::Querydata::Producer &theProducer,
-                           const Engine::Querydata::OriginTime &theOriginTime) const;
+  Engine::Querydata::Q get(const Engine::Querydata::Producer& theProducer) const;
+  Engine::Querydata::Q get(const Engine::Querydata::Producer& theProducer,
+                           const Engine::Querydata::OriginTime& theOriginTime) const;
   TS::LocalTimePoolPtr getLocalTimePool() const;
   EDRMetaData getProducerMetaData(const std::string &producer) const;
   bool isValidCollection(const std::string &producer) const;
 
  private:
-  const Plugin &itsPlugin;
+  const Plugin& itsPlugin;
   boost::posix_time::ptime itsTime;
   TS::LocalTimePoolPtr itsLocalTimePool{nullptr};
 
-  // Querydata caches - always make the same choice for same locations and
-  // producers
+  // Querydata caches - always make the same choice for same locations and producers
   using QCache = std::map<Engine::Querydata::Producer, Engine::Querydata::Q>;
   using TimedQCache = std::map<Engine::Querydata::OriginTime, QCache>;
 

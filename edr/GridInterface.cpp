@@ -7,6 +7,7 @@
 #include "LocationTools.h"
 #include "State.h"
 #include "UtilityFunctions.h"
+#include "PostProcessing.h"
 #include <engines/grid/Engine.h>
 #include <fmt/format.h>
 #include <gis/CoordinateTransformation.h>
@@ -21,6 +22,8 @@
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/TimeParser.h>
 #include <macgyver/TimeZoneFactory.h>
+#include <timeseries/ParameterKeywords.h>
+#include <timeseries/ParameterTools.h>
 
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
 
@@ -35,7 +38,91 @@ namespace Plugin
 {
 namespace EDR
 {
-GridInterface::GridInterface(Engine::Grid::Engine *engine, const Fmi::TimeZones &timezones)
+namespace
+{
+void erase_redundant_timesteps(TS::TimeSeries& ts,
+                               std::set<boost::local_time::local_date_time>& aggregationTimes)
+{
+  FUNCTION_TRACE
+  try
+  {
+    TS::TimeSeries no_redundant(ts.getLocalTimePool());
+    no_redundant.reserve(ts.size());
+    std::set<boost::local_time::local_date_time> newTimes;
+
+    for (const auto& tv : ts)
+    {
+      if (aggregationTimes.find(tv.time) == aggregationTimes.end() &&
+          newTimes.find(tv.time) == newTimes.end())
+      {
+        no_redundant.emplace_back(tv);
+        newTimes.insert(tv.time);
+      }
+      else
+      {
+        // std::cout << "REMOVE " << lTime << "\n";
+      }
+    }
+
+    ts = no_redundant;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+TS::TimeSeriesPtr erase_redundant_timesteps(
+    TS::TimeSeriesPtr ts, std::set<boost::local_time::local_date_time>& aggregationTimes)
+{
+  FUNCTION_TRACE
+  try
+  {
+    erase_redundant_timesteps(*ts, aggregationTimes);
+    return ts;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+TS::TimeSeriesVectorPtr erase_redundant_timesteps(
+    TS::TimeSeriesVectorPtr tsv, std::set<boost::local_time::local_date_time>& aggregationTimes)
+{
+  FUNCTION_TRACE
+  try
+  {
+    for (auto& ts : *tsv)
+      erase_redundant_timesteps(ts, aggregationTimes);
+
+    return tsv;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+TS::TimeSeriesGroupPtr erase_redundant_timesteps(
+    TS::TimeSeriesGroupPtr tsg, std::set<boost::local_time::local_date_time>& aggregationTimes)
+{
+  FUNCTION_TRACE
+  try
+  {
+    for (auto& t : *tsg)
+      erase_redundant_timesteps(t.timeseries, aggregationTimes);
+
+    return tsg;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+}  // namespace
+
+GridInterface::GridInterface(Engine::Grid::Engine* engine, const Fmi::TimeZones& timezones)
     : itsGridEngine(engine), itsTimezones(timezones)
 {
   FUNCTION_TRACE
@@ -48,20 +135,7 @@ GridInterface::GridInterface(Engine::Grid::Engine *engine, const Fmi::TimeZones 
   }
 }
 
-GridInterface::~GridInterface()
-{
-  FUNCTION_TRACE
-  try
-  {
-  }
-  catch (...)
-  {
-    Fmi::Exception exception(BCP, "Destructor failed", nullptr);
-    exception.printError();
-  }
-}
-
-bool GridInterface::isGridProducer(const std::string &producer)
+bool GridInterface::isGridProducer(const std::string& producer)
 {
   FUNCTION_TRACE
   try
@@ -74,13 +148,13 @@ bool GridInterface::isGridProducer(const std::string &producer)
   }
 }
 
-bool GridInterface::containsGridProducer(const Query &masterquery)
+bool GridInterface::containsGridProducer(const Query& masterquery)
 {
   FUNCTION_TRACE
   try
   {
-    for (const auto &areaproducers : masterquery.timeproducers)
-      for (const auto &producer : areaproducers)
+    for (const auto& areaproducers : masterquery.timeproducers)
+      for (const auto& producer : areaproducers)
         if (isGridProducer(producer))
           return true;
     return false;
@@ -91,14 +165,14 @@ bool GridInterface::containsGridProducer(const Query &masterquery)
   }
 }
 
-bool GridInterface::containsParameterWithGridProducer(const Query &masterquery)
+bool GridInterface::containsParameterWithGridProducer(const Query& masterquery)
 {
   FUNCTION_TRACE
   try
   {
     const char replaceChar[] = {'(', ')', '{', '}', '[', ']', ';', ',', ' ', '/', '\\', '\0'};
 
-    for (const auto &paramfunc : masterquery.poptions.parameterFunctions())
+    for (const auto& paramfunc : masterquery.poptions.parameterFunctions())
     {
       Spine::Parameter param = paramfunc.parameter;
       // printf("PARAM %s\n",param.name().c_str());
@@ -121,7 +195,7 @@ bool GridInterface::containsParameterWithGridProducer(const Query &masterquery)
       std::vector<std::string> partList;
 
       splitString(buf, ':', partList);
-      for (const auto &producer : partList)
+      for (const auto& producer : partList)
       {
         // printf("  -- PRODUCER [%s]\n",producer.c_str());
         if (!producer.empty() && isGridProducer(producer))
@@ -136,7 +210,7 @@ bool GridInterface::containsParameterWithGridProducer(const Query &masterquery)
   }
 }
 
-T::ParamLevelId GridInterface::getLevelId(const char *producerName, const Query &masterquery)
+T::ParamLevelId GridInterface::getLevelId(const char* producerName, const Query& masterquery)
 {
   FUNCTION_TRACE
   try
@@ -152,8 +226,7 @@ T::ParamLevelId GridInterface::getLevelId(const char *producerName, const Query 
             itsGridEngine->getFmiParameterLevelId(producerInfo.mProducerId, *level);
         if (levelId == 0)
         {
-          // Did not find a level id. Maybe the level value is given in hPa.
-          // Let's try with Pa.
+          // Did not find a level id. Maybe the level value is given in hPa. Let's try with Pa.
           levelId =
               itsGridEngine->getFmiParameterLevelId(producerInfo.mProducerId, C_INT(*level * 100));
           if (levelId != 0)
@@ -179,9 +252,9 @@ T::ParamLevelId GridInterface::getLevelId(const char *producerName, const Query 
   }
 }
 
-void GridInterface::getDataTimes(const AreaProducers &areaproducers,
-                                 std::string &startTime,
-                                 std::string &endTime)
+void GridInterface::getDataTimes(const AreaProducers& areaproducers,
+                                 std::string& startTime,
+                                 std::string& endTime)
 {
   FUNCTION_TRACE
   try
@@ -191,13 +264,12 @@ void GridInterface::getDataTimes(const AreaProducers &areaproducers,
 
     std::shared_ptr<ContentServer::ServiceInterface> contentServer =
         itsGridEngine->getContentServer_sptr();
-
-    for (const auto &producer : areaproducers)
+    for (const auto& producer : areaproducers)
     {
       std::vector<std::string> pnameList;
       itsGridEngine->getProducerNameList(producer, pnameList);
 
-      for (const auto &pname : pnameList)
+      for (const auto& pname : pnameList)
       {
         T::ProducerInfo producerInfo;
         if (itsGridEngine->getProducerInfoByName(pname, producerInfo))
@@ -228,16 +300,15 @@ void GridInterface::getDataTimes(const AreaProducers &areaproducers,
   }
 }
 
-void GridInterface::insertFileQueries(QueryServer::Query &query,
-                                      const QueryServer::QueryStreamer_sptr &queryStreamer)
+void GridInterface::insertFileQueries(QueryServer::Query& query,
+                                      const QueryServer::QueryStreamer_sptr& queryStreamer)
 {
   FUNCTION_TRACE
   try
   {
-    // Adding queries into the QueryStreamer. These queries fetch actual
-    // GRIB1/GRIB2 files accoding to the file attribute definitions
-    // (query.mAttributeList). The queryStreamer sends these queries to the
-    // queryServer and returns the results (= GRIB files) to the HTTP client.
+    // Adding queries into the QueryStreamer. These queries fetch actual GRIB1/GRIB2 files
+    // accoding to the file attribute definitions (query.mAttributeList). The queryStreamer sends
+    // these queries to the queryServer and returns the results (= GRIB files) to the HTTP client.
 
     for (auto param = query.mQueryParameterList.begin(); param != query.mQueryParameterList.end();
          ++param)
@@ -313,21 +384,22 @@ void GridInterface::insertFileQueries(QueryServer::Query &query,
   }
 }
 
-bool GridInterface::isValidDefaultRequest(const std::vector<uint> &defaultGeometries,
-                                          std::vector<std::vector<T::Coordinate>> &polygonPath,
-                                          T::GeometryId_set &geometryIdList)
+bool GridInterface::isValidDefaultRequest(
+    const std::vector<uint>& defaultGeometries,
+    const std::vector<std::vector<T::Coordinate>>& polygonPath,
+    T::GeometryId_set& geometryIdList)
 {
   try
   {
     if (defaultGeometries.empty())
       return true;
 
-    for (const auto &geom : defaultGeometries)
+    for (const auto& geom : defaultGeometries)
     {
       bool match = true;
-      for (const auto &cList : polygonPath)
+      for (const auto& cList : polygonPath)
       {
-        for (const auto &coordinate : cList)
+        for (const auto& coordinate : cList)
         {
           double grid_i = ParamValueMissing;
           double grid_j = ParamValueMissing;
@@ -349,30 +421,28 @@ bool GridInterface::isValidDefaultRequest(const std::vector<uint> &defaultGeomet
   }
 }
 
-void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
-                                     AdditionalParameters & /*additionalParameters */,
-                                     const Query &masterquery,
+void GridInterface::prepareGridQuery(QueryServer::Query& gridQuery,
+                                     const Query& masterquery,
                                      uint mode,
                                      int origLevelId,
                                      double origLevel,
-                                     const AreaProducers &areaproducers,
-                                     const Spine::TaggedLocation & /* tloc */,
-                                     const Spine::LocationPtr &loc,
-                                     const T::GeometryId_set &geometryIdList,
-                                     const std::vector<std::vector<T::Coordinate>> &polygonPath)
+                                     const AreaProducers& areaproducers,
+                                     const Spine::TaggedLocation& /* tloc */,
+                                     const Spine::LocationPtr& loc,
+                                     const T::GeometryId_set& geometryIdList,
+                                     std::vector<std::vector<T::Coordinate>>& polygonPath)
 {
   FUNCTION_TRACE
   try
   {
-    const char *buildIdParameters[] = {
+    const char* buildIdParameters[] = {
         "origintime", "modtime", "mtime", "level", "lat", "lon", "latlon", "lonlat", "@", nullptr};
 
     bool info = false;
     if (strcasecmp(masterquery.format.c_str(), "INFO") == 0)
       info = true;
 
-    std::shared_ptr<ContentServer::ServiceInterface> contentServer =
-        itsGridEngine->getContentServer_sptr();
+    // auto contentServer = itsGridEngine->getContentServer_sptr();
 
     gridQuery.mLanguage = masterquery.language;
 
@@ -386,8 +456,8 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
 
     gridQuery.mAttributeList = masterquery.attributeList;
 
-    T::Attribute *geomId = gridQuery.mAttributeList.getAttribute("grid.geometryId");
-    T::Attribute *coordinateType = gridQuery.mAttributeList.getAttribute("contour.coordinateType");
+    T::Attribute* geomId = gridQuery.mAttributeList.getAttribute("grid.geometryId");
+    T::Attribute* coordinateType = gridQuery.mAttributeList.getAttribute("contour.coordinateType");
 
     if (geomId != nullptr || coordinateType == nullptr)
     {
@@ -406,8 +476,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
      if (!std::isnan(loc->dem))
      gridQuery.mAttributeList.setAttribute("dem", Fmi::to_string(loc->dem));
 
-     gridQuery.mAttributeList.setAttribute("coverType",
-     Fmi::to_string(loc->covertype));
+     gridQuery.mAttributeList.setAttribute("coverType", Fmi::to_string(loc->covertype));
      */
 
     std::string timezoneName = loc->timezone;
@@ -596,7 +665,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
     // bool sameQueryAnalysisTime = false;
     bool sameParamAnalysisTime = false;
 
-    T::Attribute *attr = masterquery.attributeList.getAttribute("query.analysisTime");
+    T::Attribute* attr = masterquery.attributeList.getAttribute("query.analysisTime");
     if (attr != nullptr)
     {
       if (strcasecmp(attr->mValue.c_str(), "same") == 0)
@@ -630,25 +699,23 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
     int geometryId = -1;
 
     // Producers
-    for (const auto &producer : areaproducers)
+    for (const auto& areaproducer : areaproducers)
     {
-      std::string producerName = producer;
-      producerName = itsGridEngine->getProducerAlias(producerName, levelId);
+      std::string producerName = itsGridEngine->getProducerAlias(areaproducer, levelId);
 
       Engine::Grid::ParameterDetails_vec parameters;
       itsGridEngine->getParameterDetails(producerName, parameters);
 
-      size_t len = parameters.size();
-      for (size_t t = 0; t < len; t++)
+      for (const auto& param : parameters)
       {
-        if (masterquery.leveltype.empty() && levelId < 0 && !parameters[t].mLevelId.empty())
-          levelId = toInt32(parameters[t].mLevelId);
+        if (masterquery.leveltype.empty() && levelId < 0 && !param.mLevelId.empty())
+          levelId = toInt32(param.mLevelId);
 
-        if (!parameters[t].mGeometryId.empty())
-          geometryId = toInt32(parameters[t].mGeometryId);
+        if (!param.mGeometryId.empty())
+          geometryId = toInt32(param.mGeometryId);
 
-        if (!parameters[t].mProducerName.empty())
-          gridQuery.mProducerNameList.emplace_back(parameters[t].mProducerName);
+        if (!param.mProducerName.empty())
+          gridQuery.mProducerNameList.emplace_back(param.mProducerName);
       }
     }
 
@@ -681,6 +748,8 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
     uint idx = 0;
     uint gIdx = 0;
 
+    // BOOST_FOREACH (const Spine::ParameterAndFunctions& paramfunc,
+    // masterquery.poptions.parameterFunctions())
     for (auto paramfunc = masterquery.poptions.parameterFunctions().begin();
          paramfunc != masterquery.poptions.parameterFunctions().end();
          ++paramfunc)
@@ -764,7 +833,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
         }
         qParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
 
-        const char *p =
+        const char* p =
             pname.c_str() + partList[0].size() + partList[1].size() + partList[2].size() + 3;
         qParam.mParam = p;
       }
@@ -828,7 +897,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
 
       Engine::Grid::ParameterDetails_vec parameters;
 
-      for (const auto &areaproducer : areaproducers)
+      for (const auto& areaproducer : areaproducers)
       {
         std::string producerName = areaproducer;
         producerName = itsGridEngine->getProducerName(producerName);
@@ -942,7 +1011,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query &gridQuery,
   }
 }
 
-int GridInterface::getParameterIndex(QueryServer::Query &gridQuery, const std::string &param)
+int GridInterface::getParameterIndex(QueryServer::Query& gridQuery, const std::string& param)
 {
   FUNCTION_TRACE
   try
@@ -962,23 +1031,22 @@ int GridInterface::getParameterIndex(QueryServer::Query &gridQuery, const std::s
   }
 }
 
-void GridInterface::processGridQuery(const State &state,
-                                     Query &masterquery,
-                                     TS::OutputData &outputData,
-                                     const QueryServer::QueryStreamer_sptr &queryStreamer,
-                                     const AreaProducers &areaproducers,
-                                     const ProducerDataPeriod & /* producerDataPeriod */,
-                                     const Spine::TaggedLocation &tloc,
-                                     const Spine::LocationPtr &loc,
-                                     const std::string &country,
-                                     T::GeometryId_set &geometryIdList,
-                                     std::vector<std::vector<T::Coordinate>> &polygonPath)
+void GridInterface::processGridQuery(const State& state,
+                                     Query& masterquery,
+                                     TS::OutputData& outputData,
+                                     const QueryServer::QueryStreamer_sptr& queryStreamer,
+                                     const AreaProducers& areaproducers,
+                                     const ProducerDataPeriod& /* producerDataPeriod */,
+                                     const Spine::TaggedLocation& tloc,
+                                     const Spine::LocationPtr& loc,
+                                     const std::string& country,
+                                     T::GeometryId_set& geometryIdList,
+                                     std::vector<std::vector<T::Coordinate>>& polygonPath)
 {
   FUNCTION_TRACE
   try
   {
-    std::shared_ptr<ContentServer::ServiceInterface> contentServer =
-        itsGridEngine->getContentServer_sptr();
+    // auto contentServer = itsGridEngine->getContentServer_sptr();
 
     TS::Value missing_value = TS::None();
 
@@ -999,7 +1067,7 @@ void GridInterface::processGridQuery(const State &state,
                                               *masterquery.timeformatter,
                                               masterquery.valueformatter);
 
-    const TS::OptionParsers::ParameterFunctionList &paramFuncs =
+    const TS::OptionParsers::ParameterFunctionList& paramFuncs =
         masterquery.poptions.parameterFunctions();
 
     // std::cout << "LEVELTYPE : " << masterquery.leveltype << "\n";
@@ -1017,8 +1085,7 @@ void GridInterface::processGridQuery(const State &state,
       std::string producerName = *areaproducers.begin();
       if (masterquery.leveltype.empty())
       {
-        // The level type is empty. Maybe it is included into produces alias
-        // definition.
+        // The level type is empty. Maybe it is included into produces alias definition.
 
         Engine::Grid::ParameterDetails_vec parameters;
         itsGridEngine->getParameterDetails(producerName, parameters);
@@ -1031,8 +1098,8 @@ void GridInterface::processGridQuery(const State &state,
           {
             if (parameters[t].mLevelId > "")
             {
-              // It seems that the preferred level id is included into the
-              // producer alias definition.
+              // It seems that the preferred level id is included into the producer alias
+              // definition.
 
               qLevelId = toInt32(parameters[t].mLevelId);
             }
@@ -1072,7 +1139,8 @@ void GridInterface::processGridQuery(const State &state,
               else if (qLevelId == 3)
               {
                 itsGridEngine->getProducerParameterLevelList(producerName, 3, 1, tmpLevels);
-                std::copy(tmpLevels.begin(), tmpLevels.end(), std::back_inserter(levels));
+                for (const auto& lev : tmpLevels)
+                  levels.emplace_back(lev);
               }
               else if (masterquery.leveltype.empty())
               {
@@ -1094,7 +1162,8 @@ void GridInterface::processGridQuery(const State &state,
 
                     case 3:  // model
                       itsGridEngine->getProducerParameterLevelList(producerName, 3, 1, tmpLevels);
-                      std::copy(tmpLevels.begin(), tmpLevels.end(), std::back_inserter(levels));
+                      for (const auto& lev : tmpLevels)
+                        levels.emplace_back(lev);
                       break;
                   }
                 }
@@ -1114,17 +1183,16 @@ void GridInterface::processGridQuery(const State &state,
             }
             else
             {
-              for (auto level : masterquery.levels)
-                levels.push_back(static_cast<double>(level));
+              for (const auto& level : masterquery.levels)
+                levels.emplace_back((double)level);
             }
           }
           break;
 
         case 1:
           aLevelId = 2;
-
-          for (auto level : masterquery.pressures)
-            levels.emplace_back(static_cast<double>(level));
+          for (const auto& level : masterquery.pressures)
+            levels.emplace_back((double)level);
           break;
 
         case 2:
@@ -1143,7 +1211,6 @@ void GridInterface::processGridQuery(const State &state,
           splitString(geometryIdStr, ',', originalGridQuery->mGeometryIdList);
 
         prepareGridQuery(*originalGridQuery,
-                         additionalParameters,
                          masterquery,
                          mode,
                          aLevelId,
@@ -1164,9 +1231,9 @@ void GridInterface::processGridQuery(const State &state,
 
         // gridQuery->print(std::cout,0,0);
 
-        // Executing the query. The reqsult query object is returned as a shared
-        // pointer to a Query-object. This object can point to the original
-        // query-object as well as a cached query-object.
+        // Executing the query. The reqsult query object is returned as a shared pointer to a
+        // Query-object. This object can point to the original query-object as well as a cached
+        // query-object.
 
         std::shared_ptr<QueryServer::Query> gridQuery =
             itsGridEngine->executeQuery(originalGridQuery);
@@ -1196,6 +1263,7 @@ void GridInterface::processGridQuery(const State &state,
               auto dt = boost::posix_time::from_time_t(
                   gridQuery->mQueryParameterList[p].mValueList[x]->mForecastTimeUTC);
               boost::local_time::local_date_time queryTime(dt, tz);
+
               aggregationTimes.insert(queryTime);
             }
 
@@ -1243,8 +1311,7 @@ void GridInterface::processGridQuery(const State &state,
             TS::TimeSeriesPtr tsForNonGridParam(new TS::TimeSeries(state.getLocalTimePool()));
             TS::TimeSeriesGroupPtr tsForGroup(new TS::TimeSeriesGroup());
 
-            // Counting the number of values that the parameter can have in
-            // single timestep.
+            // Counting the number of values that the parameter can have in single timestep.
 
             uint vLen = 0;
             uint xLen = 0;
@@ -1344,8 +1411,7 @@ void GridInterface::processGridQuery(const State &state,
                       }
                       else
                       {
-                        // The parameter has multiple values in the same
-                        // timestep
+                        // The parameter has multiple values in the same timestep
                         ts.emplace_back(tsValue);
                       }
                     }
@@ -1360,8 +1426,7 @@ void GridInterface::processGridQuery(const State &state,
                       }
                       else
                       {
-                        // The parameter has multiple values in the same
-                        // timestep
+                        // The parameter has multiple values in the same timestep
                         ts.emplace_back(tsValue);
                       }
                     }
@@ -1405,7 +1470,7 @@ void GridInterface::processGridQuery(const State &state,
 
             if (!processed && coordinates.size() > 1)
             {
-              const char *cname[] = {
+              const char* cname[] = {
                   "lat", "latitude", "lon", "longitude", "latlon", "lonlat", nullptr};
               uint aaa = 0;
               while (cname[aaa] != nullptr &&
@@ -1468,10 +1533,9 @@ void GridInterface::processGridQuery(const State &state,
 
             if (!processed)
             {
-              // The query has returned no values for the parameter. This
-              // usually means that the parameter is not a data parameter. It is
-              // most likely "a special parameter" that is based on the given
-              // query location, time, level, etc.
+              // The query has returned no values for the parameter. This usually means that the
+              // parameter is not a data parameter. It is most likely "a special parameter" that
+              // is based on the given query location, time, level, etc.
 
               std::string paramValue;
               size_t tLen = gridQuery->mForecastTimeList.size();
@@ -1539,7 +1603,7 @@ void GridInterface::processGridQuery(const State &state,
                           "/tmp/timeseries_contours_{}_{}_{}.png", outputTime, cpid->second, t);
                       imagePaint.savePngImage(filename.c_str());
                       std::string image = fileToBase64(filename.c_str());
-                      filenameList.emplace_back(std::string(filename));
+                      filenameList.emplace_back(filename);
 
                       if ((gridQuery->mQueryParameterList[pid].mFlags &
                            QueryServer::QueryParameter::Flags::InvisibleParameter) == 0)
@@ -1644,6 +1708,42 @@ void GridInterface::processGridQuery(const State &state,
 
                   TS::TimedValue tsValue(queryTime, TS::Value(output.str()));
                   tsForNonGridParam->emplace_back(tsValue);
+                }
+                else if (UtilityFunctions::is_special_parameter(
+                             gridQuery->mQueryParameterList[pid].mParam))
+                {
+                  auto paramname = gridQuery->mQueryParameterList[pid].mParam;
+                  auto timezone = masterquery.timezone;
+                  if (timezone == LOCALTIME_PARAM)
+                    timezone = loc->timezone;
+
+                  if (TS::is_time_parameter(paramname))
+                  {
+                    TS::Value pValue = TS::time_parameter(paramname,
+                                                          queryTime,
+                                                          state.getTime(),
+                                                          *loc,
+                                                          timezone,
+                                                          itsTimezones,
+                                                          masterquery.outlocale,
+                                                          *masterquery.timeformatter,
+                                                          masterquery.timestring);
+
+                    TS::TimedValue tsValue(queryTime, pValue);
+                    tsForNonGridParam->emplace_back(tsValue);
+                  }
+                  else if (TS::is_location_parameter(gridQuery->mQueryParameterList[pid].mParam))
+                  {
+                    TS::Value pValue =
+                        TS::location_parameter(loc,
+                                               paramname,
+                                               masterquery.valueformatter,
+                                               timezone,
+                                               gridQuery->mQueryParameterList[pid].mPrecision,
+                                               masterquery.crs);
+                    TS::TimedValue tsValue(queryTime, pValue);
+                    tsForNonGridParam->emplace_back(tsValue);
+                  }
                 }
                 else if (additionalParameters.getParameterValueByLocation(
                              gridQuery->mQueryParameterList[pid].mParam,
@@ -1771,7 +1871,7 @@ void GridInterface::processGridQuery(const State &state,
                       itsGridEngine->getProducerNameList(gridQuery->mProducerNameList[0],
                                                          pnameList);
                       if (!pnameList.empty())
-                        producer = pnameList.front();
+                        producer = pnameList[0];
                     }
 
                     TS::TimedValue tsValue(queryTime, producer);
@@ -1976,12 +2076,9 @@ void GridInterface::processGridQuery(const State &state,
                   {
                     if (gridQuery->mQueryParameterList[idx].mValueList[t]->mModificationTime > 0)
                     {
-                      auto dt = boost::posix_time::from_time_t(
+                      auto utcT = boost::posix_time::from_time_t(
                           gridQuery->mQueryParameterList[idx].mValueList[t]->mModificationTime);
-                      boost::local_time::local_date_time modTime(dt, tz);
-                      // boost::local_time::local_date_time
-                      // modTime(toTimeStamp(gridQuery->mQueryParameterList[idx].mValueList[t]->mModificationTime),
-                      // tz);
+                      boost::local_time::local_date_time modTime(utcT, tz);
                       TS::TimedValue tsValue(queryTime, masterquery.timeformatter->format(modTime));
                       tsForNonGridParam->emplace_back(tsValue);
                       idx = pLen + 10;
@@ -2017,8 +2114,8 @@ void GridInterface::processGridQuery(const State &state,
 
                       auto tmp = fmt::format(
                           "{}:{}:{}:{}:{}:{}:{}",
-                          gridQuery->mQueryParameterList[i].mValueList[t]->mParameterKey.c_str(),
-                          producerName.c_str(),
+                          gridQuery->mQueryParameterList[i].mValueList[t]->mParameterKey,
+                          producerName,
                           gridQuery->mQueryParameterList[i].mValueList[t]->mGeometryId,
                           C_INT(gridQuery->mQueryParameterList[i].mValueList[t]->mParameterLevelId),
                           C_INT(gridQuery->mQueryParameterList[i].mValueList[t]->mParameterLevel),
@@ -2050,17 +2147,17 @@ void GridInterface::processGridQuery(const State &state,
 
                   auto tmp = fmt::format(
                       "{}:{}:{}:{}:{}:{}:{} {} flags:{}",
-                      gridQuery->mQueryParameterList[pid].mValueList[t]->mParameterKey.c_str(),
-                      producerName.c_str(),
+                      gridQuery->mQueryParameterList[pid].mValueList[t]->mParameterKey,
+                      producerName,
                       gridQuery->mQueryParameterList[pid].mValueList[t]->mGeometryId,
                       C_INT(gridQuery->mQueryParameterList[pid].mValueList[t]->mParameterLevelId),
                       C_INT(gridQuery->mQueryParameterList[pid].mValueList[t]->mParameterLevel),
                       C_INT(gridQuery->mQueryParameterList[pid].mValueList[t]->mForecastType),
                       C_INT(gridQuery->mQueryParameterList[pid].mValueList[t]->mForecastNumber),
-                      gridQuery->mQueryParameterList[pid].mValueList[t]->mAnalysisTime.c_str(),
+                      gridQuery->mQueryParameterList[pid].mValueList[t]->mAnalysisTime,
                       C_INT(gridQuery->mQueryParameterList[pid].mValueList[t]->mFlags));
 
-                  TS::TimedValue tsValue(queryTime, tmp);
+                  TS::TimedValue tsValue(queryTime, std::string(tmp));
                   // tsForNonGridParam->emplace_back(tsValue);
                   tsForParameter->emplace_back(tsValue);
                 }
@@ -2124,12 +2221,11 @@ void GridInterface::processGridQuery(const State &state,
                 }
                 else if (rLen > tLen)
                 {
-                  // It seems that there are more values available for each time
-                  // step than expected. This usually happens if the requested
-                  // parameter definition does not contain enough information in
-                  // order to identify an unique parameter. For example, if the
-                  // parameter definition does not contain level information
-                  // then the result is that we get values from several levels.
+                  // It seems that there are more values available for each time step than
+                  // expected. This usually happens if the requested parameter definition does not
+                  // contain enough information in order to identify an unique parameter. For
+                  // example, if the parameter definition does not contain level information then
+                  // the result is that we get values from several levels.
 
                   std::set<std::string> pList;
 
@@ -2144,22 +2240,23 @@ void GridInterface::processGridQuery(const State &state,
                               producer))
                         producerName = producer.mName;
 
-                      auto tmp = fmt::format(
+                      std::string tmp = fmt::format(
                           "{}:{}:{}:{}:{}:{}",
-                          gridQuery->mQueryParameterList[pid].mValueList[r]->mParameterKey.c_str(),
+                          gridQuery->mQueryParameterList[pid].mValueList[r]->mParameterKey,
                           C_INT(
                               gridQuery->mQueryParameterList[pid].mValueList[r]->mParameterLevelId),
                           C_INT(gridQuery->mQueryParameterList[pid].mValueList[r]->mParameterLevel),
                           C_INT(gridQuery->mQueryParameterList[pid].mValueList[r]->mForecastType),
                           C_INT(gridQuery->mQueryParameterList[pid].mValueList[r]->mForecastNumber),
-                          producerName.c_str());
+                          producerName);
 
                       if (pList.find(tmp) == pList.end())
                         pList.insert(tmp);
                     }
                   }
+
                   std::string tmp = "### MULTI-MATCH ### ";
-                  for (const auto &p : pList)
+                  for (const auto& p : pList)
                   {
                     tmp += p;
                     tmp += ' ';
@@ -2196,96 +2293,18 @@ void GridInterface::processGridQuery(const State &state,
                   TS::aggregate(tsForGroup, paramFuncs[pIdx].functions), aggregationTimes));
             }
 
-            UtilityFunctions::store_data(aggregatedData, masterquery, outputData);
+            PostProcessing::store_data(aggregatedData, masterquery, outputData);
             pIdx++;
           }
         }
 
-        for (const auto &filename : filenameList)
-          boost::filesystem::remove(filename);
+        for (const auto& filename : filenameList)
+        {
+          if (remove(filename.c_str()) != 0)
+            std::cerr << "Warning: Failed to remove " << filename << std::endl;
+        }
       }
     }
-  }
-  catch (...)
-  {
-    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
-  }
-}
-
-void GridInterface::erase_redundant_timesteps(
-    TS::TimeSeries &ts, std::set<boost::local_time::local_date_time> &aggregationTimes)
-{
-  FUNCTION_TRACE
-  try
-  {
-    TS::TimeSeries no_redundant(ts.getLocalTimePool());
-    no_redundant.reserve(ts.size());
-    std::set<boost::local_time::local_date_time> newTimes;
-
-    for (const auto &tv : ts)
-    {
-      if (aggregationTimes.find(tv.time) == aggregationTimes.end() &&
-          newTimes.find(tv.time) == newTimes.end())
-      {
-        no_redundant.emplace_back(tv);
-        newTimes.insert(tv.time);
-      }
-      else
-      {
-        // std::cout << "REMOVE " << lTime << "\n";
-      }
-    }
-
-    ts = no_redundant;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
-  }
-}
-
-TS::TimeSeriesPtr GridInterface::erase_redundant_timesteps(
-    TS::TimeSeriesPtr ts, std::set<boost::local_time::local_date_time> &aggregationTimes)
-{
-  FUNCTION_TRACE
-  try
-  {
-    erase_redundant_timesteps(*ts, aggregationTimes);
-    return ts;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
-  }
-}
-
-TS::TimeSeriesVectorPtr GridInterface::erase_redundant_timesteps(
-    TS::TimeSeriesVectorPtr tsv, std::set<boost::local_time::local_date_time> &aggregationTimes)
-{
-  FUNCTION_TRACE
-  try
-  {
-    for (auto &ts : *tsv)
-      erase_redundant_timesteps(ts, aggregationTimes);
-
-    return tsv;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
-  }
-}
-
-TS::TimeSeriesGroupPtr GridInterface::erase_redundant_timesteps(
-    TS::TimeSeriesGroupPtr tsg, std::set<boost::local_time::local_date_time> &aggregationTimes)
-{
-  FUNCTION_TRACE
-  try
-  {
-    for (auto &t : *tsg)
-      erase_redundant_timesteps(t.timeseries, aggregationTimes);
-
-    return tsg;
   }
   catch (...)
   {

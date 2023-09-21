@@ -1,11 +1,13 @@
 #include "EDRMetaData.h"
 #ifndef WITHOUT_AVI
 #include "AviCollection.h"
+#include <engines/avi/Engine.h>
 #endif
 #include "EDRQuery.h"
 
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
+#include <engines/querydata/MetaQueryOptions.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -16,7 +18,6 @@
 #include <engines/observation/ObservableProperty.h>
 #endif
 #include <boost/any.hpp>
-#include <engines/avi/Engine.h>
 
 namespace SmartMet
 {

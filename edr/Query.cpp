@@ -5,34 +5,13 @@
 // ======================================================================
 
 #include "Query.h"
-#include "Config.h"
-#include "EDRDefs.h"
-#include "Hash.h"
-#include "State.h"
-#include <engines/geonames/Engine.h>
-#ifndef WITHOUT_OBSERVATION
-#include <engines/observation/Engine.h>
-#endif
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/foreach.hpp>
-#include <gis/CoordinateTransformation.h>
-#include <grid-files/common/GeneralFunctions.h>
-#include <grid-files/common/ShowFunction.h>
+#include <spine/Convenience.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/DistanceParser.h>
-#include <macgyver/Exception.h>
-#include <macgyver/StringConversion.h>
-#include <macgyver/TimeParser.h>
-#include <newbase/NFmiPoint.h>
-#include <spine/Convenience.h>
-#include <spine/FmiApiKey.h>
-#include <timeseries/ParameterFactory.h>
-#include <timeseries/TimeSeriesGeneratorOptions.h>
-#include <algorithm>
-
-#define EDRException(description) \
-  Fmi::Exception(BCP, "EDRException").addParameter("description", description)
+#include <gis/CoordinateTransformation.h>
+#include <engines/observation/ExternalAndMobileProducerId.h>
+#include <engines/querydata/Engine.h>
+#include "Config.h"
 
 using namespace std;
 
@@ -42,86 +21,94 @@ namespace Plugin
 {
 namespace EDR
 {
-const char *default_timezone = "localtime";
+const char* default_timezone = "localtime";
 
 namespace
 {
-#ifndef WITHOUT_AVI
-bool is_avi_producer(const EDRProducerMetaData &avi_metadata, const std::string &producer)
-{
-  return (avi_metadata.find(producer) != avi_metadata.end());
-}
-#endif
 
-bool is_data_query(const Spine::HTTP::Request &req,
-                   const EDRQuery &edrQuery,
-                   const EDRMetaData &edrMetaData)
+void parse_ids(const boost::optional<std::string> string_param,  std::vector<int>& id_vector)
+{
+  try
+	{
+	  if (string_param)
+		{
+		  std::vector<string> parts;
+		  boost::algorithm::split(parts, *string_param, boost::algorithm::is_any_of(","));
+		  
+		  for (const string& id_string : parts)
+			{
+			  auto id_int = Fmi::stoi(id_string);
+			  id_vector.push_back(id_int);
+			}
+		}
+	}
+  catch (...)
+	{
+	  throw Fmi::Exception::Trace(BCP, "Operation failed!");
+	}
+}
+
+void set_max_agg_interval_behind(TS::DataFunction& func, unsigned int& max_interval)
 {
   try
   {
-    auto pcount = req.getParameterCount();
-    // If more than one parameters -> data query
-    if (pcount > 1)
-      return true;
-    if (pcount == 1)
-    {
-      // If only one parameter and it is 'f' -> metadata query, except AVI queries
-      auto fparam = req.getParameter("f");
-      return (fparam && edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
-    }
-
-    // If no parameters it is metadata query except for non empty AVI query
-    return (edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
+	if (func.type() == TS::FunctionType::TimeFunction)
+      {
+        if (max_interval < func.getAggregationIntervalBehind())
+          max_interval = func.getAggregationIntervalBehind();
+	  }
   }
   catch (...)
   {
-    throw Fmi::Exception::Trace(BCP, "Resolving host failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-std::string resolve_host(const Spine::HTTP::Request &theRequest)
+void set_max_agg_interval_ahead(TS::DataFunction& func, unsigned int& max_interval)
 {
   try
   {
-    auto host_header = theRequest.getHeader("Host");
-    if (!host_header)
-    {
-      // This should never happen, host header is mandatory in HTTP 1.1
-      return "http://smartmet.fmi.fi/edr";
-    }
-
-    // http/https scheme selection based on 'X-Forwarded-Proto' header
-    auto host_protocol = theRequest.getProtocol();
-    std::string protocol((host_protocol ? *host_protocol : "http") + "://");
-
-    std::string host = *host_header;
-
-    // Apikey
-    boost::optional<std::string> apikey;
-    try
-    {
-      // Deduce apikey for layer filtering
-      apikey = Spine::FmiApiKey::getFmiApiKey(theRequest);
-    }
-    catch (...)
-    {
-      throw Fmi::Exception::Trace(BCP, "Failed to get apikey from the query");
-    }
-
-    if (apikey)
-      host.append(("/fmi-apikey/" + *apikey));
-
-    return (protocol + host + "/edr");
+	if (func.type() == TS::FunctionType::TimeFunction)
+      {
+        if (max_interval < func.getAggregationIntervalAhead())
+          max_interval = func.getAggregationIntervalAhead();
+	  }
   }
   catch (...)
   {
-    throw Fmi::Exception::Trace(BCP, "Resolving host failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-void add_sql_data_filter(const Spine::HTTP::Request &req,
-                         const std::string &param_name,
-                         TS::DataFilter &dataFilter)
+void set_agg_interval_behind(TS::DataFunction& func, unsigned int interval)
+{
+  try
+  {
+	if (func.getAggregationIntervalBehind() == std::numeric_limits<unsigned int>::max())
+	  func.setAggregationIntervalBehind(interval);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void set_agg_interval_ahead(TS::DataFunction& func, unsigned int interval)
+{
+  try
+  {
+	if (func.getAggregationIntervalAhead() == std::numeric_limits<unsigned int>::max())
+	  func.setAggregationIntervalAhead(interval);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void add_sql_data_filter(const Spine::HTTP::Request& req,
+                         const std::string& param_name,
+                         TS::DataFilter& dataFilter)
 {
   try
   {
@@ -136,7 +123,7 @@ void add_sql_data_filter(const Spine::HTTP::Request &req,
   }
 }
 
-void report_unsupported_option(const std::string &name, const boost::optional<std::string> &value)
+void report_unsupported_option(const std::string& name, const boost::optional<std::string>& value)
 {
   if (value)
     std::cerr << (Spine::log_time_str() + ANSI_FG_RED + " [timeseries] Deprecated option '" + name +
@@ -144,7 +131,7 @@ void report_unsupported_option(const std::string &name, const boost::optional<st
               << std::endl;
 }
 
-Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request &req)
+Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request& req)
 {
   Fmi::ValueFormatterParam opt;
   opt.missingText = Spine::optional_string(req.getParameter("missingtext"), "nan");
@@ -155,68 +142,8 @@ Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request &req)
   return opt;
 }
 
-#ifdef LATER
-std::string transform_coordinates(const std::string &wkt, const std::string &crs)
-{
-  try
-  {
-    std::string ret;
-
-    auto iter = wkt.begin();
-    while (iter != wkt.end())
-    {
-      // Read till digit encountered
-      while (!std::isdigit(*iter))
-      {
-        ret.push_back(*iter);
-        iter++;
-      }
-
-      // Wkt coordinates are always of format {lon} {lat}
-      std::string lon_str;
-      std::string lat_str;
-      // Longitude
-      while (std::isdigit(*iter))
-      {
-        lon_str.push_back(*iter);
-        iter++;
-      }
-      // Space between longitude and latitude
-      while (!std::isdigit(*iter))
-        iter++;
-      // Latitude
-      while (iter != wkt.end() && std::isdigit(*iter))
-      {
-        lat_str.push_back(*iter);
-        iter++;
-      }
-      // Do the transformation
-      auto lon_coord = Fmi::stod(lon_str);
-      auto lat_coord = Fmi::stod(lat_str);
-      Fmi::CoordinateTransformation transformation(crs, "WGS84");
-      if (!transformation.transform(lon_coord, lat_coord))
-        throw Fmi::Exception::Trace(
-            BCP, "Failed to transform coordinates to WGS84: " + lon_str + ", " + lat_str);
-
-      ret.append(Fmi::to_string(lon_coord) + " " + Fmi::to_string(lat_coord));
-      // Read till next digit is encountered
-      while (iter != wkt.end() && !std::isdigit(*iter))
-      {
-        ret.push_back(*iter);
-        iter++;
-      }
-    }
-
-    return ret;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP,
-                                "Failed to transform coordinates to WGS84: " + crs + ", " + wkt);
-  }
-}
-#endif
 }  // namespace
+
 
 // ----------------------------------------------------------------------
 /*!
@@ -224,589 +151,38 @@ std::string transform_coordinates(const std::string &wkt, const std::string &crs
  */
 // ----------------------------------------------------------------------
 
-Query::Query(const State &state, const Spine::HTTP::Request &request, Config &config)
-    : valueformatter(valueformatter_params(request))
+Query::Query(const State& state, const Spine::HTTP::Request& request, Config& config)
+  : ObsQueryParams(request), EDRQueryParams(state, request, config), valueformatter(valueformatter_params(request)), timeAggregationRequested(false)
 {
   try
   {
-    format = "ascii";
-    Spine::HTTP::Request req = request;
-    auto resource = req.getResource();
-    itsEDRQuery.host = resolve_host(req);
+    format = Spine::optional_string(req.getParameter("format"), "ascii");
+	// If meta data query, return from here
+	if (edrQuery().query_id != EDRQueryId::DataQuery)
+	{
+	  return;
+	}
 
-    if (config.getEDRAPI().isEDRAPIQuery(resource))
-    {
-      itsEDRQuery.query_id = EDRQueryId::APIQuery;
-      itsEDRQuery.instance_id = resource;
-      return;
-    }
-
-    std::vector<std::string> resource_parts;
-    boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
-    if (resource_parts.size() > 1 && resource_parts.front().empty())
-      resource_parts.erase(resource_parts.begin());
-
-    // If invalid query type givem store it here
-    std::string invalid_query_type;
-    if (!resource_parts.empty())
-    {
-      if (resource_parts.at(0) == "edr")
-      {
-        if (resource_parts.size() > 1)
-        {
-          if (resource_parts.at(1) != "collections")
-            throw EDRException(("Invalid path '/edr/" + resource_parts.at(1) + "'"));
-          itsEDRQuery.query_id = EDRQueryId::AllCollections;
-          if (resource_parts.size() > 2 && !resource_parts.at(2).empty())
-          {
-            itsEDRQuery.collection_id = resource_parts.at(2);
-            if (!state.isValidCollection(itsEDRQuery.collection_id))
-              throw EDRException(("Collection '" + itsEDRQuery.collection_id + "' not found"));
-
-            itsEDRQuery.query_id = EDRQueryId::SpecifiedCollection;
-            if (resource_parts.size() > 3 && !resource_parts.at(3).empty())
-            {
-              if (resource_parts.at(3) == "instances")
-              {
-                itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
-                if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
-                {
-                  itsEDRQuery.instance_id = resource_parts.at(4);
-                  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;
-                  if (resource_parts.size() > 5 && !resource_parts.at(5).empty())
-                  {
-                    itsEDRQuery.query_type = to_query_type_id(resource_parts.at(5));
-                    if (itsEDRQuery.query_type == EDRQueryType::InvalidQueryType)
-                      invalid_query_type = resource_parts.at(5);
-                    if (itsEDRQuery.query_type == EDRQueryType::Locations)
-                      itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
-                  }
-                }
-              }
-              else
-              {
-                itsEDRQuery.query_type = to_query_type_id(resource_parts.at(3));
-                if (itsEDRQuery.query_type == EDRQueryType::InvalidQueryType)
-                  invalid_query_type = resource_parts.at(3);
-                if (itsEDRQuery.query_type == EDRQueryType::Locations)
-                  itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
-                if (resource_parts.size() > 4)
-                {
-                  itsEDRQuery.instance_id = resource_parts.at(4);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
-
-    if (is_data_query(request, itsEDRQuery, emd))
-    {
-      if (itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
-          !itsEDRQuery.instance_id.empty())
-        req.addParameter("origintime", itsEDRQuery.instance_id);
-      itsEDRQuery.query_id = EDRQueryId::DataQuery;
-    }
-
-    const auto &supportedDataQueries = config.getSupportedDataQueries(itsEDRQuery.collection_id);
-
-    if (!invalid_query_type.empty() || (itsEDRQuery.query_id == EDRQueryId::DataQuery &&
-                                        supportedDataQueries.find(to_string(
-                                            itsEDRQuery.query_type)) == supportedDataQueries.end()))
-    {
-      std::string data_query_list;
-      for (const auto &item : supportedDataQueries)
-      {
-        if (!data_query_list.empty())
-          data_query_list += ",";
-        data_query_list += item;
-      }
-      auto requested_query_type =
-          (!invalid_query_type.empty() ? invalid_query_type : to_string(itsEDRQuery.query_type));
-      throw EDRException("Invalid query type '" + requested_query_type +
-                         "'. The following queries are supported for collection " +
-                         itsEDRQuery.collection_id + ": " + data_query_list);
-    }
-
-    // If meta data query return from here
-    if (itsEDRQuery.query_id != EDRQueryId::DataQuery)
-    {
-      /*
-      auto fparam = req.getParameter("f");
-      if(fparam && *fparam != "application/json")
-        throw EDRException("Invalid format! Format must be 'application/json' for metadata query!");
-      */
-      return;
-    }
-
-    // From here on EDR data query
-    // Querydata and obervation producers do not have dots (.) in id, but grid
-    // producers always do have
-    bool grid_producer = (itsEDRQuery.collection_id.find('.') != std::string::npos);
-    if (!grid_producer)
-      req.addParameter("producer", itsEDRQuery.collection_id);
-
-    // If query_type is position, radius, trajectory -> coords is required
-    auto coords = Spine::optional_string(req.getParameter("coords"), "");
-    if ((itsEDRQuery.query_type == EDRQueryType::Position ||
-         itsEDRQuery.query_type == EDRQueryType::Radius ||
-         itsEDRQuery.query_type == EDRQueryType::Trajectory ||
-         itsEDRQuery.query_type == EDRQueryType::Area ||
-         itsEDRQuery.query_type == EDRQueryType::Corridor) &&
-        coords.empty())
-      throw EDRException(
-          "Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area, "
-          "Corridor query");
-
-    // If Trajectory + LINESTRINGZ,LINESTRINGM, LINESTRINGZM, use these
-    // variables
-    //	  boost::posix_time::ptime
-    // first_time(boost::posix_time::not_a_date_time); 	  boost::posix_time::ptime
-    // last_time(boost::posix_time::not_a_date_time); 	  std::set<double> levels;
-
-    if (!coords.empty())
-    {
-      // EDR within + within-units
-      auto within = Spine::optional_string(req.getParameter("within"), "");
-      auto within_units = Spine::optional_string(req.getParameter("within-units"), "");
-      if (itsEDRQuery.query_type == EDRQueryType::Radius &&
-          (within.empty() || within_units.empty()))
-        throw EDRException(
-            "Query parameter 'within' and 'within-units' must be defined for Radius query");
-
-      if (itsEDRQuery.query_type == EDRQueryType::Corridor)
-      {
-        auto corridor_width = Spine::optional_string(req.getParameter("corridor-width"), "");
-        auto width_units = Spine::optional_string(req.getParameter("width-units"), "");
-        if (corridor_width.empty() || width_units.empty())
-          throw EDRException(
-              "Query parameter 'corridor-width' and 'width-units' must be defined for Corridor "
-              "query");
-
-        within = corridor_width;
-        within_units = width_units;
-      }
-
-      if ((itsEDRQuery.query_type == EDRQueryType::Radius ||
-           itsEDRQuery.query_type == EDRQueryType::Corridor) &&
-          !within.empty() && !within_units.empty())
-      {
-        auto radius = Fmi::stod(within);
-        if (within_units == "mi")
-          radius = (radius * 1.60934);
-        else if (within_units != "km")
-          throw EDRException("Invalid within-units option '" + within_units +
-                             "' used, 'km' and 'mi' supported");
-        coords += (":" + Fmi::to_string(radius));
-      }
-      auto wkt = coords;
-      if (itsEDRQuery.query_type == EDRQueryType::Position)
-      {
-        // If query_type is Position and MULTIPOINTZ
-        boost::algorithm::to_upper(wkt);
-        boost::algorithm::trim(wkt);
-        auto geometry_name = wkt.substr(0, wkt.find('('));
-        if (geometry_name == "MULTIPOINTZ")
-        {
-          boost::algorithm::trim(geometry_name);
-          auto len = (wkt.rfind(')') - wkt.find('(') - 1);
-          auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
-          std::vector<string> coordinates;
-          boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
-
-          wkt = "MULTIPOINT(";
-          for (auto &coordinate_item : coordinates)
-          {
-            boost::algorithm::trim(coordinate_item);
-            if (coordinate_item.front() == '(' && coordinate_item.back() == ')')
-              coordinate_item = coordinate_item.substr(1, coordinate_item.length() - 2);
-            std::vector<string> parts;
-            boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
-            if (parts.size() != 3)
-              throw EDRException(
-                  "Invalid MULTIPOINTZ definition, longitude, latitude, level expected: " + coords);
-            wkt.append(parts[0] + " " + parts[1] + ",");
-            itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
-          }
-          wkt.resize(wkt.size() - 1);
-          wkt.append(")");
-        }
-      }
-
-      if (itsEDRQuery.query_type == EDRQueryType::Trajectory ||
-          itsEDRQuery.query_type == EDRQueryType::Corridor)
-      {
-        // If query_type is Trajectory, check if is 2D, 3D, 4D
-        boost::algorithm::to_upper(wkt);
-        boost::algorithm::trim(wkt);
-        auto geometry_name = wkt.substr(0, wkt.find('('));
-        boost::algorithm::trim(geometry_name);
-        auto len = (wkt.rfind(')') - wkt.find('(') - 1);
-        auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
-        auto radius = wkt.substr(wkt.rfind(')') + 1);
-
-        wkt = "LINESTRING(";
-        if (geometry_name == "LINESTRINGZM")
-        {
-          // lon,lat,level,epoch time
-          std::vector<string> coordinates;
-          boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
-          for (const auto &coordinate_item : coordinates)
-          {
-            std::vector<string> parts;
-            boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
-            if (parts.size() != 4)
-              throw EDRException(
-                  "Invalid LINESTRINGZM definition, longitude, latitude, level, epoch time "
-                  "expected: " +
-                  coords);
-            wkt.append(parts[0] + " " + parts[1] + ",");
-            itsCoordinateFilter.add(Fmi::stod(parts[0]),
-                                    Fmi::stod(parts[1]),
-                                    Fmi::stod(parts[2]),
-                                    boost::posix_time::from_time_t(Fmi::stod(parts[3])));
-          }
-        }
-        else if (geometry_name == "LINESTRINGZ")
-        {
-          // lon,lat,level
-          std::vector<string> coordinates;
-          boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
-          for (const auto &item : coordinates)
-          {
-            std::vector<string> parts;
-            boost::algorithm::split(parts, item, boost::algorithm::is_any_of(" "));
-            if (parts.size() != 3)
-              throw EDRException(
-                  "Invalid LINESTRINGZ definition, longitude, latitude, level expected: " + coords);
-            wkt.append(parts[0] + " " + parts[1] + ",");
-            itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
-          }
-        }
-        else if (geometry_name == "LINESTRINGM")
-        {
-          // lon,lat,epoch time
-          std::vector<string> coordinates;
-          boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
-          for (const auto &item : coordinates)
-          {
-            std::vector<string> parts;
-            boost::algorithm::split(parts, item, boost::algorithm::is_any_of(" "));
-            if (parts.size() != 3)
-              throw EDRException(
-                  "Invalid LINESTRINGM definition, longitude, latitude, epoch time expected: " +
-                  coords);
-            wkt.append(parts[0] + " " + parts[1] + ",");
-            itsCoordinateFilter.add(Fmi::stod(parts[0]),
-                                    Fmi::stod(parts[1]),
-                                    boost::posix_time::from_time_t(Fmi::stod(parts[2])));
-          }
-        }
-        else
-        {
-          wkt.append(geometry_values);
-        }
-        if (wkt.back() == ',')
-          wkt.resize(wkt.size() - 1);
-        wkt.append(")");
-        if (!radius.empty())
-          wkt.append(radius);
-      }
-      else if (itsEDRQuery.query_type == EDRQueryType::Cube)
-      {
-        auto minz = Spine::optional_string(req.getParameter("minz"), "");
-        auto maxz = Spine::optional_string(req.getParameter("minz"), "");
-        if (minz.empty() || maxz.empty())
-          throw EDRException("No minz, maxz parameter defined for Cube query!");
-        req.addParameter("z", minz + "/" + maxz);
-      }
-
-      auto crs = Spine::optional_string(req.getParameter("crs"), "EPSG:4326");
-      if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84" && crs != "CRS84" && crs != "CRS:84")
-        throw EDRException("Invalid crs: " + crs + ". Only EPSG:4326 is supported");
-      crs = "EPSG:4326";
-
-      /*
-            // Maybe later: support other CRSs than WGS84
-      if(!crs.empty() && crs != "EPSG:4326")
-            {
-              // Have to convert coordinates into WGS84
-              auto transformed_wkt = transform_coordinates(wkt, crs);
-              wkt = transformed_wkt;
-            }
-      */
-      req.addParameter("wkt", wkt);
-    }
-    else
-    {
-      if (itsEDRQuery.query_type == EDRQueryType::Locations)
-      {
-        if (resource_parts.size() != 5)
-          throw EDRException(
-              "Missing 'locationId' in Locations query! Format "
-              "'/edr/collections/{collectionId}/locations/{locationId}'");
-
-        const auto &location_id = resource_parts.at(4);
-
-        if (!emd.locations)
-          throw EDRException("Location query is not supported by collection '" +
-                             itsEDRQuery.collection_id + "'");
-
-        if (emd.locations->find(location_id) == emd.locations->end())
-        {
-          throw EDRException("Invalid locationId '" + location_id + "' for collection '" +
-                             itsEDRQuery.collection_id +
-                             "'! Please check metadata for valid locationIds!");
-        }
-
-        const auto &location_info = emd.locations->at(location_id);
-
-        // Currently locationId is either fmisid, geoid or icao code
-        if (location_info.type == "ICAO")
-          req.addParameter("icao", location_id);
-        else if (location_info.type == "fmisid")
-          req.addParameter("fmisid", location_id);
-        else
-          req.addParameter("geoid", location_id);
-      }
-      else if (itsEDRQuery.query_type == EDRQueryType::Cube)
-      {
-        auto bbox = Spine::optional_string(req.getParameter("bbox"), "");
-        if (bbox.empty())
-          throw EDRException("Query parameter 'bbox' or 'coords' must be defined for Cube");
-
-        std::vector<string> parts;
-        boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
-        if (parts.size() != 4)
-          throw EDRException(
-              "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner "
-              "y,upper left corner x,upper left corner y"
-              "<upper right coordinate>, e.g.  bbox=19.4,59.6,31.6,70.1");
-        auto lower_left_x = parts[0];
-        auto lower_left_y = parts[1];
-        auto upper_right_x = parts[2];
-        auto upper_right_y = parts[3];
-        boost::algorithm::trim(lower_left_x);
-        boost::algorithm::trim(lower_left_y);
-        boost::algorithm::trim(upper_right_x);
-        boost::algorithm::trim(upper_right_y);
-        auto wkt =
-            ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
-             upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x + " " +
-             lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
-        req.addParameter("wkt", wkt);
-        req.removeParameter("bbox");
-      }
-    }
-
-    // EDR datetime
-    auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
-
-    if (datetime == "null")
-    {
-      if (emd.temporal_extent.time_periods.empty())
-      {
-        datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
-      }
-      else
-      {
-        if (emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
-          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
-        else
-          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
-      }
-    }
-
-    if (datetime.empty())
-      datetime = itsCoordinateFilter.getDatetime();
-
-#ifndef WITHOUT_AVI
-    if (datetime.empty() && is_avi_producer(state.getAviMetaData(), itsEDRQuery.collection_id))
-      datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
-#endif
-
-    if (datetime.empty())
-      throw EDRException("Missing datetime option");
-
-    if (datetime.find('/') != std::string::npos)
-    {
-      std::vector<std::string> datetime_parts;
-      boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
-      auto starttime = datetime_parts.at(0);
-      auto endtime = datetime_parts.at(1);
-      if (starttime == "..")
-        req.addParameter("starttime", "data");
-      else
-        req.addParameter("starttime", starttime);
-      if (endtime != "..")
-        req.addParameter("endtime", endtime);
-    }
-    else
-    {
-      if (boost::algorithm::ends_with(datetime, ".."))
-      {
-        datetime.resize(datetime.size() - 2);
-        req.addParameter("starttime", datetime);
-      }
-      else if (boost::algorithm::starts_with(datetime, ".."))
-      {
-        datetime = datetime.substr(2);
-        req.addParameter("endtime", datetime);
-      }
-      else
-      {
-        req.addParameter("starttime", datetime);
-        req.addParameter("endtime", datetime);
-      }
-    }
-
-    // EDR parameter-name
-    auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
-#ifndef WITHOUT_AVI
-    if (parameter_names.empty() &&
-        is_avi_producer(state.getAviMetaData(), itsEDRQuery.collection_id))
-    {
-      parameter_names = "message";
-      req.addParameter("parameter-name", parameter_names);
-    }
-#endif
-
-    // Check valid parameters for requested producer
-    std::list<string> param_names;
-    boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
-
-    if (emd.vertical_extent.levels.empty() && itsEDRQuery.query_type == EDRQueryType::Cube)
-      throw EDRException("Error! Cube query not possible for '" + itsEDRQuery.collection_id +
-                         "', because there is no vertical extent!");
-
-    std::string producerId;
-    std::string geometryId;
-    std::string levelId;
-    if (grid_producer)
-    {
-      std::vector<std::string> producer_parts;
-      boost::algorithm::split(
-          producer_parts, itsEDRQuery.collection_id, boost::algorithm::is_any_of("."));
-
-      producerId = producer_parts[0];
-      if (producer_parts.size() > 1)
-        geometryId = producer_parts[1];
-      if (producer_parts.size() > 2)
-        levelId = producer_parts[2];
-    }
-
-    // EDR z
-    auto z = Spine::optional_string(req.getParameter("z"), "");
-    double min_level = std::numeric_limits<double>::min();
-    double max_level = std::numeric_limits<double>::max();
-    bool range = false;
-    if (z.find('/') != std::string::npos)
-    {
-      std::vector<std::string> parts;
-      boost::algorithm::split(parts, z, boost::algorithm::is_any_of("/"));
-      min_level = Fmi::stod(parts[0]);
-      max_level = Fmi::stod(parts[1]);
-      z.clear();
-      range = true;
-    }
-    if (!range && z.empty())
-      z = itsCoordinateFilter.getLevels();
-    // If no level given get all levels
-    if (z.empty() && !emd.vertical_extent.levels.empty())
-    {
-      for (const auto &l : emd.vertical_extent.levels)
-      {
-        double d_level = Fmi::stod(l);
-        if (d_level < min_level || d_level > max_level)
-          continue;
-        if (!z.empty())
-          z.append(",");
-        z.append(l);
-      }
-    }
-    if (!z.empty() && !grid_producer)
-      req.addParameter("levels", z);
-
-    std::string cleaned_param_names;
-    for (auto p : param_names)
-    {
-      boost::algorithm::to_lower(p);
-      if (p.find(':') != std::string::npos)
-        p = p.substr(0, p.find(':'));
-      if (emd.parameters.find(p) == emd.parameters.end())
-      {
-        std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p +
-                      "' ignored!" + ANSI_FG_DEFAULT)
-                  << std::endl;
-      }
-      if (emd.parameters.find(p) != emd.parameters.end())
-      {
-        if (!cleaned_param_names.empty())
-          cleaned_param_names += ",";
-        if (grid_producer)
-        {
-          p.append(":" + producerId);
-          if (!geometryId.empty())
-            p.append(":" + geometryId);
-          if (!levelId.empty())
-            p.append(":" + levelId);
-          if (!z.empty())
-            p.append(":" + z);
-        }
-        cleaned_param_names += p;
-        numberOfParameters++;
-      }
-    }
-    parameter_names = cleaned_param_names;
-
-    if (parameter_names.empty())
-    {
-      if (emd.parameters.empty())
-        throw EDRException("No metadata for " + itsEDRQuery.collection_id + "!");
-
-      throw EDRException("Missing parameter-name option!");
-    }
-
-    // If f-option is misssing, default output format is CoverageJSON
-    output_format = Spine::optional_string(req.getParameter("f"), COVERAGE_JSON_FORMAT);
-
-    const auto &supportedOutputFormats =
-        config.getSupportedOutputFormats(itsEDRQuery.collection_id);
-    if (supportedOutputFormats.find(output_format) == supportedOutputFormats.end())
-    {
-      std::string output_format_list;
-      for (const auto &item : supportedOutputFormats)
-      {
-        if (!output_format_list.empty())
-          output_format_list += ",";
-        output_format_list += item;
-      }
-      throw EDRException("Invalid output format '" + output_format +
-                         "'. The following output formats are supported for collection " +
-                         itsEDRQuery.collection_id + ": " + output_format_list);
-    }
-
-    // Longitude, latitude are always needed
-    parameter_names += ",longitude,latitude";
-    // If producer has levels we need to query them
-    if (!emd.vertical_extent.levels.empty())
-      parameter_names += ",level";
-
-    req.addParameter("param", parameter_names);
-
-    language = Spine::optional_string(req.getParameter("lang"), config.defaultLanguage());
-    itsEDRQuery.language = language;
+	// FMISIDs
+	auto name = req.getParameter("fmisid");
+	parse_ids(name, fmisids);
+	// sid is an alias for fmisid
+	name = req.getParameter("sid");
+	parse_ids(name, fmisids);
+	// WMOs
+	name = req.getParameter("wmo");
+	parse_ids(name, wmos);
+	// LPNNs
+	name = req.getParameter("lpnn");
+	parse_ids(name, lpnns);
 
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));
     report_unsupported_option("width", req.getParameter("width"));
     report_unsupported_option("fill", req.getParameter("fill"));
     report_unsupported_option("showpos", req.getParameter("showpos"));
     report_unsupported_option("uppercase", req.getParameter("uppercase"));
+
+    language = Spine::optional_string(req.getParameter("lang"), config.defaultLanguage());
 
     time_t tt = time(nullptr);
     if ((config.itsLastAliasCheck + 10) < tt)
@@ -819,117 +195,35 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     forecastSource = Spine::optional_string(req.getParameter("source"), "");
 
-    // ### Attribute list ( attr=name1:value1,name2:value2,name3:$(alias1) )
+	parse_attr(req);
 
-    string attr = Spine::optional_string(req.getParameter("attr"), "");
-    if (!attr.empty())
+	if(!parse_grib_loptions(state))
     {
-      bool ind = true;
-      uint loopCount = 0;
-      while (ind)
-      {
-        loopCount++;
-        if (loopCount > 10)
-          throw EDRException("The alias definitions seem to contain an eternal loop!");
+      loptions.reset(
+          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(req)));
 
-        ind = false;
-        std::string alias;
-        if (itsAliasFileCollectionPtr->replaceAlias(attr, alias))
+      auto lon_coord = Spine::optional_double(req.getParameter("x"), kFloatMissing);
+      auto lat_coord = Spine::optional_double(req.getParameter("y"), kFloatMissing);
+      auto source_crs = Spine::optional_string(req.getParameter("crs"), "");
+
+      if (lon_coord != kFloatMissing && lat_coord != kFloatMissing && !source_crs.empty())
+      {
+        // Transform lon_coord, lat_coord to lonlat parameter
+        if (source_crs != "ESPG:4326")
         {
-          attr = alias;
-          ind = true;
+          Fmi::CoordinateTransformation transformation(source_crs, "WGS84");
+          transformation.transform(lon_coord, lat_coord);
         }
-      }
-
-      std::vector<std::string> partList;
-      splitString(attr, ';', partList);
-      for (const auto &part : partList)
-      {
-        std::vector<std::string> list;
-        splitString(part, ':', list);
-        if (list.size() == 2)
-        {
-          std::string name = list[0];
-          std::string value = list[1];
-
-          attributeList.addAttribute(name, value);
-        }
-      }
-    }
-
-    // attributeList.print(std::cout,0,0);
-
-    if (!emd.isAviProducer())
-    {
-      T::Attribute *v1 =
-          attributeList.getAttributeByNameEnd("Grib1.IndicatorSection.EditionNumber");
-      T::Attribute *v2 =
-          attributeList.getAttributeByNameEnd("Grib2.IndicatorSection.EditionNumber");
-
-      T::Attribute *lat = attributeList.getAttributeByNameEnd("LatitudeOfFirstGridPoint");
-      T::Attribute *lon = attributeList.getAttributeByNameEnd("LongitudeOfFirstGridPoint");
-
-      if (v1 != nullptr && lat != nullptr && lon != nullptr)
-      {
-        // Using coordinate that is inside the GRIB1 grid
-
-        double latitude = toDouble(lat->mValue.c_str()) / 1000;
-        double longitude = toDouble(lon->mValue.c_str()) / 1000;
-
-        std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
-        Spine::HTTP::Request tmpReq;
-        tmpReq.addParameter("latlon", val);
+        auto tmpReq = req;
+        tmpReq.addParameter("lonlat",
+                            (Fmi::to_string(lon_coord) + "," + Fmi::to_string(lat_coord)));
         loptions.reset(
             new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
       }
-      else if (v2 != nullptr && lat != nullptr && lon != nullptr)
-      {
-        // Using coordinate that is inside the GRIB2 grid
-
-        double latitude = toDouble(lat->mValue.c_str()) / 1000000;
-        double longitude = toDouble(lon->mValue.c_str()) / 1000000;
-
-        std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
-        Spine::HTTP::Request tmpReq;
-        tmpReq.addParameter("latlon", val);
-        loptions.reset(
-            new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
-      }
-      else
-      {
-        loptions.reset(
-            new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(req)));
-
-        auto lon_coord = Spine::optional_double(req.getParameter("x"), kFloatMissing);
-        auto lat_coord = Spine::optional_double(req.getParameter("y"), kFloatMissing);
-        auto source_crs = crs;
-
-        if (lon_coord != kFloatMissing && lat_coord != kFloatMissing && !source_crs.empty())
-        {
-          // Transform lon_coord, lat_coord to lonlat parameter
-          if (source_crs != "ESPG:4326")
-          {
-            Fmi::CoordinateTransformation transformation(source_crs, "WGS84");
-            transformation.transform(lon_coord, lat_coord);
-          }
-          auto tmpReq = req;
-          tmpReq.addParameter("lonlat",
-                              (Fmi::to_string(lon_coord) + "," + Fmi::to_string(lat_coord)));
-          loptions.reset(
-              new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
-        }
-      }
-
-      // Store WKT-geometries
-      wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
     }
-    else
-    {
-      loptions.reset(new SmartMet::Engine::Geonames::LocationOptions());
-      loptions->setLocations(SmartMet::Spine::TaggedLocationList());
 
-      requestWKT = Spine::optional_string(req.getParameter("wkt"), "");
-    }
+    // Store WKT-geometries
+    wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
 
     toptions = TS::parseTimes(req);
 
@@ -943,23 +237,18 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     std::string endtime = Spine::optional_string(req.getParameter("endtime"), "");
     endtimeOptionGiven = (endtime != "now");
 
-#ifndef WITHOUT_OBSERVATION
-    latestObservation = (endtime == "now");
-    allplaces = (Spine::optional_string(req.getParameter("places"), "") == "all");
-#endif
-
     debug = Spine::optional_bool(req.getParameter("debug"), false);
 
     timezone = Spine::optional_string(req.getParameter("tz"), default_timezone);
 
-    step = Spine::optional_double(req.getParameter("step"), 0.0);
+    step = Spine::optional_double(req.getParameter("step"), 0.0); // In EDR no steps in paths, just explicitly given coordinates
     leveltype = Spine::optional_string(req.getParameter("leveltype"), "");
-    format = Spine::optional_string(req.getParameter("format"), "ascii");
     areasource = Spine::optional_string(req.getParameter("areasource"), "");
+    crs = Spine::optional_string(req.getParameter("crs"), "");
 
     // Either create the requested locale or use the default one constructed
-    // by the Config parser. TODO: If constructing from strings is slow, we
-    // should cache locales instead.
+    // by the Config parser. TODO: If constructing from strings is slow, we should cache locales
+    // instead.
 
     auto opt_locale = req.getParameter("locale");
     if (!opt_locale)
@@ -973,26 +262,15 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
     maxdistance =
         Spine::optional_string(req.getParameter("maxdistance"), config.defaultMaxDistance());
 
+    keyword = Spine::optional_string(req.getParameter("keyword"), "");
+
+	parse_inkeyword_locations(req, state);
+
     findnearestvalidpoint = Spine::optional_bool(req.getParameter("findnearestvalid"), false);
 
-    boost::optional<std::string> tmp = req.getParameter("origintime");
-    if (tmp)
-    {
-      if (*tmp == "latest" || *tmp == "newest")
-        origintime = boost::posix_time::ptime(boost::date_time::pos_infin);
-      else if (*tmp == "oldest")
-        origintime = boost::posix_time::ptime(boost::date_time::neg_infin);
-      else
-        origintime = Fmi::TimeParser::parse(*tmp);
-    }
-
-    Query::parse_producers(req, state);
-
-#ifndef WITHOUT_OBSERVATION
-    Query::parse_parameters(req, state.getObsEngine());
-#else
-    Query::parse_parameters(req);
-#endif
+	parse_origintime(req);
+    parse_producers(req, state);
+    parse_parameters(req);
 
     Query::parse_levels(req);
 
@@ -1019,136 +297,13 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
 
     timeformatter.reset(Fmi::TimeFormatter::create(timeformat));
 
-#ifndef WITHOUT_OBSERVATION
-    // observation params
-    numberofstations = Spine::optional_int(req.getParameter("numberofstations"), 1);
-#endif
-
-#ifndef WITHOUT_OBSERVATION
-    auto name = req.getParameter("fmisid");
-    if (name)
-    {
-      const string fmisidreq = *name;
-      vector<string> parts;
-      boost::algorithm::split(parts, fmisidreq, boost::algorithm::is_any_of(","));
-
-      for (const string &sfmisid : parts)
-      {
-        int f = Fmi::stoi(sfmisid);
-        this->fmisids.push_back(f);
-      }
-    }
-
-    // sid is an alias for fmisid
-    name = req.getParameter("sid");
-    if (name)
-    {
-      const string sidreq = *name;
-      vector<string> parts;
-      boost::algorithm::split(parts, sidreq, boost::algorithm::is_any_of(","));
-
-      for (const string &ssid : parts)
-      {
-        int f = Fmi::stoi(ssid);
-        this->fmisids.push_back(f);
-      }
-    }
-#endif
-
-#ifndef WITHOUT_OBSERVATION
-    name = req.getParameter("wmo");
-    if (name)
-    {
-      const string wmoreq = *name;
-      vector<string> parts;
-      boost::algorithm::split(parts, wmoreq, boost::algorithm::is_any_of(","));
-
-      for (const string &swmo : parts)
-      {
-        int w = Fmi::stoi(swmo);
-        this->wmos.push_back(w);
-      }
-    }
-#endif
-
-#ifndef WITHOUT_OBSERVATION
-    name = req.getParameter("lpnn");
-    if (name)
-    {
-      const string lpnnreq = *name;
-      vector<string> parts;
-      boost::algorithm::split(parts, lpnnreq, boost::algorithm::is_any_of(","));
-
-      for (const string &slpnn : parts)
-      {
-        int l = Fmi::stoi(slpnn);
-        this->lpnns.push_back(l);
-      }
-    }
-#endif
-
-    name = req.getParameter("icao");
-    if (name)
-    {
-      const string icaoreq = *name;
-      vector<string> parts;
-      boost::algorithm::split(parts, icaoreq, boost::algorithm::is_any_of(","));
-
-      this->icaos.insert(this->icaos.begin(), parts.begin(), parts.end());
-    }
-
-#ifndef WITHOUT_OBSERVATION
-    if (!!req.getParameter("bbox"))
-    {
-      string bbox = *req.getParameter("bbox");
-      vector<string> parts;
-      boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
-      std::string lat2(parts[3]);
-      if (lat2.find(':') != string::npos)
-        lat2 = lat2.substr(0, lat2.find(':'));
-
-      // Bounding box must contain exactly 4 elements
-      if (parts.size() != 4)
-      {
-        throw EDRException("Invalid bounding box '" + bbox + "'");
-      }
-
-      if (!parts[0].empty())
-      {
-        boundingBox["minx"] = Fmi::stod(parts[0]);
-      }
-      if (!parts[1].empty())
-      {
-        boundingBox["miny"] = Fmi::stod(parts[1]);
-      }
-      if (!parts[2].empty())
-      {
-        boundingBox["maxx"] = Fmi::stod(parts[2]);
-      }
-      if (!parts[3].empty())
-      {
-        boundingBox["maxy"] = Fmi::stod(lat2);
-      }
-    }
-    // Data filter options
-    add_sql_data_filter(req, "station_id", dataFilter);
-    add_sql_data_filter(req, "data_quality", dataFilter);
-    // Sounding filtering options
-    add_sql_data_filter(req, "sounding_type", dataFilter);
-    add_sql_data_filter(req, "significance", dataFilter);
-
-    std::string dataCache = Spine::optional_string(req.getParameter("useDataCache"), "true");
-    useDataCache = (dataCache == "true" || dataCache == "1");
-
-#endif
-
     if (!!req.getParameter("weekday"))
     {
       const string sweekdays = *req.getParameter("weekday");
       vector<string> parts;
       boost::algorithm::split(parts, sweekdays, boost::algorithm::is_any_of(","));
 
-      for (const string &wday : parts)
+      for (const string& wday : parts)
       {
         int h = Fmi::stoi(wday);
         this->weekdays.push_back(h);
@@ -1161,114 +316,89 @@ Query::Query(const State &state, const Spine::HTTP::Request &request, Config &co
   }
   catch (...)
   {
-    // The stack traces are useless when the user has made a typo
+    // Stack traces in journals are useless when the user has made a typo
     throw Fmi::Exception::Trace(BCP, "EDR plugin failed to parse query string options!")
-        .disableStackTrace();
+        .disableLogging();
   }
 }
 
-// ----------------------------------------------------------------------
-/*!
- * \brief Parse producer/model options
- */
-// ----------------------------------------------------------------------
-
-void Query::parse_producers(const Spine::HTTP::Request &theReq, const State &theState)
+void Query::parse_producers(const Spine::HTTP::Request& theReq, const State& theState)
 {
   try
-  {
-    const Engine::Querydata::Engine &theQEngine = theState.getQEngine();
-    const Engine::Grid::Engine *theGridEngine = theState.getGridEngine();
+	{
+	  string opt = Spine::optional_string(theReq.getParameter("model"), "");
+	  string opt2 = Spine::optional_string(theReq.getParameter("producer"), "");
+	  
+	  if (opt == "default" || opt2 == "default")
+		{
+		  // Use default if it's forced by any option
+		  return;
+		}
+	  
+	  // observation uses stationtype-parameter
+	  if (opt.empty() && opt2.empty())
+		opt2 = Spine::optional_string(theReq.getParameter("stationtype"), "");
+	  
+	  std::list<std::string> resultProducers;
+	  
+	  // Handle time separation:: either 'model' or 'producer' keyword used
+	  if (!opt.empty())
+		boost::algorithm::split(resultProducers, opt, boost::algorithm::is_any_of(";"));
+	  else if (!opt2.empty())
+		boost::algorithm::split(resultProducers, opt2, boost::algorithm::is_any_of(";"));
+	  
+	  for (auto& p : resultProducers)
+		{
+		  boost::algorithm::to_lower(p);
+		  if (p == "itmf")
+			{
+			  p = Engine::Observation::FMI_IOT_PRODUCER;
+			  iot_producer_specifier = "itmf";
+			}
+		}
+	  
+	  // Verify the producer names are valid
+	  const auto obsProducers = getObsProducers(theState);
+	  
+	  for (const auto& p : resultProducers)
+		{
+		  const auto& qEngine = theState.getQEngine();
+		  bool ok = qEngine.hasProducer(p);
+		  if (!obsProducers.empty() && !ok)
+			{
+			  ok = (obsProducers.find(p) != obsProducers.end());
+			}
 
-    string opt = Spine::optional_string(theReq.getParameter("model"), "");
+		  const auto* gridEngine = theState.getGridEngine();
+		  if (!ok && gridEngine)
+			{
+			  ok = gridEngine->isGridProducer(p);
+			}
 
-    string opt2 = Spine::optional_string(theReq.getParameter("producer"), "");
+		  if (!ok)
+			ok = isAviProducer(theState.getAviMetaData(), p);
 
-    if (opt == "default" || opt2 == "default")
-    {
-      // Use default if it's forced by any option
-      return;
-    }
+		  if (!ok)
+			throw Fmi::Exception(BCP, "Unknown producer name '" + p + "'");
+		}
 
-    // observation uses stationtype-parameter
-    if (opt.empty() && opt2.empty())
-      opt2 = Spine::optional_string(theReq.getParameter("stationtype"), "");
-
-    std::list<std::string> resultProducers;
-    const std::string &prodOpt = opt.empty() ? opt2 : opt;
-
-    // Handle time separation:: either 'model' or 'producer' keyword used
-    if (!opt.empty())
-      boost::algorithm::split(resultProducers, opt, boost::algorithm::is_any_of(";"));
-    else if (!opt2.empty())
-      boost::algorithm::split(resultProducers, opt2, boost::algorithm::is_any_of(";"));
-
-    for (auto &p : resultProducers)
-    {
-      // Avi collection names are in upper case and only one producer name is allowed
-#ifndef WITHOUT_AVI
-      if (is_avi_producer(theState.getAviMetaData(), p))
-      {
-        if (resultProducers.size() > 1)
-          throw Fmi::Exception(BCP,
-                               "Only one producer is allowed for avi query: '" + prodOpt + "'");
-
-        AreaProducers ap = {p};
-        timeproducers.push_back(ap);
-
-        return;
-      }
-#endif
-      boost::algorithm::to_lower(p);
-
-      if (p == "itmf")
-      {
-        p = Engine::Observation::FMI_IOT_PRODUCER;
-        iot_producer_specifier = "itmf";
-      }
-    }
-
-    // Verify the producer names are valid
-
-#ifndef WITHOUT_OBSERVATION
-    const Engine::Observation::Engine *theObsEngine = theState.getObsEngine();
-    std::set<std::string> observations;
-    if (theObsEngine != nullptr)
-      observations = theObsEngine->getValidStationTypes();
-#endif
-
-    for (const auto &p : resultProducers)
-    {
-      bool ok = theQEngine.hasProducer(p);
-#ifndef WITHOUT_OBSERVATION
-      if (!ok)
-        ok = (observations.find(p) != observations.end());
-#endif
-      if (!ok && theGridEngine)
-        ok = theGridEngine->isGridProducer(p);
-
-      if (!ok)
-        throw EDRException("Unknown producer name '" + p + "'");
-    }
-
-    // Now split into location parts
-
-    for (const auto &tproducers : resultProducers)
-    {
-      AreaProducers producers;
-      boost::algorithm::split(producers, tproducers, boost::algorithm::is_any_of(","));
-
-      // FMI producer is deprecated, use OPENDATA instead
-      // std::replace(producers.begin(), producers.end(), std::string("fmi"),
-      // std::string("opendata"));
-
-      timeproducers.push_back(producers);
-    }
-  }
+	  // Now split into location parts	  
+	  for (const auto& tproducers : resultProducers)
+		{
+		  AreaProducers producers;
+		  boost::algorithm::split(producers, tproducers, boost::algorithm::is_any_of(","));
+		  
+		  // FMI producer is deprecated, use OPENDATA instead
+		  // std::replace(producers.begin(), producers.end(), std::string("fmi"),
+		  // std::string("opendata"));
+		  
+		  timeproducers.push_back(producers);
+		}
+	}
   catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
+	{
+	  throw Fmi::Exception::Trace(BCP, "Operation failed!");
+	}
 }
 
 // ----------------------------------------------------------------------
@@ -1279,7 +409,7 @@ void Query::parse_producers(const Spine::HTTP::Request &theReq, const State &the
  */
 // ----------------------------------------------------------------------
 
-void Query::parse_levels(const Spine::HTTP::Request &theReq)
+void Query::parse_levels(const Spine::HTTP::Request& theReq)
 {
   try
   {
@@ -1297,7 +427,7 @@ void Query::parse_levels(const Spine::HTTP::Request &theReq)
     {
       vector<string> parts;
       boost::algorithm::split(parts, opt, boost::algorithm::is_any_of(","));
-      for (const string &tmp : parts)
+      for (const string& tmp : parts)
         levels.insert(Fmi::stoi(tmp));
     }
 
@@ -1314,7 +444,7 @@ void Query::parse_levels(const Spine::HTTP::Request &theReq)
     {
       vector<string> parts;
       boost::algorithm::split(parts, opt, boost::algorithm::is_any_of(","));
-      for (const string &tmp : parts)
+      for (const string& tmp : parts)
         pressures.insert(Fmi::stod(tmp));
     }
 
@@ -1329,7 +459,7 @@ void Query::parse_levels(const Spine::HTTP::Request &theReq)
     {
       vector<string> parts;
       boost::algorithm::split(parts, opt, boost::algorithm::is_any_of(","));
-      for (const string &tmp : parts)
+      for (const string& tmp : parts)
         heights.insert(Fmi::stod(tmp));
     }
   }
@@ -1345,28 +475,24 @@ void Query::parse_levels(const Spine::HTTP::Request &theReq)
  */
 // ----------------------------------------------------------------------
 
-void Query::parse_precision(const Spine::HTTP::Request &req, const Config &config)
+void Query::parse_precision(const Spine::HTTP::Request& req, const Config& config)
 {
   try
   {
     string precname =
         Spine::optional_string(req.getParameter("precision"), config.defaultPrecision());
 
-    const Precision &prec = config.getPrecision(precname);
+    const Precision& prec = config.getPrecision(precname);
 
     precisions.reserve(poptions.size());
 
-    for (const TS::OptionParsers::ParameterList::value_type &p : poptions.parameters())
+    for (const TS::OptionParsers::ParameterList::value_type& p : poptions.parameters())
     {
       const auto it = prec.parameter_precisions.find(p.name());
       if (it == prec.parameter_precisions.end())
-      {
         precisions.push_back(prec.default_precision);  // unknown gets default
-      }
       else
-      {
         precisions.push_back(it->second);  // known gets configured value
-      }
     }
   }
   catch (...)
@@ -1375,12 +501,63 @@ void Query::parse_precision(const Spine::HTTP::Request &req, const Config &confi
   }
 }
 
-#ifndef WITHOUT_OBSERVATION
-void Query::parse_parameters(const Spine::HTTP::Request &theReq,
-                             const Engine::Observation::Engine *theObsEngine)
-#else
-void Query::parse_parameters(const Spine::HTTP::Request &theReq)
-#endif
+void Query::parse_aggregation_intervals(const Spine::HTTP::Request& theReq)
+{
+  try
+  {
+    std::string aggregationIntervalStringBehind =
+        Spine::optional_string(theReq.getParameter("interval"), "0m");
+    std::string aggregationIntervalStringAhead = ("0m");
+
+    // check if second aggregation interval is defined
+    auto agg_pos = aggregationIntervalStringBehind.find(':');
+    if (agg_pos != string::npos)
+    {
+      aggregationIntervalStringAhead = aggregationIntervalStringBehind.substr(agg_pos + 1);
+      aggregationIntervalStringBehind.resize(agg_pos);
+    }
+
+    int agg_interval_behind = Spine::duration_string_to_minutes(aggregationIntervalStringBehind);
+    int agg_interval_ahead = Spine::duration_string_to_minutes(aggregationIntervalStringAhead);
+
+    if (agg_interval_behind < 0 || agg_interval_ahead < 0)
+      throw Fmi::Exception(BCP, "The 'interval' option must be positive!");
+
+    // set aggregation interval if it has not been set in parameter parser
+    for (const TS::ParameterAndFunctions& paramfuncs : poptions.parameterFunctions())
+    {
+	  set_agg_interval_behind(const_cast<TS::DataFunction&>(paramfuncs.functions.innerFunction), agg_interval_behind);
+	  set_agg_interval_ahead(const_cast<TS::DataFunction&>(paramfuncs.functions.innerFunction), agg_interval_ahead);
+	  set_agg_interval_behind(const_cast<TS::DataFunction&>(paramfuncs.functions.outerFunction), agg_interval_behind);
+	  set_agg_interval_ahead(const_cast<TS::DataFunction&>(paramfuncs.functions.outerFunction), agg_interval_ahead);
+    }
+
+    // store maximum aggregation intervals per parameter for later use
+    for (const TS::ParameterAndFunctions& paramfuncs : poptions.parameterFunctions())
+    {
+      std::string paramname(paramfuncs.parameter.name());
+
+      if (maxAggregationIntervals.find(paramname) == maxAggregationIntervals.end())
+        maxAggregationIntervals.insert(make_pair(paramname, AggregationInterval(0, 0)));
+
+	  set_max_agg_interval_behind(const_cast<TS::DataFunction&>(paramfuncs.functions.innerFunction), maxAggregationIntervals[paramname].behind);
+	  set_max_agg_interval_ahead(const_cast<TS::DataFunction&>(paramfuncs.functions.innerFunction), maxAggregationIntervals[paramname].ahead);
+	  set_max_agg_interval_behind(const_cast<TS::DataFunction&>(paramfuncs.functions.outerFunction), maxAggregationIntervals[paramname].behind);
+	  set_max_agg_interval_ahead(const_cast<TS::DataFunction&>(paramfuncs.functions.outerFunction), maxAggregationIntervals[paramname].ahead);
+
+      if (maxAggregationIntervals[paramname].behind > 0 ||
+          maxAggregationIntervals[paramname].ahead > 0)
+        timeAggregationRequested = true;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+void Query::parse_parameters(const Spine::HTTP::Request& theReq)
 {
   try
   {
@@ -1409,22 +586,23 @@ void Query::parse_parameters(const Spine::HTTP::Request &theReq)
       ind = false;
       names.clear();
 
-      for (const auto &tmpName : tmpNames)
+      for (const auto& tmpName : tmpNames)
       {
         std::string alias;
         if (itsAliasFileCollectionPtr->getAlias(tmpName, alias))
         {
           Names tmp;
           boost::algorithm::split(tmp, alias, boost::algorithm::is_any_of(","));
-          for (const auto &tt : tmp)
+          for (const auto& tt : tmp)
             names.push_back(tt);
+
           ind = true;
         }
         else if (itsAliasFileCollectionPtr->replaceAlias(tmpName, alias))
         {
           Names tmp;
           boost::algorithm::split(tmp, alias, boost::algorithm::is_any_of(","));
-          for (const auto &tt : tmp)
+          for (const auto& tt : tmp)
             names.push_back(tt);
 
           ind = true;
@@ -1439,34 +617,8 @@ void Query::parse_parameters(const Spine::HTTP::Request &theReq)
         tmpNames = names;
     }
 
-#ifndef WITHOUT_OBSERVATION
-
-    // Determine whether any producer implies observations are needed
-
-    bool obsProducersExist = false;
-
-    if (theObsEngine != nullptr)
-    {
-      std::set<std::string> obsEngineStationTypes = theObsEngine->getValidStationTypes();
-      for (const auto &areaproducers : timeproducers)
-      {
-        if (obsProducersExist)
-          break;
-
-        for (const auto &producer : areaproducers)
-        {
-          if (obsEngineStationTypes.find(producer) != obsEngineStationTypes.end())
-          {
-            obsProducersExist = true;
-            break;
-          }
-        }
-      }
-    }
-#endif
-
     // Validate and convert
-    for (const string &paramname : names)
+    for (const string& paramname : names)
     {
       try
       {
@@ -1477,89 +629,155 @@ void Query::parse_parameters(const Spine::HTTP::Request &theReq)
       }
       catch (...)
       {
-        Fmi::Exception exception(BCP, "Parameter parsing failed for '" + paramname + "'!", nullptr);
-        throw exception;
+        throw Fmi::Exception(BCP, "Parameter parsing failed for '" + paramname + "'!", nullptr);
       }
     }
     poptions.expandParameter("data_source");
 
-    std::string aggregationIntervalStringBehind =
-        Spine::optional_string(theReq.getParameter("interval"), "0m");
-    std::string aggregationIntervalStringAhead = ("0m");
+	parse_aggregation_intervals(theReq);
 
-    // check if second aggregation interval is defined
-    if (aggregationIntervalStringBehind.find(':') != string::npos)
-    {
-      aggregationIntervalStringAhead =
-          aggregationIntervalStringBehind.substr(aggregationIntervalStringBehind.find(':') + 1);
-      aggregationIntervalStringBehind =
-          aggregationIntervalStringBehind.substr(0, aggregationIntervalStringBehind.find(':'));
-    }
-
-    int agg_interval_behind(Spine::duration_string_to_minutes(aggregationIntervalStringBehind));
-    int agg_interval_ahead(Spine::duration_string_to_minutes(aggregationIntervalStringAhead));
-
-    if (agg_interval_behind < 0 || agg_interval_ahead < 0)
-      throw Fmi::Exception(BCP, "The 'interval' option must be positive!");
-
-    // set aggregation interval if it has not been set in parameter parser
-    for (const TS::ParameterAndFunctions &paramfuncs : poptions.parameterFunctions())
-    {
-      if (paramfuncs.functions.innerFunction.getAggregationIntervalBehind() ==
-          std::numeric_limits<unsigned int>::max())
-        const_cast<TS::DataFunction &>(paramfuncs.functions.innerFunction)
-            .setAggregationIntervalBehind(agg_interval_behind);
-      if (paramfuncs.functions.innerFunction.getAggregationIntervalAhead() ==
-          std::numeric_limits<unsigned int>::max())
-        const_cast<TS::DataFunction &>(paramfuncs.functions.innerFunction)
-            .setAggregationIntervalAhead(agg_interval_ahead);
-
-      if (paramfuncs.functions.outerFunction.getAggregationIntervalBehind() ==
-          std::numeric_limits<unsigned int>::max())
-        const_cast<TS::DataFunction &>(paramfuncs.functions.outerFunction)
-            .setAggregationIntervalBehind(agg_interval_behind);
-      if (paramfuncs.functions.outerFunction.getAggregationIntervalAhead() ==
-          std::numeric_limits<unsigned int>::max())
-        const_cast<TS::DataFunction &>(paramfuncs.functions.outerFunction)
-            .setAggregationIntervalAhead(agg_interval_ahead);
-    }
-
-    // store maximum aggregation intervals per parameter for later use
-    for (const TS::ParameterAndFunctions &paramfuncs : poptions.parameterFunctions())
-    {
-      std::string paramname(paramfuncs.parameter.name());
-
-      if (maxAggregationIntervals.find(paramname) == maxAggregationIntervals.end())
-        maxAggregationIntervals.insert(make_pair(paramname, AggregationInterval(0, 0)));
-
-      if (paramfuncs.functions.innerFunction.type() == TS::FunctionType::TimeFunction)
-      {
-        if (maxAggregationIntervals[paramname].behind <
-            paramfuncs.functions.innerFunction.getAggregationIntervalBehind())
-          maxAggregationIntervals[paramname].behind =
-              paramfuncs.functions.innerFunction.getAggregationIntervalBehind();
-        if (maxAggregationIntervals[paramname].ahead <
-            paramfuncs.functions.innerFunction.getAggregationIntervalAhead())
-          maxAggregationIntervals[paramname].ahead =
-              paramfuncs.functions.innerFunction.getAggregationIntervalAhead();
-      }
-      else if (paramfuncs.functions.outerFunction.type() == TS::FunctionType::TimeFunction)
-      {
-        if (maxAggregationIntervals[paramname].behind <
-            paramfuncs.functions.outerFunction.getAggregationIntervalBehind())
-          maxAggregationIntervals[paramname].behind =
-              paramfuncs.functions.outerFunction.getAggregationIntervalBehind();
-        if (maxAggregationIntervals[paramname].ahead <
-            paramfuncs.functions.outerFunction.getAggregationIntervalAhead())
-          maxAggregationIntervals[paramname].ahead =
-              paramfuncs.functions.outerFunction.getAggregationIntervalAhead();
-      }
-
-      if (maxAggregationIntervals[paramname].behind > 0 ||
-          maxAggregationIntervals[paramname].ahead > 0)
-        timeAggregationRequested = true;
-    }
   }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void Query::parse_attr(const Spine::HTTP::Request& theReq)
+{
+  try
+  {
+    string attr = Spine::optional_string(theReq.getParameter("attr"), "");
+    if (!attr.empty())
+    {
+      bool ind = true;
+      uint loopCount = 0;
+      while (ind)
+      {
+        loopCount++;
+        if (loopCount > 10)
+          throw Fmi::Exception(BCP, "The alias definitions seem to contain an eternal loop!");
+
+        ind = false;
+        std::string alias;
+        if (itsAliasFileCollectionPtr->replaceAlias(attr, alias))
+        {
+          attr = alias;
+          ind = true;
+        }
+      }
+
+      std::vector<std::string> partList;
+      splitString(attr, ';', partList);
+      for (const auto& part : partList)
+      {
+        std::vector<std::string> list;
+        splitString(part, ':', list);
+        if (list.size() == 2)
+        {
+          std::string name = list[0];
+          std::string value = list[1];
+
+          attributeList.addAttribute(name, value);
+        }
+      }
+    }
+    // ### Attribute list ( attr=name1:value1,name2:value2,name3:$(alias1) )
+    // attributeList.print(std::cout,0,0);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+bool Query::parse_grib_loptions(const State& state)
+{
+  try
+  {
+	T::Attribute* v1 = attributeList.getAttributeByNameEnd("Grib1.IndicatorSection.EditionNumber");
+    T::Attribute* v2 = attributeList.getAttributeByNameEnd("Grib2.IndicatorSection.EditionNumber");
+
+    T::Attribute* lat = attributeList.getAttributeByNameEnd("LatitudeOfFirstGridPoint");
+    T::Attribute* lon = attributeList.getAttributeByNameEnd("LongitudeOfFirstGridPoint");
+
+    if (v1 != nullptr && lat != nullptr && lon != nullptr)
+    {
+      // Using coordinate that is inside the GRIB1 grid
+
+      double latitude = toDouble(lat->mValue.c_str()) / 1000;
+      double longitude = toDouble(lon->mValue.c_str()) / 1000;
+
+      std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
+      Spine::HTTP::Request tmpReq;
+      tmpReq.addParameter("latlon", val);
+      loptions.reset(
+          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
+	  return true;
+    }
+    else if (v2 != nullptr && lat != nullptr && lon != nullptr)
+    {
+      // Using coordinate that is inside the GRIB2 grid
+
+      double latitude = toDouble(lat->mValue.c_str()) / 1000000;
+      double longitude = toDouble(lon->mValue.c_str()) / 1000000;
+
+      std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
+      Spine::HTTP::Request tmpReq;
+      tmpReq.addParameter("latlon", val);
+      loptions.reset(
+          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
+	  return true;
+    }
+
+	return false;
+ }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void Query::parse_inkeyword_locations(const Spine::HTTP::Request& theReq, const State& state)
+{
+  try
+  {
+    auto searchName = theReq.getParameterList("inkeyword");
+    if (!searchName.empty())
+    {
+      for (const std::string& key : searchName)
+      {
+        Locus::QueryOptions opts;
+        opts.SetLanguage(language);
+        Spine::LocationList places = state.getGeoEngine().keywordSearch(opts, key);
+        if (places.empty())
+          throw Fmi::Exception(BCP, "No locations for keyword " + std::string(key) + " found");
+        inKeywordLocations.insert(inKeywordLocations.end(), places.begin(), places.end());
+      }
+    }
+ }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void Query::parse_origintime(const Spine::HTTP::Request& theReq)
+{
+  try
+  {
+    boost::optional<std::string> tmp = theReq.getParameter("origintime");
+    if (tmp)
+    {
+      if (*tmp == "latest" || *tmp == "newest")
+        origintime = boost::posix_time::ptime(boost::date_time::pos_infin);
+      else if (*tmp == "oldest")
+        origintime = boost::posix_time::ptime(boost::date_time::neg_infin);
+      else
+        origintime = Fmi::TimeParser::parse(*tmp);
+    }
+}
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");

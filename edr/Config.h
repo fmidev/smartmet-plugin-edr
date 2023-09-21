@@ -11,7 +11,6 @@
 #include "EDRAPI.h"
 #include "EDRDefs.h"
 #include "Precision.h"
-#include "Query.h"
 
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
@@ -65,7 +64,7 @@ class Config : private boost::noncopyable
     return itsFormatterOptions.defaultWxmlTimeString();
   }
 
-  const std::vector<uint> &defaultGridGeometries() { return itsDefaultGridGeometries; }
+  const std::vector<uint> &defaultGridGeometries() const { return itsDefaultGridGeometries; }
 
   const std::string &defaultWxmlVersion() const { return itsFormatterOptions.defaultWxmlVersion(); }
   const std::string &wxmlSchema() const { return itsFormatterOptions.wxmlSchema(); }

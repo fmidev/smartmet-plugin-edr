@@ -1,6 +1,11 @@
 #include "UtilityFunctions.h"
+#include "State.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <timeseries/ParameterKeywords.h>
+#include <timeseries/ParameterTools.h>
+#include <engines/observation/ExternalAndMobileProducerId.h>
+#include <engines/observation/Keywords.h>
 
 namespace SmartMet
 {
@@ -10,171 +15,183 @@ namespace EDR
 {
 namespace UtilityFunctions
 {
-// ----------------------------------------------------------------------
-/*!
- * \brief
- */
-// ----------------------------------------------------------------------
 
-void update_latest_timestep(Query &query, const TS::TimeSeriesVectorPtr &tsv)
+bool is_special_parameter(const std::string& paramname)
 {
   try
   {
-    if (tsv->empty())
-      return;
-
-    // Sometimes some of the timeseries are empty. However, should we iterate
-    // backwards until we find a valid one instead of exiting??
-
-    if (tsv->back().empty())
-      return;
-
-    const auto &last_time = tsv->back().back().time;
-
-    if (query.toptions.startTimeUTC)
-      query.latestTimestep = last_time.utc_time();
-    else
-      query.latestTimestep = last_time.local_time();
+	if (paramname == ORIGINTIME_PARAM || paramname == LEVEL_PARAM)
+	  return false;
+	
+	return (TS::is_time_parameter(paramname) || TS::is_location_parameter(paramname));
   }
   catch (...)
   {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
 
-// ----------------------------------------------------------------------
-/*!
- * \brief
- */
-// ----------------------------------------------------------------------
-
-void update_latest_timestep(Query &query, const TS::TimeSeries &ts)
+TS::Value get_location_parameter_value(const Spine::LocationPtr& loc, const std::string& paramname, const Query& query, int precision)
 {
   try
   {
-    if (ts.empty())
-      return;
+	if(paramname == "longitude")
+	  return loc->longitude;
+	else if(paramname == "latitude")
+	  return loc->latitude;
 
-    const auto &last_time = ts[ts.size() - 1].time;
+	return TS::location_parameter(loc, paramname, query.valueformatter, query.timezone, precision, query.crs);
 
-    if (query.toptions.startTimeUTC)
-      query.latestTimestep = last_time.utc_time();
-    else
-      query.latestTimestep = last_time.local_time();
   }
   catch (...)
   {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
 
-// ----------------------------------------------------------------------
-/*!
- * \brief
- */
-// ----------------------------------------------------------------------
-
-void update_latest_timestep(Query &query, const TS::TimeSeriesGroup &tsg)
+void get_special_parameter_values(const std::string& paramname,
+                                  int precision,
+                                  const TS::TimeSeriesGenerator::LocalTimeList& tlist,
+                                  const Spine::LocationPtr& loc,
+                                  const Query& query,
+                                  const State& state,
+                                  const Fmi::TimeZones& timezones,
+                                  TS::TimeSeriesPtr& result)
 {
   try
   {
-    // take first time series and last timestep thereof
-    TS::TimeSeries ts = tsg[0].timeseries;
-
-    if (ts.empty())
-      return;
-
-    // update the latest timestep, so that next query (is exists) knows from
-    // where to continue
-    update_latest_timestep(query, ts);
+	bool is_time_parameter = TS::is_time_parameter(paramname);
+	bool is_location_parameter = TS::is_location_parameter(paramname);
+	
+	for (const auto& timestep : tlist)
+	{
+	  if (is_time_parameter)
+	  {
+		TS::Value value = TS::time_parameter(paramname,
+											 timestep,
+											 state.getTime(),
+											 *loc,
+											 query.timezone,
+											 timezones,
+											 query.outlocale,
+											 *query.timeformatter,
+											 query.timestring);
+		result->emplace_back(TS::TimedValue(timestep, value));
+	  }
+	  if (is_location_parameter)
+	  {
+		TS::Value value = get_location_parameter_value(loc, paramname, query, precision);
+		result->emplace_back(TS::TimedValue(timestep, value));
+	  }
+	}
   }
   catch (...)
   {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
 
-// ----------------------------------------------------------------------
-/*!
- * \brief
- */
-// ----------------------------------------------------------------------
-
-void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query &query, TS::OutputData &outputData)
+void get_special_parameter_values(const std::string& paramname,
+                                  int precision,
+                                  const TS::TimeSeriesGenerator::LocalTimeList& tlist,
+                                  const Spine::LocationList& llist,
+                                  const Query& query,
+                                  const State& state,
+                                  const Fmi::TimeZones& timezones,
+                                  TS::TimeSeriesGroupPtr& result)
 {
   try
   {
-    if (aggregatedData->empty())
-      return;
-
-    // insert data to the end
-    std::vector<TS::TimeSeriesData> &odata = (--outputData.end())->second;
-    odata.emplace_back(TS::TimeSeriesData(aggregatedData));
-    update_latest_timestep(query, aggregatedData);
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief
- */
-// ----------------------------------------------------------------------
-
-void store_data(std::vector<TS::TimeSeriesData> &aggregatedData,
-                Query &query,
-                TS::OutputData &outputData)
-{
-  try
-  {
-    if (aggregatedData.empty())
-      return;
-
-    TS::TimeSeriesData tsdata;
-    if (boost::get<TS::TimeSeriesPtr>(aggregatedData.data()))
-    {
-      TS::TimeSeriesPtr ts_first = *(boost::get<TS::TimeSeriesPtr>(aggregatedData.data()));
-      TS::TimeSeriesPtr ts_result(new TS::TimeSeries(ts_first->getLocalTimePool()));
-      // first merge timeseries of all levels of one parameter
-      for (const auto &data : aggregatedData)
+	bool is_time_parameter = TS::is_time_parameter(paramname);
+	bool is_location_parameter = TS::is_location_parameter(paramname);
+	for (const auto& loc : llist)
+	{
+	  auto timeseries = TS::TimeSeries(state.getLocalTimePool());
+	  for (const auto& timestep : tlist)
       {
-        TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&data));
-        ts_result->insert(ts_result->end(), ts->begin(), ts->end());
-      }
-      // update the latest timestep, so that next query (if exists) knows from
-      // where to continue
-      update_latest_timestep(query, *ts_result);
-      tsdata = ts_result;
-    }
-    else if (boost::get<TS::TimeSeriesGroupPtr>(aggregatedData.data()))
-    {
-      TS::TimeSeriesGroupPtr tsg_result(new TS::TimeSeriesGroup);
-      // first merge timeseries of all levels of one parameter
-      for (const auto &data : aggregatedData)
-      {
-        TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&data));
-        tsg_result->insert(tsg_result->end(), tsg->begin(), tsg->end());
-      }
-      // update the latest timestep, so that next query (if exists) knows from
-      // where to continue
-      update_latest_timestep(query, *tsg_result);
-      tsdata = tsg_result;
-    }
-
-    // insert data to the end
-    std::vector<TS::TimeSeriesData> &odata = (--outputData.end())->second;
-    odata.push_back(tsdata);
+		if (is_time_parameter)
+		{
+		  TS::Value value = TS::time_parameter(paramname,
+											   timestep,
+											   state.getTime(),
+											   *loc,
+											   query.timezone,
+											   timezones,
+											   query.outlocale,
+											   *query.timeformatter,
+											   query.timestring);
+		  timeseries.emplace_back(TS::TimedValue(timestep, value));
+		}
+		if (is_location_parameter)
+		{
+		  TS::Value value = get_location_parameter_value(loc, paramname, query, precision);
+		  timeseries.emplace_back(TS::TimedValue(timestep, value));
+		}
+	  }
+	  if (!timeseries.empty())
+		result->push_back(TS::LonLatTimeSeries(Spine::LonLat(loc->longitude, loc->latitude), timeseries));
+	}
   }
   catch (...)
   {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
 
-double get_double(const TS::Value &val, double default_value = kFloatMissing)
+bool is_mobile_producer(const std::string& producer)
+{
+  try
+  {
+    return (producer == Engine::Observation::ROADCLOUD_PRODUCER ||
+            producer == Engine::Observation::TECONER_PRODUCER ||
+            producer == Engine::Observation::FMI_IOT_PRODUCER ||
+            producer == Engine::Observation::NETATMO_PRODUCER ||
+            producer == Engine::Observation::BK_HYDROMETA_PRODUCER);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+bool is_flash_producer(const std::string& producer)
+{
+  try
+  {
+    return (producer == FLASH_PRODUCER);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+bool is_icebuoy_or_copernicus_producer(const std::string& producer)
+{
+  try
+  {
+    return (producer == ICEBUOY_PRODUCER || producer == COPERNICUS_PRODUCER);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+bool is_flash_or_mobile_producer(const std::string& producer)
+{
+  try
+  {
+    return (is_flash_producer(producer) || is_mobile_producer(producer) ||
+            is_icebuoy_or_copernicus_producer(producer));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+double get_double(const TS::Value &val, double default_value)
 {
   try
   {
@@ -183,7 +200,12 @@ double get_double(const TS::Value &val, double default_value = kFloatMissing)
     if (boost::get<int>(&val) != nullptr)
       ret = *(boost::get<int>(&val));
     else if (boost::get<double>(&val) != nullptr)
-      ret = *(boost::get<double>(&val));
+	  ret = *(boost::get<double>(&val));
+    else if (boost::get<std::string>(&val) != nullptr)
+	  {
+		std::string value = *(boost::get<std::string>(&val));
+		ret = Fmi::stod(value);
+	  }
 
     return ret;
   }
@@ -235,18 +257,29 @@ std::string get_string(const TS::Value &val, const std::string &default_value = 
 
 Json::Value json_value(const TS::Value &val, int precision)
 {
-  auto double_value = get_double(val);
-  if (double_value != kFloatMissing)
-    return {double_value, static_cast<unsigned int>(precision)};
+  try
+  {
+	auto double_value = get_double(val, kFloatMissing);
 
-  auto int_value = get_int(val);
-  if (int_value != static_cast<int>(kFloatMissing))
-    return int_value;
+	if (double_value != kFloatMissing)
+	  return {double_value, static_cast<unsigned int>(precision)};
+	
+	auto int_value = get_int(val);
 
-  // If value is of type string empty string is returned
-  auto string_value = get_string(val);
-  return string_value;
+	if (int_value != static_cast<int>(kFloatMissing))
+	  return int_value;
+	
+	// If value is of type string empty string is returned
+	auto string_value = get_string(val);
+
+	return string_value;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
 }
+
 
 }  // namespace UtilityFunctions
 }  // namespace EDR

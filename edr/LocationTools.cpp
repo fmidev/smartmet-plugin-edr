@@ -1,9 +1,9 @@
 #include "LocationTools.h"
 #include "LonLatDistance.h"
-#include <engines/observation/Keywords.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiSvgTools.h>
 #include <timeseries/ParameterKeywords.h>
+#include <grid-files/common/GraphFunctions.h>
 
 namespace SmartMet
 {
@@ -23,15 +23,16 @@ const std::locale stdlocale = std::locale();
  */
 // ----------------------------------------------------------------------
 
-std::string get_name_base(const std::string &theName)
+std::string get_name_base(const std::string& theName)
 {
   try
   {
     std::string place = theName;
 
     // remove radius if exists
-    if (place.find(':') != std::string::npos)
-      place = place.substr(0, place.find(':'));
+    auto pos = place.find(':');
+    if (pos != std::string::npos)
+      place.resize(pos);
 
     return place;
   }
@@ -47,13 +48,13 @@ std::string get_name_base(const std::string &theName)
  */
 // ----------------------------------------------------------------------
 
-const OGRGeometry *get_ogr_geometry(const Spine::TaggedLocation &tloc,
-                                    const Engine::Gis::GeometryStorage &geometryStorage)
+const OGRGeometry* get_ogr_geometry(const Spine::TaggedLocation& tloc,
+                                    const Engine::Gis::GeometryStorage& geometryStorage)
 {
-  const OGRGeometry *ret = nullptr;
+  const OGRGeometry* ret = nullptr;
 
   try
-  {
+  {   
     Spine::LocationPtr loc = tloc.loc;
     std::string place = get_name_base(loc->name);
     boost::algorithm::to_lower(place, stdlocale);
@@ -74,6 +75,11 @@ const OGRGeometry *get_ogr_geometry(const Spine::TaggedLocation &tloc,
       if (ret == nullptr)
         ret = geometryStorage.getOGRGeometry(place, wkbMultiLineString);
     }
+    else if (loc->type == Spine::Location::Wkt)
+	  {
+		std::unique_ptr<OGRGeometry> ret = get_ogr_geometry(place, loc->radius);
+		return ret.release();
+	  }
   }
   catch (...)
   {
@@ -83,7 +89,7 @@ const OGRGeometry *get_ogr_geometry(const Spine::TaggedLocation &tloc,
   return ret;
 }
 
-std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string &wktString, double radius /*= 0.0*/)
+std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string& wktString, double radius /*= 0.0*/)
 {
   try
   {
@@ -91,7 +97,7 @@ std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string &wktString, doub
 
     std::string wkt = get_name_base(wktString);
 
-    OGRGeometry *geom = Fmi::OGR::createFromWkt(wkt, 4326);
+    OGRGeometry* geom = Fmi::OGR::createFromWkt(wkt, 4326);
 
     if (geom)
     {
@@ -120,9 +126,9 @@ std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string &wktString, doub
  */
 // ----------------------------------------------------------------------
 
-void get_svg_path(const Spine::TaggedLocation &tloc,
-                  const Engine::Gis::GeometryStorage &geometryStorage,
-                  NFmiSvgPath &svgPath)
+void get_svg_path(const Spine::TaggedLocation& tloc,
+                  const Engine::Gis::GeometryStorage& geometryStorage,
+                  NFmiSvgPath& svgPath)
 {
   try
   {
@@ -154,8 +160,7 @@ void get_svg_path(const Spine::TaggedLocation &tloc,
     {
       if (place.find(',') != std::string::npos)
       {
-        // path given as a query parameter in format
-        // "lon,lat,lon,lat,lon,lat,..."
+        // path given as a query parameter in format "lon,lat,lon,lat,lon,lat,..."
         std::vector<std::string> lonLatVector;
         boost::algorithm::split(lonLatVector, place, boost::algorithm::is_any_of(","));
         for (unsigned int i = 0; i < lonLatVector.size(); i += 2)
@@ -200,10 +205,10 @@ void get_svg_path(const Spine::TaggedLocation &tloc,
  */
 // ----------------------------------------------------------------------
 
-Spine::LocationList get_location_list(const NFmiSvgPath &thePath,
-                                      const std::string &thePathName,
-                                      const double &stepInKm,
-                                      const Engine::Geonames::Engine &geonames)
+Spine::LocationList get_location_list(const NFmiSvgPath& thePath,
+                                      const std::string& thePathName,
+                                      const double& stepInKm,
+                                      const Engine::Geonames::Engine& geonames)
 {
   try
   {
@@ -220,15 +225,15 @@ Spine::LocationList get_location_list(const NFmiSvgPath &thePath,
     std::string theTimezone;
 
     std::size_t i = 0;
-    for (const auto &element : thePath)
+    for (const auto& element : thePath)
     {
       to = std::pair<double, double>(element.itsX, element.itsY);
 
       // first round
       if (i++ == 0)
       {
-        // fetch geoinfo only for the first coordinate, because geosearch is so
-        // slow reuse name and timezone for rest of the locations
+        // fetch geoinfo only for the first coordinate, because geosearch is so slow
+        // reuse name and timezone for rest of the locations
         Spine::LocationPtr locFirst = geonames.lonlatSearch(element.itsX, element.itsY, "");
 
         Spine::LocationPtr loc = Spine::LocationPtr(new Spine::Location(locFirst->geoid,
@@ -249,6 +254,7 @@ Spine::LocationList get_location_list(const NFmiSvgPath &thePath,
       }
       else
       {
+		// Dont add intermediate points
         if (step == 0)
         {
           locationList.push_back(Spine::LocationPtr(
@@ -323,7 +329,7 @@ Spine::LocationList get_location_list(const NFmiSvgPath &thePath,
  */
 // ----------------------------------------------------------------------
 
-std::string get_location_id(const Spine::LocationPtr &loc)
+std::string get_location_id(const Spine::LocationPtr& loc)
 {
   try
   {
@@ -347,9 +353,9 @@ std::string get_location_id(const Spine::LocationPtr &loc)
 // ----------------------------------------------------------------------
 
 #ifndef WITHOUT_OBSERVATION
-std::vector<int> get_fmisids_for_wkt(Engine::Observation::Engine *observation,
-                                     const Engine::Observation::Settings &settings,
-                                     const std::string &wktstring)
+std::vector<int> get_fmisids_for_wkt(Engine::Observation::Engine* observation,
+                                     const Engine::Observation::Settings& settings,
+                                     const std::string& wktstring)
 {
   try
   {
@@ -358,7 +364,7 @@ std::vector<int> get_fmisids_for_wkt(Engine::Observation::Engine *observation,
     Spine::Stations stations;
 
     observation->getStationsByArea(stations, settings, wktstring);
-    for (const auto &station : stations)
+    for (const auto& station : stations)
       fmisids.push_back(station.fmisid);
 
     return fmisids;
@@ -376,10 +382,10 @@ std::vector<int> get_fmisids_for_wkt(Engine::Observation::Engine *observation,
  */
 // ----------------------------------------------------------------------
 
-Spine::LocationPtr get_location(const Engine::Geonames::Engine &geonames,
-                                const int id,
-                                const std::string &idtype,
-                                const std::string &language)
+Spine::LocationPtr get_location(const Engine::Geonames::Engine& geonames,
+                                int id,
+                                const std::string& idtype,
+                                const std::string& language)
 {
   try
   {
@@ -425,7 +431,7 @@ Spine::LocationPtr get_location(const Engine::Geonames::Engine &geonames,
 
 #ifndef WITHOUT_OBSERVATION
 
-int get_fmisid_index(const Engine::Observation::Settings &settings)
+int get_fmisid_index(const Engine::Observation::Settings& settings)
 {
   try
   {
@@ -452,7 +458,7 @@ int get_fmisid_index(const Engine::Observation::Settings &settings)
 
 #ifndef WITHOUT_OBSERVATION
 
-int get_fmisid_value(const TS::Value &value)
+int get_fmisid_value(const TS::Value& value)
 {
   try
   {
@@ -487,14 +493,13 @@ int get_fmisid_value(const TS::Value &value)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Extract fmisid from a timeseries vector where fmisid may not be set
- * for all rows
+ * \brief Extract fmisid from a timeseries vector where fmisid may not be set for all rows
  */
 // ----------------------------------------------------------------------
 
-int get_fmisid_value(const TS::TimeSeries &ts)
+int get_fmisid_value(const TS::TimeSeries& ts)
 {
-  for (const auto &tv : ts)
+  for (const auto& tv : ts)
   {
     try
     {
@@ -515,8 +520,8 @@ int get_fmisid_value(const TS::TimeSeries &ts)
 
 std::unique_ptr<Spine::Location> get_coordinate_location(double lon,
                                                          double lat,
-                                                         const std::string &language,
-                                                         const Engine::Geonames::Engine &geoEngine)
+                                                         const std::string& language,
+                                                         const Engine::Geonames::Engine& geoEngine)
 
 {
   try
@@ -543,6 +548,217 @@ std::unique_ptr<Spine::Location> get_coordinate_location(double lon,
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
+
+std::unique_ptr<Spine::Location> get_bbox_location(const std::string& bbox_string,
+                                                   const std::string& language,
+                                                   const Engine::Geonames::Engine& geoengine)
+{
+  std::vector<std::string> parts;
+  boost::algorithm::split(parts, bbox_string, boost::algorithm::is_any_of(","));
+
+  double lon1 = Fmi::stod(parts[0]);
+  double lat1 = Fmi::stod(parts[1]);
+  double lon2 = Fmi::stod(parts[2]);
+  double lat2 = Fmi::stod(parts[3]);
+
+  // get location info for center coordinates
+  double lon = (lon1 + lon2) / 2.0;
+  double lat = (lat1 + lat2) / 2.0;
+
+  return get_coordinate_location(lon, lat, language, geoengine);
+}
+
+Spine::LocationPtr get_location_for_area(const Spine::TaggedLocation& tloc,
+										 const Engine::Gis::GeometryStorage& geometryStorage,
+										 const std::string& language,
+										 const Engine::Geonames::Engine& geoengine,
+										 NFmiSvgPath* svgPath /*= nullptr*/)
+{
+  try
+  {
+    double bottom = 0.0;
+    double top = 0.0;
+    double left = 0.0;
+    double right = 0.0;
+
+    const OGRGeometry* geom = get_ogr_geometry(tloc, geometryStorage);
+
+    if (geom)
+    {
+      OGREnvelope envelope;
+      geom->getEnvelope(&envelope);
+      top = envelope.MaxY;
+      bottom = envelope.MinY;
+      left = envelope.MinX;
+      right = envelope.MaxX;
+    }
+
+    if (svgPath != nullptr)
+    {
+      get_svg_path(tloc, geometryStorage, *svgPath);
+
+      if (!geom)
+      {
+        // get location info for center coordinate
+        bottom = svgPath->begin()->itsY;
+        top = svgPath->begin()->itsY;
+        left = svgPath->begin()->itsX;
+        right = svgPath->begin()->itsX;
+
+        for (const auto& element : *svgPath)
+        {
+          if (element.itsX < left)
+            left = element.itsX;
+          if (element.itsX > right)
+            right = element.itsX;
+          if (element.itsY < bottom)
+            bottom = element.itsY;
+          if (element.itsY > top)
+            top = element.itsY;
+        }
+      }
+    }
+
+    double lon = (right + left) / 2.0;
+    double lat = (top + bottom) / 2.0;
+    std::unique_ptr<Spine::Location> tmp =
+        get_coordinate_location(lon, lat, language, geoengine);
+
+    tmp->name = tloc.tag;
+    tmp->type = tloc.loc->type;
+    tmp->radius = tloc.loc->radius;
+
+    return Spine::LocationPtr(tmp.release());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+Spine::LocationPtr get_location_for_area(const Spine::TaggedLocation& tloc,
+										 int radius,
+										 const Engine::Gis::GeometryStorage& geometryStorage,
+										 const std::string& language,
+										 const Engine::Geonames::Engine& geoengine,
+										 NFmiSvgPath* svgPath /*= nullptr*/)
+{
+  try
+  {
+    double bottom = 0.0;
+    double top = 0.0;
+    double left = 0.0;
+    double right = 0.0;
+
+    const OGRGeometry* geom = get_ogr_geometry(tloc, geometryStorage);
+    std::string wktString;
+
+    std::unique_ptr<OGRGeometry> expandedGeomUptr;
+    if (geom && radius > 0)
+    {
+      auto* expandedGeom = Fmi::OGR::expandGeometry(geom, radius);
+      expandedGeomUptr.reset(expandedGeom);
+      wktString = Fmi::OGR::exportToWkt(*expandedGeom);
+      geom = expandedGeom;
+    }
+
+    if (geom)
+    {
+      OGREnvelope envelope;
+      geom->getEnvelope(&envelope);
+      top = envelope.MaxY;
+      bottom = envelope.MinY;
+      left = envelope.MinX;
+      right = envelope.MaxX;
+    }
+
+    if (svgPath != nullptr)
+    {
+      if (wktString.length() > 0)
+      {
+        convertWktMultipolygonToSvgPath(wktString, *svgPath);
+      }
+      else
+      {
+        get_svg_path(tloc, geometryStorage, *svgPath);
+      }
+
+      if (!geom)
+      {
+        // get location info for center coordinate
+        bottom = svgPath->begin()->itsY;
+        top = svgPath->begin()->itsY;
+        left = svgPath->begin()->itsX;
+        right = svgPath->begin()->itsX;
+
+        for (const auto& element : *svgPath)
+        {
+          if (element.itsX < left)
+            left = element.itsX;
+          if (element.itsX > right)
+            right = element.itsX;
+          if (element.itsY < bottom)
+            bottom = element.itsY;
+          if (element.itsY > top)
+            top = element.itsY;
+        }
+      }
+    }
+
+    std::pair<double, double> lonlatCenter((right + left) / 2.0, (top + bottom) / 2.0);
+
+    Spine::LocationPtr locCenter =
+        geoengine.lonlatSearch(lonlatCenter.first, lonlatCenter.second, language);
+
+    // Spine::LocationPtr contains a const Location, so some trickery is used here
+    std::unique_ptr<Spine::Location> tmp(new Spine::Location(locCenter->geoid,
+                                                             tloc.tag,
+                                                             locCenter->iso2,
+                                                             locCenter->municipality,
+                                                             locCenter->area,
+                                                             locCenter->feature,
+                                                             locCenter->country,
+                                                             locCenter->longitude,
+                                                             locCenter->latitude,
+                                                             locCenter->timezone,
+                                                             locCenter->population,
+                                                             locCenter->elevation));
+    tmp->type = tloc.loc->type;
+    tmp->radius = tloc.loc->radius;
+
+    return Spine::LocationPtr(tmp.release());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Spine::TaggedLocationList get_locations_inside_geometry(const Spine::LocationList& locations,
+                                                        const OGRGeometry& geom)
+{
+  try
+  {
+    Spine::TaggedLocationList ret;
+
+    for (auto loc : locations)
+    {
+      std::string wkt =
+          ("POINT(" + Fmi::to_string(loc->longitude) + " " + Fmi::to_string(loc->latitude) + ")");
+      std::unique_ptr<OGRGeometry> location_geom = get_ogr_geometry(wkt);
+      if (geom.Contains(location_geom.get()))
+        ret.emplace_back(Spine::TaggedLocation(loc->name, loc));
+    }
+
+    return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 
 }  // namespace EDR
 }  // namespace Plugin
