@@ -103,15 +103,36 @@ const std::set<std::string> &get_supported_output_formats(const std::string &pro
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+// Remove duplicate collection on secondary engine's metadata
+void remove_duplicate_collection(const std::string& collection_name,
+								 const std::string& secondary_engine, 
+								 const std::string& primary_engine, 
+								 std::set<std::string>& secondary_engine_collection_names,
+								 EDRProducerMetaData &secondary_engine_metadata,
+								 bool report_removal)
+{
+  // If collection with the same name found in secondary engine, remove it 
+  if (secondary_engine_metadata.find(collection_name) != secondary_engine_metadata.end())
+	{
+	  secondary_engine_metadata.erase(collection_name);
+	  secondary_engine_collection_names.erase(collection_name);
+	  // Report that 'collection_name' has been removed from 'secondary_engine'
+	  if (report_removal)
+		report_duplicate_collection(collection_name, secondary_engine, primary_engine);
+	}
+}
+
 }  // namespace
 
-const boost::posix_time::ptime& get_latest_data_update_time(const EDRProducerMetaData& pmd, const std::string& producer)
+const boost::posix_time::ptime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
+                                                            const std::string &producer)
 {
-  if(pmd.find(producer) != pmd.end())
-	{
-	  // Latest update time is same for all metadata instances of the same producer
-	  return pmd.at(producer).front().latest_data_update_time;
-	}
+  if (pmd.find(producer) != pmd.end())
+  {
+    // Latest update time is same for all metadata instances of the same producer
+    return pmd.at(producer).front().latest_data_update_time;
+  }
   return NOT_A_DATE_TIME;
 }
 
@@ -133,7 +154,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
     if (qd_meta_data.empty())
       return epmd;
 
-	std::map<std::string, boost::posix_time::ptime> latest_update_times;
+    std::map<std::string, boost::posix_time::ptime> latest_update_times;
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
@@ -189,15 +210,16 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       if (spl.find(producer_key) != spl.end())
         producer_emd.locations = &spl.at(producer_key);
       epmd[qmd.producer].push_back(producer_emd);
-	  // Update latest data update time
-	  if(latest_update_times.find(qmd.producer) == latest_update_times.end() || latest_update_times.at(qmd.producer) < qmd.originTime)
-		latest_update_times[qmd.producer] = qmd.originTime;
+      // Update latest data update time
+      if (latest_update_times.find(qmd.producer) == latest_update_times.end() ||
+          latest_update_times.at(qmd.producer) < qmd.originTime)
+        latest_update_times[qmd.producer] = qmd.originTime;
     }
-	for(auto& item : epmd)
-	  {
-		for(auto& producer_meta_data : item.second)
-		  producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);		
-	  }
+    for (auto &item : epmd)
+    {
+      for (auto &producer_meta_data : item.second)
+        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
+    }
 
     return epmd;
   }
@@ -221,7 +243,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
-	std::map<std::string, boost::posix_time::ptime> latest_update_times;
+    std::map<std::string, boost::posix_time::ptime> latest_update_times;
     // Iterate Grid metadata and add items into collection
     for (auto &gmd : grid_meta_data)
     {
@@ -321,17 +343,17 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
         producer_emd.locations = &spl.at(producer_key);
 
       epmd[producerId].push_back(producer_emd);
-	  // Update latest data update time
-	  auto origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
-	  if(latest_update_times.find(producerId) == latest_update_times.end() || latest_update_times.at(producerId) < origin_time)
-		latest_update_times[producerId] = origin_time;
+      // Update latest data update time
+      auto origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
+      if (latest_update_times.find(producerId) == latest_update_times.end() ||
+          latest_update_times.at(producerId) < origin_time)
+        latest_update_times[producerId] = origin_time;
     }
-	for(auto& item : epmd)
-	  {
-		for(auto& producer_meta_data : item.second)
-		  producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);		
-	  }
-
+    for (auto &item : epmd)
+    {
+      for (auto &producer_meta_data : item.second)
+        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
+    }
 
     return epmd;
   }
@@ -346,17 +368,142 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 std::set<std::string> get_producer_parameters(const std::string &producer,
                                               const Engine::Observation::ProducerMeasurandInfo &pmi)
 {
-  std::set<std::string> ret;
-
-  if (pmi.find(producer) != pmi.end())
+  try
   {
-    const auto &mi = pmi.at(producer);
-    for (const auto &item : mi)
-      ret.insert(item.first);
-  }
+	std::set<std::string> ret;
 
-  return ret;
+	if (pmi.find(producer) != pmi.end())
+	{
+	  const auto &mi = pmi.at(producer);
+	  for (const auto &item : mi)
+		ret.insert(item.first);
+	}
+
+	return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
+
+bool is_external_producer(const std::string &producer)
+{
+  try
+  {
+	return(producer == "netatmo" || producer == "roadcloud" || producer == "teconer" || producer == "fmi_iot");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+const Engine::Observation::measurand_info* get_measurand_info(const std::string &producer,
+															  const std::string &parameter_name,
+															  const Engine::Observation::ProducerMeasurandInfo &producer_measurand_info)
+{
+  try
+  {
+	const Engine::Observation::measurand_info *mi = nullptr;
+	if (producer_measurand_info.find(producer) != producer_measurand_info.end())
+	{
+	  const auto &measurands = producer_measurand_info.at(producer);
+	  if (measurands.find(parameter_name) != measurands.end())
+		mi = &measurands.at(parameter_name);
+	}
+	return mi;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+void get_label_unit_description(const std::string &parameter_name,
+								const std::map<std::string, const Engine::Observation::ObservableProperty*> &observable_properties,
+								const Engine::Observation::measurand_info* mi,
+								const std::string& default_language,
+								std::string& label,
+								std::string& unit,
+								std::string& description)
+{
+  try
+  {
+	if (observable_properties.find(parameter_name) != observable_properties.end())
+    {
+	  const auto &properties = observable_properties.at(parameter_name);
+	  description = properties->observablePropertyLabel;
+	  label = properties->uom;
+	  unit = properties->uom;
+	  /*
+		auto prop_desc =
+		(properties->measurandId+" -- "+ properties->measurandCode+" -- "+
+		properties->observablePropertyId+" -- "+
+		properties->observablePropertyLabel+" -- "+
+		properties->uom+" -- "+
+		properties->statisticalMeasureId+" -- "+
+		properties->statisticalFunction+" -- "+
+		properties->aggregationTimePeriod+" -- "+
+		properties->gmlId);
+		std::cout << "desc: " << prop_desc << std::endl;
+	  */
+	}
+	else if (mi)
+	{
+	  description = mi->get_description(default_language);
+	  label = mi->get_label(default_language);
+	}
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void process_parameters(const std::string& producer,
+						const std::set<std::string>& params,
+						const std::map<std::string, const Engine::Observation::ObservableProperty*> &observable_properties,
+						const Engine::Observation::ProducerMeasurandInfo &producer_measurand_info,
+						const std::string& default_language,
+						EDRMetaData& producer_emd)
+{
+  try
+  {
+	for (const auto &p : params)
+    {
+	  auto parameter_name = p;
+	  boost::algorithm::to_lower(parameter_name);
+	  std::string description = p;
+	  std::string label = p;
+	  std::string unit = "";
+	  
+	  // Exclude external producers
+	  if (!is_external_producer(producer))
+      {
+		const Engine::Observation::measurand_info *mi = get_measurand_info(producer,
+																		   parameter_name,
+																		   producer_measurand_info);
+
+		get_label_unit_description(parameter_name,
+								   observable_properties,
+								   mi,
+								   default_language,
+								   label,
+								   unit,
+								   description);
+	  }
+	  producer_emd.parameter_names.insert(parameter_name);
+	  producer_emd.parameters.insert(std::make_pair(parameter_name, edr_parameter(p, description, unit, label)));
+	}
+   }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 
 EDRProducerMetaData get_edr_metadata_obs(
     Engine::Observation::Engine &obsEngine,
@@ -379,7 +526,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     for (const auto &prod : producers)
     {
       if (cic.isVisibleCollection(SourceEngine::Observation, prod))
-		observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
+        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
     }
 
     const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
@@ -423,57 +570,12 @@ EDRProducerMetaData get_edr_metadata_obs(
       temporal_extent.time_periods.push_back(temporal_extent_period);
       producer_emd.temporal_extent = temporal_extent;
 
-      for (const auto &p : params)
-      {
-        auto parameter_name = p;
-        boost::algorithm::to_lower(parameter_name);
-        std::string description = p;
-        std::string label = p;
-        std::string unit = "";
-
-        // Exclude external producers
-        if (producer != "netatmo" && producer != "roadcloud" && producer != "teconer" &&
-            producer != "fmi_iot")
-        {
-          const Engine::Observation::measurand_info *mi = nullptr;
-
-          if (producer_measurand_info.find(producer) != producer_measurand_info.end())
-          {
-            const auto &measurands = producer_measurand_info.at(producer);
-            if (measurands.find(parameter_name) != measurands.end())
-              mi = &measurands.at(parameter_name);
-          }
-
-          if (observable_properties.find(parameter_name) != observable_properties.end())
-          {
-            const auto &properties = observable_properties.at(parameter_name);
-            description = properties->observablePropertyLabel;
-            label = properties->uom;
-            unit = properties->uom;
-            /*
-            auto prop_desc =
-                  (properties->measurandId+" -- "+ properties->measurandCode+" -- "+
-                   properties->observablePropertyId+" -- "+
-                   properties->observablePropertyLabel+" -- "+
-                   properties->uom+" -- "+
-                   properties->statisticalMeasureId+" -- "+
-                   properties->statisticalFunction+" -- "+
-                   properties->aggregationTimePeriod+" -- "+
-                   properties->gmlId);
-            std::cout << "desc: " << prop_desc << std::endl;
-            */
-          }
-          else if (mi)
-          {
-            description = mi->get_description(default_language);
-            label = mi->get_label(default_language);
-          }
-        }
-
-        producer_emd.parameter_names.insert(parameter_name);
-        producer_emd.parameters.insert(
-            std::make_pair(parameter_name, edr_parameter(p, description, unit, label)));
-      }
+	  process_parameters(producer,
+						 params,
+						 observable_properties,
+						 producer_measurand_info,
+						 default_language,
+						 producer_emd);
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;
@@ -500,253 +602,256 @@ EDRProducerMetaData get_edr_metadata_obs(
 #ifndef WITHOUT_AVI
 std::vector<std::string> time_periods(const std::set<boost::local_time::local_date_time> &timesteps)
 {
-  std::vector<std::string> ret;
-  if (timesteps.size() == 0)
-    return ret;
-  if (timesteps.size() == 1)
+  try
   {
-    ret.push_back(Fmi::to_iso_string(timesteps.begin()->utc_time()));
-    return ret;
+	std::vector<std::string> ret;
+	if (timesteps.size() == 0)
+	  return ret;
+	if (timesteps.size() == 1)
+	  {
+		ret.push_back(Fmi::to_iso_string(timesteps.begin()->utc_time()));
+		return ret;
+	  }
+	
+	// Insert time periods into vector
+	std::vector<TimePeriod> time_periods;
+	auto it_previous = timesteps.begin();
+	auto it = timesteps.begin();
+	it++;
+	while (it != timesteps.end())
+	  {
+		time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+		it_previous++;
+		it++;
+	  }
+	
+	// Iterate vector and find out periods with even timesteps
+	TimePeriod tp = time_periods.at(0);
+	int first_period_length = tp.length();
+	bool multiple_periods = false;
+	for (unsigned int i = 1; i < time_periods.size(); i++)
+	  {
+		auto tp_current = time_periods.at(i);
+		if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
+		  {
+			if (multiple_periods)
+			  {
+				if (i == time_periods.size() - 1)
+				  tp.setEndTime(tp_current.getEndTime());
+				ret.push_back(Fmi::to_iso_string(tp.getStartTime()) + "Z/" +
+							  Fmi::to_iso_string(tp.getEndTime()) + "Z/" +
+							  Fmi::to_string(first_period_length));
+				multiple_periods = false;
+			  }
+			else
+			  {
+				ret.push_back(Fmi::to_iso_string(tp.getStartTime()));
+				ret.push_back(Fmi::to_iso_string(tp.getEndTime()));
+				if (i == time_periods.size() - 1)
+				  ret.push_back(Fmi::to_iso_string(tp_current.getEndTime()));
+			  }
+			i++;
+			if (i < time_periods.size() - 1)
+			  {
+				tp = time_periods.at(i);
+				first_period_length = tp.length();
+			  }
+		  }
+		else
+		  {
+			tp.setEndTime(tp_current.getEndTime());
+			multiple_periods = true;
+		  }
+	  }
+	
+	return ret;
   }
-
-  // Insert time periods into vector
-  std::vector<TimePeriod> time_periods;
-  auto it_previous = timesteps.begin();
-  auto it = timesteps.begin();
-  it++;
-  while (it != timesteps.end())
+  catch (...)
   {
-    time_periods.push_back({it_previous->utc_time(), it->utc_time()});
-    it_previous++;
-    it++;
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
-
-  // Iterate vector and find out periods with even timesteps
-  TimePeriod tp = time_periods.at(0);
-  int first_period_length = tp.length();
-  bool multiple_periods = false;
-  for (unsigned int i = 1; i < time_periods.size(); i++)
-  {
-    auto tp_current = time_periods.at(i);
-    if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
-    {
-      if (multiple_periods)
-      {
-        if (i == time_periods.size() - 1)
-          tp.setEndTime(tp_current.getEndTime());
-        ret.push_back(Fmi::to_iso_string(tp.getStartTime()) + "Z/" +
-                      Fmi::to_iso_string(tp.getEndTime()) + "Z/" +
-                      Fmi::to_string(first_period_length));
-        multiple_periods = false;
-      }
-      else
-      {
-        ret.push_back(Fmi::to_iso_string(tp.getStartTime()));
-        ret.push_back(Fmi::to_iso_string(tp.getEndTime()));
-        if (i == time_periods.size() - 1)
-          ret.push_back(Fmi::to_iso_string(tp_current.getEndTime()));
-      }
-      i++;
-      if (i < time_periods.size() - 1)
-      {
-        tp = time_periods.at(i);
-        first_period_length = tp.length();
-      }
-    }
-    else
-    {
-      tp.setEndTime(tp_current.getEndTime());
-      multiple_periods = true;
-    }
-  }
-
-  return ret;
 }
 
 // Merge time periods when possible (even timesteps)
 edr_temporal_extent get_temporal_extent(
     const std::set<boost::local_time::local_date_time> &timesteps)
 {
-  edr_temporal_extent ret;
-
-  auto timper = time_periods(timesteps);
-
-  if (timesteps.size() < 2)
-    return ret;
-
-  ret.origin_time = boost::posix_time::second_clock::universal_time();
-
-  // Insert time periods into vector
-  std::vector<TimePeriod> time_periods;
-  auto it_previous = timesteps.begin();
-  auto it = timesteps.begin();
-  it++;
-  while (it != timesteps.end())
+  try
   {
-    time_periods.push_back({it_previous->utc_time(), it->utc_time()});
-    it_previous++;
-    it++;
+	edr_temporal_extent ret;
+	
+	auto timper = time_periods(timesteps);
+	
+	if (timesteps.size() < 2)
+	  return ret;
+	
+	ret.origin_time = boost::posix_time::second_clock::universal_time();
+	
+	// Insert time periods into vector
+	std::vector<TimePeriod> time_periods;
+	auto it_previous = timesteps.begin();
+	auto it = timesteps.begin();
+	it++;
+	while (it != timesteps.end())
+	  {
+		time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+		it_previous++;
+		it++;
+	  }
+	
+	// Iterate vector and find out periods with even timesteps
+	TimePeriod tp = time_periods.at(0);
+	int first_period_length = tp.length();
+	bool multiple_periods = false;
+	std::vector<edr_temporal_extent_period> merged_time_periods;
+	for (unsigned int i = 1; i < time_periods.size(); i++)
+	  {
+		auto tp_current = time_periods.at(i);
+		if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
+		  {
+			if (multiple_periods)
+			  {
+				if (i == time_periods.size() - 1)
+				  tp.setEndTime(tp_current.getEndTime());
+				edr_temporal_extent_period etep;
+				etep.start_time = tp.getStartTime();
+				etep.end_time = tp.getEndTime();
+				etep.timestep = first_period_length / 60;  // seconds to minutes
+				etep.timesteps = ((etep.end_time - etep.start_time).total_seconds() / first_period_length);
+				merged_time_periods.push_back(etep);
+				multiple_periods = false;
+			  }
+			else
+			  {
+				merged_time_periods.clear();
+				break;
+			  }
+			i++;
+			if (i < time_periods.size() - 1)
+			  {
+				tp = time_periods.at(i);
+				first_period_length = tp.length();
+			  }
+		  }
+		else
+		  {
+			tp.setEndTime(tp_current.getEndTime());
+			multiple_periods = true;
+		  }
+	  }
+	
+	if (merged_time_periods.empty())
+	  {
+		if (timesteps.size() > MAX_TIME_PERIODS)
+		  {
+			// Insert only starttime and endtime
+			edr_temporal_extent_period etep;
+			etep.start_time = time_periods.front().getStartTime();
+			etep.end_time = time_periods.back().getEndTime();
+			etep.timestep = 0;
+			etep.timesteps = 0;
+			ret.time_periods.push_back(etep);
+		  }
+		else
+		  {
+			// Insert all timesteps
+			for (const auto &t : timesteps)
+			  {
+				edr_temporal_extent_period etep;
+				etep.start_time = t.utc_time();
+				etep.timestep = 0;
+				etep.timesteps = 0;
+				ret.time_periods.push_back(etep);
+			  }
+		  }
+	  }
+	else
+	  {
+		ret.time_periods = merged_time_periods;
+	  }
+	
+	return ret;
   }
-
-  // Iterate vector and find out periods with even timesteps
-  TimePeriod tp = time_periods.at(0);
-  int first_period_length = tp.length();
-  bool multiple_periods = false;
-  std::vector<edr_temporal_extent_period> merged_time_periods;
-  for (unsigned int i = 1; i < time_periods.size(); i++)
+  catch (...)
   {
-    auto tp_current = time_periods.at(i);
-    if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
-    {
-      if (multiple_periods)
-      {
-        if (i == time_periods.size() - 1)
-          tp.setEndTime(tp_current.getEndTime());
-        edr_temporal_extent_period etep;
-        etep.start_time = tp.getStartTime();
-        etep.end_time = tp.getEndTime();
-        etep.timestep = first_period_length / 60;  // seconds to minutes
-        etep.timesteps = ((etep.end_time - etep.start_time).total_seconds() / first_period_length);
-        merged_time_periods.push_back(etep);
-        multiple_periods = false;
-      }
-      else
-      {
-        merged_time_periods.clear();
-        break;
-      }
-      i++;
-      if (i < time_periods.size() - 1)
-      {
-        tp = time_periods.at(i);
-        first_period_length = tp.length();
-      }
-    }
-    else
-    {
-      tp.setEndTime(tp_current.getEndTime());
-      multiple_periods = true;
-    }
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
-
-  if (merged_time_periods.empty())
-  {
-    if (timesteps.size() > MAX_TIME_PERIODS)
-    {
-      // Insert only starttime and endtime
-      edr_temporal_extent_period etep;
-      etep.start_time = time_periods.front().getStartTime();
-      etep.end_time = time_periods.back().getEndTime();
-      etep.timestep = 0;
-      etep.timesteps = 0;
-      ret.time_periods.push_back(etep);
-    }
-    else
-    {
-      // Insert all timesteps
-      for (const auto &t : timesteps)
-      {
-        edr_temporal_extent_period etep;
-        etep.start_time = t.utc_time();
-        etep.timestep = 0;
-        etep.timesteps = 0;
-        ret.time_periods.push_back(etep);
-      }
-    }
-  }
-  else
-  {
-    ret.time_periods = merged_time_periods;
-  }
-
-  return ret;
 }
 
 edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
                                          const std::string &message_type,
                                          int period_length)
 {
-  edr_temporal_extent ret;
-
-  SmartMet::Engine::Avi::QueryOptions queryOptions;
-
-  queryOptions.itsDistinctMessages = true;
-  queryOptions.itsFilterMETARs = true;
-  queryOptions.itsExcludeSPECIs = false;
-  queryOptions.itsLocationOptions.itsCountries.push_back("FI");
-
-  queryOptions.itsParameters.push_back("icao");
-  queryOptions.itsParameters.push_back("messagetime");
-  queryOptions.itsParameters.push_back("messagetype");
-
-  queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
-  queryOptions.itsMessageTypes.push_back(message_type);
-  queryOptions.itsMessageFormat = TAC_FORMAT;
-
-  auto now = boost::posix_time::second_clock::universal_time();
-  auto start_of_period =
+  try
+  {
+	edr_temporal_extent ret;
+	
+	SmartMet::Engine::Avi::QueryOptions queryOptions;
+	
+	queryOptions.itsDistinctMessages = true;
+	queryOptions.itsFilterMETARs = true;
+	queryOptions.itsExcludeSPECIs = false;
+	queryOptions.itsLocationOptions.itsCountries.push_back("FI");
+	
+	queryOptions.itsParameters.push_back("icao");
+	queryOptions.itsParameters.push_back("messagetime");
+	queryOptions.itsParameters.push_back("messagetype");
+	
+	queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
+	queryOptions.itsMessageTypes.push_back(message_type);
+	queryOptions.itsMessageFormat = TAC_FORMAT;
+	
+	auto now = boost::posix_time::second_clock::universal_time();
+	auto start_of_period =
       (now - boost::posix_time::hours(period_length *
                                       24));  // from config file avi.period_length (30 days default)
-  std::string startTime = boost::posix_time::to_iso_string(start_of_period);
-  std::string endTime = boost::posix_time::to_iso_string(now);
-  queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
-  queryOptions.itsTimeOptions.itsEndTime = "timestamptz '" + endTime + "Z'";
-  queryOptions.itsTimeOptions.itsTimeFormat = "iso";
-  queryOptions.itsDistinctMessages = true;
-  queryOptions.itsMaxMessageStations = -1;
-  queryOptions.itsMaxMessageRows = -1;
-  queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
-  // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
-  queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
-  // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
-  queryOptions.itsExcludeSPECIs = true;
-
-  auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
-
-  std::set<boost::local_time::local_date_time> timesteps;
-  for (auto stationId : aviData.itsStationIds)
-  {
-    auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
-
-    while (timeIter != aviData.itsValues[stationId]["messagetime"].end())
-    {
-      boost::local_time::local_date_time timestep =
-          boost::get<boost::local_time::local_date_time>(*timeIter);
-
-      timesteps.insert(timestep);
-      timeIter++;
-    }
+	std::string startTime = boost::posix_time::to_iso_string(start_of_period);
+	std::string endTime = boost::posix_time::to_iso_string(now);
+	queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
+	queryOptions.itsTimeOptions.itsEndTime = "timestamptz '" + endTime + "Z'";
+	queryOptions.itsTimeOptions.itsTimeFormat = "iso";
+	queryOptions.itsDistinctMessages = true;
+	queryOptions.itsMaxMessageStations = -1;
+	queryOptions.itsMaxMessageRows = -1;
+	queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
+	// Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
+	queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
+	// Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
+	queryOptions.itsExcludeSPECIs = true;
+	
+	auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
+	
+	std::set<boost::local_time::local_date_time> timesteps;
+	for (auto stationId : aviData.itsStationIds)
+	  {
+		auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
+		
+		while (timeIter != aviData.itsValues[stationId]["messagetime"].end())
+		  {
+			boost::local_time::local_date_time timestep =
+			  boost::get<boost::local_time::local_date_time>(*timeIter);
+			
+			timesteps.insert(timestep);
+			timeIter++;
+		  }
+	  }
+	
+	ret = get_temporal_extent(timesteps);
+	
+	return ret;
   }
-
-  ret = get_temporal_extent(timesteps);
-
-  return ret;
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
-std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine,
-                                            const AviCollections &aviCollections,
-                                            const CollectionInfoContainer &cic)
+void setAviQueryLocationOptions(const AviCollection& aviCollection,
+								const AviMetaData& amd,
+								SmartMet::Engine::Avi::QueryOptions& queryOptions)
 {
-  std::list<AviMetaData> aviMetaData;
-
-  for (auto const &aviCollection : aviCollections)
+  try
   {
-    if (!cic.isVisibleCollection(SourceEngine::Avi, aviCollection.getName()))
-      continue;
-
-    AviMetaData amd(aviCollection.getBBox(),
-                    aviCollection.getName(),
-                    aviCollection.getMessageTypes(),
-                    aviCollection.getLocationCheck());
-    SmartMet::Engine::Avi::QueryOptions queryOptions;
-    std::string icaoColumnName("icao");
-    std::string latColumnName("latitude");
-    std::string lonColumnName("longitude");
-
-    queryOptions.itsParameters.push_back(icaoColumnName);
-    queryOptions.itsParameters.push_back(latColumnName);
-    queryOptions.itsParameters.push_back(lonColumnName);
-
     if (!aviCollection.getCountries().empty())
       queryOptions.itsLocationOptions.itsCountries.insert(
           queryOptions.itsLocationOptions.itsCountries.begin(),
@@ -771,69 +876,125 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
       queryOptions.itsLocationOptions.itsBBoxes.push_back(
           SmartMet::Engine::Avi::BBox(west, east, south, north));
     }
-
-    auto stationData = aviEngine.queryStations(queryOptions);
-    bool useDataBBox = (!amd.getBBox());
-    bool first = true;
-    double minX = 0;
-    double minY = 0;
-    double maxX = 0;
-    double maxY = 0;
-
-    for (auto stationId : stationData.itsStationIds)
-    {
-      auto &columns = stationData.itsValues[stationId];
-      auto const &icaoCode = *(columns[icaoColumnName].cbegin());
-      auto const &latitude = *(columns[latColumnName].cbegin());
-      auto const &longitude = *(columns[lonColumnName].cbegin());
-
-      // Icao code filtering to ignore e.g. ILxx stations
-
-      auto icao = boost::get<std::string>(icaoCode);
-
-      if (aviCollection.filter(icao))
-        continue;
-
-      auto lat = boost::get<double>(latitude);
-      auto lon = boost::get<double>(longitude);
-
-      if (useDataBBox)
-      {
-        if (first)
-        {
-          minY = maxY = lat;
-          minX = maxX = lon;
-
-          first = false;
-        }
-        else
-        {
-          if (lat < minY)
-            minY = lat;
-          else if (lat > maxY)
-            maxY = lat;
-
-          if (lon < minX)
-            minX = lon;
-          else if (lon > maxX)
-            maxX = lon;
-        }
-      }
-
-      amd.addStation(
-          AviStation(stationId, icao, boost::get<double>(latitude), boost::get<double>(longitude)));
-    }
-
-    if (!amd.getStations().empty())
-    {
-      if (useDataBBox)
-        amd.setBBox(AviBBox(minX, minY, maxX, maxY));
-
-      aviMetaData.push_back(amd);
-    }
   }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
-  return aviMetaData;
+
+void setAviStations(const Engine::Avi::StationQueryData& stationData,
+					const AviCollection& aviCollection,
+					const std::string& icaoColumnName,
+					const std::string& latColumnName,
+					const std::string& lonColumnName,
+					AviMetaData& amd)
+{
+  try
+  {
+	bool useDataBBox = (!amd.getBBox());
+	bool first = true;
+	double minX = 0;
+	double minY = 0;
+	double maxX = 0;
+	double maxY = 0;
+	
+	for (auto stationId : stationData.itsStationIds)
+	  {
+		auto const &columns = stationData.itsValues.at(stationId);
+		auto const &icaoCode = *(columns.at(icaoColumnName).cbegin());
+		auto const &latitude = *(columns.at(latColumnName).cbegin());
+		auto const &longitude = *(columns.at(lonColumnName).cbegin());
+
+		// Icao code filtering to ignore e.g. ILxx stations
+		
+		auto icao = boost::get<std::string>(icaoCode);
+		
+		if (aviCollection.filter(icao))
+		  continue;
+		
+		auto lat = boost::get<double>(latitude);
+		auto lon = boost::get<double>(longitude);
+		
+		if (useDataBBox)
+		  {
+			if (first)
+			  {
+				minY = maxY = lat;
+				minX = maxX = lon;
+				first = false;
+			  }
+			else
+			  {
+				minY = std::min(minY, lat);
+				maxY = std::max(maxY, lat);
+				
+				minX = std::min(minX, lon);
+				maxX = std::max(maxX, lon);
+			  }
+		  }
+		
+		amd.addStation(
+          AviStation(stationId, icao, boost::get<double>(latitude), boost::get<double>(longitude)));
+	  }
+	
+	if (!amd.getStations().empty() && useDataBBox)
+	  amd.setBBox(AviBBox(minX, minY, maxX, maxY));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine,
+                                            const AviCollections &aviCollections,
+                                            const CollectionInfoContainer &cic)
+{
+  try
+  {
+	std::list<AviMetaData> aviMetaData;
+	
+	for (auto const &aviCollection : aviCollections)
+	  {
+		if (!cic.isVisibleCollection(SourceEngine::Avi, aviCollection.getName()))
+		  continue;
+		
+		AviMetaData amd(aviCollection.getBBox(),
+						aviCollection.getName(),
+						aviCollection.getMessageTypes(),
+						aviCollection.getLocationCheck());
+		SmartMet::Engine::Avi::QueryOptions queryOptions;
+		std::string icaoColumnName("icao");
+		std::string latColumnName("latitude");
+		std::string lonColumnName("longitude");
+		
+		queryOptions.itsParameters.push_back(icaoColumnName);
+		queryOptions.itsParameters.push_back(latColumnName);
+		queryOptions.itsParameters.push_back(lonColumnName);
+
+		setAviQueryLocationOptions(aviCollection, amd, queryOptions);
+		
+		auto stationData = aviEngine.queryStations(queryOptions);
+
+		setAviStations(stationData,
+					   aviCollection,
+					   icaoColumnName,
+					   latColumnName,
+					   lonColumnName,
+					   amd);
+		if (!amd.getStations().empty())
+		  aviMetaData.push_back(amd);
+	  }
+	
+	return aviMetaData;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
@@ -848,11 +1009,11 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
   using boost::posix_time::hours;
   using boost::posix_time::ptime;
   using boost::posix_time::time_duration;
-
+  
   try
   {
     EDRProducerMetaData edrProducerMetaData;
-
+	
     auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
 
     for (const auto &amd : aviMetaData)
@@ -901,8 +1062,9 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       if (spl.find(producer_key) != spl.end())
         edrMetaData.locations = &spl.at(producer_key);
 
-	  if(!edrMetaData.temporal_extent.time_periods.empty())
-		edrMetaData.latest_data_update_time = edrMetaData.temporal_extent.time_periods.back().end_time;
+      if (!edrMetaData.temporal_extent.time_periods.empty())
+        edrMetaData.latest_data_update_time =
+            edrMetaData.temporal_extent.time_periods.back().end_time;
       edrProducerMetaData[producer].push_back(edrMetaData);
     }
 
@@ -914,34 +1076,65 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
   }
 }
 
+SupportedLocations get_supported_locations(const AviMetaData& amd,
+										   const AviCollections &aviCollections,
+										   SupportedProducerLocations &spl,
+										   const CollectionInfoContainer &cic)
+
+{
+  try
+  {
+	SupportedLocations sls;
+	
+	for (const auto &station : amd.getStations())
+	{
+	  // TODO: Station name needed ?
+	  
+	  location_info li;
+	  li.id = station.getIcao();
+	  li.longitude = station.getLongitude();
+	  li.latitude = station.getLatitude();
+	  li.name = ("ICAO: " + station.getIcao() + "; stationId: " + Fmi::to_string(station.getId()));
+	  li.type = "ICAO";
+	  li.keyword = amd.getProducer();
+	  
+	  sls[li.id] = li;
+	}
+		
+	return sls;
+  }  
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+
+
 void load_locations_avi(const Engine::Avi::Engine &aviEngine,
                         const AviCollections &aviCollections,
                         SupportedProducerLocations &spl,
                         const CollectionInfoContainer &cic)
 
 {
-  auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
-
-  for (const auto &amd : aviMetaData)
+  try
   {
-    SupportedLocations sls;
+	auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
+	
+	for (const auto &amd : aviMetaData)
+	  {
+		SupportedLocations sls = get_supported_locations(amd,
+														 aviCollections,
+														 spl,
+														 cic);
 
-    for (const auto &station : amd.getStations())
-    {
-      // TODO: Station name needed ?
-
-      location_info li;
-      li.id = station.getIcao();
-      li.longitude = station.getLongitude();
-      li.latitude = station.getLatitude();
-      li.name = ("ICAO: " + station.getIcao() + "; stationId: " + Fmi::to_string(station.getId()));
-      li.type = "ICAO";
-      li.keyword = amd.getProducer();
-
-      sls[li.id] = li;
-    }
-
-    spl[amd.getProducer()] = sls;
+		spl[amd.getProducer()] = sls;
+	  }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 #endif
@@ -1053,58 +1246,52 @@ void EngineMetaData::removeDuplicates(bool report_removal)
     for (const auto &collection : qd_collections)
     {
       // Remove collections that already are found in querydata
-      if (grid_metadata.find(collection) != grid_metadata.end())
-      {
-        grid_metadata.erase(collection);
-        grid_collections.erase(collection);
-        if (report_removal)
-          report_duplicate_collection(collection, GRID_ENGINE, Q_ENGINE);
-      }
-      if (obs_metadata.find(collection) != obs_metadata.end())
-      {
-        obs_metadata.erase(collection);
-        obs_collections.erase(collection);
-        if (report_removal)
-          report_duplicate_collection(collection, OBS_ENGINE, Q_ENGINE);
-      }
-      if (avi_metadata.find(collection) != avi_metadata.end())
-      {
-        avi_metadata.erase(collection);
-        avi_collections.erase(collection);
-        if (report_removal)
-          report_duplicate_collection(collection, AVI_ENGINE, Q_ENGINE);
-      }
+	  remove_duplicate_collection(collection,
+								  GRID_ENGINE,
+								  Q_ENGINE,
+								  grid_collections,
+								  grid_metadata,
+								  report_removal);
+	  remove_duplicate_collection(collection,
+								  OBS_ENGINE,
+								  Q_ENGINE,
+								  obs_collections,
+								  obs_metadata,
+								  report_removal);
+	  remove_duplicate_collection(collection,
+								  AVI_ENGINE,
+								  Q_ENGINE,
+								  avi_collections,
+								  avi_metadata,
+								  report_removal);
     }
 
     for (const auto &collection : grid_collections)
     {
-      // Remove collections that already are found in qrid engine
-      if (obs_metadata.find(collection) != obs_metadata.end())
-      {
-        obs_metadata.erase(collection);
-        obs_collections.erase(collection);
-        if (report_removal)
-          report_duplicate_collection(collection, OBS_ENGINE, GRID_ENGINE);
-      }
-      if (avi_metadata.find(collection) != avi_metadata.end())
-      {
-        avi_metadata.erase(collection);
-        avi_collections.erase(collection);
-        if (report_removal)
-          report_duplicate_collection(collection, AVI_ENGINE, GRID_ENGINE);
-      }
+      // Remove collections that already are found in grid engine
+	  remove_duplicate_collection(collection,
+								  OBS_ENGINE,
+								  GRID_ENGINE,
+								  obs_collections,
+								  obs_metadata,
+								  report_removal);
+	  remove_duplicate_collection(collection,
+								  AVI_ENGINE,
+								  GRID_ENGINE,
+								  avi_collections,
+								  avi_metadata,
+								  report_removal);
     }
 
     for (const auto &collection : obs_collections)
     {
       // Remove collections that already are found in observation engine
-      if (avi_metadata.find(collection) != avi_metadata.end())
-      {
-        avi_metadata.erase(collection);
-        avi_collections.erase(collection);
-        if (report_removal)
-          report_duplicate_collection(collection, AVI_ENGINE, OBS_ENGINE);
-      }
+	  remove_duplicate_collection(collection,
+								  AVI_ENGINE,
+								  OBS_ENGINE,
+								  avi_collections,
+								  avi_metadata,
+								  report_removal);
     }
   }
   catch (...)
@@ -1113,33 +1300,36 @@ void EngineMetaData::removeDuplicates(bool report_removal)
   }
 }
 
-const boost::posix_time::ptime& EngineMetaData::getLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer) const
+const boost::posix_time::ptime &EngineMetaData::getLatestDataUpdateTime(
+    SourceEngine source_engine, const std::string &producer) const
 {
   const auto &producer_meta_data = getMetaData(source_engine);
-  
+
   return get_latest_data_update_time(producer_meta_data, producer);
   /*
   if(producer_meta_data.find(producer) != producer_meta_data.end())
-	{
-	  // Latest update time is same for all metadata instances of the same producer
-	  return producer_meta_data.at(producer).front().latest_data_update_time;
-	}
+        {
+          // Latest update time is same for all metadata instances of the same producer
+          return producer_meta_data.at(producer).front().latest_data_update_time;
+        }
   return NOT_A_DATE_TIME;
   */
 }
 
-void EngineMetaData::setLatestDataUpdateTime(SourceEngine source_engine, const std::string& producer, const boost::posix_time::ptime& t)
+void EngineMetaData::setLatestDataUpdateTime(SourceEngine source_engine,
+                                             const std::string &producer,
+                                             const boost::posix_time::ptime &t)
 {
   if (itsMetaData.find(source_engine) != itsMetaData.end())
-	{
-	  auto& engine_meta_data = itsMetaData.at(source_engine);
-	  if(engine_meta_data.find(producer) != engine_meta_data.end())
-		{
-		  auto& producer_meta_data = engine_meta_data.at(producer);
-		  for(auto& md : producer_meta_data)
-			md.latest_data_update_time = t;
-		}
-	}
+  {
+    auto &engine_meta_data = itsMetaData.at(source_engine);
+    if (engine_meta_data.find(producer) != engine_meta_data.end())
+    {
+      auto &producer_meta_data = engine_meta_data.at(producer);
+      for (auto &md : producer_meta_data)
+        md.latest_data_update_time = t;
+    }
+  }
 }
 
 std::string get_engine_name(SourceEngine source_engine)

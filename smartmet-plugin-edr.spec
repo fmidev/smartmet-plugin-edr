@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.9.25
+Version: 23.9.26
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Tue Sep 26 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.9.26-1.fmi
+- More refactoring
+
 * Mon Sep 25 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.9.25-1.fmi
 - Refactored EDRQueryParams.cpp
 

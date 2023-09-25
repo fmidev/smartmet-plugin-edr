@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Plugin.h"
 #include "GridInterface.h"
+#include "Plugin.h"
 
 namespace SmartMet
 {
@@ -23,21 +23,24 @@ namespace Plugin
 {
 namespace EDR
 {
-
 class GridEngineQuery
 {
-public:
+ public:
   GridEngineQuery(const Plugin& thePlugin);
 
   bool processGridEngineQuery(const State& state,
-							  Query& query,
-							  TS::OutputData& outputData,
-							  const QueryServer::QueryStreamer_sptr& queryStreamer,
-							  const AreaProducers& areaproducers,
-							  const ProducerDataPeriod& producerDataPeriod) const;
+                              Query& query,
+                              TS::OutputData& outputData,
+                              const QueryServer::QueryStreamer_sptr& queryStreamer,
+                              const AreaProducers& areaproducers,
+                              const ProducerDataPeriod& producerDataPeriod) const;
   bool isGridEngineQuery(const AreaProducers& theProducers, const Query& theQuery) const;
 
-private:
+ private:
+  void getLocationDefinition(Spine::LocationPtr& loc,
+                             std::vector<std::vector<T::Coordinate>>& polygonPath,
+                             const Spine::TaggedLocation& tloc,
+                             Query& query) const;
 
   const Plugin& itsPlugin;
 

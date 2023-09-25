@@ -136,8 +136,9 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
     std::string place = get_name_base(loc->name);
 
     if (loc->type == Spine::Location::Place || loc->type == Spine::Location::CoordinatePoint)
+	{
       NFmiSvgTools::PointToSvgPath(svgPath, loc->longitude, loc->latitude);
-
+	}
     else if (loc->type == Spine::Location::Area)
     {
       if (geometryStorage.isPolygon(place))
@@ -151,7 +152,9 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
         NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
       }
       else
+	  {
         throw Fmi::Exception(BCP, "Area '" + place + "' not found in PostGIS database!");
+	  }
     }
     else if (loc->type == Spine::Location::Path)
     {
