@@ -31,8 +31,6 @@ public:
 											  Query& masterquery,
 											  const QueryServer::QueryStreamer_sptr& queryStreamer,
 											  size_t& product_hash);
-
-  Json::Value processMetaDataQuery(const State& state, const EDRQuery& edr_query) const;
 	
   std::size_t hash_value(const State& state,
 						 const Spine::HTTP::Request& request,
@@ -40,11 +38,19 @@ public:
 
 private:
 
+  Json::Value processMetaDataQuery(const State& state, const EDRQuery& edr_query) const;
+  boost::shared_ptr<std::string> processMetaDataQuery(const State& state,
+													  const Query& masterquery, 
+													  Spine::Table& table) const;
+
+  void setPrecisions(EDRMetaData& emd, const Query& masterquery) const;
+  void processIWXXMAndTACData(const TS::OutputData& outputData, const Query& masterquery, Spine::Table& table) const;
+  std::string parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsg_data, const Query& masterquery) const;
+
   QEngineQuery itsQEngineQuery;
   ObsEngineQuery itsObsEngineQuery;
   AviEngineQuery itsAviEngineQuery;
   GridEngineQuery itsGridEngineQuery;
-
 };
 
 }  // namespace EDR

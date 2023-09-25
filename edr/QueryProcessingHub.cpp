@@ -281,12 +281,116 @@ QueryProcessingHub::QueryProcessingHub(const Plugin& thePlugin) : itsQEngineQuer
 
 Json::Value QueryProcessingHub::processMetaDataQuery(const State& state, const EDRQuery& edr_query) const
 {
-  // Atomic copy of metadata
-  auto metadata = state.getPlugin().itsMetaData.load();
+  try
+  {
+	// Atomic copy of metadata
+	auto metadata = state.getPlugin().itsMetaData.load();
 
-  return CoverageJson::parseEDRMetaData(edr_query, *metadata);
+	return CoverageJson::parseEDRMetaData(edr_query, *metadata);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
+boost::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state, const Query& masterquery, Spine::Table& table) const
+{
+  try
+  {
+      const auto &edr_query = masterquery.edrQuery();
+      if (edr_query.query_id == EDRQueryId::APIQuery)
+      {
+        auto result = state.getPlugin().itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
+        table.set(0, 0, result);
+      }
+      else
+      {
+        auto result = processMetaDataQuery(state, edr_query);
+        table.set(0, 0, result.toStyledString());
+      }
+	  return {};
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquery) const
+{
+  try
+  {
+    emd.parameter_precisions["__DEFAULT_PRECISION__"] =
+        SmartMet::Plugin::EDR::Json::DEFAULT_PRECISION;
+
+    // Set precisions
+    unsigned int i = 0;
+    for (const TS::OptionParsers::ParameterList::value_type &p : masterquery.poptions.parameters())
+    {
+      auto pname = p.name();
+      boost::algorithm::to_lower(pname);
+      emd.parameter_precisions[pname] = masterquery.precisions[i++];
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsg_data, const Query& masterquery) const
+{
+  try
+  {
+	std::string messages;
+
+	for (const auto &llts_data : *tsg_data)
+	{
+	  for (const auto &timed_value : llts_data.timeseries)
+	  {
+		if (!messages.empty() && masterquery.output_format == TAC_FORMAT)
+		  messages += "\n";
+		  messages += *(boost::get<std::string>(&timed_value.value));
+	  }
+	}
+
+	return messages;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData, const Query& masterquery, Spine::Table& table) const
+{
+  try
+  {
+	if (!outputData.empty())
+      {
+        std::string messages;
+        for (const auto &output : outputData)
+        {
+          const auto &outdata = output.second;
+          const auto &tsdata = outdata.at(0);
+          const auto &tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+		  messages += parseIWXXMAndTACMessages(tsg_data, masterquery);
+        }
+        if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
+        {
+          messages.insert(0, "<collect:meteorologicalInformation>\n");
+          messages.append("\n</collect:meteorologicalInformation>");
+        }
+        table.set(0, 0, messages);
+      }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
 boost::shared_ptr<std::string> QueryProcessingHub::processQuery(const State& state,
 																Spine::Table& table,
@@ -301,18 +405,7 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(const State& sta
 
     if (masterquery.isEDRMetaDataQuery())
     {
-      const auto &edr_query = masterquery.edrQuery();
-      if (edr_query.query_id == EDRQueryId::APIQuery)
-      {
-        auto result = thePlugin.itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
-        table.set(0, 0, result);
-      }
-      else
-      {
-        auto result = processMetaDataQuery(state, edr_query);
-        table.set(0, 0, result.toStyledString());
-      }
-      return {};
+	  return processMetaDataQuery(state, masterquery, table);
     }
 
     check_in_keyword_locations(masterquery, thePlugin.itsGeometryStorage);
@@ -364,11 +457,13 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(const State& sta
         q.toptions.startTimeUTC = startTimeUTC;
       q.toptions.endTimeUTC = masterquery.toptions.endTimeUTC;
 
+	  bool process_qengine_query = true;
 #ifndef WITHOUT_AVI
 	  std::string producerName = (producerMissing ? "" : masterquery.timeproducers.front().front());
 	  if(itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
 	  {
 		itsAviEngineQuery.processAviEngineQuery(state, q, producerName,	outputData);
+		process_qengine_query = false;
 	  }
 	  else
 #endif
@@ -377,6 +472,7 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(const State& sta
           itsObsEngineQuery.isObsProducer(areaproducers.front()))
       {
         itsObsEngineQuery.processObsEngineQuery(state, q, outputData, areaproducers, producerDataPeriod, obsParameters);
+		process_qengine_query = false;
       }
       else
 #endif
@@ -388,14 +484,12 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(const State& sta
 			  {
 				// We need different hash calculcations for the grid requests.
 				product_hash = Fmi::bad_hash;
+				process_qengine_query = false;
 			  }
-			// If the query was not processed then we should call the QEngine instead.
-			else
-			  {
-				itsQEngineQuery.processQEngineQuery(state, q, outputData, areaproducers, producerDataPeriod);
-			  }
+			// If the query was not processed then we will call the QEngine instead.
 		  }
-		else
+
+		if(process_qengine_query)
 		  {
 			itsQEngineQuery.processQEngineQuery(state, q, outputData, areaproducers, producerDataPeriod);
 		  }
@@ -413,45 +507,12 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(const State& sta
     const auto &edr_query = masterquery.edrQuery();
     const auto &producer = edr_query.collection_id;
     EDRMetaData emd = thePlugin.getProducerMetaData(producer);
-    emd.parameter_precisions["__DEFAULT_PRECISION__"] =
-        SmartMet::Plugin::EDR::Json::DEFAULT_PRECISION;
 
-    // Set precisions
-    unsigned int i = 0;
-    for (const TS::OptionParsers::ParameterList::value_type &p : masterquery.poptions.parameters())
-    {
-      auto pname = p.name();
-      boost::algorithm::to_lower(pname);
-      emd.parameter_precisions[pname] = masterquery.precisions[i++];
-    }
+	setPrecisions(emd, masterquery);
 
     if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT)
     {
-      if (!outputData.empty())
-      {
-        std::string messages;
-        for (const auto &output : outputData)
-        {
-          const auto &outdata = output.second;
-          const auto &tsdata = outdata.at(0);
-          const auto &tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-          for (const auto &llts_data : *tsg_data)
-          {
-            for (const auto &timed_value : llts_data.timeseries)
-            {
-              if (!messages.empty() && masterquery.output_format == TAC_FORMAT)
-                messages += "\n";
-              messages += *(boost::get<std::string>(&timed_value.value));
-            }
-          }
-        }
-        if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
-        {
-          messages.insert(0, "<collect:meteorologicalInformation>\n");
-          messages.append("\n</collect:meteorologicalInformation>");
-        }
-        table.set(0, 0, messages);
-      }
+	  processIWXXMAndTACData(outputData, masterquery, table);
     }
     else if (masterquery.output_format == COVERAGE_JSON_FORMAT)
     {
