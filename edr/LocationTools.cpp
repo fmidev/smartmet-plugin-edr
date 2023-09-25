@@ -1,9 +1,9 @@
 #include "LocationTools.h"
 #include "LonLatDistance.h"
+#include <grid-files/common/GraphFunctions.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiSvgTools.h>
 #include <timeseries/ParameterKeywords.h>
-#include <grid-files/common/GraphFunctions.h>
 
 namespace SmartMet
 {
@@ -54,7 +54,7 @@ const OGRGeometry* get_ogr_geometry(const Spine::TaggedLocation& tloc,
   const OGRGeometry* ret = nullptr;
 
   try
-  {   
+  {
     Spine::LocationPtr loc = tloc.loc;
     std::string place = get_name_base(loc->name);
     boost::algorithm::to_lower(place, stdlocale);
@@ -76,10 +76,10 @@ const OGRGeometry* get_ogr_geometry(const Spine::TaggedLocation& tloc,
         ret = geometryStorage.getOGRGeometry(place, wkbMultiLineString);
     }
     else if (loc->type == Spine::Location::Wkt)
-	  {
-		std::unique_ptr<OGRGeometry> ret = get_ogr_geometry(place, loc->radius);
-		return ret.release();
-	  }
+    {
+      std::unique_ptr<OGRGeometry> ret = get_ogr_geometry(place, loc->radius);
+      return ret.release();
+    }
   }
   catch (...)
   {
@@ -136,9 +136,8 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
     std::string place = get_name_base(loc->name);
 
     if (loc->type == Spine::Location::Place || loc->type == Spine::Location::CoordinatePoint)
-    {
       NFmiSvgTools::PointToSvgPath(svgPath, loc->longitude, loc->latitude);
-    }
+
     else if (loc->type == Spine::Location::Area)
     {
       if (geometryStorage.isPolygon(place))
@@ -152,9 +151,7 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
         NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
       }
       else
-      {
         throw Fmi::Exception(BCP, "Area '" + place + "' not found in PostGIS database!");
-      }
     }
     else if (loc->type == Spine::Location::Path)
     {
@@ -165,8 +162,8 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
         boost::algorithm::split(lonLatVector, place, boost::algorithm::is_any_of(","));
         for (unsigned int i = 0; i < lonLatVector.size(); i += 2)
         {
-          double longitude = Fmi::stod(lonLatVector[i]);
-          double latitude = Fmi::stod(lonLatVector[i + 1]);
+          auto longitude = Fmi::stod(lonLatVector[i]);
+          auto latitude = Fmi::stod(lonLatVector[i + 1]);
           svgPath.push_back(NFmiSvgPath::Element(
               (i == 0 ? NFmiSvgPath::kElementMoveto : NFmiSvgPath::kElementLineto),
               longitude,
@@ -187,9 +184,7 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
           NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
         }
         else
-        {
           throw Fmi::Exception(BCP, "Path '" + place + "' not found in PostGIS database!");
-        }
       }
     }
   }
@@ -254,7 +249,7 @@ Spine::LocationList get_location_list(const NFmiSvgPath& thePath,
       }
       else
       {
-		// Dont add intermediate points
+        // Dont add intermediate points
         if (step == 0)
         {
           locationList.push_back(Spine::LocationPtr(
@@ -569,10 +564,10 @@ std::unique_ptr<Spine::Location> get_bbox_location(const std::string& bbox_strin
 }
 
 Spine::LocationPtr get_location_for_area(const Spine::TaggedLocation& tloc,
-										 const Engine::Gis::GeometryStorage& geometryStorage,
-										 const std::string& language,
-										 const Engine::Geonames::Engine& geoengine,
-										 NFmiSvgPath* svgPath /*= nullptr*/)
+                                         const Engine::Gis::GeometryStorage& geometryStorage,
+                                         const std::string& language,
+                                         const Engine::Geonames::Engine& geoengine,
+                                         NFmiSvgPath* svgPath /*= nullptr*/)
 {
   try
   {
@@ -607,22 +602,17 @@ Spine::LocationPtr get_location_for_area(const Spine::TaggedLocation& tloc,
 
         for (const auto& element : *svgPath)
         {
-          if (element.itsX < left)
-            left = element.itsX;
-          if (element.itsX > right)
-            right = element.itsX;
-          if (element.itsY < bottom)
-            bottom = element.itsY;
-          if (element.itsY > top)
-            top = element.itsY;
+          left = std::min(left, element.itsX);
+          right = std::max(right, element.itsX);
+          bottom = std::min(bottom, element.itsY);
+          top = std::max(top, element.itsY);
         }
       }
     }
 
     double lon = (right + left) / 2.0;
     double lat = (top + bottom) / 2.0;
-    std::unique_ptr<Spine::Location> tmp =
-        get_coordinate_location(lon, lat, language, geoengine);
+    std::unique_ptr<Spine::Location> tmp = get_coordinate_location(lon, lat, language, geoengine);
 
     tmp->name = tloc.tag;
     tmp->type = tloc.loc->type;
@@ -636,13 +626,12 @@ Spine::LocationPtr get_location_for_area(const Spine::TaggedLocation& tloc,
   }
 }
 
-
 Spine::LocationPtr get_location_for_area(const Spine::TaggedLocation& tloc,
-										 int radius,
-										 const Engine::Gis::GeometryStorage& geometryStorage,
-										 const std::string& language,
-										 const Engine::Geonames::Engine& geoengine,
-										 NFmiSvgPath* svgPath /*= nullptr*/)
+                                         int radius,
+                                         const Engine::Gis::GeometryStorage& geometryStorage,
+                                         const std::string& language,
+                                         const Engine::Geonames::Engine& geoengine,
+                                         NFmiSvgPath* svgPath /*= nullptr*/)
 {
   try
   {
@@ -694,14 +683,10 @@ Spine::LocationPtr get_location_for_area(const Spine::TaggedLocation& tloc,
 
         for (const auto& element : *svgPath)
         {
-          if (element.itsX < left)
-            left = element.itsX;
-          if (element.itsX > right)
-            right = element.itsX;
-          if (element.itsY < bottom)
-            bottom = element.itsY;
-          if (element.itsY > top)
-            top = element.itsY;
+          left = std::min(left, element.itsX);
+          right = std::max(right, element.itsX);
+          bottom = std::min(bottom, element.itsY);
+          top = std::max(top, element.itsY);
         }
       }
     }
@@ -742,7 +727,7 @@ Spine::TaggedLocationList get_locations_inside_geometry(const Spine::LocationLis
   {
     Spine::TaggedLocationList ret;
 
-    for (auto loc : locations)
+    for (const auto& loc : locations)
     {
       std::string wkt =
           ("POINT(" + Fmi::to_string(loc->longitude) + " " + Fmi::to_string(loc->latitude) + ")");
@@ -758,7 +743,6 @@ Spine::TaggedLocationList get_locations_inside_geometry(const Spine::LocationLis
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 }  // namespace EDR
 }  // namespace Plugin

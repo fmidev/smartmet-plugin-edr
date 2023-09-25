@@ -362,6 +362,35 @@ Value &Value::operator[](ArrayIndex index)
   return data_value_vector.at(index);
 }
 
+std::string Value::data_value_vector_to_string(const std::vector<Value> &data_value_vector,
+                                               unsigned int level)
+{
+  std::string value_array;
+  for (const auto &val : data_value_vector)
+  {
+    if (val.valueType < ValueType::arrayValue)
+    {
+      auto new_value = val.data_value.to_string(val.precision);
+      if (!value_array.empty() && !new_value.empty())
+        value_array.append(COMMA_PLUS_NEWLINE);
+      value_array.append(tabs(level + 2) + new_value);
+    }
+    else
+    {
+      auto new_value = val.to_string_impl(level + 2);
+      if (!value_array.empty() && !new_value.empty())
+      {
+        if (boost::algorithm::starts_with(new_value, NEWLINE))
+          value_array.append(",");
+        else
+          value_array.append(COMMA_PLUS_NEWLINE);
+      }
+      value_array.append(new_value);
+    }
+  }
+  return value_array;
+}
+
 std::string Value::values_to_string(unsigned int level) const
 {
   std::string result;
@@ -379,20 +408,13 @@ std::string Value::values_to_string(unsigned int level) const
   }
 
   // Order of fields in output document: id,title,description,links,output_formats,keywords,crs
-  if (values.find("crs") != values.end())
-    keys.insert(keys.begin(), "crs");
-  if (values.find("keywords") != values.end())
-    keys.insert(keys.begin(), "keywords");
-  if (values.find("output_formats") != values.end())
-    keys.insert(keys.begin(), "output_formats");
-  if (values.find("links") != values.end())
-    keys.insert(keys.begin(), "links");
-  if (values.find("description") != values.end())
-    keys.insert(keys.begin(), "description");
-  if (values.find("title") != values.end())
-    keys.insert(keys.begin(), "title");
-  if (values.find("id") != values.end())
-    keys.insert(keys.begin(), "id");
+
+  std::array<const char *, 7> fields{
+      "crs", "keywords", "output_formats", "links", "description", "title", "id"};
+
+  for (const auto *field : fields)
+    if (values.find(field) != values.end())
+      keys.insert(keys.begin(), field);
 
   for (const auto &key : keys)
   {
@@ -400,29 +422,8 @@ std::string Value::values_to_string(unsigned int level) const
     std::string value = (tabs(level + 1) + "\"" + key + "\" : ");
     if (!value_obj.data_value_vector.empty())
     {
-      auto value_array = std::string();
-      for (const auto &val : value_obj.data_value_vector)
-      {
-        if (val.valueType < ValueType::arrayValue)
-        {
-          auto new_value = val.data_value.to_string(val.precision);
-          if (!value_array.empty() && !new_value.empty())
-            value_array.append(COMMA_PLUS_NEWLINE);
-          value_array.append(tabs(level + 2) + new_value);
-        }
-        else
-        {
-          auto new_value = val.to_string_impl(level + 2);
-          if (!value_array.empty() && !new_value.empty())
-          {
-            if (boost::algorithm::starts_with(new_value, NEWLINE))
-              value_array.append(",");
-            else
-              value_array.append(COMMA_PLUS_NEWLINE);
-          }
-          value_array.append(new_value);
-        }
-      }
+      auto value_array = data_value_vector_to_string(value_obj.data_value_vector, level);
+
       if (boost::algorithm::starts_with(value_array, NEWLINE))
         value.append(NEWLINE + tabs(level + 1) + LEFT_SQUARE_BRACKET);
       else

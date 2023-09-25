@@ -6,19 +6,19 @@
 
 #include "Plugin.h"
 #include "QueryProcessingHub.h"
-#include "UtilityFunctions.h"
 #include "State.h"
+#include "UtilityFunctions.h"
+#include <engines/gis/Engine.h>
+#include <fmt/format.h>
+#include <macgyver/Hash.h>
 #include <spine/Convenience.h>
-#include <timeseries/ParameterKeywords.h>
 #include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
 #include <spine/ImageFormatter.h>
 #include <spine/TableFormatterFactory.h>
-#include <macgyver/Hash.h>
-#include <fmt/format.h>
-#include <engines/gis/Engine.h>
+#include <timeseries/ParameterKeywords.h>
 
-//#define MYDEBUG ON
+// #define MYDEBUG ON
 
 namespace SmartMet
 {
@@ -28,146 +28,172 @@ namespace EDR
 {
 namespace
 {
-Spine::TableFormatter* get_formatter_and_qstreamer(const Query& q, QueryServer::QueryStreamer_sptr& queryStreamer)
-{  
-  try
-	{
-	  if (strcasecmp(q.format.c_str(), "IMAGE") == 0)
-		return new Spine::ImageFormatter();
-	  
-	  if (strcasecmp(q.format.c_str(), "FILE") == 0)
-		{
-		  auto* qStreamer = new QueryServer::QueryStreamer();
-		  queryStreamer.reset(qStreamer);
-		  return new Spine::ImageFormatter();
-		}
-	  
-	  if (strcasecmp(q.format.c_str(), "INFO") == 0)
-		return Spine::TableFormatterFactory::create("debug");
-	  
-	  return Spine::TableFormatterFactory::create(q.format);
-	  
-	}
-  catch (...)
-	{
-	  throw Fmi::Exception::Trace(BCP, "Operation failed!");
-	}
+
+std::set<std::string> get_metadata_parameters(const boost::shared_ptr<EngineMetaData>& metadata)
+{
+  std::set<std::string> parameter_names;
+
+  // Iterate metadata of engines
+  for (const auto& item : metadata->getMetaData())
+  {
+    // Iterate metadata of producers
+    for (const auto& item2 : item.second)
+    {
+      // Iterate metadata of single producer
+      for (const auto& md : item2.second)
+      {
+        // Iterate parameter names
+        for (const auto& pname : md.parameter_names)
+          parameter_names.insert(pname);
+      }
+    }
+  }
+  return parameter_names;
 }
 
-Spine::TableFormatter::Names get_headers(const std::vector<Spine::Parameter>& parameters)
-{  
-  try
-	{
-	  // The names of the columns
-	  Spine::TableFormatter::Names headers;
-	  
-	  for (const Spine::Parameter& p : parameters)
-		{
-		  std::string header_name = p.alias();
-		  std::vector<std::string> partList;
-		  splitString(header_name, ':', partList);
-		  // There was a merge conflict in here at one time. GRIB branch processed
-		  // these two special cases, while master added the sensor part below. This
-		  // may be incorrect.
-		  if (partList.size() > 2 && (partList[0] == "ISOBANDS" || partList[0] == "ISOLINES"))
-			{
-			  const char* param_header =
-				header_name.c_str() + partList[0].size() + partList[1].size() + 2;
-			  headers.push_back(param_header);
-			}
-		  else
-			{
-			  const boost::optional<int>& sensor_no = p.getSensorNumber();
-			  if (sensor_no)
-				{
-				  header_name += ("_#" + Fmi::to_string(*sensor_no));
-				}
-			  if (!p.getSensorParameter().empty())
-				header_name += ("_" + p.getSensorParameter());
-			  headers.push_back(header_name);
-			}
-		}
-	  
-	  return headers;
-	}
-  catch (...)
-	{
-	  throw Fmi::Exception::Trace(BCP, "Operation failed!");
-	}
-}
-
-std::string get_wxml_type(const std::string& producer_option, const std::set<std::string>& obs_station_types)
-{  
-  try
-	{
-	  // If query is fast, we do not not have observation producers
-	  // This means we put 'forecast' into wxml-tag
-	  std::string wxml_type = "forecast";
-	  
-	  for (const auto& obsProducer : obs_station_types)
-		{
-		  if (boost::algorithm::contains(producer_option, obsProducer))
-			{
-			  // Observation mentioned, use 'observation' wxml type
-			  wxml_type = "observation";
-			  break;
-			}
-		}
-	  
-	  return wxml_type;
-	}
-  catch (...)
-	{
-	  throw Fmi::Exception::Trace(BCP, "Operation failed!");
-	}
-}
-
-bool etag_only(const Spine::HTTP::Request& request, Spine::HTTP::Response& response, std::size_t product_hash)
-{  
-  try
-	{
-	  if (product_hash != Fmi::bad_hash)
-		{
-		  response.setHeader("ETag", fmt::format("\"{:x}-timeseries\"", product_hash));
-		  
-		  // If the product is cacheable and etag was requested, respond with etag only
-		  
-		  if (request.getHeader("X-Request-ETag"))
-			{
-			  response.setStatus(Spine::HTTP::Status::no_content);
-			  return true;
-			}
-		}
-	  return false;
-	}
-  catch (...)
-	{
-	  throw Fmi::Exception::Trace(BCP, "Operation failed!");
-	}
-}
-
-void parse_lonlats(const boost::optional<std::string>& lonlats,
-				   Spine::HTTP::Request& theRequest,
-				   std::string& wkt_multipoint)
+Spine::TableFormatter* get_formatter_and_qstreamer(const Query& q,
+                                                   QueryServer::QueryStreamer_sptr& queryStreamer)
 {
   try
   {
-	if(!lonlats)
-	  return;
+    if (strcasecmp(q.format.c_str(), "IMAGE") == 0)
+      return new Spine::ImageFormatter();
 
-	theRequest.removeParameter("lonlat");
-	theRequest.removeParameter("lonlats");
-	std::vector<std::string> parts;
-	boost::algorithm::split(parts, *lonlats, boost::algorithm::is_any_of(","));
-	if (parts.size() % 2 != 0)
-	  throw Fmi::Exception(BCP, "Invalid lonlats list: " + *lonlats);
-	
-	for (unsigned int j = 0; j < parts.size(); j += 2)
-	  {
-		if (wkt_multipoint != "MULTIPOINT(")
-		  wkt_multipoint += ",";
-		wkt_multipoint += "(" + parts[j] + " " + parts[j + 1] + ")";
-	  }
+    if (strcasecmp(q.format.c_str(), "FILE") == 0)
+    {
+      auto* qStreamer = new QueryServer::QueryStreamer();
+      queryStreamer.reset(qStreamer);
+      return new Spine::ImageFormatter();
+    }
+
+    if (strcasecmp(q.format.c_str(), "INFO") == 0)
+      return Spine::TableFormatterFactory::create("debug");
+
+    return Spine::TableFormatterFactory::create(q.format);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Spine::TableFormatter::Names get_headers(const std::vector<Spine::Parameter>& parameters)
+{
+  try
+  {
+    // The names of the columns
+    Spine::TableFormatter::Names headers;
+
+    for (const Spine::Parameter& p : parameters)
+    {
+      std::string header_name = p.alias();
+      std::vector<std::string> partList;
+      splitString(header_name, ':', partList);
+      // There was a merge conflict in here at one time. GRIB branch processed
+      // these two special cases, while master added the sensor part below. This
+      // may be incorrect.
+      if (partList.size() > 2 && (partList[0] == "ISOBANDS" || partList[0] == "ISOLINES"))
+      {
+        const char* param_header =
+            header_name.c_str() + partList[0].size() + partList[1].size() + 2;
+        headers.push_back(param_header);
+      }
+      else
+      {
+        const boost::optional<int>& sensor_no = p.getSensorNumber();
+        if (sensor_no)
+        {
+          header_name += ("_#" + Fmi::to_string(*sensor_no));
+        }
+        if (!p.getSensorParameter().empty())
+          header_name += ("_" + p.getSensorParameter());
+        headers.push_back(header_name);
+      }
+    }
+
+    return headers;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+std::string get_wxml_type(const std::string& producer_option,
+                          const std::set<std::string>& obs_station_types)
+{
+  try
+  {
+    // If query is fast, we do not not have observation producers
+    // This means we put 'forecast' into wxml-tag
+    std::string wxml_type = "forecast";
+
+    for (const auto& obsProducer : obs_station_types)
+    {
+      if (boost::algorithm::contains(producer_option, obsProducer))
+      {
+        // Observation mentioned, use 'observation' wxml type
+        wxml_type = "observation";
+        break;
+      }
+    }
+
+    return wxml_type;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+bool etag_only(const Spine::HTTP::Request& request,
+               Spine::HTTP::Response& response,
+               std::size_t product_hash)
+{
+  try
+  {
+    if (product_hash != Fmi::bad_hash)
+    {
+      response.setHeader("ETag", fmt::format("\"{:x}-timeseries\"", product_hash));
+
+      // If the product is cacheable and etag was requested, respond with etag only
+
+      if (request.getHeader("X-Request-ETag"))
+      {
+        response.setStatus(Spine::HTTP::Status::no_content);
+        return true;
+      }
+    }
+    return false;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void parse_lonlats(const boost::optional<std::string>& lonlats,
+                   Spine::HTTP::Request& theRequest,
+                   std::string& wkt_multipoint)
+{
+  try
+  {
+    if (!lonlats)
+      return;
+
+    theRequest.removeParameter("lonlat");
+    theRequest.removeParameter("lonlats");
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, *lonlats, boost::algorithm::is_any_of(","));
+    if (parts.size() % 2 != 0)
+      throw Fmi::Exception(BCP, "Invalid lonlats list: " + *lonlats);
+
+    for (unsigned int j = 0; j < parts.size(); j += 2)
+    {
+      if (wkt_multipoint != "MULTIPOINT(")
+        wkt_multipoint += ",";
+      wkt_multipoint += "(" + parts[j] + " " + parts[j + 1] + ")";
+    }
   }
   catch (...)
   {
@@ -176,27 +202,27 @@ void parse_lonlats(const boost::optional<std::string>& lonlats,
 }
 
 void parse_latlons(const boost::optional<std::string>& latlons,
-				   Spine::HTTP::Request& theRequest,
-				   std::string& wkt_multipoint)
+                   Spine::HTTP::Request& theRequest,
+                   std::string& wkt_multipoint)
 {
   try
   {
-	if(!latlons)
-	  return;
+    if (!latlons)
+      return;
 
-	theRequest.removeParameter("latlon");
-	theRequest.removeParameter("latlons");
-	std::vector<std::string> parts;
-	boost::algorithm::split(parts, *latlons, boost::algorithm::is_any_of(","));
-	if (parts.size() % 2 != 0)
-	  throw Fmi::Exception(BCP, "Invalid latlons list: " + *latlons);
-	
-	for (unsigned int j = 0; j < parts.size(); j += 2)
-      {
-        if (wkt_multipoint != "MULTIPOINT(")
-          wkt_multipoint += ",";
-        wkt_multipoint += "(" + parts[j + 1] + " " + parts[j] + ")";
-      }
+    theRequest.removeParameter("latlon");
+    theRequest.removeParameter("latlons");
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, *latlons, boost::algorithm::is_any_of(","));
+    if (parts.size() % 2 != 0)
+      throw Fmi::Exception(BCP, "Invalid latlons list: " + *latlons);
+
+    for (unsigned int j = 0; j < parts.size(); j += 2)
+    {
+      if (wkt_multipoint != "MULTIPOINT(")
+        wkt_multipoint += ",";
+      wkt_multipoint += "(" + parts[j + 1] + " " + parts[j] + ")";
+    }
   }
   catch (...)
   {
@@ -205,29 +231,29 @@ void parse_latlons(const boost::optional<std::string>& latlons,
 }
 
 void parse_places(const boost::optional<std::string>& places,
-				  Spine::HTTP::Request& theRequest,
-				  std::string& wkt_multipoint,
-				  const Engine::Geonames::Engine* geoEngine)
+                  Spine::HTTP::Request& theRequest,
+                  std::string& wkt_multipoint,
+                  const Engine::Geonames::Engine* geoEngine)
 {
   try
   {
-	if(!places)
-	  return;
+    if (!places)
+      return;
 
-      theRequest.removeParameter("places");
-      std::vector<std::string> parts;
-      boost::algorithm::split(parts, *places, boost::algorithm::is_any_of(","));
-      for (const auto& place : parts)
+    theRequest.removeParameter("places");
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, *places, boost::algorithm::is_any_of(","));
+    for (const auto& place : parts)
+    {
+      Spine::LocationPtr loc = geoEngine->nameSearch(place, "fi");
+      if (loc)
       {
-        Spine::LocationPtr loc = geoEngine->nameSearch(place, "fi");
-        if (loc)
-        {
-          if (wkt_multipoint != "MULTIPOINT(")
-            wkt_multipoint += ",";
-          wkt_multipoint +=
-              "(" + Fmi::to_string(loc->longitude) + " " + Fmi::to_string(loc->latitude) + ")";
-        }
+        if (wkt_multipoint != "MULTIPOINT(")
+          wkt_multipoint += ",";
+        wkt_multipoint +=
+            "(" + Fmi::to_string(loc->longitude) + " " + Fmi::to_string(loc->latitude) + ")";
       }
+    }
   }
   catch (...)
   {
@@ -236,19 +262,19 @@ void parse_places(const boost::optional<std::string>& places,
 }
 
 void parse_fmisids(const boost::optional<std::string>& fmisid,
-				   Spine::HTTP::Request& theRequest,
-				   std::vector<int>& fmisids)
+                   Spine::HTTP::Request& theRequest,
+                   std::vector<int>& fmisids)
 {
   try
   {
-	if (!fmisid)
-	  return;
+    if (!fmisid)
+      return;
 
-	theRequest.removeParameter("fmisid");
-	std::vector<std::string> parts;
-	boost::algorithm::split(parts, *fmisid, boost::algorithm::is_any_of(","));
-	for (const auto& id : parts)
-	  fmisids.push_back(Fmi::stoi(id));
+    theRequest.removeParameter("fmisid");
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, *fmisid, boost::algorithm::is_any_of(","));
+    for (const auto& id : parts)
+      fmisids.push_back(Fmi::stoi(id));
   }
   catch (...)
   {
@@ -257,19 +283,19 @@ void parse_fmisids(const boost::optional<std::string>& fmisid,
 }
 
 void parse_lpnns(const boost::optional<std::string>& lpnn,
-				 Spine::HTTP::Request& theRequest,
-				 std::vector<int>& lpnns)
+                 Spine::HTTP::Request& theRequest,
+                 std::vector<int>& lpnns)
 {
   try
   {
-	if (!lpnn)
-	  return;
+    if (!lpnn)
+      return;
 
-	theRequest.removeParameter("lpnn");
-	std::vector<std::string> parts;
-	boost::algorithm::split(parts, *lpnn, boost::algorithm::is_any_of(","));
-	for (const auto& id : parts)
-	  lpnns.push_back(Fmi::stoi(id));
+    theRequest.removeParameter("lpnn");
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, *lpnn, boost::algorithm::is_any_of(","));
+    for (const auto& id : parts)
+      lpnns.push_back(Fmi::stoi(id));
   }
   catch (...)
   {
@@ -278,19 +304,19 @@ void parse_lpnns(const boost::optional<std::string>& lpnn,
 }
 
 void parse_wmos(const boost::optional<std::string>& wmo,
-				Spine::HTTP::Request& theRequest,
-				std::vector<int>& wmos)
+                Spine::HTTP::Request& theRequest,
+                std::vector<int>& wmos)
 {
   try
   {
-	if (!wmo)
-	  return;
+    if (!wmo)
+      return;
 
-	theRequest.removeParameter("wmo");
-	std::vector<std::string> parts;
-	boost::algorithm::split(parts, *wmo, boost::algorithm::is_any_of(","));
-	for (const auto& id : parts)
-	  wmos.push_back(Fmi::stoi(id));
+    theRequest.removeParameter("wmo");
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, *wmo, boost::algorithm::is_any_of(","));
+    for (const auto& id : parts)
+      wmos.push_back(Fmi::stoi(id));
   }
   catch (...)
   {
@@ -298,8 +324,7 @@ void parse_wmos(const boost::optional<std::string>& wmo,
   }
 }
 
-} // anonymous
-
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -314,7 +339,7 @@ void Plugin::query(const State& state,
   try
   {
     using std::chrono::duration_cast;
-	using std::chrono::high_resolution_clock;
+    using std::chrono::high_resolution_clock;
     using std::chrono::microseconds;
 
     Spine::Table data;
@@ -322,81 +347,80 @@ void Plugin::query(const State& state,
     // Options
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
-	QueryProcessingHub qph(*this);
+    QueryProcessingHub qph(*this);
 
     Query q(state, request, itsConfig);
 
-	boost::shared_ptr<std::string> obj;
-	std::string timeheader;
-	std::string producer_option;
-	high_resolution_clock::time_point t3;
-	boost::shared_ptr<Spine::TableFormatter> formatter;
-	QueryServer::QueryStreamer_sptr queryStreamer;
+    boost::shared_ptr<std::string> obj;
+    std::string timeheader;
+    std::string producer_option;
+    high_resolution_clock::time_point t3;
+    boost::shared_ptr<Spine::TableFormatter> formatter;
+    QueryServer::QueryStreamer_sptr queryStreamer;
 
     if (!q.isEDRMetaDataQuery())
-	{
-	  // Resolve locations for FMISDs,WMOs,LPNNs (https://jira.fmi.fi/browse/BRAINSTORM-1848)
-	  Engine::Geonames::LocationOptions lopt =
-		itsEngines.geoEngine->parseLocations(q.fmisids, q.lpnns, q.wmos, q.language);
-	  	  
-	  const Spine::TaggedLocationList& locations = lopt.locations();
-	  Spine::TaggedLocationList tagged_ll = q.loptions->locations();
-	  tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
-	  q.loptions->setLocations(tagged_ll);
-	}	  
-	
-	high_resolution_clock::time_point t2 = high_resolution_clock::now();
-	
-	data.setPaging(0, 1);
-	
-	producer_option =
-	  Spine::optional_string(request.getParameter(PRODUCER_PARAM),
-							 Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
-	boost::algorithm::to_lower(producer_option);
-	
-	// The formatter knows which mimetype to send
-	Spine::TableFormatter* fmt = get_formatter_and_qstreamer(q, queryStreamer);
-	
-	bool gridEnabled = false;
-	if (strcasecmp(q.forecastSource.c_str(), "grid") == 0 ||
-		(q.forecastSource.length() == 0 &&
-		 strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))
-	  gridEnabled = true;
-		
-	formatter.reset(fmt);
-	std::string mime = ((q.output_format == IWXXM_FORMAT || q.output_format == TAC_FORMAT)
-						? "ascii"
-						: "application/json");
-	response.setHeader("Content-Type", mime);
+    {
+      // Resolve locations for FMISDs,WMOs,LPNNs (https://jira.fmi.fi/browse/BRAINSTORM-1848)
+      Engine::Geonames::LocationOptions lopt =
+          itsEngines.geoEngine->parseLocations(q.fmisids, q.lpnns, q.wmos, q.language);
 
-	
-	// Calculate the hash value for the product.
-	
-	std::size_t product_hash = Fmi::bad_hash;
+      const Spine::TaggedLocationList& locations = lopt.locations();
+      Spine::TaggedLocationList tagged_ll = q.loptions->locations();
+      tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
+      q.loptions->setLocations(tagged_ll);
+    }
 
-	try
-	{
-	  product_hash = qph.hash_value(state, request, q);
-	}
-	catch (...)
-	{
-	  if (!gridEnabled)
-		throw Fmi::Exception::Trace(BCP, "Operation failed!");
-	}
-		
-	t3 = high_resolution_clock::now();
-	
-	timeheader = Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
-	  Fmi::to_string(duration_cast<microseconds>(t3 - t2).count());
-	
-	if(etag_only(request, response, product_hash))
-	  return;
-	
-	// If obj is not nullptr it is from cache
-	obj = qph.processQuery(state, data, q, queryStreamer, product_hash);
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+
+    data.setPaging(0, 1);
+
+    producer_option =
+        Spine::optional_string(request.getParameter(PRODUCER_PARAM),
+                               Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
+    boost::algorithm::to_lower(producer_option);
+
+    // The formatter knows which mimetype to send
+    Spine::TableFormatter* fmt = get_formatter_and_qstreamer(q, queryStreamer);
+
+    bool gridEnabled = false;
+    if (strcasecmp(q.forecastSource.c_str(), "grid") == 0 ||
+        (q.forecastSource.length() == 0 &&
+         strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))
+      gridEnabled = true;
+
+    formatter.reset(fmt);
+    std::string mime =
+        ((q.output_format == IWXXM_FORMAT || q.output_format == TAC_FORMAT) ? "ascii"
+                                                                            : "application/json");
+    response.setHeader("Content-Type", mime);
+
+    // Calculate the hash value for the product.
+
+    std::size_t product_hash = Fmi::bad_hash;
+
+    try
+    {
+      product_hash = qph.hash_value(state, request, q);
+    }
+    catch (...)
+    {
+      if (!gridEnabled)
+        throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    }
+
+    t3 = high_resolution_clock::now();
+
+    timeheader = Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
+                 Fmi::to_string(duration_cast<microseconds>(t3 - t2).count());
+
+    if (etag_only(request, response, product_hash))
+      return;
+
+    // If obj is not nullptr it is from cache
+    obj = qph.processQuery(state, data, q, queryStreamer, product_hash);
 
     if (obj)
-	{
+    {
       response.setHeader("X-Duration", timeheader);
       response.setHeader("X-EDR-Cache", "yes");
       response.setContent(obj);
@@ -413,13 +437,13 @@ void Plugin::query(const State& state,
     data.setMissingText(q.valueformatter.missing());
 
     // The names of the columns
-	Spine::TableFormatter::Names headers = get_headers(q.poptions.parameters());
+    Spine::TableFormatter::Names headers = get_headers(q.poptions.parameters());
 
     // Format product
     // Deduce WXML-tag from used producer. (What happens when we combine forecasts and
     // observations??).
 
-	std::string wxml_type = get_wxml_type(producer_option, itsObsEngineStationTypes);
+    std::string wxml_type = get_wxml_type(producer_option, itsObsEngineStationTypes);
 
     auto formatter_options = itsConfig.formatterOptions();
     formatter_options.setFormatType(wxml_type);
@@ -484,17 +508,17 @@ void Plugin::grouplocations(Spine::HTTP::Request& theRequest)
     auto wmo = theRequest.getParameter("wmo");
 
     std::string wkt_multipoint = "MULTIPOINT(";
-	parse_lonlats(lonlats, theRequest, wkt_multipoint);
-	parse_latlons(latlons, theRequest, wkt_multipoint);
-	parse_places(places, theRequest, wkt_multipoint, itsEngines.geoEngine);
+    parse_lonlats(lonlats, theRequest, wkt_multipoint);
+    parse_latlons(latlons, theRequest, wkt_multipoint);
+    parse_places(places, theRequest, wkt_multipoint, itsEngines.geoEngine);
 
     std::vector<int> fmisids;
     std::vector<int> lpnns;
     std::vector<int> wmos;
 
-	parse_fmisids(fmisid, theRequest, fmisids);
-	parse_lpnns(lpnn, theRequest, lpnns);
-	parse_wmos(wmo, theRequest, wmos);
+    parse_fmisids(fmisid, theRequest, fmisids);
+    parse_lpnns(lpnn, theRequest, lpnns);
+    parse_wmos(wmo, theRequest, wmos);
 
     Engine::Geonames::LocationOptions lopts =
         itsEngines.geoEngine->parseLocations(fmisids, lpnns, wmos, "fi");
@@ -655,25 +679,26 @@ void Plugin::init()
     itsTimeSeriesCache->resize(itsConfig.maxTimeSeriesCacheSize());
 
     /* GeoEngine */
-    auto *engine = itsReactor->getSingleton("Geonames", nullptr);
+    auto* engine = itsReactor->getSingleton("Geonames", nullptr);
     if (!engine)
       throw Fmi::Exception(BCP, "Geonames engine unavailable");
-    itsEngines.geoEngine = reinterpret_cast<Engine::Geonames::Engine *>(engine);
+    itsEngines.geoEngine = reinterpret_cast<Engine::Geonames::Engine*>(engine);
 
     /* GisEngine */
     engine = itsReactor->getSingleton("Gis", nullptr);
     if (!engine)
       throw Fmi::Exception(BCP, "Gis engine unavailable");
-    itsEngines.gisEngine = reinterpret_cast<Engine::Gis::Engine *>(engine);
+    itsEngines.gisEngine = reinterpret_cast<Engine::Gis::Engine*>(engine);
 
     // Read the geometries from PostGIS database
-    itsEngines.gisEngine->populateGeometryStorage(itsConfig.getPostGISIdentifiers(), itsGeometryStorage);
+    itsEngines.gisEngine->populateGeometryStorage(itsConfig.getPostGISIdentifiers(),
+                                                  itsGeometryStorage);
 
     /* QEngine */
     engine = itsReactor->getSingleton("Querydata", nullptr);
     if (!engine)
       throw Fmi::Exception(BCP, "Querydata engine unavailable");
-    itsEngines.qEngine = reinterpret_cast<Engine::Querydata::Engine *>(engine);
+    itsEngines.qEngine = reinterpret_cast<Engine::Querydata::Engine*>(engine);
 
     /* GridEngine */
     if (!itsConfig.gridEngineDisabled())
@@ -682,7 +707,7 @@ void Plugin::init()
       if (!engine)
         throw Fmi::Exception(BCP, "The 'grid-engine' unavailable!");
 
-      itsEngines.gridEngine = reinterpret_cast<Engine::Grid::Engine *>(engine);
+      itsEngines.gridEngine = reinterpret_cast<Engine::Grid::Engine*>(engine);
       itsEngines.gridEngine->setDem(itsEngines.geoEngine->dem());
       itsEngines.gridEngine->setLandCover(itsEngines.geoEngine->landCover());
     }
@@ -694,7 +719,7 @@ void Plugin::init()
       engine = itsReactor->getSingleton("Observation", nullptr);
       if (!engine)
         throw Fmi::Exception(BCP, "Observation engine unavailable");
-      itsEngines.obsEngine = reinterpret_cast<Engine::Observation::Engine *>(engine);
+      itsEngines.obsEngine = reinterpret_cast<Engine::Observation::Engine*>(engine);
 
       // fetch obsebgine station types (producers)
       itsObsEngineStationTypes = itsEngines.obsEngine->getValidStationTypes();
@@ -708,7 +733,7 @@ void Plugin::init()
       engine = itsReactor->getSingleton("Avi", nullptr);
       if (!engine)
         throw Fmi::Exception(BCP, "Avi engine unavailable");
-      itsEngines.aviEngine = reinterpret_cast<Engine::Avi::Engine *>(engine);
+      itsEngines.aviEngine = reinterpret_cast<Engine::Avi::Engine*>(engine);
     }
 #endif
 
@@ -718,9 +743,9 @@ void Plugin::init()
     if (!itsReactor->addContentHandler(
             this,
             itsConfig.defaultUrl(),
-            [this](Spine::Reactor &theReactor,
-                   const Spine::HTTP::Request &theRequest,
-                   Spine::HTTP::Response &theResponse)
+            [this](Spine::Reactor& theReactor,
+                   const Spine::HTTP::Request& theRequest,
+                   Spine::HTTP::Response& theResponse)
             { callRequestHandler(theReactor, theRequest, theResponse); },
             true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
@@ -787,11 +812,11 @@ void Plugin::updateMetaData(bool initial_phase)
   {
     boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
 
-    const auto &default_language = itsConfig.defaultLanguage();
-    const auto *parameter_info = &itsConfigParameterInfo;
-    const auto &data_queries = itsConfig.allSupportedDataQueries();
-    const auto &output_formats = itsConfig.allSupportedOutputFormats();
-    const auto &collection_info_container = itsConfig.getCollectionInfo();
+    const auto& default_language = itsConfig.defaultLanguage();
+    const auto* parameter_info = &itsConfigParameterInfo;
+    const auto& data_queries = itsConfig.allSupportedDataQueries();
+    const auto& output_formats = itsConfig.allSupportedOutputFormats();
+    const auto& collection_info_container = itsConfig.getCollectionInfo();
     auto observation_period = itsConfig.getObservationPeriod();
 
     auto qengine_metadata = get_edr_metadata_qd(*itsEngines.qEngine,
@@ -820,10 +845,11 @@ void Plugin::updateMetaData(bool initial_phase)
       if (initial_phase)
       {
         // std::shared_ptr<std::vector<ObservableProperty>>
-        std::map<std::string, const Engine::Observation::ObservableProperty *> properties;
+        std::map<std::string, const Engine::Observation::ObservableProperty*> properties;
         std::vector<std::string> params;
-        itsObservableProperties = itsEngines.obsEngine->observablePropertyQuery(params, default_language);
-        for (const auto &prop : *itsObservableProperties)
+        itsObservableProperties =
+            itsEngines.obsEngine->observablePropertyQuery(params, default_language);
+        for (const auto& prop : *itsObservableProperties)
           itsObservablePropertiesMap[prop.gmlId] = &prop;
       }
 
@@ -856,7 +882,7 @@ void Plugin::updateMetaData(bool initial_phase)
 #endif
     engine_meta_data->removeDuplicates(initial_phase);
 
-	//	checkNewDataAndNotify(engine_meta_data);
+    //	checkNewDataAndNotify(engine_meta_data);
 
     itsMetaData.store(engine_meta_data);
   }
@@ -870,102 +896,108 @@ void Plugin::checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) c
 {
   try
   {
-	//	std::cout << " Plugin::checkNewMetaData\n";
+    //	std::cout << " Plugin::checkNewMetaData\n";
 
-	/*
-	  1) querydata: check origintimes
-	  2) grid-engine: check origintimes (analysisTime)
-	  3) avi-engine: endtime of avi engine metadata temporal extet is the latest data_time
-	  4) observation-engine: get latest data_time of each producer, either from cache or from database
-	*/
+    /*
+      1) querydata: check origintimes
+      2) grid-engine: check origintimes (analysisTime)
+      3) avi-engine: endtime of avi engine metadata temporal extet is the latest data_time
+      4) observation-engine: get latest data_time of each producer, either from cache or from
+      database
+    */
 
-	std::map<SourceEngine, std::map<std::string, boost::posix_time::ptime>> times_to_notify; // engine -> producer -> latest update time
-	SourceEngine source_engines[] = {SourceEngine::Querydata,SourceEngine::Grid,SourceEngine::Observation,SourceEngine::Avi}; 
-	auto now = boost::posix_time::second_clock::universal_time();
+    std::map<SourceEngine, std::map<std::string, boost::posix_time::ptime>>
+        times_to_notify;  // engine -> producer -> latest update time
+    SourceEngine source_engines[] = {
+        SourceEngine::Querydata, SourceEngine::Grid, SourceEngine::Observation, SourceEngine::Avi};
+    auto now = boost::posix_time::second_clock::universal_time();
 
-	for(auto source_engine : source_engines)
-	  {
-		const auto& new_md = new_emd->getMetaData(source_engine);
+    for (auto source_engine : source_engines)
+    {
+      const auto& new_md = new_emd->getMetaData(source_engine);
 
-		std::map<std::string, boost::posix_time::ptime> producer_notification_times;
+      std::map<std::string, boost::posix_time::ptime> producer_notification_times;
 
-		for(const auto& producer_md_item : new_md)
-		  {
-			const auto& producer = producer_md_item.first;
-			const auto& producer_new_md = producer_md_item.second;
+      for (const auto& producer_md_item : new_md)
+      {
+        const auto& producer = producer_md_item.first;
+        const auto& producer_new_md = producer_md_item.second;
 
-			auto old_latest_data_update_time = getProducerMetaData(producer).latest_data_update_time;
+        auto old_latest_data_update_time = getProducerMetaData(producer).latest_data_update_time;
 
-			if(old_latest_data_update_time.is_not_a_date_time())
-			  {
-				// If old latest data update time does not exist -> set it to now and continue and don't notify
-				new_emd->setLatestDataUpdateTime(source_engine, producer, now);
-				continue;
-			  }
+        if (old_latest_data_update_time.is_not_a_date_time())
+        {
+          // If old latest data update time does not exist -> set it to now and continue and don't
+          // notify
+          new_emd->setLatestDataUpdateTime(source_engine, producer, now);
+          continue;
+        }
 
-			if(source_engine == SourceEngine::Observation)
-			  {
-				// Get the latest update time since old_latest_data_update_time
-				auto new_latest_data_update_time = itsEngines.obsEngine->getLatestDataUpdateTime(producer, old_latest_data_update_time);
-				if(new_latest_data_update_time.is_not_a_date_time())
-				  {
-					// If no timestamp received -> set latest data update time to now and do not notify
-					new_latest_data_update_time = now;
-				  }
-				else if(new_latest_data_update_time > old_latest_data_update_time)
-				  {
-					// Set notification time, but it must not be in the future
-					producer_notification_times[producer] = (new_latest_data_update_time <= now ? new_latest_data_update_time : now);
-				  }
-				new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
-			  }
-			else if(source_engine == SourceEngine::Querydata || source_engine == SourceEngine::Grid || source_engine == SourceEngine::Avi)
-			  {
-				if(!producer_new_md.empty())
-				  {
-					auto new_latest_data_update_time = producer_new_md.front().latest_data_update_time;
-					if(new_latest_data_update_time.is_not_a_date_time())
-					  {
-						// If no timestamp received -> set latest data update time to now and do not notify
-						new_latest_data_update_time = now;
-					  }
-					else if(new_latest_data_update_time > old_latest_data_update_time)
-					  {
-						// Set notification time, but it must not be in the future
-						producer_notification_times[producer] = (new_latest_data_update_time <= now ? new_latest_data_update_time : now);
-					  }
-					new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
-				  }
-			  }
-		  }
-		times_to_notify[source_engine] = producer_notification_times;
-	  }
-	
-	/*
-	if(times_to_notify.empty())
-	  std::cout << "Nothing to notify\n";
+        if (source_engine == SourceEngine::Observation)
+        {
+          // Get the latest update time since old_latest_data_update_time
+          auto new_latest_data_update_time =
+              itsEngines.obsEngine->getLatestDataUpdateTime(producer, old_latest_data_update_time);
+          if (new_latest_data_update_time.is_not_a_date_time())
+          {
+            // If no timestamp received -> set latest data update time to now and do not notify
+            new_latest_data_update_time = now;
+          }
+          else if (new_latest_data_update_time > old_latest_data_update_time)
+          {
+            // Set notification time, but it must not be in the future
+            producer_notification_times[producer] =
+                (new_latest_data_update_time <= now ? new_latest_data_update_time : now);
+          }
+          new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
+        }
+        else if (source_engine == SourceEngine::Querydata || source_engine == SourceEngine::Grid ||
+                 source_engine == SourceEngine::Avi)
+        {
+          if (!producer_new_md.empty())
+          {
+            auto new_latest_data_update_time = producer_new_md.front().latest_data_update_time;
+            if (new_latest_data_update_time.is_not_a_date_time())
+            {
+              // If no timestamp received -> set latest data update time to now and do not notify
+              new_latest_data_update_time = now;
+            }
+            else if (new_latest_data_update_time > old_latest_data_update_time)
+            {
+              // Set notification time, but it must not be in the future
+              producer_notification_times[producer] =
+                  (new_latest_data_update_time <= now ? new_latest_data_update_time : now);
+            }
+            new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
+          }
+        }
+      }
+      times_to_notify[source_engine] = producer_notification_times;
+    }
 
-	for(const auto& item : times_to_notify)
-	  {
-		std::cout << "Notifications of " << get_engine_name(item.first) << std::endl;
-		if(item.second.empty())
-		  {
-			std::cout << "- none" << std::endl;
-		  }
-		else
-		  {
-			for(const auto& item2 : item.second)
-			  std::cout << "- "  << item2.first << " -> " << item2.second << std::endl;
-		  }		
-	  }
-	*/
-	
+    /*
+    if(times_to_notify.empty())
+      std::cout << "Nothing to notify\n";
+
+    for(const auto& item : times_to_notify)
+      {
+            std::cout << "Notifications of " << get_engine_name(item.first) << std::endl;
+            if(item.second.empty())
+              {
+                    std::cout << "- none" << std::endl;
+              }
+            else
+              {
+                    for(const auto& item2 : item.second)
+                      std::cout << "- "  << item2.first << " -> " << item2.second << std::endl;
+              }
+      }
+    */
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
-
 }
 
 void Plugin::updateSupportedLocations()
@@ -976,15 +1008,15 @@ void Plugin::updateSupportedLocations()
     auto producer_keywords = itsConfig.getProducerKeywords();
     Locus::QueryOptions opts;
     opts.SetLanguage(itsConfig.defaultLanguage());
-    for (const auto &item : producer_keywords)
+    for (const auto& item : producer_keywords)
     {
       auto producer = item.first;
       Spine::LocationList producer_llist;
       SupportedLocations sls;
-      for (const auto &keyword : item.second)
+      for (const auto& keyword : item.second)
       {
         auto llist = itsEngines.geoEngine->keywordSearch(opts, keyword);
-        for (const auto &loc : llist)
+        for (const auto& loc : llist)
         {
           location_info li(loc, keyword);
           sls[li.id] = li;
@@ -998,7 +1030,7 @@ void Plugin::updateSupportedLocations()
 #ifndef WITHOUT_AVI
     if (!itsConfig.aviEngineDisabled())
     {
-      const auto &collection_info_container = itsConfig.getCollectionInfo();
+      const auto& collection_info_container = itsConfig.getCollectionInfo();
       load_locations_avi(*itsEngines.aviEngine,
                          itsConfig.getAviCollections(),
                          itsSupportedLocations,
@@ -1018,26 +1050,11 @@ void Plugin::updateParameterInfo()
   {
     auto metadata = itsMetaData.load();
 
-    std::set<std::string> parameter_names;
-    // Iterate metadata of engines
-    for (const auto &item : metadata->getMetaData())
-    {
-      // Iterate metadata of producers
-      for (const auto &item2 : item.second)
-      {
-        // Iterate metadata of single producer
-        for (const auto &md : item2.second)
-        {
-          // Iterate parameter names
-          for (const auto &pname : md.parameter_names)
-            parameter_names.insert(pname);
-        }
-      }
-    }
+    std::set<std::string> parameter_names = get_metadata_parameters(metadata);
 
-    const auto &lconfig = itsConfig.config();
+    const auto& lconfig = itsConfig.config();
 
-    for (const auto &pname : parameter_names)
+    for (const auto& pname : parameter_names)
     {
       if (pname.empty())
         continue;
@@ -1053,11 +1070,11 @@ void Plugin::updateParameterInfo()
         auto desc_key = (pname_key + ".description");
         if (lconfig.exists(desc_key))
         {
-          auto &setting = lconfig.lookup(desc_key);
+          auto& setting = lconfig.lookup(desc_key);
           int len = setting.getLength();
           for (int i = 0; i < len; i++)
           {
-            const auto *name = setting[i].getName();
+            const auto* name = setting[i].getName();
             std::string value;
             lconfig.lookupValue(desc_key + "." + name, value);
             pinfo.description[name] = value;
@@ -1067,20 +1084,18 @@ void Plugin::updateParameterInfo()
         auto unit_label_key = (pname_key + ".unit.label");
         if (lconfig.exists(unit_label_key))
         {
-          auto &setting = lconfig.lookup(unit_label_key);
+          auto& setting = lconfig.lookup(unit_label_key);
           int len = setting.getLength();
           for (int i = 0; i < len; i++)
           {
-            const auto *name = setting[i].getName();
+            const auto* name = setting[i].getName();
             std::string value;
             lconfig.lookupValue(unit_label_key + "." + name, value);
             pinfo.unit_label[name] = value;
           }
         }
-        if (lconfig.exists(pname_key + ".unit.symbol.value"))
-          lconfig.lookupValue(pname_key + ".unit.symbol.value", pinfo.unit_symbol_value);
-        if (lconfig.exists(pname_key + ".unit.symbol.type"))
-          lconfig.lookupValue(pname_key + ".unit.symbol.type", pinfo.unit_symbol_type);
+        lconfig.lookupValue(pname_key + ".unit.symbol.value", pinfo.unit_symbol_value);
+        lconfig.lookupValue(pname_key + ".unit.symbol.type", pinfo.unit_symbol_type);
       }
       itsConfigParameterInfo[pname] = pinfo;
     }
@@ -1091,17 +1106,17 @@ void Plugin::updateParameterInfo()
   }
 }
 
-EDRMetaData Plugin::getProducerMetaData(const std::string &producer) const
+EDRMetaData Plugin::getProducerMetaData(const std::string& producer) const
 {
   auto metadata = itsMetaData.load();
   EDRMetaData empty_emd;
-  
-  if(!metadata)
-	return empty_emd;	
 
-  for (const auto &item : metadata->getMetaData())
+  if (!metadata)
+    return empty_emd;
+
+  for (const auto& item : metadata->getMetaData())
   {
-    const auto &engine_metadata = item.second;
+    const auto& engine_metadata = item.second;
     if (engine_metadata.find(producer) != engine_metadata.end())
       return engine_metadata.at(producer).front();
   }
@@ -1110,7 +1125,7 @@ EDRMetaData Plugin::getProducerMetaData(const std::string &producer) const
 }
 
 #ifndef WITHOUT_AVI
-const EDRProducerMetaData &Plugin::getAviMetaData() const
+const EDRProducerMetaData& Plugin::getAviMetaData() const
 {
   auto metadata = itsMetaData.load();
 
@@ -1118,7 +1133,7 @@ const EDRProducerMetaData &Plugin::getAviMetaData() const
 }
 #endif
 
-bool Plugin::isValidCollection(const std::string &producer) const
+bool Plugin::isValidCollection(const std::string& producer) const
 {
   auto metadata = itsMetaData.load();
 
@@ -1172,9 +1187,9 @@ int Plugin::getRequiredAPIVersion() const
   return SMARTMET_API_VERSION;
 }
 
-const Fmi::TimeZones& Plugin::getTimeZones() const 
-{ 
-  return itsEngines.geoEngine->getTimeZones(); 
+const Fmi::TimeZones& Plugin::getTimeZones() const
+{
+  return itsEngines.geoEngine->getTimeZones();
 }
 
 // ----------------------------------------------------------------------
