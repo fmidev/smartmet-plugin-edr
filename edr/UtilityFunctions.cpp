@@ -2,10 +2,10 @@
 #include "State.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <timeseries/ParameterKeywords.h>
-#include <timeseries/ParameterTools.h>
 #include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/observation/Keywords.h>
+#include <timeseries/ParameterKeywords.h>
+#include <timeseries/ParameterTools.h>
 
 namespace SmartMet
 {
@@ -20,10 +20,10 @@ bool is_special_parameter(const std::string& paramname)
 {
   try
   {
-	if (paramname == ORIGINTIME_PARAM || paramname == LEVEL_PARAM)
-	  return false;
-	
-	return (TS::is_time_parameter(paramname) || TS::is_location_parameter(paramname));
+    if (paramname == ORIGINTIME_PARAM || paramname == LEVEL_PARAM)
+      return false;
+
+    return (TS::is_time_parameter(paramname) || TS::is_location_parameter(paramname));
   }
   catch (...)
   {
@@ -31,17 +31,20 @@ bool is_special_parameter(const std::string& paramname)
   }
 }
 
-TS::Value get_location_parameter_value(const Spine::LocationPtr& loc, const std::string& paramname, const Query& query, int precision)
+TS::Value get_location_parameter_value(const Spine::LocationPtr& loc,
+                                       const std::string& paramname,
+                                       const Query& query,
+                                       int precision)
 {
   try
   {
-	if(paramname == "longitude")
-	  return loc->longitude;
-	else if(paramname == "latitude")
-	  return loc->latitude;
+    if (paramname == "longitude")
+      return loc->longitude;
+    else if (paramname == "latitude")
+      return loc->latitude;
 
-	return TS::location_parameter(loc, paramname, query.valueformatter, query.timezone, precision, query.crs);
-
+    return TS::location_parameter(
+        loc, paramname, query.valueformatter, query.timezone, precision, query.crs);
   }
   catch (...)
   {
@@ -60,30 +63,30 @@ void get_special_parameter_values(const std::string& paramname,
 {
   try
   {
-	bool is_time_parameter = TS::is_time_parameter(paramname);
-	bool is_location_parameter = TS::is_location_parameter(paramname);
-	
-	for (const auto& timestep : tlist)
-	{
-	  if (is_time_parameter)
-	  {
-		TS::Value value = TS::time_parameter(paramname,
-											 timestep,
-											 state.getTime(),
-											 *loc,
-											 query.timezone,
-											 timezones,
-											 query.outlocale,
-											 *query.timeformatter,
-											 query.timestring);
-		result->emplace_back(TS::TimedValue(timestep, value));
-	  }
-	  if (is_location_parameter)
-	  {
-		TS::Value value = get_location_parameter_value(loc, paramname, query, precision);
-		result->emplace_back(TS::TimedValue(timestep, value));
-	  }
-	}
+    bool is_time_parameter = TS::is_time_parameter(paramname);
+    bool is_location_parameter = TS::is_location_parameter(paramname);
+
+    for (const auto& timestep : tlist)
+    {
+      if (is_time_parameter)
+      {
+        TS::Value value = TS::time_parameter(paramname,
+                                             timestep,
+                                             state.getTime(),
+                                             *loc,
+                                             query.timezone,
+                                             timezones,
+                                             query.outlocale,
+                                             *query.timeformatter,
+                                             query.timestring);
+        result->emplace_back(TS::TimedValue(timestep, value));
+      }
+      if (is_location_parameter)
+      {
+        TS::Value value = get_location_parameter_value(loc, paramname, query, precision);
+        result->emplace_back(TS::TimedValue(timestep, value));
+      }
+    }
   }
   catch (...)
   {
@@ -102,35 +105,36 @@ void get_special_parameter_values(const std::string& paramname,
 {
   try
   {
-	bool is_time_parameter = TS::is_time_parameter(paramname);
-	bool is_location_parameter = TS::is_location_parameter(paramname);
-	for (const auto& loc : llist)
-	{
-	  auto timeseries = TS::TimeSeries(state.getLocalTimePool());
-	  for (const auto& timestep : tlist)
+    bool is_time_parameter = TS::is_time_parameter(paramname);
+    bool is_location_parameter = TS::is_location_parameter(paramname);
+    for (const auto& loc : llist)
+    {
+      auto timeseries = TS::TimeSeries(state.getLocalTimePool());
+      for (const auto& timestep : tlist)
       {
-		if (is_time_parameter)
-		{
-		  TS::Value value = TS::time_parameter(paramname,
-											   timestep,
-											   state.getTime(),
-											   *loc,
-											   query.timezone,
-											   timezones,
-											   query.outlocale,
-											   *query.timeformatter,
-											   query.timestring);
-		  timeseries.emplace_back(TS::TimedValue(timestep, value));
-		}
-		if (is_location_parameter)
-		{
-		  TS::Value value = get_location_parameter_value(loc, paramname, query, precision);
-		  timeseries.emplace_back(TS::TimedValue(timestep, value));
-		}
-	  }
-	  if (!timeseries.empty())
-		result->push_back(TS::LonLatTimeSeries(Spine::LonLat(loc->longitude, loc->latitude), timeseries));
-	}
+        if (is_time_parameter)
+        {
+          TS::Value value = TS::time_parameter(paramname,
+                                               timestep,
+                                               state.getTime(),
+                                               *loc,
+                                               query.timezone,
+                                               timezones,
+                                               query.outlocale,
+                                               *query.timeformatter,
+                                               query.timestring);
+          timeseries.emplace_back(TS::TimedValue(timestep, value));
+        }
+        if (is_location_parameter)
+        {
+          TS::Value value = get_location_parameter_value(loc, paramname, query, precision);
+          timeseries.emplace_back(TS::TimedValue(timestep, value));
+        }
+      }
+      if (!timeseries.empty())
+        result->push_back(
+            TS::LonLatTimeSeries(Spine::LonLat(loc->longitude, loc->latitude), timeseries));
+    }
   }
   catch (...)
   {
@@ -191,7 +195,7 @@ bool is_flash_or_mobile_producer(const std::string& producer)
   }
 }
 
-double get_double(const TS::Value &val, double default_value)
+double get_double(const TS::Value& val, double default_value)
 {
   try
   {
@@ -200,12 +204,12 @@ double get_double(const TS::Value &val, double default_value)
     if (boost::get<int>(&val) != nullptr)
       ret = *(boost::get<int>(&val));
     else if (boost::get<double>(&val) != nullptr)
-	  ret = *(boost::get<double>(&val));
+      ret = *(boost::get<double>(&val));
     else if (boost::get<std::string>(&val) != nullptr)
-	  {
-		std::string value = *(boost::get<std::string>(&val));
-		ret = Fmi::stod(value);
-	  }
+    {
+      std::string value = *(boost::get<std::string>(&val));
+      ret = Fmi::stod(value);
+    }
 
     return ret;
   }
@@ -215,7 +219,7 @@ double get_double(const TS::Value &val, double default_value)
   }
 }
 
-int get_int(const TS::Value &val, int default_value = kFloatMissing)
+int get_int(const TS::Value& val, int default_value = kFloatMissing)
 {
   try
   {
@@ -234,7 +238,7 @@ int get_int(const TS::Value &val, int default_value = kFloatMissing)
   }
 }
 
-std::string get_string(const TS::Value &val, const std::string &default_value = "")
+std::string get_string(const TS::Value& val, const std::string& default_value = "")
 {
   try
   {
@@ -255,31 +259,30 @@ std::string get_string(const TS::Value &val, const std::string &default_value = 
   }
 }
 
-Json::Value json_value(const TS::Value &val, int precision)
+Json::Value json_value(const TS::Value& val, int precision)
 {
   try
   {
-	auto double_value = get_double(val, kFloatMissing);
+    auto double_value = get_double(val, kFloatMissing);
 
-	if (double_value != kFloatMissing)
-	  return {double_value, static_cast<unsigned int>(precision)};
-	
-	auto int_value = get_int(val);
+    if (double_value != kFloatMissing)
+      return {double_value, static_cast<unsigned int>(precision)};
 
-	if (int_value != static_cast<int>(kFloatMissing))
-	  return int_value;
-	
-	// If value is of type string empty string is returned
-	auto string_value = get_string(val);
+    auto int_value = get_int(val);
 
-	return string_value;
+    if (int_value != static_cast<int>(kFloatMissing))
+      return int_value;
+
+    // If value is of type string empty string is returned
+    auto string_value = get_string(val);
+
+    return string_value;
   }
   catch (...)
   {
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
-
 
 }  // namespace UtilityFunctions
 }  // namespace EDR

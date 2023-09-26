@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include "Json.h"
 #include "ObsParameter.h"
 #include "Query.h"
-#include "Json.h"
 #include <timeseries/TimeSeriesInclude.h>
 
 namespace SmartMet
@@ -40,8 +40,8 @@ bool is_mobile_producer(const std::string& producer);
 bool is_flash_producer(const std::string& producer);
 bool is_icebuoy_or_copernicus_producer(const std::string& producer);
 bool is_flash_or_mobile_producer(const std::string& producer);
-EDR::Json::Value json_value(const TS::Value &val, int precision);
-double get_double(const TS::Value &val, double default_value = kFloatMissing);
+EDR::Json::Value json_value(const TS::Value& val, int precision);
+double get_double(const TS::Value& val, double default_value = kFloatMissing);
 
 }  // namespace UtilityFunctions
 }  // namespace EDR

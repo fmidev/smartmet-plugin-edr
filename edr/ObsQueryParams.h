@@ -30,4 +30,3 @@ struct ObsQueryParams
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet
-

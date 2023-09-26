@@ -18,11 +18,11 @@
 #pragma once
 #include "EDRMetaData.h"
 #include "Engines.h"
-#include <macgyver/TimeZones.h>
 #include <boost/date_time/posix_time/ptime.hpp>
 #include <engines/querydata/OriginTime.h>
 #include <engines/querydata/Producer.h>
 #include <engines/querydata/Q.h>
+#include <macgyver/TimeZones.h>
 #include <timeseries/TimeSeriesInclude.h>
 
 namespace Fmi
@@ -58,8 +58,8 @@ class State
   Engine::Observation::Engine* getObsEngine() const;
 #endif
 #ifndef WITHOUT_AVI
-  const Engine::Avi::Engine *getAviEngine() const;
-  const EDRProducerMetaData &getAviMetaData() const;
+  const Engine::Avi::Engine* getAviEngine() const;
+  const EDRProducerMetaData& getAviMetaData() const;
 #endif
   const Plugin& getPlugin() const;
 
@@ -74,8 +74,8 @@ class State
   Engine::Querydata::Q get(const Engine::Querydata::Producer& theProducer,
                            const Engine::Querydata::OriginTime& theOriginTime) const;
   TS::LocalTimePoolPtr getLocalTimePool() const;
-  EDRMetaData getProducerMetaData(const std::string &producer) const;
-  bool isValidCollection(const std::string &producer) const;
+  EDRMetaData getProducerMetaData(const std::string& producer) const;
+  bool isValidCollection(const std::string& producer) const;
 
  private:
   const Plugin& itsPlugin;

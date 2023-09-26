@@ -414,14 +414,15 @@ void fill_missing_location_params(TS::TimeSeries& ts)
   }
 }
 
-TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(const State& state,
-																	 const std::string& producer,
-																	 const Spine::LocationPtr& loc,
-																	 const Query& query,
-																	 const ObsParameters& obsParameters,
-																	 const TS::TimeSeriesVectorPtr& observation_result,
-																	 const std::vector<boost::local_time::local_date_time>& timestep_vector,
-																	 std::map<std::string, unsigned int>& parameterResultIndexes) const
+TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(
+    const State& state,
+    const std::string& producer,
+    const Spine::LocationPtr& loc,
+    const Query& query,
+    const ObsParameters& obsParameters,
+    const TS::TimeSeriesVectorPtr& observation_result,
+    const std::vector<boost::local_time::local_date_time>& timestep_vector,
+    std::map<std::string, unsigned int>& parameterResultIndexes) const
 {
   try
   {

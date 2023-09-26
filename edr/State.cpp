@@ -1,8 +1,8 @@
 #include "State.h"
 #include "Plugin.h"
-#include <engines/querydata/Engine.h>
-#include <engines/observation/ExternalAndMobileProducerId.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <engines/observation/ExternalAndMobileProducerId.h>
+#include <engines/querydata/Engine.h>
 #include <macgyver/Exception.h>
 #include <ogr_geometry.h>
 
@@ -100,7 +100,7 @@ Engine::Observation::Engine* State::getObsEngine() const
 // ----------------------------------------------------------------------
 
 #ifndef WITHOUT_AVI
-const Engine::Avi::Engine *State::getAviEngine() const
+const Engine::Avi::Engine* State::getAviEngine() const
 {
   try
   {
@@ -112,7 +112,7 @@ const Engine::Avi::Engine *State::getAviEngine() const
   }
 }
 
-const EDRProducerMetaData &State::getAviMetaData() const
+const EDRProducerMetaData& State::getAviMetaData() const
 {
   try
   {
@@ -257,7 +257,7 @@ TS::LocalTimePoolPtr State::getLocalTimePool() const
   return itsLocalTimePool;
 }
 
-EDRMetaData State::getProducerMetaData(const std::string &producer) const
+EDRMetaData State::getProducerMetaData(const std::string& producer) const
 {
   try
   {
@@ -269,7 +269,7 @@ EDRMetaData State::getProducerMetaData(const std::string &producer) const
   }
 }
 
-bool State::isValidCollection(const std::string &producer) const
+bool State::isValidCollection(const std::string& producer) const
 {
   try
   {

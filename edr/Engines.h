@@ -50,9 +50,8 @@ struct Engines
   Engine::Observation::Engine* obsEngine = nullptr;
 #endif
 #ifndef WITHOUT_AVI
-  Engine::Avi::Engine *aviEngine = nullptr;
+  Engine::Avi::Engine* aviEngine = nullptr;
 #endif
-
 };
 
 }  // namespace EDR
