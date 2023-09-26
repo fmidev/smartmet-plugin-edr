@@ -883,7 +883,6 @@ void setAviQueryLocationOptions(const AviCollection& aviCollection,
   }
 }
 
-
 void setAviStations(const Engine::Avi::StationQueryData& stationData,
 					const AviCollection& aviCollection,
 					const std::string& icaoColumnName,
