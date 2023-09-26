@@ -27,9 +27,9 @@ bool AviEngineQuery::isAviProducer(const std::string &producer) const
   }
 }
 
-void AviEngineQuery::storeAviData(const State &state,
-                                  SmartMet::Engine::Avi::StationQueryData &aviData,
-                                  TS::OutputData &outputData) const
+void storeAviData(const State &state,
+                  SmartMet::Engine::Avi::StationQueryData &aviData,
+                  TS::OutputData &outputData)
 {
   try
   {
@@ -67,7 +67,7 @@ void AviEngineQuery::storeAviData(const State &state,
       }
 
       if (!messageData->empty())
-        odata.emplace_back(TS::TimeSeriesData(messageData));
+        odata.emplace_back(messageData);
     }
   }
   catch (...)
@@ -76,10 +76,108 @@ void AviEngineQuery::storeAviData(const State &state,
   }
 }
 
-void AviEngineQuery::checkAviEngineQuery(const Query &query,
-                                         const std::vector<EDRMetaData> &edrMetaDataVector,
-                                         bool locationCheck,
-                                         SmartMet::Engine::Avi::QueryOptions &queryOptions) const
+void checkAviEngineLocationQuery(const Query &query,
+                                 const EDRMetaData &edrMetaData,
+                                 bool locationCheck,
+                                 SmartMet::Engine::Avi::QueryOptions &queryOptions)
+{
+  try
+  {
+    if (query.icaos.empty())
+      throw Fmi::Exception(BCP, "No location(s) to query", nullptr);
+
+    for (auto const &icao : query.icaos)
+    {
+      if (locationCheck && (edrMetaData.locations->find(icao) == edrMetaData.locations->end()))
+        throw Fmi::Exception(BCP, "Location is not listed in metadata", nullptr);
+
+      queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void checkAviEnginePositionQuery(const Query &query,
+                                 const EDRQuery &edrQuery,
+                                 SmartMet::Engine::Avi::QueryOptions &queryOptions)
+{
+  try
+  {
+    // For position query set maxdistance 1 km
+    auto wkt = query.requestWKT;
+    int radius = 1.0;
+    if (edrQuery.query_type == EDRQueryType::Radius)
+    {
+      std::string::size_type n = wkt.find(':');
+      if (n == std::string::npos)
+        throw Fmi::Exception(BCP, "Error! Radius query must contain radius!", nullptr);
+
+      radius = Fmi::stoi(wkt.substr(n + 1));
+      wkt = wkt.substr(0, n);
+    }
+
+    // Find out the point
+    auto geom = get_ogr_geometry(wkt);
+    if (geom->getGeometryType() != wkbPoint)
+      throw Fmi::Exception(
+          BCP,
+          "Error! POINT geometry must be defined in " +
+              std::string(edrQuery.query_type == EDRQueryType::Position ? "Position query!"
+                                                                        : "Radius query!"));
+
+    auto *point = geom->toPoint();
+    auto lon = point->getX();
+    auto lat = point->getY();
+
+    // Lets set longitude, latitude and maxdistance
+    queryOptions.itsLocationOptions.itsLonLats.push_back({lon, lat});
+    queryOptions.itsLocationOptions.itsMaxDistance = (radius * 1000);
+    queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void checkAviEngineAreaQuery(const Query &query, SmartMet::Engine::Avi::QueryOptions &queryOptions)
+{
+  try
+  {
+    if (query.requestWKT.empty())
+      throw Fmi::Exception(BCP, "No area to query", nullptr);
+
+    auto wkt = query.requestWKT;
+    //	if(edrQuery.query_type == EDRQueryType::Corridor)
+    {
+      queryOptions.itsLocationOptions.itsMaxDistance = 0;
+      std::string::size_type n = wkt.find(':');
+      if (n != std::string::npos)
+      {
+        queryOptions.itsLocationOptions.itsMaxDistance = (Fmi::stoi(wkt.substr(n + 1)) * 1000);
+        queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
+        wkt = wkt.substr(0, n);
+      }
+
+      queryOptions.itsDistinctMessages = true;
+      queryOptions.itsFilterMETARs = true;
+      queryOptions.itsExcludeSPECIs = false;
+    }
+    queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void checkAviEngineQuery(const Query &query,
+                         const std::vector<EDRMetaData> &edrMetaDataVector,
+                         bool locationCheck,
+                         SmartMet::Engine::Avi::QueryOptions &queryOptions)
 {
   try
   {
@@ -89,75 +187,13 @@ void AviEngineQuery::checkAviEngineQuery(const Query &query,
     const auto &edrMetaData = edrMetaDataVector.front();
 
     if (edrQuery.query_type == EDRQueryType::Locations)
-    {
-      if (query.icaos.empty())
-        throw Fmi::Exception(BCP, "No location(s) to query", nullptr);
+      checkAviEngineLocationQuery(query, edrMetaData, locationCheck, queryOptions);
 
-      for (auto const &icao : query.icaos)
-      {
-        if (locationCheck && (edrMetaData.locations->find(icao) == edrMetaData.locations->end()))
-          throw Fmi::Exception(BCP, "Location is not listed in metadata", nullptr);
-
-        queryOptions.itsLocationOptions.itsIcaos.push_back(icao);
-      }
-    }
     else if (edrQuery.query_type == EDRQueryType::Position ||
              edrQuery.query_type == EDRQueryType::Radius)
-    {
-      // For position query set maxdistance 1 km
-      auto wkt = query.requestWKT;
-      int radius = 1.0;
-      if (edrQuery.query_type == EDRQueryType::Radius)
-      {
-        std::string::size_type n = wkt.find(':');
-        if (n == std::string::npos)
-          throw Fmi::Exception(BCP, "Error! Radius query must contain radius!", nullptr);
-
-        radius = Fmi::stoi(wkt.substr(n + 1));
-        wkt = wkt.substr(0, n);
-      }
-
-      // Find out the point
-      auto geom = get_ogr_geometry(wkt);
-      if (geom->getGeometryType() != wkbPoint)
-        throw Fmi::Exception(
-            BCP,
-            "Error! POINT geometry must be defined in " +
-                std::string(edrQuery.query_type == EDRQueryType::Position ? "Position query!"
-                                                                          : "Radius query!"));
-
-      auto point = geom->toPoint();
-      auto lon = point->getX();
-      auto lat = point->getY();
-
-      // Lets set longitude, latitude and maxdistance
-      queryOptions.itsLocationOptions.itsLonLats.push_back({lon, lat});
-      queryOptions.itsLocationOptions.itsMaxDistance = (radius * 1000);
-      queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
-    }
+      checkAviEnginePositionQuery(query, edrQuery, queryOptions);
     else
-    {
-      if (query.requestWKT.empty())
-        throw Fmi::Exception(BCP, "No area to query", nullptr);
-
-      auto wkt = query.requestWKT;
-      //	if(edrQuery.query_type == EDRQueryType::Corridor)
-      {
-        queryOptions.itsLocationOptions.itsMaxDistance = 0;
-        std::string::size_type n = wkt.find(':');
-        if (n != std::string::npos)
-        {
-          queryOptions.itsLocationOptions.itsMaxDistance = (Fmi::stoi(wkt.substr(n + 1)) * 1000);
-          queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
-          wkt = wkt.substr(0, n);
-        }
-
-        queryOptions.itsDistinctMessages = true;
-        queryOptions.itsFilterMETARs = true;
-        queryOptions.itsExcludeSPECIs = false;
-      }
-      queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
-    }
+      checkAviEngineAreaQuery(query, queryOptions);
   }
   catch (...)
   {
@@ -173,7 +209,7 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
   try
   {
     const auto producer = trim_copy(to_upper_copy(prod));
-    const auto edrProducerMetaData = state.getAviMetaData();
+    const auto &edrProducerMetaData = state.getAviMetaData();
     const auto edrMetaData = edrProducerMetaData.find(producer);
     if (edrMetaData == edrProducerMetaData.end())
       throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, nullptr);
