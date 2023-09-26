@@ -7,10 +7,10 @@
 #pragma once
 
 #include "Config.h"
-#include "Engines.h"
 #include "EDRMetaData.h"
-#include "State.h"
+#include "Engines.h"
 #include "Query.h"
+#include "State.h"
 
 namespace SmartMet
 {
@@ -42,10 +42,10 @@ class Plugin : public SmartMetPlugin
   const Engines& getEngines() const { return itsEngines; }
 
 #ifndef WITHOUT_AVI
-  const EDRProducerMetaData &getAviMetaData() const;
+  const EDRProducerMetaData& getAviMetaData() const;
 #endif
-  EDRMetaData getProducerMetaData(const std::string &producer) const;
-  bool isValidCollection(const std::string &producer) const;
+  EDRMetaData getProducerMetaData(const std::string& producer) const;
+  bool isValidCollection(const std::string& producer) const;
 
  protected:
   void init() override;
@@ -54,15 +54,14 @@ class Plugin : public SmartMetPlugin
                       const Spine::HTTP::Request& theRequest,
                       Spine::HTTP::Response& theResponse) override;
 
- private:  
-  
+ private:
   void query(const State& theState,
              const Spine::HTTP::Request& req,
              Spine::HTTP::Response& response);
 
   Fmi::Cache::CacheStatistics getCacheStats() const override;
 
-  void grouplocations(Spine::HTTP::Request& theRequest);
+  void grouplocations(Spine::HTTP::Request& theRequest) const;
 
   const std::string itsModuleName;
   Config itsConfig;
@@ -89,6 +88,10 @@ class Plugin : public SmartMetPlugin
   void updateSupportedLocations();
   void updateParameterInfo();
   void checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) const;
+  std::map<std::string, boost::posix_time::ptime> getNotificationTimes(
+      SourceEngine source_engine,
+      EngineMetaData& new_emd,
+      const boost::posix_time::ptime& now) const;
 
   // Locations info is read once at startup, the used subsequent queries
   SupportedProducerLocations itsSupportedLocations;
@@ -101,19 +104,19 @@ class Plugin : public SmartMetPlugin
   // is not thread safe.
 
   boost::atomic_shared_ptr<EngineMetaData> itsMetaData;
-  
+
 #ifndef WITHOUT_OBSERVATION
   // Observable properties read from observation engine once
   std::shared_ptr<std::vector<Engine::Observation::ObservableProperty>> itsObservableProperties;
   // Parameter name -> observable property
-  std::map<std::string, const Engine::Observation::ObservableProperty *> itsObservablePropertiesMap;
+  std::map<std::string, const Engine::Observation::ObservableProperty*> itsObservablePropertiesMap;
 #endif
 
   friend class QEngineQuery;
   friend class ObsEngineQuery;
   friend class GridEngineQuery;
   friend class QueryProcessingHub;
-  
+
 };  // class Plugin
 
 }  // namespace EDR
