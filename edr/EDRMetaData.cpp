@@ -600,71 +600,139 @@ EDRProducerMetaData get_edr_metadata_obs(
 #endif
 
 #ifndef WITHOUT_AVI
-std::vector<std::string> time_periods(const std::set<boost::local_time::local_date_time> &timesteps)
+std::vector<TimePeriod> get_time_periods(const std::set<boost::local_time::local_date_time> &timesteps)
 {
   try
   {
-	std::vector<std::string> ret;
-	if (timesteps.size() == 0)
-	  return ret;
-	if (timesteps.size() == 1)
-	  {
-		ret.push_back(Fmi::to_iso_string(timesteps.begin()->utc_time()));
-		return ret;
-	  }
-	
-	// Insert time periods into vector
 	std::vector<TimePeriod> time_periods;
+
 	auto it_previous = timesteps.begin();
 	auto it = timesteps.begin();
 	it++;
 	while (it != timesteps.end())
+	{
+	  time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+	  it_previous++;
+	  it++;
+	}
+
+	return time_periods;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+bool parse_merged_time_periods(const std::vector<TimePeriod>& time_periods,
+							   const TimePeriod& tp_current,
+							   TimePeriod& tp,
+							   unsigned int& i,
+							   std::vector<edr_temporal_extent_period>& merged_time_periods, 
+							   int& first_period_length,
+							   bool& multiple_periods)
+{
+  try
+  {
+	if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
+	{
+	  if (multiple_periods)
 	  {
-		time_periods.push_back({it_previous->utc_time(), it->utc_time()});
-		it_previous++;
-		it++;
+		if (i == time_periods.size() - 1)
+		  tp.setEndTime(tp_current.getEndTime());
+		edr_temporal_extent_period etep;
+		etep.start_time = tp.getStartTime();
+		etep.end_time = tp.getEndTime();
+		etep.timestep = first_period_length / 60;  // seconds to minutes
+		etep.timesteps = ((etep.end_time - etep.start_time).total_seconds() / first_period_length);
+		merged_time_periods.push_back(etep);
+		multiple_periods = false;
 	  }
-	
-	// Iterate vector and find out periods with even timesteps
+	  else
+	  {
+		merged_time_periods.clear();
+		return true;
+	  }
+	  i++;
+	  if (i < time_periods.size() - 1)
+	  {
+		tp = time_periods.at(i);
+		first_period_length = tp.length();
+	  }
+	}
+	else
+	{
+	  tp.setEndTime(tp_current.getEndTime());
+	  multiple_periods = true;
+	}
+	return false;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+std::vector<edr_temporal_extent_period> get_merged_time_periods(const std::vector<TimePeriod>& time_periods)
+{
+  try
+  {
+	std::vector<edr_temporal_extent_period> merged_time_periods;
+
 	TimePeriod tp = time_periods.at(0);
 	int first_period_length = tp.length();
 	bool multiple_periods = false;
 	for (unsigned int i = 1; i < time_periods.size(); i++)
+	{
+	  const auto tp_current = time_periods.at(i);
+	  bool break_here = parse_merged_time_periods(time_periods,
+												  tp_current,
+												  tp,
+												  i,
+												  merged_time_periods, 
+												  first_period_length,
+												  multiple_periods);
+	  if(break_here)
+		break;
+	}
+
+	return merged_time_periods;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void parse_temporal_extent(const std::set<boost::local_time::local_date_time> &timesteps,
+						   const std::vector<TimePeriod>& time_periods,
+						   edr_temporal_extent& t_extent)
+{
+  try
+  {
+	if (timesteps.size() > MAX_TIME_PERIODS)
+	{
+	  // Insert only starttime and endtime
+	  edr_temporal_extent_period etep;
+	  etep.start_time = time_periods.front().getStartTime();
+	  etep.end_time = time_periods.back().getEndTime();
+	  etep.timestep = 0;
+	  etep.timesteps = 0;
+	  t_extent.time_periods.push_back(etep);
+	}
+	else
+	{
+	  // Insert all timesteps
+	  for (const auto &t : timesteps)
 	  {
-		auto tp_current = time_periods.at(i);
-		if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
-		  {
-			if (multiple_periods)
-			  {
-				if (i == time_periods.size() - 1)
-				  tp.setEndTime(tp_current.getEndTime());
-				ret.push_back(Fmi::to_iso_string(tp.getStartTime()) + "Z/" +
-							  Fmi::to_iso_string(tp.getEndTime()) + "Z/" +
-							  Fmi::to_string(first_period_length));
-				multiple_periods = false;
-			  }
-			else
-			  {
-				ret.push_back(Fmi::to_iso_string(tp.getStartTime()));
-				ret.push_back(Fmi::to_iso_string(tp.getEndTime()));
-				if (i == time_periods.size() - 1)
-				  ret.push_back(Fmi::to_iso_string(tp_current.getEndTime()));
-			  }
-			i++;
-			if (i < time_periods.size() - 1)
-			  {
-				tp = time_periods.at(i);
-				first_period_length = tp.length();
-			  }
-		  }
-		else
-		  {
-			tp.setEndTime(tp_current.getEndTime());
-			multiple_periods = true;
-		  }
+		edr_temporal_extent_period etep;
+		etep.start_time = t.utc_time();
+		etep.timestep = 0;
+		etep.timesteps = 0;
+		t_extent.time_periods.push_back(etep);
 	  }
-	
-	return ret;
+	}
   }
   catch (...)
   {
@@ -679,96 +747,26 @@ edr_temporal_extent get_temporal_extent(
   try
   {
 	edr_temporal_extent ret;
-	
-	auto timper = time_periods(timesteps);
-	
+
 	if (timesteps.size() < 2)
 	  return ret;
-	
-	ret.origin_time = boost::posix_time::second_clock::universal_time();
-	
+			
+	ret.origin_time = boost::posix_time::second_clock::universal_time();	
+
 	// Insert time periods into vector
-	std::vector<TimePeriod> time_periods;
-	auto it_previous = timesteps.begin();
-	auto it = timesteps.begin();
-	it++;
-	while (it != timesteps.end())
-	  {
-		time_periods.push_back({it_previous->utc_time(), it->utc_time()});
-		it_previous++;
-		it++;
-	  }
+	std::vector<TimePeriod> time_periods = get_time_periods(timesteps);
 	
 	// Iterate vector and find out periods with even timesteps
-	TimePeriod tp = time_periods.at(0);
-	int first_period_length = tp.length();
-	bool multiple_periods = false;
-	std::vector<edr_temporal_extent_period> merged_time_periods;
-	for (unsigned int i = 1; i < time_periods.size(); i++)
-	  {
-		auto tp_current = time_periods.at(i);
-		if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
-		  {
-			if (multiple_periods)
-			  {
-				if (i == time_periods.size() - 1)
-				  tp.setEndTime(tp_current.getEndTime());
-				edr_temporal_extent_period etep;
-				etep.start_time = tp.getStartTime();
-				etep.end_time = tp.getEndTime();
-				etep.timestep = first_period_length / 60;  // seconds to minutes
-				etep.timesteps = ((etep.end_time - etep.start_time).total_seconds() / first_period_length);
-				merged_time_periods.push_back(etep);
-				multiple_periods = false;
-			  }
-			else
-			  {
-				merged_time_periods.clear();
-				break;
-			  }
-			i++;
-			if (i < time_periods.size() - 1)
-			  {
-				tp = time_periods.at(i);
-				first_period_length = tp.length();
-			  }
-		  }
-		else
-		  {
-			tp.setEndTime(tp_current.getEndTime());
-			multiple_periods = true;
-		  }
-	  }
-	
+	std::vector<edr_temporal_extent_period> merged_time_periods = get_merged_time_periods(time_periods);
+
 	if (merged_time_periods.empty())
-	  {
-		if (timesteps.size() > MAX_TIME_PERIODS)
-		  {
-			// Insert only starttime and endtime
-			edr_temporal_extent_period etep;
-			etep.start_time = time_periods.front().getStartTime();
-			etep.end_time = time_periods.back().getEndTime();
-			etep.timestep = 0;
-			etep.timesteps = 0;
-			ret.time_periods.push_back(etep);
-		  }
-		else
-		  {
-			// Insert all timesteps
-			for (const auto &t : timesteps)
-			  {
-				edr_temporal_extent_period etep;
-				etep.start_time = t.utc_time();
-				etep.timestep = 0;
-				etep.timesteps = 0;
-				ret.time_periods.push_back(etep);
-			  }
-		  }
-	  }
+	{
+		parse_temporal_extent(timesteps, time_periods, ret);
+	}
 	else
-	  {
-		ret.time_periods = merged_time_periods;
-	  }
+	{
+	  ret.time_periods = merged_time_periods;
+	}
 	
 	return ret;
   }
@@ -1305,14 +1303,6 @@ const boost::posix_time::ptime &EngineMetaData::getLatestDataUpdateTime(
   const auto &producer_meta_data = getMetaData(source_engine);
 
   return get_latest_data_update_time(producer_meta_data, producer);
-  /*
-  if(producer_meta_data.find(producer) != producer_meta_data.end())
-        {
-          // Latest update time is same for all metadata instances of the same producer
-          return producer_meta_data.at(producer).front().latest_data_update_time;
-        }
-  return NOT_A_DATE_TIME;
-  */
 }
 
 void EngineMetaData::setLatestDataUpdateTime(SourceEngine source_engine,

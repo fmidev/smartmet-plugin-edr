@@ -11,6 +11,7 @@
 #include <engines/gis/Engine.h>
 #include <fmt/format.h>
 #include <macgyver/Hash.h>
+#include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
@@ -173,7 +174,7 @@ bool etag_only(const Spine::HTTP::Request& request,
 }
 
 void parse_lonlats(const boost::optional<std::string>& lonlats,
-                   Spine::HTTP::Request& theRequest,
+                   Spine::HTTP::Request& request,
                    std::string& wkt_multipoint)
 {
   try
@@ -181,8 +182,8 @@ void parse_lonlats(const boost::optional<std::string>& lonlats,
     if (!lonlats)
       return;
 
-    theRequest.removeParameter("lonlat");
-    theRequest.removeParameter("lonlats");
+    request.removeParameter("lonlat");
+    request.removeParameter("lonlats");
     std::vector<std::string> parts;
     boost::algorithm::split(parts, *lonlats, boost::algorithm::is_any_of(","));
     if (parts.size() % 2 != 0)
@@ -202,7 +203,7 @@ void parse_lonlats(const boost::optional<std::string>& lonlats,
 }
 
 void parse_latlons(const boost::optional<std::string>& latlons,
-                   Spine::HTTP::Request& theRequest,
+                   Spine::HTTP::Request& request,
                    std::string& wkt_multipoint)
 {
   try
@@ -210,8 +211,8 @@ void parse_latlons(const boost::optional<std::string>& latlons,
     if (!latlons)
       return;
 
-    theRequest.removeParameter("latlon");
-    theRequest.removeParameter("latlons");
+    request.removeParameter("latlon");
+    request.removeParameter("latlons");
     std::vector<std::string> parts;
     boost::algorithm::split(parts, *latlons, boost::algorithm::is_any_of(","));
     if (parts.size() % 2 != 0)
@@ -231,7 +232,7 @@ void parse_latlons(const boost::optional<std::string>& latlons,
 }
 
 void parse_places(const boost::optional<std::string>& places,
-                  Spine::HTTP::Request& theRequest,
+                  Spine::HTTP::Request& request,
                   std::string& wkt_multipoint,
                   const Engine::Geonames::Engine* geoEngine)
 {
@@ -240,7 +241,7 @@ void parse_places(const boost::optional<std::string>& places,
     if (!places)
       return;
 
-    theRequest.removeParameter("places");
+    request.removeParameter("places");
     std::vector<std::string> parts;
     boost::algorithm::split(parts, *places, boost::algorithm::is_any_of(","));
     for (const auto& place : parts)
@@ -262,7 +263,7 @@ void parse_places(const boost::optional<std::string>& places,
 }
 
 void parse_fmisids(const boost::optional<std::string>& fmisid,
-                   Spine::HTTP::Request& theRequest,
+                   Spine::HTTP::Request& request,
                    std::vector<int>& fmisids)
 {
   try
@@ -270,7 +271,7 @@ void parse_fmisids(const boost::optional<std::string>& fmisid,
     if (!fmisid)
       return;
 
-    theRequest.removeParameter("fmisid");
+    request.removeParameter("fmisid");
     std::vector<std::string> parts;
     boost::algorithm::split(parts, *fmisid, boost::algorithm::is_any_of(","));
     for (const auto& id : parts)
@@ -283,7 +284,7 @@ void parse_fmisids(const boost::optional<std::string>& fmisid,
 }
 
 void parse_lpnns(const boost::optional<std::string>& lpnn,
-                 Spine::HTTP::Request& theRequest,
+                 Spine::HTTP::Request& request,
                  std::vector<int>& lpnns)
 {
   try
@@ -291,7 +292,7 @@ void parse_lpnns(const boost::optional<std::string>& lpnn,
     if (!lpnn)
       return;
 
-    theRequest.removeParameter("lpnn");
+    request.removeParameter("lpnn");
     std::vector<std::string> parts;
     boost::algorithm::split(parts, *lpnn, boost::algorithm::is_any_of(","));
     for (const auto& id : parts)
@@ -304,7 +305,7 @@ void parse_lpnns(const boost::optional<std::string>& lpnn,
 }
 
 void parse_wmos(const boost::optional<std::string>& wmo,
-                Spine::HTTP::Request& theRequest,
+                Spine::HTTP::Request& request,
                 std::vector<int>& wmos)
 {
   try
@@ -312,7 +313,7 @@ void parse_wmos(const boost::optional<std::string>& wmo,
     if (!wmo)
       return;
 
-    theRequest.removeParameter("wmo");
+    request.removeParameter("wmo");
     std::vector<std::string> parts;
     boost::algorithm::split(parts, *wmo, boost::algorithm::is_any_of(","));
     for (const auto& id : parts)
@@ -492,33 +493,33 @@ void Plugin::query(const State& state,
   }
 }
 
-void Plugin::grouplocations(Spine::HTTP::Request& theRequest)
+void Plugin::grouplocations(Spine::HTTP::Request& request) const
 {
   try
   {
-    auto lonlats = theRequest.getParameter("lonlats");
+    auto lonlats = request.getParameter("lonlats");
     if (!lonlats)
-      lonlats = theRequest.getParameter("lonlat");
-    auto latlons = theRequest.getParameter("latlons");
+      lonlats = request.getParameter("lonlat");
+    auto latlons = request.getParameter("latlons");
     if (!latlons)
-      latlons = theRequest.getParameter("latlon");
-    auto places = theRequest.getParameter("places");
-    auto fmisid = theRequest.getParameter("fmisid");
-    auto lpnn = theRequest.getParameter("lpnn");
-    auto wmo = theRequest.getParameter("wmo");
+      latlons = request.getParameter("latlon");
+    auto places = request.getParameter("places");
+    auto fmisid = request.getParameter("fmisid");
+    auto lpnn = request.getParameter("lpnn");
+    auto wmo = request.getParameter("wmo");
 
     std::string wkt_multipoint = "MULTIPOINT(";
-    parse_lonlats(lonlats, theRequest, wkt_multipoint);
-    parse_latlons(latlons, theRequest, wkt_multipoint);
-    parse_places(places, theRequest, wkt_multipoint, itsEngines.geoEngine);
+    parse_lonlats(lonlats, request, wkt_multipoint);
+    parse_latlons(latlons, request, wkt_multipoint);
+    parse_places(places, request, wkt_multipoint, itsEngines.geoEngine);
 
     std::vector<int> fmisids;
     std::vector<int> lpnns;
     std::vector<int> wmos;
 
-    parse_fmisids(fmisid, theRequest, fmisids);
-    parse_lpnns(lpnn, theRequest, lpnns);
-    parse_wmos(wmo, theRequest, wmos);
+    parse_fmisids(fmisid, request, fmisids);
+    parse_lpnns(lpnn, request, lpnns);
+    parse_wmos(wmo, request, wmos);
 
     Engine::Geonames::LocationOptions lopts =
         itsEngines.geoEngine->parseLocations(fmisids, lpnns, wmos, "fi");
@@ -534,7 +535,7 @@ void Plugin::grouplocations(Spine::HTTP::Request& theRequest)
     }
 
     wkt_multipoint += ")";
-    theRequest.addParameter("wkt", wkt_multipoint);
+    request.addParameter("wkt", wkt_multipoint);
   }
   catch (...)
   {
@@ -563,10 +564,13 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
       return;
     }
 
-    if (Spine::optional_bool(theRequest.getParameter("grouplocations"), false))
-      grouplocations(const_cast<Spine::HTTP::Request&>(theRequest));
+    // The request will be modified when parsing the input
+    auto request = theRequest;
 
-    isdebug = ("debug" == Spine::optional_string(theRequest.getParameter("format"), ""));
+    if (Spine::optional_bool(request.getParameter("grouplocations"), false))
+      grouplocations(request);
+
+    isdebug = ("debug" == Spine::optional_string(request.getParameter("format"), ""));
 
     theResponse.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -575,7 +579,7 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
 
     theResponse.setStatus(Spine::HTTP::Status::ok);
 
-    query(state, theRequest, theResponse);  // may modify the status
+    query(state, request, theResponse);  // may modify the status
 
     // Adding response headers
 
@@ -892,6 +896,78 @@ void Plugin::updateMetaData(bool initial_phase)
   }
 }
 
+std::map<std::string, boost::posix_time::ptime> Plugin::getNotificationTimes(
+    SourceEngine source_engine, EngineMetaData& new_emd, const boost::posix_time::ptime& now) const
+{
+  try
+  {
+    std::map<std::string, boost::posix_time::ptime> times;
+
+    const auto& new_md = new_emd.getMetaData(source_engine);
+
+    for (const auto& producer_md_item : new_md)
+    {
+      const auto& producer = producer_md_item.first;
+      const auto& producer_new_md = producer_md_item.second;
+
+      auto old_latest_data_update_time = getProducerMetaData(producer).latest_data_update_time;
+
+      if (old_latest_data_update_time.is_not_a_date_time())
+      {
+        // If old latest data update time does not exist -> set it to now and continue and don't
+        // notify
+        new_emd.setLatestDataUpdateTime(source_engine, producer, now);
+      }
+      else
+      {
+        boost::optional<boost::posix_time::ptime> new_latest_data_update_time;
+
+        switch (source_engine)
+        {
+          case SourceEngine::Observation:
+          {
+            // Get the latest update time since old_latest_data_update_time
+            new_latest_data_update_time = itsEngines.obsEngine->getLatestDataUpdateTime(
+                producer, old_latest_data_update_time);
+            break;
+          }
+          case SourceEngine::Querydata:
+          case SourceEngine::Grid:
+          case SourceEngine::Avi:
+          {
+            if (!producer_new_md.empty())
+              new_latest_data_update_time = producer_new_md.front().latest_data_update_time;
+            break;
+          }
+          case SourceEngine::Undefined:
+            break;
+        }
+
+        if (new_latest_data_update_time)
+        {
+          if (new_latest_data_update_time->is_not_a_date_time())
+          {
+            // If no timestamp received -> set latest data update time to now and do not notify
+            new_latest_data_update_time = now;
+          }
+          else if (new_latest_data_update_time > old_latest_data_update_time)
+          {
+            // Set notification time, but it must not be in the future
+            times[producer] =
+                (new_latest_data_update_time <= now ? *new_latest_data_update_time : now);
+          }
+          new_emd.setLatestDataUpdateTime(source_engine, producer, *new_latest_data_update_time);
+        }
+      }
+    }
+    return times;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void Plugin::checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) const
 {
   try
@@ -914,65 +990,9 @@ void Plugin::checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) c
 
     for (auto source_engine : source_engines)
     {
-      const auto& new_md = new_emd->getMetaData(source_engine);
+      auto notification_times = getNotificationTimes(source_engine, *new_emd, now);
 
-      std::map<std::string, boost::posix_time::ptime> producer_notification_times;
-
-      for (const auto& producer_md_item : new_md)
-      {
-        const auto& producer = producer_md_item.first;
-        const auto& producer_new_md = producer_md_item.second;
-
-        auto old_latest_data_update_time = getProducerMetaData(producer).latest_data_update_time;
-
-        if (old_latest_data_update_time.is_not_a_date_time())
-        {
-          // If old latest data update time does not exist -> set it to now and continue and don't
-          // notify
-          new_emd->setLatestDataUpdateTime(source_engine, producer, now);
-          continue;
-        }
-
-        if (source_engine == SourceEngine::Observation)
-        {
-          // Get the latest update time since old_latest_data_update_time
-          auto new_latest_data_update_time =
-              itsEngines.obsEngine->getLatestDataUpdateTime(producer, old_latest_data_update_time);
-          if (new_latest_data_update_time.is_not_a_date_time())
-          {
-            // If no timestamp received -> set latest data update time to now and do not notify
-            new_latest_data_update_time = now;
-          }
-          else if (new_latest_data_update_time > old_latest_data_update_time)
-          {
-            // Set notification time, but it must not be in the future
-            producer_notification_times[producer] =
-                (new_latest_data_update_time <= now ? new_latest_data_update_time : now);
-          }
-          new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
-        }
-        else if (source_engine == SourceEngine::Querydata || source_engine == SourceEngine::Grid ||
-                 source_engine == SourceEngine::Avi)
-        {
-          if (!producer_new_md.empty())
-          {
-            auto new_latest_data_update_time = producer_new_md.front().latest_data_update_time;
-            if (new_latest_data_update_time.is_not_a_date_time())
-            {
-              // If no timestamp received -> set latest data update time to now and do not notify
-              new_latest_data_update_time = now;
-            }
-            else if (new_latest_data_update_time > old_latest_data_update_time)
-            {
-              // Set notification time, but it must not be in the future
-              producer_notification_times[producer] =
-                  (new_latest_data_update_time <= now ? new_latest_data_update_time : now);
-            }
-            new_emd->setLatestDataUpdateTime(source_engine, producer, new_latest_data_update_time);
-          }
-        }
-      }
-      times_to_notify[source_engine] = producer_notification_times;
+      times_to_notify[source_engine] = notification_times;
     }
 
     /*
