@@ -18,30 +18,29 @@ namespace EDR
 
 class AviEngineQuery
 {
-public:
-   AviEngineQuery(const Plugin& thePlugin);
+ public:
+  AviEngineQuery(const Plugin &thePlugin);
 
 #ifndef WITHOUT_AVI
-   void processAviEngineQuery(const State &state,
-								const Query &query,
-								const std::string &producer,
-								TS::OutputData &outputData) const;
+  void processAviEngineQuery(const State &state,
+                             const Query &query,
+                             const std::string &producer,
+                             TS::OutputData &outputData) const;
 
-   bool isAviProducer(const std::string& producer) const;
+  bool isAviProducer(const std::string &producer) const;
 
-private:
-
-   void storeAviData(const State &state,
-					   SmartMet::Engine::Avi::StationQueryData &aviData,
-					   TS::OutputData &outputData) const;
-   void checkAviEngineQuery(const Query &query,
-							 const std::vector<EDRMetaData> &edrMetaDataVector,
-							 bool locationCheck,
-							 SmartMet::Engine::Avi::QueryOptions &queryOptions) const;
+ private:
+  void storeAviData(const State &state,
+                    SmartMet::Engine::Avi::StationQueryData &aviData,
+                    TS::OutputData &outputData) const;
+  void checkAviEngineQuery(const Query &query,
+                           const std::vector<EDRMetaData> &edrMetaDataVector,
+                           bool locationCheck,
+                           SmartMet::Engine::Avi::QueryOptions &queryOptions) const;
 
 #endif
 
-  const Plugin& itsPlugin;
+  const Plugin &itsPlugin;
 };
 
 }  // namespace EDR
