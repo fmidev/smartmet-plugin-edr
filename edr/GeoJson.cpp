@@ -30,8 +30,8 @@ struct coordinate_xyz
 struct time_coord_value
 {
   std::string time;
-  double lon;
-  double lat;
+  double lon = 0;
+  double lat = 0;
   boost::optional<TS::Value> value;
 };
 
@@ -110,9 +110,42 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
-      ret.emplace_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
+      ret.emplace_back(longitude_vector.at(i), latitude_vector.at(i));
 
     return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void get_coordinates(std::vector<double> &longitude_vector,
+                     std::vector<double> &latitude_vector,
+                     const TS::TimeSeriesGroupPtr &tsg,
+                     const std::string &param_name)
+
+{
+  try
+  {
+    for (const auto &llts : *tsg)
+    {
+      const auto &ts = llts.timeseries;
+
+      if (!ts.empty())
+      {
+        const auto &tv = ts.front();
+        double value = as_double(tv.value);
+        if (param_name == "longitude")
+        {
+          longitude_vector.push_back(value);
+        }
+        else
+        {
+          latitude_vector.push_back(value);
+        }
+      }
+    }
   }
   catch (...)
   {
@@ -176,24 +209,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       {
         TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
 
-        for (const auto &llts : *tsg)
-        {
-          const auto &ts = llts.timeseries;
-
-          if (!ts.empty())
-          {
-            const auto &tv = ts.front();
-            double value = as_double(tv.value);
-            if (param_name == "longitude")
-            {
-              longitude_vector.push_back(value);
-            }
-            else
-            {
-              latitude_vector.push_back(value);
-            }
-          }
-        }
+        get_coordinates(longitude_vector, latitude_vector, tsg, param_name);
       }
     }
 
@@ -202,7 +218,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
-      ret.emplace_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
+      ret.emplace_back(longitude_vector.at(i), latitude_vector.at(i));
 
     return ret;
   }
@@ -318,6 +334,7 @@ void add_value(const TS::TimedValue &tv,
   }
 }
 
+#if 0
 void add_value(const TS::TimedValue &tv,
                Json::Value &values_array,
                Json::Value &data_type,
@@ -359,6 +376,7 @@ void add_value(const TS::TimedValue &tv,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 #if 0
 void add_value(const TS::TimedValue &tv,
@@ -491,6 +509,79 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
   }
 }
 
+void add_position_features(Json::Value &features,
+                           const TS::TimeSeriesPtr &ts_data,
+                           const TS::TimeSeriesPtr &ts_lon,
+                           const TS::TimeSeriesPtr &ts_lat,
+                           const TS::TimeSeriesPtr &ts_level,
+                           const std::string &parameter_name,
+                           int parameter_precision,
+                           int lon_precision,
+                           int lat_precision,
+                           int level_precision)
+{
+  try
+  {
+    std::map<size_t, coordinate_xyz> coordinates;
+    std::map<size_t, std::vector<Json::Value>> timesteps_per_coordinate;
+    std::map<size_t, std::vector<Json::Value>> parameter_values_per_coordinate;
+    for (unsigned int k = 0; k < ts_data->size(); k++)
+    {
+      auto lon_value = to_double(ts_lon->at(k));
+      auto lat_value = to_double(ts_lat->at(k));
+      boost::optional<double> level_value;
+      if (ts_level)
+        level_value = to_int(ts_level->at(k));
+      coordinate_xyz coord(lon_value, lat_value, level_value);
+      auto key = hash_value(coord);
+      auto timestep = Json::Value(
+          boost::posix_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
+      timesteps_per_coordinate[key].push_back(timestep);
+      parameter_values_per_coordinate[key].push_back(
+          UtilityFunctions::json_value(ts_data->at(k).value, parameter_precision));
+      coordinates[key] = coord;
+    }
+
+    for (const auto &item : coordinates)
+    {
+      auto key = item.first;
+      const auto &coord = item.second;
+      auto feature = Json::Value(Json::ValueType::objectValue);
+      feature["type"] = Json::Value("Feature");
+      auto point_coordinates = Json::Value(Json::ValueType::arrayValue);
+      point_coordinates[0] = Json::Value(coord.x, lon_precision);
+      point_coordinates[1] = Json::Value(coord.y, lat_precision);
+      if (coord.z)
+        point_coordinates[2] = Json::Value(*coord.z, level_precision);
+      auto point_geometry = Json::Value(Json::ValueType::objectValue);
+      point_geometry["type"] = Json::Value("Point");
+      point_geometry["coordinates"] = point_coordinates;
+      feature["geometry"] = point_geometry;
+
+      auto parameter_values = Json::Value(Json::ValueType::arrayValue);
+      auto time_values = Json::Value(Json::ValueType::arrayValue);
+
+      const auto &timesteps = timesteps_per_coordinate.at(key);
+      const auto &values = parameter_values_per_coordinate.at(key);
+      for (unsigned int k = 0; k < timesteps.size(); k++)
+      {
+        time_values[time_values.size()] = timesteps.at(k);
+        parameter_values[parameter_values.size()] = values.at(k);
+      }
+
+      auto properties = Json::Value(Json::ValueType::objectValue);
+      properties[parameter_name] = parameter_values;
+      properties["time"] = time_values;
+      feature["properties"] = properties;
+      features[features.size()] = feature;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 Json::Value format_output_data_position(const TS::OutputData &outputData,
                                         const EDRMetaData &emd,
                                         const std::vector<Spine::Parameter> &query_parameters)
@@ -504,25 +595,25 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     feature_collection["type"] = Json::Value("FeatureCollection");
     feature_collection["parameters"] = get_edr_series_parameters(query_parameters, emd);
 
-    const auto &lon_precision = emd.getPrecision("longitude");
-    const auto &lat_precision = emd.getPrecision("latitude");
+    const auto lon_precision = emd.getPrecision("longitude");
+    const auto lat_precision = emd.getPrecision("latitude");
     auto level_precision = 0;
-    unsigned int longitude_index;
-    unsigned int latitude_index;
+    unsigned int longitude_index = 0;
+    unsigned int latitude_index = 0;
     boost::optional<unsigned int> level_index;
     const auto &last_param = query_parameters.back();
     auto last_param_name = last_param.name();
     boost::algorithm::to_lower(last_param_name);
     if (last_param_name == "level")
     {
-      level_index = (query_parameters.size() - 1);
-      latitude_index = (query_parameters.size() - 2);
-      longitude_index = (query_parameters.size() - 3);
+      level_index = query_parameters.size() - 1;
+      latitude_index = query_parameters.size() - 2;
+      longitude_index = query_parameters.size() - 3;
     }
     else
     {
-      latitude_index = (query_parameters.size() - 1);
-      longitude_index = (query_parameters.size() - 2);
+      latitude_index = query_parameters.size() - 1;
+      longitude_index = query_parameters.size() - 2;
     }
 
     for (const auto &output : outputData)
@@ -551,64 +642,88 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
           ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
         }
 
-        std::map<size_t, coordinate_xyz> coordinates;
-        std::map<size_t, std::vector<Json::Value>> timesteps_per_coordinate;
-        std::map<size_t, std::vector<Json::Value>> parameter_values_per_coordinate;
-        for (unsigned int k = 0; k < ts_data->size(); k++)
-        {
-          auto lon_value = to_double(ts_lon->at(k));
-          auto lat_value = to_double(ts_lat->at(k));
-          boost::optional<double> level_value;
-          if (ts_level)
-            level_value = to_int(ts_level->at(k));
-          coordinate_xyz coord(lon_value, lat_value, level_value);
-          auto key = hash_value(coord);
-          auto timestep = Json::Value(
-              boost::posix_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
-          timesteps_per_coordinate[key].push_back(timestep);
-          parameter_values_per_coordinate[key].push_back(
-              UtilityFunctions::json_value(ts_data->at(k).value, parameter_precision));
-          coordinates[key] = coord;
-        }
-        for (const auto &item : coordinates)
-        {
-          auto key = item.first;
-          const auto &coord = item.second;
-          auto feature = Json::Value(Json::ValueType::objectValue);
-          feature["type"] = Json::Value("Feature");
-          auto point_coordinates = Json::Value(Json::ValueType::arrayValue);
-          point_coordinates[0] = Json::Value(coord.x, lon_precision);
-          point_coordinates[1] = Json::Value(coord.y, lat_precision);
-          if (coord.z)
-            point_coordinates[2] = Json::Value(*coord.z, level_precision);
-          auto point_geometry = Json::Value(Json::ValueType::objectValue);
-          point_geometry["type"] = Json::Value("Point");
-          point_geometry["coordinates"] = point_coordinates;
-          feature["geometry"] = point_geometry;
-
-          auto parameter_values = Json::Value(Json::ValueType::arrayValue);
-          auto time_values = Json::Value(Json::ValueType::arrayValue);
-
-          const auto &timesteps = timesteps_per_coordinate.at(key);
-          const auto &values = parameter_values_per_coordinate.at(key);
-          for (unsigned int k = 0; k < timesteps.size(); k++)
-          {
-            time_values[time_values.size()] = timesteps.at(k);
-            parameter_values[parameter_values.size()] = values.at(k);
-          }
-
-          auto properties = Json::Value(Json::ValueType::objectValue);
-          properties[parameter_name] = parameter_values;
-          properties["time"] = time_values;
-          feature["properties"] = properties;
-          features[features.size()] = feature;
-        }
+        add_position_features(features,
+                              ts_data,
+                              ts_lon,
+                              ts_lat,
+                              ts_level,
+                              parameter_name,
+                              parameter_precision,
+                              lon_precision,
+                              lat_precision,
+                              level_precision);
       }
     }
 
     feature_collection["features"] = features;
 
     return feature_collection;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
+                                const TS::TimeSeriesGroupPtr &tsg_lon,
+                                const TS::TimeSeriesGroupPtr &tsg_lat,
+                                const TS::TimeSeriesGroupPtr &tsg_level,
+                                bool levels_present,
+                                const CoordinateFilter &coordinate_filter)
+{
+  try
+  {
+    DataPerLevel dpl;
+    unsigned int levels_index = 0;
+    for (unsigned int k = 0; k < tsg_data->size(); k++)
+    {
+      const auto &llts_data = tsg_data->at(k);
+      const auto &llts_lon = tsg_lon->at(k);
+      const auto &llts_lat = tsg_lat->at(k);
+
+      for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
+      {
+        const auto &data_value = llts_data.timeseries.at(l);
+        const auto &lon_value = llts_lon.timeseries.at(l);
+        const auto &lat_value = llts_lat.timeseries.at(l);
+
+        time_coord_value tcv;
+        tcv.lon = as_double(lon_value.value);
+        tcv.lat = as_double(lat_value.value);
+        tcv.time = (boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
+
+        double level = std::numeric_limits<double>::max();
+        if (levels_present)
+        {
+          const auto &llts_level = tsg_level->at(k);
+          const auto &level_value = llts_level.timeseries.at(l);
+          if (boost::get<double>(&level_value.value) != nullptr)
+          {
+            level = *(boost::get<double>(&level_value.value));
+          }
+          else if (boost::get<int>(&level_value.value) != nullptr)
+          {
+            level = *(boost::get<int>(&level_value.value));
+          }
+        }
+
+        if (data_value.value != TS::None())
+          tcv.value = data_value.value;
+        bool accept = coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
+
+        if (accept)
+          dpl[level].push_back(tcv);
+
+        if (levels_present)
+        {
+          levels_index++;
+          if (levels_index >= tsg_level->size())
+            levels_index = 0;
+        }
+      }
+    }
+    return dpl;
   }
   catch (...)
   {
@@ -631,22 +746,22 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
     bool levels_present = !levels.empty();
 
     // Get indexes of longitude, latitude, level
-    unsigned int longitude_index;
-    unsigned int latitude_index;
-    unsigned int level_index;
+    unsigned int longitude_index = 0;
+    unsigned int latitude_index = 0;
+    unsigned int level_index = 0;
     const auto &last_param = query_parameters.back();
     auto last_param_name = last_param.name();
     boost::algorithm::to_lower(last_param_name);
     if (levels_present)
     {
-      level_index = (query_parameters.size() - 1);
-      latitude_index = (query_parameters.size() - 2);
-      longitude_index = (query_parameters.size() - 3);
+      level_index = query_parameters.size() - 1;
+      latitude_index = query_parameters.size() - 2;
+      longitude_index = query_parameters.size() - 3;
     }
     else
     {
-      latitude_index = (query_parameters.size() - 1);
-      longitude_index = (query_parameters.size() - 2);
+      latitude_index = query_parameters.size() - 1;
+      longitude_index = query_parameters.size() - 2;
     }
 
     for (const auto &output : outputData)
@@ -657,7 +772,6 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
       for (unsigned int j = 0; j < outdata.size(); j++)
       {
         auto parameter_name = parse_parameter_name(query_parameters[j].name());
-        DataPerLevel dpl;
 
         if (lon_lat_level_param(parameter_name))
           continue;
@@ -675,60 +789,78 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
           tsg_level = *(boost::get<TS::TimeSeriesGroupPtr>(&tslevel));
         }
 
-        unsigned int levels_index = 0;
-        for (unsigned int k = 0; k < tsg_data->size(); k++)
-        {
-          const auto &llts_data = tsg_data->at(k);
-          const auto &llts_lon = tsg_lon->at(k);
-          const auto &llts_lat = tsg_lat->at(k);
+        DataPerLevel dpl = get_parameter_data(
+            tsg_data, tsg_lon, tsg_lat, tsg_level, levels_present, coordinate_filter);
 
-          for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
-          {
-            const auto &data_value = llts_data.timeseries.at(l);
-            const auto &lon_value = llts_lon.timeseries.at(l);
-            const auto &lat_value = llts_lat.timeseries.at(l);
-
-            time_coord_value tcv;
-            tcv.lon = as_double(lon_value.value);
-            tcv.lat = as_double(lat_value.value);
-            tcv.time =
-                (boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
-
-            double level = std::numeric_limits<double>::max();
-            if (levels_present)
-            {
-              const auto &llts_level = tsg_level->at(k);
-              const auto &level_value = llts_level.timeseries.at(l);
-              if (boost::get<double>(&level_value.value) != nullptr)
-              {
-                level = *(boost::get<double>(&level_value.value));
-              }
-              else if (boost::get<int>(&level_value.value) != nullptr)
-              {
-                level = *(boost::get<int>(&level_value.value));
-              }
-            }
-
-            if (data_value.value != TS::None())
-              tcv.value = data_value.value;
-            bool accept =
-                coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
-
-            if (accept)
-              dpl[level].push_back(tcv);
-
-            if (levels_present)
-            {
-              levels_index++;
-              if (levels_index >= tsg_level->size())
-                levels_index = 0;
-            }
-          }
-        }
         dpp[parameter_name] = dpl;
       }
     }
     return dpp;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void add_collection_level_features(Json::Value &features,
+                                   const std::vector<time_coord_value> &time_coord_values,
+                                   const std::string &parameter_name,
+                                   int parameter_precision,
+                                   int lon_precision,
+                                   int lat_precision,
+                                   int level_precision,
+                                   const boost::optional<double> &level)
+{
+  try
+  {
+    std::map<size_t, coordinate_xyz> coordinates;
+    std::map<size_t, std::vector<std::string>> timestamps_per_coordinate;
+    std::map<size_t, std::vector<boost::optional<TS::Value>>> values_per_coordinate;
+    for (const auto &item3 : time_coord_values)
+    {
+      coordinate_xyz coord(item3.lon, item3.lat, level);
+      auto key = hash_value(coord);
+      timestamps_per_coordinate[key].push_back(item3.time);
+      values_per_coordinate[key].push_back(item3.value);
+      coordinates[key] = coord;
+    }
+
+    auto parameter_values = Json::Value(Json::ValueType::arrayValue);
+    auto time_values = Json::Value(Json::ValueType::arrayValue);
+
+    for (const auto &item : coordinates)
+    {
+      auto key = item.first;
+      const auto &coord = item.second;
+      const auto &timeseries = timestamps_per_coordinate.at(key);
+      const auto &values = values_per_coordinate.at(key);
+
+      for (unsigned int i = 0; i < timeseries.size(); i++)
+      {
+        time_values[i] = Json::Value(timeseries.at(i));
+        Json::Value parameter_value;
+        if (values.at(i))
+          parameter_value = UtilityFunctions::json_value(*values.at(i), parameter_precision);
+        parameter_values[i] = parameter_value;
+      }
+      auto feature = Json::Value(Json::ValueType::objectValue);
+      feature["type"] = Json::Value("Feature");
+      auto point_coordinates = Json::Value(Json::ValueType::arrayValue);
+      point_coordinates[0] = Json::Value(coord.x, lon_precision);
+      point_coordinates[1] = Json::Value(coord.y, lat_precision);
+      if (coord.z)
+        point_coordinates[2] = Json::Value(*coord.z, level_precision);
+      auto point_geometry = Json::Value(Json::ValueType::objectValue);
+      point_geometry["type"] = Json::Value("Point");
+      point_geometry["coordinates"] = point_coordinates;
+      feature["geometry"] = point_geometry;
+      auto properties = Json::Value(Json::ValueType::objectValue);
+      properties[parameter_name] = parameter_values;
+      properties["time"] = time_values;
+      feature["properties"] = properties;
+      features[features.size()] = feature;
+    }
   }
   catch (...)
   {
@@ -771,68 +903,31 @@ Json::Value format_output_data_feature_collection(
     {
       const auto &parameter_name = item.first;
       const auto &level_values = item.second;
-      const auto &parameter_precision = emd.getPrecision(parameter_name);
+      const auto parameter_precision = emd.getPrecision(parameter_name);
       for (const auto &item2 : level_values)
       {
         boost::optional<double> level;
         if (item2.first != std::numeric_limits<double>::max())
           level = item2.first;
         const auto &time_coord_values = item2.second;
-        std::map<size_t, coordinate_xyz> coordinates;
-        std::map<size_t, std::vector<std::string>> timestamps_per_coordinate;
-        std::map<size_t, std::vector<boost::optional<TS::Value>>> values_per_coordinate;
+
         for (const auto &item3 : time_coord_values)
         {
           coordinate_xyz coord(item3.lon, item3.lat, level);
-          auto key = hash_value(coord);
-          timestamps_per_coordinate[key].push_back(item3.time);
-          values_per_coordinate[key].push_back(item3.value);
-          coordinates[key] = coord;
-          if (coord.x < bbox_xmin)
-            bbox_xmin = coord.x;
-          if (coord.x > bbox_xmax)
-            bbox_xmax = coord.x;
-          if (coord.y < bbox_ymin)
-            bbox_ymin = coord.y;
-          if (coord.y > bbox_ymax)
-            bbox_ymax = coord.y;
+          bbox_xmin = std::min(bbox_xmin, coord.x);
+          bbox_xmax = std::max(bbox_xmax, coord.x);
+          bbox_ymin = std::min(bbox_ymin, coord.y);
+          bbox_ymax = std::max(bbox_ymax, coord.y);
         }
 
-        auto parameter_values = Json::Value(Json::ValueType::arrayValue);
-        auto time_values = Json::Value(Json::ValueType::arrayValue);
-
-        for (const auto &item : coordinates)
-        {
-          auto key = item.first;
-          const auto &coord = item.second;
-          const auto &timeseries = timestamps_per_coordinate.at(key);
-          const auto &values = values_per_coordinate.at(key);
-
-          for (unsigned int i = 0; i < timeseries.size(); i++)
-          {
-            time_values[i] = Json::Value(timeseries.at(i));
-            Json::Value parameter_value;
-            if (values.at(i))
-              parameter_value = UtilityFunctions::json_value(*values.at(i), parameter_precision);
-            parameter_values[i] = parameter_value;
-          }
-          auto feature = Json::Value(Json::ValueType::objectValue);
-          feature["type"] = Json::Value("Feature");
-          auto point_coordinates = Json::Value(Json::ValueType::arrayValue);
-          point_coordinates[0] = Json::Value(coord.x, lon_precision);
-          point_coordinates[1] = Json::Value(coord.y, lat_precision);
-          if (coord.z)
-            point_coordinates[2] = Json::Value(*coord.z, level_precision);
-          auto point_geometry = Json::Value(Json::ValueType::objectValue);
-          point_geometry["type"] = Json::Value("Point");
-          point_geometry["coordinates"] = point_coordinates;
-          feature["geometry"] = point_geometry;
-          auto properties = Json::Value(Json::ValueType::objectValue);
-          properties[parameter_name] = parameter_values;
-          properties["time"] = time_values;
-          feature["properties"] = properties;
-          features[features.size()] = feature;
-        }
+        add_collection_level_features(features,
+                                      time_coord_values,
+                                      parameter_name,
+                                      parameter_precision,
+                                      lon_precision,
+                                      lat_precision,
+                                      level_precision,
+                                      level);
       }
     }
 
