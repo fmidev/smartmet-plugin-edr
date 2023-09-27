@@ -400,6 +400,52 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
   }
 }
 
+void update_lon_lat_vector(const std::string& param_name,
+						   const TS::TimeSeries& ts,
+						   std::vector<double>& longitude_vector,
+						   std::vector<double>& latitude_vector)
+{
+  try
+  {
+	if (!ts.empty())
+	  {
+		const TS::TimedValue &tv = ts.at(0);
+		double value = as_double(tv.value);
+		if (param_name == "longitude")
+		  longitude_vector.push_back(value);
+		else
+		  latitude_vector.push_back(value);
+	  }
+   }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void update_lon_lat_vector(const std::string& param_name,
+						   const TS::TimeSeriesGroupPtr& tsg,
+						   std::vector<double>& longitude_vector,
+						   std::vector<double>& latitude_vector)
+{
+  try
+  {
+	for (const auto &llts : *tsg)
+	{
+	  const auto &ts = llts.timeseries;
+	  
+	  update_lon_lat_vector(param_name,
+							ts,
+							longitude_vector,
+							latitude_vector);
+	}
+   }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
                                         const std::vector<Spine::Parameter> &query_parameters)
 {
@@ -436,44 +482,30 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       if (boost::get<TS::TimeSeriesPtr>(&tsdata))
       {
         TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-        if (!ts->empty())
-        {
-          const TS::TimedValue &tv = ts->at(0);
-          double value = as_double(tv.value);
-          if (param_name == "longitude")
-            longitude_vector.push_back(value);
-          else
-            latitude_vector.push_back(value);
-        }
+		update_lon_lat_vector(param_name,
+							  *ts,
+							  longitude_vector,
+							  latitude_vector);
+		continue;
       }
-      else if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
+
+      if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
       {
         std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldnt be "
                      "here -> report error!!:\n"
                   << tsdata << std::endl;
+		continue;
       }
-      else if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
+
+      if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
       {
         TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
 
-        for (const auto &llts : *tsg)
-        {
-          const auto &ts = llts.timeseries;
-
-          if (!ts.empty())
-          {
-            const auto &tv = ts.front();
-            double value = as_double(tv.value);
-            if (param_name == "longitude")
-            {
-              longitude_vector.push_back(value);
-            }
-            else
-            {
-              latitude_vector.push_back(value);
-            }
-          }
-        }
+		update_lon_lat_vector(param_name,
+							  tsg,
+							  longitude_vector,
+							  latitude_vector);
+		continue;
       }
     }
 
@@ -1787,6 +1819,148 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
   }
 }
 
+void set_axis_names(const bool& levels_present,
+					Json::Value& axis_names)
+{
+  try
+  {
+	  axis_names[0] = Json::Value("x");
+	  axis_names[1] = Json::Value("y");
+	  if (levels_present)
+	  {
+		axis_names[2] = Json::Value("z");
+		axis_names[3] = Json::Value("t");
+	  }
+	  else
+	  {
+		axis_names[2] = Json::Value("t");
+	  }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void set_parameter_value(const time_coord_value& value,
+						 const int& parameter_precision,
+						 const bool& isAviProducer,
+						 Json::Value& values,
+						 Json::Value& range_item)
+{
+  try
+  {
+	if (value.value)
+	{
+	  values[0] = UtilityFunctions::json_value(*value.value, parameter_precision);
+	  range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
+	}
+	else
+	{
+	  values[0] = Json::Value();
+	  range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
+	}
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
+void set_level_value(const bool& levels_present,
+					 const int& level,
+					 Json::Value& domain_axes)
+{
+  try
+  {
+	if (levels_present)
+	{
+	  auto domain_axes_z = Json::Value(Json::ValueType::objectValue);
+	  domain_axes_z["values"] = Json::Value(Json::ValueType::arrayValue);
+	  domain_axes_z["values"][0] = Json::Value(level);
+	  domain_axes["z"] = domain_axes_z;
+	}
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void process_values(const std::string& parameter_name,
+					const int& parameter_precision,
+					const int& longitude_precision,
+					const int& latitude_precision,
+					const bool& isAviProducer,
+					std::vector<time_coord_value>& values,
+					const bool& levels_present,
+					const int& level,
+					Json::Value& coverages)
+{
+  try
+  {
+	for (const auto &value : values)
+    {
+	  auto coverage = Json::Value(Json::ValueType::objectValue);
+	  coverage["type"] = Json::Value("Coverage");
+	  auto domain = Json::Value(Json::ValueType::objectValue);
+	  domain["type"] = Json::Value("Domain");
+	  auto domain_axes = Json::Value(Json::ValueType::objectValue);
+	  auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
+	  domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
+	  auto data_type = Json::Value(Json::ValueType::objectValue);
+	  domain_axes_x["values"][0] = Json::Value(value.lon, longitude_precision);
+	  auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
+	  domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
+	  domain_axes_y["values"][0] = Json::Value(value.lat, latitude_precision);
+	  auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
+	  domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
+	  domain_axes_t["values"][0] = Json::Value(value.time);
+	  domain_axes["x"] = domain_axes_x;
+	  domain_axes["y"] = domain_axes_y;
+	  domain_axes["t"] = domain_axes_t;
+	  set_level_value(levels_present,
+					  level,
+					  domain_axes);
+	  
+	  domain["axes"] = domain_axes;
+	  coverage["domain"] = domain;
+	  
+	  auto range_item = Json::Value(Json::ValueType::objectValue);
+	  range_item["type"] = Json::Value("NdArray");
+	  auto shape = Json::Value(Json::ValueType::arrayValue);
+	  shape[0] = Json::Value(1);
+	  shape[1] = Json::Value(1);
+	  shape[2] = Json::Value(1);
+	  if (levels_present)
+		shape[3] = Json::Value(1);
+	  
+	  range_item["shape"] = shape;
+	  auto axis_names = Json::Value(Json::ValueType::arrayValue);
+	  set_axis_names(levels_present, axis_names);
+	  
+	  range_item["axisNames"] = axis_names;
+	  auto values = Json::Value(Json::ValueType::arrayValue);
+	  set_parameter_value(value,
+						  parameter_precision,
+						  isAviProducer,
+						  values,
+						  range_item);
+
+	  range_item["values"] = values;
+	  auto ranges = Json::Value(Json::ValueType::objectValue);
+	  ranges[parameter_name] = range_item;
+	  coverage["ranges"] = ranges;
+	  coverages[coverages.size()] = coverage;
+	}
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void process_coverage_collection_point_parameter(const DataPerLevel& dpl,
 												 const std::string& parameter_name,
 												 const int& parameter_precision,
@@ -1805,82 +1979,18 @@ void process_coverage_collection_point_parameter(const DataPerLevel& dpl,
 	  levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
 	  
 	  auto values = dpl_item.second;
-	  auto data_values = Json::Value(Json::ValueType::arrayValue);
-	  auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
-	  for (const auto &value : values)
-      {
-		auto coverage = Json::Value(Json::ValueType::objectValue);
-		coverage["type"] = Json::Value("Coverage");
-		auto domain = Json::Value(Json::ValueType::objectValue);
-		domain["type"] = Json::Value("Domain");
-		auto domain_axes = Json::Value(Json::ValueType::objectValue);
-		auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
-		domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
-		auto data_type = Json::Value(Json::ValueType::objectValue);
-		domain_axes_x["values"][0] = Json::Value(value.lon, longitude_precision);
-		auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
-		domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
-		domain_axes_y["values"][0] = Json::Value(value.lat, latitude_precision);
-		auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
-		domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
-		domain_axes_t["values"][0] = Json::Value(value.time);
-		domain_axes["x"] = domain_axes_x;
-		domain_axes["y"] = domain_axes_y;
-		domain_axes["t"] = domain_axes_t;
-		if (levels_present)
-        {
-		  auto domain_axes_z = Json::Value(Json::ValueType::objectValue);
-		  domain_axes_z["values"] = Json::Value(Json::ValueType::arrayValue);
-		  domain_axes_z["values"][0] = Json::Value(level);
-		  domain_axes["z"] = domain_axes_z;
-		}
-		
-		domain["axes"] = domain_axes;
-		coverage["domain"] = domain;
-		
-		auto range_item = Json::Value(Json::ValueType::objectValue);
-		range_item["type"] = Json::Value("NdArray");
-		auto shape = Json::Value(Json::ValueType::arrayValue);
-		shape[0] = Json::Value(1);
-		shape[1] = Json::Value(1);
-		shape[2] = Json::Value(1);
-		if (levels_present)
-		  shape[3] = Json::Value(1);
-		
-		range_item["shape"] = shape;
-		auto axis_names = Json::Value(Json::ValueType::arrayValue);
-		axis_names[0] = Json::Value("x");
-		axis_names[1] = Json::Value("y");
-		if (levels_present)
-		{
-		  axis_names[2] = Json::Value("z");
-		  axis_names[3] = Json::Value("t");
-		}
-		else
-        {
-		  axis_names[2] = Json::Value("t");
-		}
-
-		range_item["axisNames"] = axis_names;
-		auto values = Json::Value(Json::ValueType::arrayValue);
-		if (value.value)
-		{
-		  values[0] = UtilityFunctions::json_value(*value.value, parameter_precision);
-		  range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
-        }
-		else
-        {
-		  values[0] = Json::Value();
-		  range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
-		}
-		range_item["values"] = values;
-		auto ranges = Json::Value(Json::ValueType::objectValue);
-		ranges[parameter_name] = range_item;
-		coverage["ranges"] = ranges;
-		coverages[coverages.size()] = coverage;
-	  }
+	  
+	  process_values(parameter_name,
+					 parameter_precision,
+					 longitude_precision,
+					 latitude_precision,
+					 isAviProducer,
+					 values,
+					 levels_present,
+					 level,
+					 coverages);
 	}
- }
+  }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");

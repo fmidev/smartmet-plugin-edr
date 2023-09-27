@@ -438,7 +438,7 @@ void get_label_unit_description(
     {
       const auto &properties = observable_properties.at(parameter_name);
       description = properties->observablePropertyLabel;
-      label = properties->uom;
+      label = parameter_name;
       unit = properties->uom;
       /*
             auto prop_desc =
