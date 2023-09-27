@@ -1941,14 +1941,14 @@ void process_values(const std::string& parameter_name,
 	  set_axis_names(levels_present, axis_names);
 	  
 	  range_item["axisNames"] = axis_names;
-	  auto values = Json::Value(Json::ValueType::arrayValue);
+	  auto parameter_values = Json::Value(Json::ValueType::arrayValue);
 	  set_parameter_value(value,
 						  parameter_precision,
 						  isAviProducer,
-						  values,
+						  parameter_values,
 						  range_item);
 
-	  range_item["values"] = values;
+	  range_item["values"] = parameter_values;
 	  auto ranges = Json::Value(Json::ValueType::objectValue);
 	  ranges[parameter_name] = range_item;
 	  coverage["ranges"] = ranges;

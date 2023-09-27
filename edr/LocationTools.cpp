@@ -77,8 +77,8 @@ const OGRGeometry* get_ogr_geometry(const Spine::TaggedLocation& tloc,
     }
     else if (loc->type == Spine::Location::Wkt)
     {
-      std::unique_ptr<OGRGeometry> ret = get_ogr_geometry(place, loc->radius);
-      return ret.release();
+      std::unique_ptr<OGRGeometry> geom = get_ogr_geometry(place, loc->radius);
+      return geom.release();
     }
   }
   catch (...)
