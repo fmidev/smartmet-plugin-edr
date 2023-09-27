@@ -2091,6 +2091,53 @@ double get_level(const TS::TimeSeriesGroupPtr& tsg_level,
   }
 }
 
+void add_time_coord_value(const TS::LonLatTimeSeries& llts_data,
+						  const TS::LonLatTimeSeries& llts_lon,
+						  const TS::LonLatTimeSeries& llts_lat,
+						  const TS::TimeSeriesGroupPtr& tsg_level,
+						  const unsigned int tsg_index,
+						  const bool& levels_present,
+						  unsigned int& levels_index,
+						  const CoordinateFilter &coordinate_filter,
+						  DataPerLevel& dpl)
+{
+  try
+  {
+	for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
+	{
+	  const auto &data_value = llts_data.timeseries.at(l);
+	  const auto &lon_value = llts_lon.timeseries.at(l);
+	  const auto &lat_value = llts_lat.timeseries.at(l);
+	  
+	  time_coord_value tcv;
+	  tcv.lon = as_double(lon_value.value);
+	  tcv.lat = as_double(lat_value.value);
+	  tcv.time =
+		(boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
+	  
+	  double level = get_level(tsg_level, levels_present, tsg_index, l);
+	  
+	  if (data_value.value != TS::None())
+		tcv.value = data_value.value;
+	  bool accept =
+		coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
+	  
+	  if (accept)
+		dpl[level].push_back(tcv);
+	  
+	  if (levels_present)
+	  {
+		levels_index++;
+		if (levels_index >= tsg_level->size())
+		  levels_index = 0;
+	  }
+	}
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
 DataPerLevel get_data_per_level(const TS::TimeSeriesGroupPtr& tsg_data,
 								const TS::TimeSeriesGroupPtr& tsg_lon,
@@ -2110,35 +2157,15 @@ DataPerLevel get_data_per_level(const TS::TimeSeriesGroupPtr& tsg_data,
 	  const auto &llts_lon = tsg_lon->at(k);
 	  const auto &llts_lat = tsg_lat->at(k);
 	  
-	  for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
-	  {
-		const auto &data_value = llts_data.timeseries.at(l);
-		const auto &lon_value = llts_lon.timeseries.at(l);
-		const auto &lat_value = llts_lat.timeseries.at(l);
-		
-		time_coord_value tcv;
-		tcv.lon = as_double(lon_value.value);
-		tcv.lat = as_double(lat_value.value);
-		tcv.time =
-		  (boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
-		
-		double level = get_level(tsg_level, levels_present, k, l);
-
-		if (data_value.value != TS::None())
-		  tcv.value = data_value.value;
-		bool accept =
-		  coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
-		
-		if (accept)
-		  dpl[level].push_back(tcv);
-		
-		if (levels_present)
-		{
-		  levels_index++;
-		  if (levels_index >= tsg_level->size())
-			levels_index = 0;
-		}
-	  }
+	  add_time_coord_value(llts_data,
+						   llts_lon,
+						   llts_lat,
+						   tsg_level,
+						   k,
+						   levels_present,
+						   levels_index,
+						   coordinate_filter,
+						   dpl);
 	}
 	return dpl;
   }
@@ -2159,34 +2186,34 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData>& outdata,
 {
   try
   {
-      for (unsigned int j = 0; j < outdata.size(); j++)
+	for (unsigned int j = 0; j < outdata.size(); j++)
+    {
+	  auto parameter_name = parse_parameter_name(query_parameters[j].name());
+	  
+	  if (lon_lat_level_param(parameter_name))
+		continue;
+
+	  auto tsdata = outdata.at(j);
+	  auto tslon = outdata.at(longitude_index);
+	  auto tslat = outdata.at(latitude_index);
+	  TS::TimeSeriesGroupPtr tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+	  TS::TimeSeriesGroupPtr tsg_lon = *(boost::get<TS::TimeSeriesGroupPtr>(&tslon));
+	  TS::TimeSeriesGroupPtr tsg_lat = *(boost::get<TS::TimeSeriesGroupPtr>(&tslat));
+	  TS::TimeSeriesGroupPtr tsg_level = nullptr;
+	  if (levels_present)
       {
-        auto parameter_name = parse_parameter_name(query_parameters[j].name());
-
-        if (lon_lat_level_param(parameter_name))
-          continue;
-
-        auto tsdata = outdata.at(j);
-        auto tslon = outdata.at(longitude_index);
-        auto tslat = outdata.at(latitude_index);
-        TS::TimeSeriesGroupPtr tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-        TS::TimeSeriesGroupPtr tsg_lon = *(boost::get<TS::TimeSeriesGroupPtr>(&tslon));
-        TS::TimeSeriesGroupPtr tsg_lat = *(boost::get<TS::TimeSeriesGroupPtr>(&tslat));
-        TS::TimeSeriesGroupPtr tsg_level = nullptr;
-        if (levels_present)
-        {
-          auto tslevel = outdata.at(level_index);
-          tsg_level = *(boost::get<TS::TimeSeriesGroupPtr>(&tslevel));
-        }
-
-		DataPerLevel dpl = get_data_per_level(tsg_data,
-											  tsg_lon,
-											  tsg_lat,
-											  tsg_level,
-											  levels_present,
-											  coordinate_filter);
-        dpp[parameter_name] = dpl;
-      }
+		auto tslevel = outdata.at(level_index);
+		tsg_level = *(boost::get<TS::TimeSeriesGroupPtr>(&tslevel));
+	  }
+	  
+	  DataPerLevel dpl = get_data_per_level(tsg_data,
+											tsg_lon,
+											tsg_lat,
+											tsg_level,
+											levels_present,
+											coordinate_filter);
+	  dpp[parameter_name] = dpl;
+	}
   }
   catch (...)
   {
@@ -2274,6 +2301,41 @@ Json::Value format_output_data_coverage_collection(
   }
 }
 
+void add_parameter(const std::string& parameter_name,
+				   const int& parameter_precision,
+				   const TS::TimeSeriesPtr& ts_data,
+				   const TS::TimeSeriesPtr& ts_level,
+				   const int& level_precision,
+				   const bool& firstParameter,
+				   Json::Value& values_array,
+				   Json::Value& level_values,
+				   std::map<std::string, Json::Value>& parameter_data_type)
+{
+  try
+  {
+	Json::Value data_type_level;
+	Json::Value data_type_data;
+	unsigned int data_index = 0;
+	for (unsigned int k = 0; k < ts_data->size(); k++)
+    {
+	  const auto &data_value = ts_data->at(k);
+	  const auto &level_value = ts_level->at(k);
+	  add_value(data_value, values_array, data_type_data, data_index, parameter_precision);
+	  // All parameters have the same levels
+	  if (firstParameter)
+		add_value(level_value, level_values, data_type_level, data_index, level_precision);
+	  if (parameter_data_type.find(parameter_name) == parameter_data_type.end())
+		parameter_data_type[parameter_name] = data_type_data;
+	  data_index++;
+	}
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+
 Json::Value format_output_data_vertical_profile(
     const TS::OutputData &outputData,
     const EDRMetaData &emd,
@@ -2315,6 +2377,7 @@ Json::Value format_output_data_vertical_profile(
       if (lon_lat_level_param(parameter_name))
         continue;
 
+	  auto firstParameter = (j == 0);
       auto tsdata = outdata.at(j);
       auto tslevel = outdata.at(level_index);
       TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
@@ -2322,22 +2385,17 @@ Json::Value format_output_data_vertical_profile(
 
       auto values_array = Json::Value(Json::ValueType::arrayValue);
 
-      Json::Value data_type_level;
-      Json::Value data_type_data;
-      unsigned int data_index = 0;
-      for (unsigned int k = 0; k < ts_data->size(); k++)
-      {
-        const auto &data_value = ts_data->at(k);
-        const auto &level_value = ts_level->at(k);
-        add_value(data_value, values_array, data_type_data, data_index, parameter_precision);
-        // All parameters have the same levels
-        if (j == 0)
-          add_value(level_value, level_values, data_type_level, data_index, level_precision);
-        if (parameter_data_type.find(parameter_name) == parameter_data_type.end())
-          parameter_data_type[parameter_name] = data_type_data;
-        data_index++;
-      }
-      parameter_data_values[parameter_name] = values_array;
+	  add_parameter(parameter_name,
+					parameter_precision,
+					ts_data,
+					ts_level,
+					level_precision,
+					firstParameter,
+					values_array,
+					level_values,
+					parameter_data_type);
+
+      parameter_data_values[parameter_name] = values_array;	  
     }
 
     if (parameter_data_values.empty())
