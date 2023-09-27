@@ -76,6 +76,8 @@ ValueType get_value_type(const DataValue &dv)
 std::string json_encode(const std::string &input)
 {
   std::string output;
+  output.reserve(input.size());
+
   for (unsigned char c : input)
   {
     switch (c)
@@ -102,7 +104,7 @@ std::string json_encode(const std::string &input)
         output += "\\t";
         break;
       default:
-        if (c < 0x20 || c > 0x7F)
+        if (c < 0x20)
           output += fmt::format("\\u{:04x}", c);
         else
           output += c;
