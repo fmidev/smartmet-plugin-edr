@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.9.11
+Version: 23.9.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Thu 282023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.9.282.fmi
+- Code refactored (BRAINSTORM-2694)
+- Json encoding fixed (BRAINSTORM-2732)
+- Set parameter name in observedProperty.label field instead of measurement unit (BRAINSTORM-2732)
+- IWXXM message tag changed from <avi> to <collect:meteorologicalInformation> (BRAINSTORM-2732)
+
 * Mon Sep 11 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.9.11-1.fmi
 - Repackaged due to ABI changes in grid-files
 

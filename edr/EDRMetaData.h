@@ -2,6 +2,7 @@
 
 #include "CollectionInfo.h"
 #include "EDRDefs.h"
+#include "Engines.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
 #include <boost/date_time/posix_time/ptime.hpp>
@@ -10,36 +11,17 @@
 #include <map>
 #include <set>
 #include <string>
+#ifndef WITHOUT_OBSERVATION
+#include <engines/observation/ObservableProperty.h>
+#endif
 
 namespace SmartMet
 {
-namespace Engine
-{
-namespace Querydata
-{
-class Engine;
-}
-namespace Grid
-{
-class Engine;
-}
-#ifndef WITHOUT_OBSERVATION
-namespace Observation
-{
-class Engine;
-}
-#endif
-#ifndef WITHOUT_AVI
-namespace Avi
-{
-class Engine;
-}
-#endif
-}  // namespace Engine
 namespace Plugin
 {
 namespace EDR
 {
+
 // Parameter info from querydata-, observation-, grid-engine
 struct edr_parameter
 {
@@ -149,7 +131,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     Engine::Observation::Engine& obsEngine,
     const std::string& default_language,
     const ParameterInfo* pinfo,
-    const std::map<std::string, const Engine::Observation::ObservableProperty*>&
+    const std::map<std::string, const SmartMet::Engine::Observation::ObservableProperty*>&
         observable_properties,
     const CollectionInfoContainer& cic,
     const SupportedDataQueries& sdq,

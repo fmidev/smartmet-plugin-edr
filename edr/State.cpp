@@ -1,6 +1,8 @@
 #include "State.h"
 #include "Plugin.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <engines/observation/ExternalAndMobileProducerId.h>
+#include <engines/querydata/Engine.h>
 #include <macgyver/Exception.h>
 #include <ogr_geometry.h>
 
@@ -10,14 +12,13 @@ namespace Plugin
 {
 namespace EDR
 {
-// atic EDRProducerMetaData EMPTY_PRODUCER_METADATA
 // ----------------------------------------------------------------------
 /*!
  * \brief Initialize'the query state object
  */
 // ----------------------------------------------------------------------
 
-State::State(const Plugin &thePlugin)
+State::State(const Plugin& thePlugin)
     : itsPlugin(thePlugin),
       itsTime(boost::posix_time::second_clock::universal_time()),
       itsLocalTimePool(boost::make_shared<TS::LocalTimePool>())
@@ -30,11 +31,11 @@ State::State(const Plugin &thePlugin)
  */
 // ----------------------------------------------------------------------
 
-const Engine::Querydata::Engine &State::getQEngine() const
+const Engine::Querydata::Engine& State::getQEngine() const
 {
   try
   {
-    return itsPlugin.getQEngine();
+    return *(itsPlugin.getEngines().qEngine);
   }
   catch (...)
   {
@@ -42,11 +43,11 @@ const Engine::Querydata::Engine &State::getQEngine() const
   }
 }
 
-const Engine::Grid::Engine *State::getGridEngine() const
+const Engine::Grid::Engine* State::getGridEngine() const
 {
   try
   {
-    return itsPlugin.getGridEngine();
+    return itsPlugin.getEngines().gridEngine;
   }
   catch (...)
   {
@@ -60,11 +61,11 @@ const Engine::Grid::Engine *State::getGridEngine() const
  */
 // ----------------------------------------------------------------------
 
-const Engine::Geonames::Engine &State::getGeoEngine() const
+const Engine::Geonames::Engine& State::getGeoEngine() const
 {
   try
   {
-    return itsPlugin.getGeoEngine();
+    return *(itsPlugin.getEngines().geoEngine);
   }
   catch (...)
   {
@@ -79,11 +80,11 @@ const Engine::Geonames::Engine &State::getGeoEngine() const
 // ----------------------------------------------------------------------
 
 #ifndef WITHOUT_OBSERVATION
-Engine::Observation::Engine *State::getObsEngine() const
+Engine::Observation::Engine* State::getObsEngine() const
 {
   try
   {
-    return itsPlugin.getObsEngine();
+    return itsPlugin.getEngines().obsEngine;
   }
   catch (...)
   {
@@ -99,11 +100,11 @@ Engine::Observation::Engine *State::getObsEngine() const
 // ----------------------------------------------------------------------
 
 #ifndef WITHOUT_AVI
-const Engine::Avi::Engine *State::getAviEngine() const
+const Engine::Avi::Engine* State::getAviEngine() const
 {
   try
   {
-    return itsPlugin.getAviEngine();
+    return itsPlugin.getEngines().aviEngine;
   }
   catch (...)
   {
@@ -111,7 +112,7 @@ const Engine::Avi::Engine *State::getAviEngine() const
   }
 }
 
-const EDRProducerMetaData &State::getAviMetaData() const
+const EDRProducerMetaData& State::getAviMetaData() const
 {
   try
   {
@@ -126,11 +127,29 @@ const EDRProducerMetaData &State::getAviMetaData() const
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get the plugin
+ */
+// ----------------------------------------------------------------------
+
+const Plugin& State::getPlugin() const
+{
+  try
+  {
+    return itsPlugin;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Access to time zone information
  */
 // ----------------------------------------------------------------------
 
-const Fmi::TimeZones &State::getTimeZones() const
+const Fmi::TimeZones& State::getTimeZones() const
 {
   try
   {
@@ -148,7 +167,7 @@ const Fmi::TimeZones &State::getTimeZones() const
  */
 // ----------------------------------------------------------------------
 
-const boost::posix_time::ptime &State::getTime() const
+const boost::posix_time::ptime& State::getTime() const
 {
   return itsTime;
 }
@@ -163,7 +182,7 @@ const boost::posix_time::ptime &State::getTime() const
  */
 // ----------------------------------------------------------------------
 
-void State::setTime(const boost::posix_time::ptime &theTime)
+void State::setTime(const boost::posix_time::ptime& theTime)
 {
   itsTime = theTime;
 }
@@ -174,7 +193,7 @@ void State::setTime(const boost::posix_time::ptime &theTime)
  */
 // ----------------------------------------------------------------------
 
-Engine::Querydata::Q State::get(const Engine::Querydata::Producer &theProducer) const
+Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer) const
 {
   try
   {
@@ -184,7 +203,7 @@ Engine::Querydata::Q State::get(const Engine::Querydata::Producer &theProducer) 
       return res->second;
 
     // Get the data from the engine
-    auto q = itsPlugin.getQEngine().get(theProducer);
+    auto q = itsPlugin.getEngines().qEngine->get(theProducer);
 
     // Cache the obtained data and return it. The cache is
     // request specific, no need for mutexes here.
@@ -203,8 +222,8 @@ Engine::Querydata::Q State::get(const Engine::Querydata::Producer &theProducer) 
  */
 // ----------------------------------------------------------------------
 
-Engine::Querydata::Q State::get(const Engine::Querydata::Producer &theProducer,
-                                const Engine::Querydata::OriginTime &theOriginTime) const
+Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer,
+                                const Engine::Querydata::OriginTime& theOriginTime) const
 {
   try
   {
@@ -218,7 +237,7 @@ Engine::Querydata::Q State::get(const Engine::Querydata::Producer &theProducer,
     }
 
     // Get the data from the engine
-    auto q = itsPlugin.getQEngine().get(theProducer, theOriginTime);
+    auto q = itsPlugin.getEngines().qEngine->get(theProducer, theOriginTime);
 
     // Cache the obtained data and return it. The cache is
     // request specific, no need for mutexes here.
@@ -238,7 +257,7 @@ TS::LocalTimePoolPtr State::getLocalTimePool() const
   return itsLocalTimePool;
 }
 
-EDRMetaData State::getProducerMetaData(const std::string &producer) const
+EDRMetaData State::getProducerMetaData(const std::string& producer) const
 {
   try
   {
@@ -250,7 +269,7 @@ EDRMetaData State::getProducerMetaData(const std::string &producer) const
   }
 }
 
-bool State::isValidCollection(const std::string &producer) const
+bool State::isValidCollection(const std::string& producer) const
 {
   try
   {

@@ -21,9 +21,9 @@ namespace Plugin
 {
 namespace EDR
 {
-boost::local_time::local_date_time ProducerDataPeriod::getTime(const std::string &producer,
-                                                               const std::string &timezone,
-                                                               const Fmi::TimeZones &timezones,
+boost::local_time::local_date_time ProducerDataPeriod::getTime(const std::string& producer,
+                                                               const std::string& timezone,
+                                                               const Fmi::TimeZones& timezones,
                                                                eTime time_enum) const
 {
   try
@@ -51,7 +51,7 @@ boost::local_time::local_date_time ProducerDataPeriod::getTime(const std::string
   }
 }
 
-boost::posix_time::ptime ProducerDataPeriod::getTime(const std::string &producer,
+boost::posix_time::ptime ProducerDataPeriod::getTime(const std::string& producer,
                                                      eTime time_enum) const
 {
   try
@@ -72,14 +72,14 @@ boost::posix_time::ptime ProducerDataPeriod::getTime(const std::string &producer
   }
 }
 
-void ProducerDataPeriod::getQEngineDataPeriods(const Engine::Querydata::Engine &querydata,
-                                               const TimeProducers &producers)
+void ProducerDataPeriod::getQEngineDataPeriods(const Engine::Querydata::Engine& querydata,
+                                               const TimeProducers& producers)
 {
   try
   {
-    for (const auto &areaproducers : producers)
+    for (const auto& areaproducers : producers)
     {
-      for (const auto &producer : areaproducers)
+      for (const auto& producer : areaproducers)
       {
         auto period = querydata.getProducerTimePeriod(producer);
         if (!period.is_null())
@@ -94,17 +94,17 @@ void ProducerDataPeriod::getQEngineDataPeriods(const Engine::Querydata::Engine &
 }
 
 #ifndef WITHOUT_OBSERVATION
-void ProducerDataPeriod::getObsEngineDataPeriods(const Engine::Observation::Engine &observation,
-                                                 const TimeProducers &producers,
-                                                 const boost::posix_time::ptime &now)
+void ProducerDataPeriod::getObsEngineDataPeriods(const Engine::Observation::Engine& observation,
+                                                 const TimeProducers& producers,
+                                                 const boost::posix_time::ptime& now)
 {
   try
   {
     std::set<std::string> obsproducers = observation.getValidStationTypes();
 
-    for (const auto &areaproducers : producers)
+    for (const auto& areaproducers : producers)
     {
-      for (const auto &producer : areaproducers)
+      for (const auto& producer : areaproducers)
       {
         if (obsproducers.find(producer) == obsproducers.end())
           continue;
@@ -123,7 +123,7 @@ void ProducerDataPeriod::getObsEngineDataPeriods(const Engine::Observation::Engi
 
 // localtime
 boost::local_time::local_date_time ProducerDataPeriod::getLocalStartTime(
-    const std::string &producer, const std::string &timezone, const Fmi::TimeZones &timezones) const
+    const std::string& producer, const std::string& timezone, const Fmi::TimeZones& timezones) const
 {
   try
   {
@@ -136,7 +136,7 @@ boost::local_time::local_date_time ProducerDataPeriod::getLocalStartTime(
 }
 
 // utc
-boost::posix_time::ptime ProducerDataPeriod::getUTCStartTime(const std::string &producer) const
+boost::posix_time::ptime ProducerDataPeriod::getUTCStartTime(const std::string& producer) const
 {
   try
   {
@@ -150,7 +150,7 @@ boost::posix_time::ptime ProducerDataPeriod::getUTCStartTime(const std::string &
 
 // localtime
 boost::local_time::local_date_time ProducerDataPeriod::getLocalEndTime(
-    const std::string &producer, const std::string &timezone, const Fmi::TimeZones &timezones) const
+    const std::string& producer, const std::string& timezone, const Fmi::TimeZones& timezones) const
 {
   try
   {
@@ -163,7 +163,7 @@ boost::local_time::local_date_time ProducerDataPeriod::getLocalEndTime(
 }
 
 // utc
-boost::posix_time::ptime ProducerDataPeriod::getUTCEndTime(const std::string &producer) const
+boost::posix_time::ptime ProducerDataPeriod::getUTCEndTime(const std::string& producer) const
 {
   try
   {
@@ -175,12 +175,12 @@ boost::posix_time::ptime ProducerDataPeriod::getUTCEndTime(const std::string &pr
   }
 }
 
-void ProducerDataPeriod::init(const State &state,
-                              const Engine::Querydata::Engine &querydata,
+void ProducerDataPeriod::init(const State& state,
+                              const Engine::Querydata::Engine& querydata,
 #ifndef WITHOUT_OBSERVATION
-                              const Engine::Observation::Engine *observation,
+                              const Engine::Observation::Engine* observation,
 #endif
-                              const TimeProducers &producers)
+                              const TimeProducers& producers)
 {
   try
   {

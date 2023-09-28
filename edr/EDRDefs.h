@@ -8,8 +8,6 @@
 
 #include "AviCollection.h"
 #include "Precision.h"
-#include "Query.h"
-
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
 #include <engines/grid/Engine.h>

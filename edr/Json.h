@@ -101,6 +101,8 @@ class Value
   std::string to_string_impl(unsigned int level) const;
   std::string value() const;
   std::string values_to_string(unsigned int level) const;
+  static std::string data_value_vector_to_string(const std::vector<Value> &data_value_vector,
+                                                 unsigned int level);
   std::string data_value_vector_to_string(unsigned int level) const;
 
   DataValue data_value;                   // Value is stored here

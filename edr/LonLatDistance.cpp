@@ -12,7 +12,7 @@ namespace EDR
 /// @brief Earth's quatratic mean radius for WGS-84
 static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
-double deg_to_rad(const double &degrees)
+double deg_to_rad(const double& degrees)
 {
   try
   {
@@ -24,7 +24,7 @@ double deg_to_rad(const double &degrees)
   }
 }
 
-double rad_to_deg(const double &radians)
+double rad_to_deg(const double& radians)
 {
   try
   {
@@ -37,13 +37,13 @@ double rad_to_deg(const double &radians)
 }
 
 /**
- * Returns the (initial) bearing from this point to the supplied point, in
- * degrees see http://williams.best.vwh.net/avform.htm#Crs
+ * Returns the (initial) bearing from this point to the supplied point, in degrees
+ *   see http://williams.best.vwh.net/avform.htm#Crs
  *
  * @param   {LatLon} point: Latitude/longitude of destination point
  * @returns {Number} Initial bearing in degrees from North
  */
-double initial_bearing(const std::pair<double, double> &from, const std::pair<double, double> &to)
+double initial_bearing(const std::pair<double, double>& from, const std::pair<double, double>& to)
 {
   try
   {
@@ -64,14 +64,13 @@ double initial_bearing(const std::pair<double, double> &from, const std::pair<do
 }
 
 /**
- * Returns final bearing arriving at supplied destination point from this point;
- * the final bearing will differ from the initial bearing by varying degrees
- * according to distance and latitude
+ * Returns final bearing arriving at supplied destination point from this point; the final bearing
+ * will differ from the initial bearing by varying degrees according to distance and latitude
  *
  * @param   {LatLon} point: Latitude/longitude of destination point
  * @returns {Number} Final bearing in degrees from North
  */
-double final_bearing(const std::pair<double, double> &from, const std::pair<double, double> &to)
+double final_bearing(const std::pair<double, double>& from, const std::pair<double, double>& to)
 {
   try
   {
@@ -99,8 +98,8 @@ double final_bearing(const std::pair<double, double> &from, const std::pair<doub
  * @param   {LatLon} point: Latitude/longitude of destination point
  * @returns {LatLon} Midpoint between this point and the supplied point
  */
-std::pair<double, double> midpoint(const std::pair<double, double> &from,
-                                   const std::pair<double, double> &to)
+std::pair<double, double> midpoint(const std::pair<double, double>& from,
+                                   const std::pair<double, double>& to)
 {
   try
   {
@@ -126,9 +125,8 @@ std::pair<double, double> midpoint(const std::pair<double, double> &from,
 }
 
 /**
- * Returns the destination point from this point having travelled the given
- * distance (in km) on the given initial bearing (bearing may vary before
- * destination is reached)
+ * Returns the destination point from this point having travelled the given distance (in km) on the
+ * given initial bearing (bearing may vary before destination is reached)
  *
  *   see http://williams.best.vwh.net/avform.htm#LL
  *
@@ -136,9 +134,9 @@ std::pair<double, double> midpoint(const std::pair<double, double> &from,
  * @param   {Number} dist: Distance in km
  * @returns {LatLon} Destination point
  */
-std::pair<double, double> destination_point(const std::pair<double, double> &from,
-                                            const std::pair<double, double> &to,
-                                            const double &distance)
+std::pair<double, double> destination_point(const std::pair<double, double>& from,
+                                            const std::pair<double, double>& to,
+                                            const double& distance)
 {
   try
   {
@@ -175,12 +173,11 @@ std::pair<double, double> destination_point(const std::pair<double, double> &fro
  * </ul>
  *
  * The haversine formula gives:
- *    <code>h(d/R) =
- * h(from.lat-to.lat)+h(from.lon-to.lon)+cos(from.lat)*cos(to.lat)</code>
+ *    <code>h(d/R) = h(from.lat-to.lat)+h(from.lon-to.lon)+cos(from.lat)*cos(to.lat)</code>
  *
  * @sa http://en.wikipedia.org/wiki/Law_of_haversines
  */
-double arc_in_radians(const std::pair<double, double> &from, const std::pair<double, double> &to)
+double arc_in_radians(const std::pair<double, double>& from, const std::pair<double, double>& to)
 {
   try
   {
@@ -201,13 +198,12 @@ double arc_in_radians(const std::pair<double, double> &from, const std::pair<dou
 
 /** @brief Computes the distance, in meters, between two WGS-84 positions.
  *
- * The result is equal to
- * <code>EARTH_RADIUS_IN_METERS*ArcInRadians(from,to)</code>
+ * The result is equal to <code>EARTH_RADIUS_IN_METERS*ArcInRadians(from,to)</code>
  *
  * @sa ArcInRadians
  */
-double distance_in_meters(const std::pair<double, double> &from,
-                          const std::pair<double, double> &to)
+double distance_in_meters(const std::pair<double, double>& from,
+                          const std::pair<double, double>& to)
 {
   try
   {
@@ -219,8 +215,8 @@ double distance_in_meters(const std::pair<double, double> &from,
   }
 }
 
-double distance_in_kilometers(const std::pair<double, double> &from,
-                              const std::pair<double, double> &to)
+double distance_in_kilometers(const std::pair<double, double>& from,
+                              const std::pair<double, double>& to)
 {
   try
   {

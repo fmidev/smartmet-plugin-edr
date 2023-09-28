@@ -166,7 +166,7 @@
 				"symbol" : 
 				{
 					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "\u00cb\u009aC"
+					"value" : "˚C"
 				}
 			}
 		}

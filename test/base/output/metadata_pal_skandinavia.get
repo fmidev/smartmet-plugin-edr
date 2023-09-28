@@ -427,7 +427,7 @@
 		"RadiationGlobal" : 
 		{
 			"id" : "RadiationGlobal",
-			"description" : "Auringon s\u00e4teily",
+			"description" : "Auringon s‰teily",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -437,7 +437,7 @@
 		"RadiationLW" : 
 		{
 			"id" : "RadiationLW",
-			"description" : "Pitk\u00e4aaltoinen s\u00e4teily",
+			"description" : "Pitk‰aaltoinen s‰teily",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
@@ -447,11 +447,20 @@
 		"Temperature" : 
 		{
 			"id" : "Temperature",
-			"description" : "Ilman l\u00c3\u00a4mp\u00c3\u00b6tila",
+			"description" : "Ilman l√§mp√∂tila",
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
 				"label" : "Celsius"
+			},
+			"unit" : 
+			{
+				"label" : "Celsius",
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "ÀöC"
+				}
 			}
 		},
 		"TotalCloudCover" : 
