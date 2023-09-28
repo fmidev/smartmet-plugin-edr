@@ -112,7 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
-* Thu 282023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.9.282.fmi
+* Thu Sep 28 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.9.28.fmi
 - Code refactored (BRAINSTORM-2694)
 - Json encoding fixed (BRAINSTORM-2732)
 - Set parameter name in observedProperty.label field instead of measurement unit (BRAINSTORM-2732)
