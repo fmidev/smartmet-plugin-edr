@@ -18,8 +18,6 @@ void get_time_interval(const CoordinateFilter::AllowedTimesteps &timesteps,
   {
     for (const auto &timestep : item.second)
     {
-      auto timesteps = item.second;
-
       if (starttime.is_not_a_date_time())
       {
         starttime = timestep;

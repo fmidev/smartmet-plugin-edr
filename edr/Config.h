@@ -11,7 +11,6 @@
 #include "EDRAPI.h"
 #include "EDRDefs.h"
 #include "Precision.h"
-#include "Query.h"
 
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
@@ -65,7 +64,7 @@ class Config : private boost::noncopyable
     return itsFormatterOptions.defaultWxmlTimeString();
   }
 
-  const std::vector<uint> &defaultGridGeometries() { return itsDefaultGridGeometries; }
+  const std::vector<uint> &defaultGridGeometries() const { return itsDefaultGridGeometries; }
 
   const std::string &defaultWxmlVersion() const { return itsFormatterOptions.defaultWxmlVersion(); }
   const std::string &wxmlSchema() const { return itsFormatterOptions.wxmlSchema(); }
@@ -141,11 +140,17 @@ class Config : private boost::noncopyable
   void parse_config_output_formats();
   void parse_config_geometry_tables();
   void parse_config_avi_collections();
+  void parse_config_avi_collection_countries(AviCollection &aviCollection, const std::string &path);
+  void parse_config_avi_collection_bbox(AviCollection &aviCollection, const std::string &path);
+  void parse_config_avi_collection_icaos(AviCollection &aviCollection, const std::string &path);
+  void parse_config_avi_collection_icaofilters(AviCollection &aviCollection,
+                                               const std::string &path);
   void parse_config_grid_geometries();
   void parse_config_parameter_aliases(const std::string &configfile);
   void parse_config_api_settings();
   void parse_config_collection_info();
   void process_collection_info(SourceEngine source_engine);
+  void parse_visible_collections(const SourceEngine &source_engine);
 
 };  // class Config
 

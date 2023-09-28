@@ -9,34 +9,15 @@
 #pragma once
 
 #include "AggregationInterval.h"
-#include "CoordinateFilter.h"
-#include "EDRQuery.h"
+#include "EDRQueryParams.h"
+#include "ObsQueryParams.h"
 #include "Producers.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/shared_ptr.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/geonames/WktGeometry.h>
-#include <engines/grid/Engine.h>
 #include <grid-content/queryServer/definition/AliasFileCollection.h>
-#include <grid-files/common/AdditionalParameters.h>
 #include <grid-files/common/AttributeList.h>
-#include <macgyver/TimeFormatter.h>
-#include <macgyver/ValueFormatter.h>
-#include <newbase/NFmiPoint.h>
-#include <spine/HTTP.h>
-#include <spine/Location.h>
-#include <spine/Parameter.h>
 #include <timeseries/OptionParsers.h>
-#include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <timeseries/TimeSeriesInclude.h>
-#include <list>
-#include <locale>
-#include <map>
-#include <set>
-#include <string>
-#include <vector>
-
-#include "ProducerDataPeriod.h"
 
 namespace SmartMet
 {
@@ -46,30 +27,26 @@ namespace EDR
 {
 class Config;
 
-struct EDRMetaData;
-using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>;
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Individual precision settings
  */
 // ----------------------------------------------------------------------
 
-struct Query
+class Query : public ObsQueryParams, public EDRQueryParams
 {
-  Query(const State &state, const Spine::HTTP::Request &req, Config &config);
+ public:
   Query() = delete;
+  Query(const State& state, const Spine::HTTP::Request& req, Config& config);
 
-  // Note: Data members ordered according to the advice of Clang Analyzer to
-  // avoid excessive padding
+  // Note: Data members ordered according to the advice of Clang Analyzer to avoid excessive padding
 
-  // iot_producer_specifier, latestTimestep, origintime, timeproducers,
-  // loptions, timeformatter, lastpoint, weekdays, wmos, lpnns, fmisids,
-  // precisions, valueformatter, boundingBox, dataFilter, levels, pressures,
-  // heights, poptions, maxAggregationIntervals, wktGeometries, toptions,
-  // numberofstations, maxdistanceOptionGiven, findnearestvalidpoint, debug,
-  // allplaces, latestObservation, useDataCache, starttimeOptionGiven,
-  // endtimeOptionGiven, timeAggregationRequested,
+  // iot_producer_specifier, latestTimestep, origintime, timeproducers, loptions, timeformatter,
+  // lastpoint, weekdays, wmos, lpnns, fmisids, precisions, valueformatter, boundingBox,
+  // dataFilter, levels, pressures, heights, poptions, maxAggregationIntervals, wktGeometries,
+  // toptions, numberofstations, maxdistanceOptionGiven, findnearestvalidpoint, debug, allplaces,
+  // latestObservation, useDataCache, starttimeOptionGiven, endtimeOptionGiven,
+  // timeAggregationRequested,
 
   using ParamPrecisions = std::vector<int>;
   using Levels = std::set<int>;
@@ -78,10 +55,10 @@ struct Query
 
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
 
-  double step = 0;  // used with path geometry
+  double step;  // used with path geometry
 
-  std::size_t startrow = 0;    // Paging; first (0-) row to return; default 0
-  std::size_t maxresults = 0;  // max rows to return (page length); default 0 (all)
+  std::size_t startrow;    // Paging; first (0-) row to return; default 0
+  std::size_t maxresults;  // max rows to return (page length); default 0 (all)
 
   std::string wmo;
   std::string fmisid;
@@ -90,7 +67,6 @@ struct Query
   std::string keyword;
   std::string timezone;
   std::string leveltype;
-  std::string output_format;
   std::string format;
   std::string timeformat;
   std::string timestring;
@@ -98,10 +74,6 @@ struct Query
   std::locale outlocale;
   std::string areasource;
   std::string crs;
-
-#ifndef WITHOUT_OBSERVATION
-  std::string iot_producer_specifier;
-#endif
 
   boost::posix_time::ptime latestTimestep;
   boost::optional<boost::posix_time::ptime> origintime;
@@ -115,21 +87,12 @@ struct Query
 
   std::vector<int> weekdays;
 
-#ifndef WITHOUT_OBSERVATION
   std::vector<int> wmos;
   std::vector<int> lpnns;
   std::vector<int> fmisids;
-#endif
-  std::vector<std::string> icaos;
-  std::string requestWKT;
 
   ParamPrecisions precisions;
   Fmi::ValueFormatter valueformatter;
-
-#ifndef WITHOUT_OBSERVATION
-  std::map<std::string, double> boundingBox;
-  TS::DataFilter dataFilter;
-#endif
 
   Levels levels;
   Pressures pressures;
@@ -140,57 +103,39 @@ struct Query
   Engine::Geonames::WktGeometries wktGeometries;
   TS::TimeSeriesGeneratorOptions toptions;
 
-#ifndef WITHOUT_OBSERVATION
-  int numberofstations = 0;
-#endif
-
-  size_t numberOfParameters = 0;
-  bool maxdistanceOptionGiven = false;
-  bool findnearestvalidpoint = false;
+  bool maxdistanceOptionGiven;
+  bool findnearestvalidpoint;
   bool debug = false;
-  bool starttimeOptionGiven = false;
-  bool endtimeOptionGiven = false;
-  bool timeAggregationRequested = false;
+  bool starttimeOptionGiven;
+  bool endtimeOptionGiven;
+  bool timeAggregationRequested;
   std::string forecastSource;
   T::AttributeList attributeList;
 
-#ifndef WITHOUT_OBSERVATION
-  bool allplaces = false;
-  bool latestObservation = false;
-  bool useDataCache = false;
-#endif
   Spine::LocationList inKeywordLocations;
-  bool groupareas = true;
+  bool groupareas{true};
 
   double maxdistance_kilometers() const;
   double maxdistance_meters() const;
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
 
-  const EDRQuery &edrQuery() const { return itsEDRQuery; }
-  const CoordinateFilter &coordinateFilter() const { return itsCoordinateFilter; }
-  bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
-
  private:
-  void parse_levels(const Spine::HTTP::Request &theReq);
+  void parse_levels(const Spine::HTTP::Request& theReq);
 
-  void parse_precision(const Spine::HTTP::Request &theReq, const Config &config);
+  void parse_precision(const Spine::HTTP::Request& theReq, const Config& config);
 
-  void parse_producers(const Spine::HTTP::Request &theReq, const State &theState);
+  void parse_producers(const Spine::HTTP::Request& theReq, const State& theState);
+  void parse_parameters(const Spine::HTTP::Request& theReq);
+  void parse_aggregation_intervals(const Spine::HTTP::Request& theReq);
+  void parse_attr(const Spine::HTTP::Request& theReq);
+  bool parse_grib_loptions(const State& state);
+  void parse_inkeyword_locations(const Spine::HTTP::Request& theReq, const State& state);
+  void parse_origintime(const Spine::HTTP::Request& theReq);
 
-#ifndef WITHOUT_OBSERVATION
-  void parse_parameters(const Spine::HTTP::Request &theReq,
-                        const Engine::Observation::Engine *theObsEngine);
-#else
-  void parse_parameters(const Spine::HTTP::Request &theReq);
-#endif
-  QueryServer::AliasFileCollection *itsAliasFileCollectionPtr;
+  QueryServer::AliasFileCollection* itsAliasFileCollectionPtr;
 
   std::string maxdistance;
-  EDRQuery itsEDRQuery;
-  CoordinateFilter itsCoordinateFilter;
 };
-
-std::ostream &operator<<(std::ostream &out, const Query &edrQ);
 
 }  // namespace EDR
 }  // namespace Plugin
