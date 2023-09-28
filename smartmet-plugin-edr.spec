@@ -33,8 +33,8 @@ BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
 BuildRequires: smartmet-library-grid-content-devel >= 23.9.11
 BuildRequires: smartmet-library-grid-files-devel >= 23.9.11
 BuildRequires: smartmet-library-newbase-devel >= 23.8.30
-BuildRequires: smartmet-library-gis-devel >= 23.8.30
-BuildRequires: smartmet-library-timeseries-devel >= 23.7.28
+BuildRequires: smartmet-library-gis-devel >= 23.9.12
+BuildRequires: smartmet-library-timeseries-devel >= 23.9.18
 BuildRequires: smartmet-engine-avi-devel >= 23.7.28
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
 %if %{with observation}
@@ -49,13 +49,13 @@ BuildRequires: smartmet-engine-grid-devel >= 23.9.11
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 23.8.30
+Requires: smartmet-library-gis >= 23.9.12
 Requires: smartmet-library-locus >= 23.7.28
 Requires: smartmet-library-macgyver >= 23.8.31
 Requires: smartmet-library-newbase >= 23.8.30
 Requires: smartmet-library-spine >= 23.8.31
-Requires: smartmet-library-timeseries >= 23.7.28
-Requires: smartmet-library-gis >= 23.8.30
+Requires: smartmet-library-timeseries >= 23.9.18
+Requires: smartmet-library-gis >= 23.9.12
 Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.9.6
 Requires: smartmet-engine-querydata >= 23.8.31
@@ -75,7 +75,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-test-data >= 23.7.14
 #TestRequires: smartmet-engine-grid-test >= 23.9.11
-#TestRequires: smartmet-library-gis >= 23.8.30
+#TestRequires: smartmet-library-gis >= 23.9.12
 #TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 23.9.6
 #TestRequires: smartmet-engine-gis >= 23.8.28
@@ -112,7 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
-* Thu 282023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.9.282.fmi
+* Thu Sep 28 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.9.28-1.fmi
 - Code refactored (BRAINSTORM-2694)
 - Json encoding fixed (BRAINSTORM-2732)
 - Set parameter name in observedProperty.label field instead of measurement unit (BRAINSTORM-2732)
