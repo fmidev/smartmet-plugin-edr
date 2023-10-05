@@ -536,8 +536,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 
     for (const auto &p : query_parameters)
     {
-      auto parameter_name = parse_parameter_name(p.name());
-
+      auto parameter_name = parse_parameter_name(p.originalName());
       if (lon_lat_level_param(parameter_name))
         continue;
 
