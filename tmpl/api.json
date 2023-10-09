@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "__HOST__/"
+      "url": "__HOST__"
     }
   ],
   "paths": {
