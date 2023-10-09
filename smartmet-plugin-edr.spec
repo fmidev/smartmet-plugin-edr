@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.10.5
+Version: 23.10.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Mon Oct  9 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.10.9-1.fmi
+- Fixed api.json not to place an extra '/' in URIs
+- Fixed home.json not to list a HTML link since it has not been implemented
+
 * Thu Oct 5 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.10.5.fmi
 - Fixed parameter name handling bug (BRAINSTORM-2746)
 
