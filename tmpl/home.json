@@ -22,12 +22,6 @@
       "title": "API description in JSON"
     },
     {
-      "href": "__HOST__/api?f=HTML",
-      "rel": "service-doc",
-      "type": "text/html",
-      "title": "API description in HTML"
-    },
-    {
       "href": "__HOST__/conformance?f=JSON",
       "rel": "conformance",
       "type": "application/json",
