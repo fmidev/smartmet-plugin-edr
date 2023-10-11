@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.10.9
+Version: 23.10.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -34,7 +34,7 @@ BuildRequires: smartmet-library-grid-content-devel >= 23.9.29
 BuildRequires: smartmet-library-grid-files-devel >= 23.10.3
 BuildRequires: smartmet-library-newbase-devel >= 23.10.3
 BuildRequires: smartmet-library-gis-devel >= 23.9.12
-BuildRequires: smartmet-library-timeseries-devel >= 23.10.5
+BuildRequires: smartmet-library-timeseries-devel >= 23.10.11
 BuildRequires: smartmet-engine-avi-devel >= 23.7.28
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
 %if %{with observation}
@@ -54,7 +54,7 @@ Requires: smartmet-library-locus >= 23.7.28
 Requires: smartmet-library-macgyver >= 23.8.31
 Requires: smartmet-library-newbase >= 23.10.3
 Requires: smartmet-library-spine >= 23.8.31
-Requires: smartmet-library-timeseries >= 23.10.5
+Requires: smartmet-library-timeseries >= 23.10.11
 Requires: smartmet-library-gis >= 23.9.12
 Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.9.6
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
+* Wed Oct 11 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.10.11-1.fmi
+- Moved some aggregation related functions to timeseries-library (BRAINSTORM-2457)
+
 * Mon Oct  9 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.10.9-1.fmi
 - Fixed api.json not to place an extra '/' in URIs
 - Fixed home.json not to list a HTML link since it has not been implemented
