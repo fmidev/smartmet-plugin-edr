@@ -543,7 +543,9 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       const auto &edr_parameter = engine_parameter_info.at(parameter_name);
 
       auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
-      auto description = (!pinfo.description.empty() ? pinfo.description : "");
+	  // Description field: 1) from config 2) from engine 3) parameter name
+	  auto description = Json::Value(!pinfo.description.empty() ? pinfo.description : (!edr_parameter.description.empty() ? edr_parameter.description : parameter_name));
+
       auto label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter.name);
       auto symbol = (!pinfo.unit_symbol_value.empty() ? pinfo.unit_symbol_value : "");
       auto symbol_type = (!pinfo.unit_symbol_type.empty() ? pinfo.unit_symbol_type : "");
@@ -555,7 +557,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       // characters cause problems metoffice test interface uses description
       // field -> set parameter name to description field
       parameter["description"] = Json::Value(Json::ValueType::objectValue);
-      parameter["description"][metadata.language] = Json::Value(parameter_name);
+      parameter["description"][metadata.language] = description;//Json::Value(parameter_name);
       parameter["unit"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"][metadata.language] = Json::Value(label);
@@ -2719,6 +2721,8 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     result["type"] = Json::Value("FeatureCollection");
     auto features = Json::Value(Json::ValueType::arrayValue);
 
+    auto now = boost::posix_time::second_clock::universal_time();
+
     for (const auto &item : *edr_md->locations)
     {
       const auto &loc = item.second;
@@ -2732,14 +2736,22 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       coordinates[1] = Json::Value(loc.latitude, latitude_precision);
       auto properties = Json::Value(Json::ValueType::objectValue);
       properties["name"] = Json::Value(loc.name);
-      auto detail_string = ("Id is " + loc.type + " from " + loc.keyword);
+      auto detail_string = ("Id is " + loc.type);
+	  if(!loc.keyword.empty())
+		detail_string.append(" from " + loc.keyword);
       properties["detail"] = Json::Value(detail_string);
       if (!edr_md->temporal_extent.time_periods.empty())
       {
-        auto start_time = edr_md->temporal_extent.time_periods.front().start_time;
-        auto end_time = edr_md->temporal_extent.time_periods.back().end_time;
+        auto start_time = loc.start_time;
+		if(start_time.is_not_a_date_time())
+		  start_time = edr_md->temporal_extent.time_periods.front().start_time;
+        auto end_time = loc.end_time;
+		if(end_time.is_not_a_date_time())
+		  end_time = edr_md->temporal_extent.time_periods.back().end_time;
         if (end_time.is_not_a_date_time())
           end_time = edr_md->temporal_extent.time_periods.back().start_time;
+		if(end_time > now)
+		  end_time = now;
         properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
                                              Fmi::to_iso_extended_string(end_time) + "Z");
       }

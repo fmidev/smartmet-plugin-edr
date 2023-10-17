@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ProducerParameters.h"
 #include <macgyver/StringConversion.h>
 #include <spine/Location.h>
 #include <map>
@@ -32,6 +33,8 @@ class ParameterInfo : public std::map<std::string,
 {
  public:
   parameter_info get_parameter_info(const std::string &pname, const std::string &language) const;
+
+  const ProducerParameters* producerParameters = nullptr;
 };
 
 }  // namespace EDR

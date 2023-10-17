@@ -366,17 +366,31 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 #ifndef WITHOUT_OBSERVATION
 
 std::set<std::string> get_producer_parameters(const std::string &producer,
+											  const ProducerParameters& prodParams,
                                               const Engine::Observation::ProducerMeasurandInfo &pmi)
 {
   try
   {
     std::set<std::string> ret;
 
+	// If no parameters defined for producer -> accept all
+	bool parametersDefined = prodParams.parametersDefined(producer);
+
     if (pmi.find(producer) != pmi.end())
     {
       const auto &mi = pmi.at(producer);
       for (const auto &item : mi)
-        ret.insert(item.first);
+	  {
+		if(parametersDefined)
+		{
+		  // Add given name
+		  if(prodParams.isValidParameter(producer, item.first))
+			ret.insert(prodParams.parameterName(producer, item.first));
+		  continue;
+		}
+
+		ret.insert(item.first);
+	  }
     }
 
     return ret;
@@ -513,6 +527,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     const SupportedDataQueries &sdq,
     const SupportedOutputFormats &sofs,
     const SupportedProducerLocations &spl,
+	const ProducerParameters& prodParam,
     unsigned int observation_period)
 
 {
@@ -537,9 +552,11 @@ EDRProducerMetaData get_edr_metadata_obs(
       const auto &producer = item.first;
       const auto &obs_md = item.second;
       auto params = obs_md.parameters;
-      auto measurand_params = get_producer_parameters(producer, producer_measurand_info);
-
-      params.insert(measurand_params.begin(), measurand_params.end());
+	  auto measurand_params = get_producer_parameters(producer, prodParam, producer_measurand_info);
+	  // If valid parameters defined in config use only them
+	  if(!measurand_params.empty())
+		params.clear();
+	  params.insert(measurand_params.begin(), measurand_params.end());
 
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Observation;

@@ -993,6 +993,9 @@ Config::Config(const string &configfile)
     itsConfig.readFile(configfile.c_str());
     Spine::expandVariables(itsConfig);
 
+	// Read valid parameters for producers from config
+	itsProducerParameters.init(itsConfig);
+
     itsConfig.lookupValue("observation_period", itsObservationPeriod);
 
     // Metadata update settings

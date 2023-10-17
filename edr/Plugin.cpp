@@ -865,6 +865,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                       data_queries,
                                                       output_formats,
                                                       itsSupportedLocations,
+													  itsConfig.getProducerParameters(),
                                                       observation_period);
 
       engine_meta_data->addMetaData(SourceEngine::Observation, obs_engine_metadata);
@@ -1024,13 +1025,42 @@ void Plugin::updateSupportedLocations()
 {
   try
   {
-    // Get locations for each Producers
+	std::set<std::string> obs_producers;
+#ifndef WITHOUT_OBSERVATION
+    if (!itsConfig.obsEngineDisabled())
+    {
+	  obs_producers = itsEngines.obsEngine->getValidStationTypes();
+	  for(const auto& producer : obs_producers)
+	  {
+		Engine::Observation::Settings settings;
+		settings.stationtype = producer;
+		settings.allplaces = true;
+		Spine::Stations stations;
+		itsEngines.obsEngine->getStations(stations, settings);
+		SupportedLocations sls;
+		for(const auto& station : stations)
+		  {
+			if(station.fmisid == 0 || station.geoid == 0)
+			  continue;
+			location_info li(station);
+			sls[li.id] = li;
+		  }
+		if (!sls.empty())
+		  itsSupportedLocations[producer] = sls;		
+	  }
+	}
+#endif
+
+	// Get locations using keywords
     auto producer_keywords = itsConfig.getProducerKeywords();
     Locus::QueryOptions opts;
     opts.SetLanguage(itsConfig.defaultLanguage());
     for (const auto& item : producer_keywords)
     {
       auto producer = item.first;
+	  // Use keywords except for observation producers
+	  if(obs_producers.find(producer) != obs_producers.end())
+		continue;
       Spine::LocationList producer_llist;
       SupportedLocations sls;
       for (const auto& keyword : item.second)

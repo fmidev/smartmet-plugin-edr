@@ -2,6 +2,7 @@
 
 #include <macgyver/StringConversion.h>
 #include <spine/Location.h>
+#include <spine/Station.h>
 #include <map>
 #include <string>
 
@@ -24,7 +25,16 @@ struct location_info
         keyword(std::move(k))
   {
   }
-
+  location_info(const Spine::Station& station)
+	: id(station.fmisid != 0 ? Fmi::to_string(station.fmisid) : Fmi::to_string(station.geoid)),
+	  longitude(station.longitude_out),
+	  latitude(station.latitude_out),
+	  name(station.station_formal_name_fi),
+	  type("fmisid"),
+	  start_time(station.station_start),
+	  end_time(station.station_end)
+  {
+  }
   location_info() = default;
 
   std::string id;
@@ -32,6 +42,8 @@ struct location_info
   double latitude = 0.0;
   std::string name;     // From loc->name or station id for avi location (id is icao code)
   std::string type;     // From loc->fmisid if it exists, otherwise from loc->geoid or ICAO
+  boost::posix_time::ptime start_time = boost::posix_time::not_a_date_time;
+  boost::posix_time::ptime end_time = boost::posix_time::not_a_date_time;
   std::string keyword;  // Keyword used to get this location
 };
 
