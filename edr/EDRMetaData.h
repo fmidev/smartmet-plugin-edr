@@ -137,6 +137,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     const SupportedDataQueries& sdq,
     const SupportedOutputFormats& sofs,
     const SupportedProducerLocations& spl,
+	const ProducerParameters& prodParams,
     unsigned int observation_period);
 #endif
 #ifndef WITHOUT_AVI

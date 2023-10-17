@@ -11,6 +11,7 @@
 #include "EDRAPI.h"
 #include "EDRDefs.h"
 #include "Precision.h"
+#include "ProducerParameters.h"
 
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
@@ -90,6 +91,7 @@ class Config : private boost::noncopyable
   const AviCollections &getAviCollections() const { return itsAviCollections; }
   const EDRAPI &getEDRAPI() const { return itsEDRAPI; }
   const CollectionInfoContainer &getCollectionInfo() const { return itsCollectionInfo; }
+  const ProducerParameters& getProducerParameters() const { return itsProducerParameters; }
 
  private:
   libconfig::Config itsConfig;
@@ -129,6 +131,7 @@ class Config : private boost::noncopyable
 
   AviCollections itsAviCollections;
   CollectionInfoContainer itsCollectionInfo;
+  ProducerParameters itsProducerParameters;
   mutable EDRAPI itsEDRAPI;
 
   // Private helper functions

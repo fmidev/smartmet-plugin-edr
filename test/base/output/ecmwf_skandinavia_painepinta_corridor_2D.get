@@ -2608,7 +2608,7 @@
 			"type" : "Parameter",
 			"description" : 
 			{
-				"fi" : "temperature"
+				"fi" : "Ilman lämpötila"
 			},
 			"observedProperty" : 
 			{
