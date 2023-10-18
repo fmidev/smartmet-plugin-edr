@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.10.17
+Version: 23.10.18
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,7 +112,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/smartmet/plugins/edr/tmpl/*json
 
 %changelog
-* Tue Oct 17 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.10.17-1.fmi
+* Wed Oct 18 2023 Anssi Reponen <anssi.reponen@fmi.fi> - 23.10.18-1.fmi
 - Locations for observations are fetched from database (not from geoengine) (BRAINSTORM-2750)
 - Valid parameter list for observation producers can be defined in EDR configuration file (BRAINSTORM-2749)
 
