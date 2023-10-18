@@ -38,14 +38,14 @@ BuildRequires: smartmet-library-timeseries-devel >= 23.10.11
 BuildRequires: smartmet-engine-avi-devel >= 23.7.28
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 23.10.11
+BuildRequires: smartmet-engine-observation-devel >= 23.10.18
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 23.8.31
+BuildRequires: smartmet-engine-querydata-devel >= 23.10.12
 BuildRequires: smartmet-engine-gis-devel >= 23.8.28
 BuildRequires: smartmet-engine-grid-devel >= 23.10.12
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 23.10.11
+#Requires: smartmet-engine-observation >= 23.10.18
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -58,7 +58,7 @@ Requires: smartmet-library-timeseries >= 23.10.11
 Requires: smartmet-library-gis >= 23.9.12
 Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.9.6
-Requires: smartmet-engine-querydata >= 23.8.31
+Requires: smartmet-engine-querydata >= 23.10.12
 Requires: smartmet-engine-gis >= 23.8.28
 Requires: smartmet-engine-grid >= 23.10.12
 Requires: smartmet-server >= 23.8.30
@@ -73,15 +73,15 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-newbase-devel >= 23.10.11
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.7.21
-#TestRequires: smartmet-test-data >= 23.10.11
+#TestRequires: smartmet-test-data >= 23.10.16
 #TestRequires: smartmet-engine-grid-test >= 23.10.12
 #TestRequires: smartmet-library-gis >= 23.9.12
 #TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 23.9.6
 #TestRequires: smartmet-engine-gis >= 23.8.28
-#TestRequires: smartmet-engine-querydata >= 23.8.31
+#TestRequires: smartmet-engine-querydata >= 23.10.12
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 23.10.11
+#TestRequires: smartmet-engine-observation >= 23.10.18
 %endif
 #TestRequires: smartmet-engine-grid >= 23.10.12
 #TestRequires: gdal35
