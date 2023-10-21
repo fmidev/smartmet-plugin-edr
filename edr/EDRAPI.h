@@ -25,7 +25,7 @@ class EDRAPI
 
  private:
   APISettings itsAPISettings;
-  std::string itsTemplateDir;
+  std::string itsTemplateDir = "/usr/share/smartmet/edr";
   mutable Spine::MutexType itsMutex;
   mutable APISettings itsAPIQueryResponses;
 };
