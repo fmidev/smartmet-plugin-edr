@@ -484,7 +484,7 @@ void Config::parse_config_api_settings()
 
     libconfig::Setting &edr_api = itsConfig.lookup(api_key);
 
-    std::string templatedir;
+    std::string templatedir = "/usr/share/smartmet/edr";
     edr_api.lookupValue("templatedir", templatedir);
 
     if (templatedir.empty())
