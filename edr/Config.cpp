@@ -479,10 +479,6 @@ void Config::parse_config_api_settings()
     if (!itsConfig.exists(api_key))
       return;
 
-    if (!itsConfig.exists(api_key + ".templatedir"))
-      throw Fmi::Exception(
-          BCP, "Configuration file error. EDR api settings must contain 'templatedir'!");
-
     if (!itsConfig.exists(api_key + ".items"))
       throw Fmi::Exception(BCP, "Configuration file error. EDR api settings must contain 'items'!");
 
@@ -993,8 +989,8 @@ Config::Config(const string &configfile)
     itsConfig.readFile(configfile.c_str());
     Spine::expandVariables(itsConfig);
 
-	// Read valid parameters for producers from config
-	itsProducerParameters.init(itsConfig);
+    // Read valid parameters for producers from config
+    itsProducerParameters.init(itsConfig);
 
     itsConfig.lookupValue("observation_period", itsObservationPeriod);
 
