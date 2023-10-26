@@ -9,6 +9,7 @@ This page describes more indepth EDR API
 - [Supported data queries](#supported-data-queries)
 - [Supported output formats](#supported-output-formats)
 - [Supported locations](#supported-locations)
+- [Supported parameters](#supported-parameters)
 - [Disabling engines](#disabling-engines)
 - [Visible collections](#visible-collections)
 - [Collection info](#collection-info)
@@ -136,6 +137,17 @@ locations:
 	{
 		mareograph = ["mareografit"];
 	};
+};
+```
+# Supported parameters
+
+You can define supported parameters per producer and rename the original name. For example you can define mareograph parameters as follows:
+
+```
+producer_parameters:
+{
+   opendata_mareograph = ["wlev_pt1s_instant as watlev", "tw_pt1h_avg as twater"];
+   mareograph = ["wlev_pt1s_instant as watlev","tw_pt1h_avg as twater"];
 };
 ```
 
