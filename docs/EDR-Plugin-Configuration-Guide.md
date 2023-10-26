@@ -141,7 +141,7 @@ locations:
 ```
 # Supported parameters
 
-You can define supported parameters per producer and rename the original name. For example you can define mareograph parameters as follows:
+You can define supported parameters per producer and rename them at will. For example you can define mareograph parameters as follows:
 
 ```
 producer_parameters:
