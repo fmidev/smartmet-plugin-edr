@@ -5,7 +5,7 @@
 #include "Engines.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/optional.hpp>
 #include <list>
 #include <map>
@@ -62,8 +62,8 @@ struct edr_temporal_extent_period
         timesteps(0)
   {
   }
-  boost::posix_time::ptime start_time;
-  boost::posix_time::ptime end_time;
+  Fmi::DateTime start_time;
+  Fmi::DateTime end_time;
   int timestep;
   int timesteps;
 };
@@ -74,7 +74,7 @@ struct edr_temporal_extent
       : origin_time(boost::posix_time::not_a_date_time), trs("Temporal Reference System")
   {
   }
-  boost::posix_time::ptime origin_time;
+  Fmi::DateTime origin_time;
   std::string trs;
   std::vector<edr_temporal_extent_period> time_periods;
 };
@@ -104,7 +104,7 @@ struct EDRMetaData
   CollectionInfo collection_info_engine;            // Info about colections from engine
   std::string language = "en";                      // Language from configuration file
   SourceEngine metadata_source = SourceEngine::Undefined;
-  boost::posix_time::ptime latest_data_update_time;
+  Fmi::DateTime latest_data_update_time;
   int getPrecision(const std::string& parameter_name) const;
   bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
 };
@@ -156,7 +156,7 @@ void load_locations_avi(const Engine::Avi::Engine& aviEngine,
                         const CollectionInfoContainer& cic);
 #endif
 
-const boost::posix_time::ptime& get_latest_data_update_time(const EDRProducerMetaData& pmd,
+const Fmi::DateTime& get_latest_data_update_time(const EDRProducerMetaData& pmd,
                                                             const std::string& producer);
 
 class EngineMetaData
@@ -167,11 +167,11 @@ class EngineMetaData
   const EDRProducerMetaData& getMetaData(SourceEngine source_engine) const;
   const std::map<SourceEngine, EDRProducerMetaData>& getMetaData() const;
   const std::time_t& getMetaDataUpdateTime() const { return itsMetaDataUpdateTime; }
-  const boost::posix_time::ptime& getLatestDataUpdateTime(SourceEngine source_engine,
+  const Fmi::DateTime& getLatestDataUpdateTime(SourceEngine source_engine,
                                                           const std::string& producer) const;
   void setLatestDataUpdateTime(SourceEngine source_engine,
                                const std::string& producer,
-                               const boost::posix_time::ptime& t);
+                               const Fmi::DateTime& t);
   bool isValidCollection(const std::string& collection_name) const;
   bool isValidCollection(SourceEngine source_engine, const std::string& collection_name) const;
   void removeDuplicates(bool report_removal);

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/date_time/posix_time/ptime.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/variant.hpp>
 #include <iostream>
 #include <map>

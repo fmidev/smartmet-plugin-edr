@@ -75,8 +75,8 @@ class Query : public ObsQueryParams, public EDRQueryParams
   std::string areasource;
   std::string crs;
 
-  boost::posix_time::ptime latestTimestep;
-  boost::optional<boost::posix_time::ptime> origintime;
+  Fmi::DateTime latestTimestep;
+  boost::optional<Fmi::DateTime> origintime;
 
   TimeProducers timeproducers;
   std::shared_ptr<Engine::Geonames::LocationOptions> loptions;

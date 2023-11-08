@@ -56,7 +56,7 @@ void storeAviData(const State &state,
         TS::TimeSeries ts(state.getLocalTimePool());
         for (auto &value : aviData.itsValues[stationId][column.itsName])
         {
-          auto dt = boost::get<boost::local_time::local_date_time>(*timeIter);
+          auto dt = boost::get<Fmi::LocalDateTime>(*timeIter);
           TS::TimedValue tv(dt, value);
           ts.push_back(tv);
           timeIter++;

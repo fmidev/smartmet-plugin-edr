@@ -1,5 +1,5 @@
 #include "CoordinateFilter.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <macgyver/DateTime.h>
 #include <macgyver/StringConversion.h>
 
 namespace SmartMet
@@ -11,8 +11,8 @@ namespace EDR
 namespace
 {
 void get_time_interval(const CoordinateFilter::AllowedTimesteps &timesteps,
-                       boost::posix_time::ptime &starttime,
-                       boost::posix_time::ptime &endtime)
+                       Fmi::DateTime &starttime,
+                       Fmi::DateTime &endtime)
 {
   for (const auto &item : timesteps)
   {
@@ -34,8 +34,8 @@ void get_time_interval(const CoordinateFilter::AllowedTimesteps &timesteps,
 }
 
 void get_time_interval(const CoordinateFilter::AllowedLevelsTimesteps &timesteps,
-                       boost::posix_time::ptime &starttime,
-                       boost::posix_time::ptime &endtime)
+                       Fmi::DateTime &starttime,
+                       Fmi::DateTime &endtime)
 {
   for (const auto &coords : timesteps)
   {
@@ -67,7 +67,7 @@ void CoordinateFilter::add(double longitude, double latitude, double level)
 
 void CoordinateFilter::add(double longitude,
                            double latitude,
-                           const boost::posix_time::ptime &timestep)
+                           const Fmi::DateTime &timestep)
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedTimesteps[lonlat].insert(timestep);
@@ -76,7 +76,7 @@ void CoordinateFilter::add(double longitude,
 void CoordinateFilter::add(double longitude,
                            double latitude,
                            double level,
-                           const boost::posix_time::ptime &timestep)
+                           const Fmi::DateTime &timestep)
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedLevelsTimesteps[lonlat].insert(std::make_pair(level, timestep));
@@ -125,8 +125,8 @@ std::string CoordinateFilter::getLevels() const
 // Get datetime
 std::string CoordinateFilter::getDatetime() const
 {
-  boost::posix_time::ptime starttime(boost::posix_time::not_a_date_time);
-  boost::posix_time::ptime endtime(boost::posix_time::not_a_date_time);
+  Fmi::DateTime starttime(boost::posix_time::not_a_date_time);
+  Fmi::DateTime endtime(boost::posix_time::not_a_date_time);
 
   if (!itsAllowedTimesteps.empty())
     get_time_interval(itsAllowedTimesteps, starttime, endtime);
@@ -143,7 +143,7 @@ std::string CoordinateFilter::getDatetime() const
 bool CoordinateFilter::accept(double longitude,
                               double latitude,
                               double level,
-                              const boost::posix_time::ptime &timestep) const
+                              const Fmi::DateTime &timestep) const
 {
   if (isEmpty())
     return true;

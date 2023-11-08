@@ -447,7 +447,7 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(
     const ObsParameters obsParameters = itsObsEngineQuery.getObsParameters(masterquery);
 #endif
 
-    boost::posix_time::ptime latestTimestep = masterquery.latestTimestep;
+    Fmi::DateTime latestTimestep = masterquery.latestTimestep;
     bool startTimeUTC = masterquery.toptions.startTimeUTC;
 
     // This loop will iterate through the producers, collecting as much
@@ -666,7 +666,7 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
       masterquery.timeproducers.emplace_back(AreaProducers());
     }
 
-    boost::posix_time::ptime latestTimestep = masterquery.latestTimestep;
+    Fmi::DateTime latestTimestep = masterquery.latestTimestep;
 
     bool startTimeUTC = masterquery.toptions.startTimeUTC;
 
@@ -701,7 +701,7 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
         // Note name changes: masterquery --> query, and query-->subquery
 
         // first timestep is here in utc
-        boost::posix_time::ptime first_timestep = q.latestTimestep;
+        Fmi::DateTime first_timestep = q.latestTimestep;
 
         for (const auto& tloc : q.loptions->locations())
         {
@@ -713,7 +713,7 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
           subquery.toptions.startTime = first_timestep;
 
           if (!firstProducer)
-            subquery.toptions.startTime += boost::posix_time::minutes(1);  // WHY???????
+            subquery.toptions.startTime += Fmi::Minutes(1);  // WHY???????
           firstProducer = false;
 
           // producer can be alias, get actual producer
@@ -725,7 +725,7 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
                    ? false
                    : thePlugin.itsEngines.qEngine->getProducerConfig(producer).isclimatology);
 
-          boost::local_time::local_date_time data_period_endtime(producerDataPeriod.getLocalEndTime(
+          Fmi::LocalDateTime data_period_endtime(producerDataPeriod.getLocalEndTime(
               producer, subquery.timezone, thePlugin.itsEngines.geoEngine->getTimeZones()));
 
           // We do not need to iterate over the parameters here like processQEngineQuery does

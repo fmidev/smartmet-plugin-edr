@@ -28,18 +28,18 @@ namespace EDR
 #define MAX_TIME_PERIODS 300
 #define DEFAULT_PRECISION 4
 static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
-static boost::posix_time::ptime NOT_A_DATE_TIME;
+static Fmi::DateTime NOT_A_DATE_TIME;
 class TimePeriod
 {
  public:
-  TimePeriod(const boost::posix_time::ptime &t1, const boost::posix_time::ptime &t2)
+  TimePeriod(const Fmi::DateTime &t1, const Fmi::DateTime &t2)
       : period_start(t1), period_end(t2)
   {
   }
-  void setStartTime(const boost::posix_time::ptime &t) { period_start = t; }
-  void setEndTime(const boost::posix_time::ptime &t) { period_end = t; }
-  const boost::posix_time::ptime &getStartTime() const { return period_start; }
-  const boost::posix_time::ptime &getEndTime() const { return period_end; }
+  void setStartTime(const Fmi::DateTime &t) { period_start = t; }
+  void setEndTime(const Fmi::DateTime &t) { period_end = t; }
+  const Fmi::DateTime &getStartTime() const { return period_start; }
+  const Fmi::DateTime &getEndTime() const { return period_end; }
   int length() const
   {
     if (period_start.is_not_a_date_time() || period_end.is_not_a_date_time())
@@ -48,8 +48,8 @@ class TimePeriod
   }
 
  private:
-  boost::posix_time::ptime period_start = boost::posix_time::not_a_date_time;
-  boost::posix_time::ptime period_end = boost::posix_time::not_a_date_time;
+  Fmi::DateTime period_start = boost::posix_time::not_a_date_time;
+  Fmi::DateTime period_end = boost::posix_time::not_a_date_time;
 };
 namespace
 {
@@ -125,7 +125,7 @@ void remove_duplicate_collection(const std::string &collection_name,
 
 }  // namespace
 
-const boost::posix_time::ptime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
+const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
                                                             const std::string &producer)
 {
   if (pmd.find(producer) != pmd.end())
@@ -154,7 +154,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
     if (qd_meta_data.empty())
       return epmd;
 
-    std::map<std::string, boost::posix_time::ptime> latest_update_times;
+    std::map<std::string, Fmi::DateTime> latest_update_times;
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
@@ -243,7 +243,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
-    std::map<std::string, boost::posix_time::ptime> latest_update_times;
+    std::map<std::string, Fmi::DateTime> latest_update_times;
     // Iterate Grid metadata and add items into collection
     for (auto &gmd : grid_meta_data)
     {
@@ -566,17 +566,17 @@ EDRProducerMetaData get_edr_metadata_obs(
       producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
       producer_emd.spatial_extent.bbox_ymax = obs_md.bbox.yMax;
       edr_temporal_extent temporal_extent;
-      temporal_extent.origin_time = boost::posix_time::second_clock::universal_time();
+      temporal_extent.origin_time = Fmi::SecondClock::universal_time();
       edr_temporal_extent_period temporal_extent_period;
       auto time_of_day = obs_md.period.last().time_of_day();
       auto end_date = obs_md.period.last().date();
       // In order to get rid of fractions of a second in end_time
-      boost::posix_time::ptime end_time(
+      Fmi::DateTime end_time(
           end_date,
-          boost::posix_time::time_duration(time_of_day.hours(), time_of_day.minutes(), 0));
+          Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
       if (observation_period > 0)
         temporal_extent_period.start_time =
-            (end_time - boost::posix_time::hours(observation_period));
+            (end_time - Fmi::Hours(observation_period));
       else
         temporal_extent_period.start_time = obs_md.period.begin();
       temporal_extent_period.end_time = end_time;
@@ -616,7 +616,7 @@ EDRProducerMetaData get_edr_metadata_obs(
 
 #ifndef WITHOUT_AVI
 std::vector<TimePeriod> get_time_periods(
-    const std::set<boost::local_time::local_date_time> &timesteps)
+    const std::set<Fmi::LocalDateTime> &timesteps)
 {
   try
   {
@@ -721,7 +721,7 @@ std::vector<edr_temporal_extent_period> get_merged_time_periods(
   }
 }
 
-void parse_temporal_extent(const std::set<boost::local_time::local_date_time> &timesteps,
+void parse_temporal_extent(const std::set<Fmi::LocalDateTime> &timesteps,
                            const std::vector<TimePeriod> &time_periods,
                            edr_temporal_extent &t_extent)
 {
@@ -758,7 +758,7 @@ void parse_temporal_extent(const std::set<boost::local_time::local_date_time> &t
 
 // Merge time periods when possible (even timesteps)
 edr_temporal_extent get_temporal_extent(
-    const std::set<boost::local_time::local_date_time> &timesteps)
+    const std::set<Fmi::LocalDateTime> &timesteps)
 {
   try
   {
@@ -767,7 +767,7 @@ edr_temporal_extent get_temporal_extent(
     if (timesteps.size() < 2)
       return ret;
 
-    ret.origin_time = boost::posix_time::second_clock::universal_time();
+    ret.origin_time = Fmi::SecondClock::universal_time();
 
     // Insert time periods into vector
     std::vector<TimePeriod> time_periods = get_time_periods(timesteps);
@@ -816,9 +816,9 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsMessageTypes.push_back(message_type);
     queryOptions.itsMessageFormat = TAC_FORMAT;
 
-    auto now = boost::posix_time::second_clock::universal_time();
+    auto now = Fmi::SecondClock::universal_time();
     auto start_of_period =
-        (now - boost::posix_time::hours(
+        (now - Fmi::Hours(
                    period_length * 24));  // from config file avi.period_length (30 days default)
     std::string startTime = boost::posix_time::to_iso_string(start_of_period);
     std::string endTime = boost::posix_time::to_iso_string(now);
@@ -836,15 +836,15 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
     auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
 
-    std::set<boost::local_time::local_date_time> timesteps;
+    std::set<Fmi::LocalDateTime> timesteps;
     for (auto stationId : aviData.itsStationIds)
     {
       auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
 
       while (timeIter != aviData.itsValues[stationId]["messagetime"].end())
       {
-        boost::local_time::local_date_time timestep =
-            boost::get<boost::local_time::local_date_time>(*timeIter);
+        Fmi::LocalDateTime timestep =
+            boost::get<Fmi::LocalDateTime>(*timeIter);
 
         timesteps.insert(timestep);
         timeIter++;
@@ -1014,9 +1014,9 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const SupportedOutputFormats &sofs,
                                          const SupportedProducerLocations &spl)
 {
-  using boost::posix_time::hours;
-  using boost::posix_time::ptime;
-  using boost::posix_time::time_duration;
+  using Fmi::Hours;
+  using Fmi::DateTime;
+  using Fmi::TimeDuration;
 
   try
   {
@@ -1278,7 +1278,7 @@ void EngineMetaData::removeDuplicates(bool report_removal)
   }
 }
 
-const boost::posix_time::ptime &EngineMetaData::getLatestDataUpdateTime(
+const Fmi::DateTime &EngineMetaData::getLatestDataUpdateTime(
     SourceEngine source_engine, const std::string &producer) const
 {
   const auto &producer_meta_data = getMetaData(source_engine);
@@ -1288,7 +1288,7 @@ const boost::posix_time::ptime &EngineMetaData::getLatestDataUpdateTime(
 
 void EngineMetaData::setLatestDataUpdateTime(SourceEngine source_engine,
                                              const std::string &producer,
-                                             const boost::posix_time::ptime &t)
+                                             const Fmi::DateTime &t)
 {
   if (itsMetaData.find(source_engine) != itsMetaData.end())
   {

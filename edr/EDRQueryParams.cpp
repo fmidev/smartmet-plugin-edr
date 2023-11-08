@@ -667,7 +667,7 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
     {
       if (emd.temporal_extent.time_periods.empty())
       {
-        datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
+        datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
       }
       else
       {
@@ -685,7 +685,7 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
 
 #ifndef WITHOUT_AVI
     if (datetime.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
-      datetime = Fmi::to_iso_string(boost::posix_time::second_clock::universal_time());
+      datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
 #endif
 
     if (datetime.empty())

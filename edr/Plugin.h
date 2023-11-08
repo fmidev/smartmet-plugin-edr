@@ -88,10 +88,10 @@ class Plugin : public SmartMetPlugin
   void updateSupportedLocations();
   void updateParameterInfo();
   void checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) const;
-  std::map<std::string, boost::posix_time::ptime> getNotificationTimes(
+  std::map<std::string, Fmi::DateTime> getNotificationTimes(
       SourceEngine source_engine,
       EngineMetaData& new_emd,
-      const boost::posix_time::ptime& now) const;
+      const Fmi::DateTime& now) const;
 
   // Locations info is read once at startup, the used subsequent queries
   SupportedProducerLocations itsSupportedLocations;

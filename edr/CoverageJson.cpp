@@ -2721,7 +2721,7 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     result["type"] = Json::Value("FeatureCollection");
     auto features = Json::Value(Json::ValueType::arrayValue);
 
-    auto now = boost::posix_time::second_clock::universal_time();
+    auto now = Fmi::SecondClock::universal_time();
 
     for (const auto &item : *edr_md->locations)
     {

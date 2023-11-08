@@ -42,8 +42,8 @@ struct location_info
   double latitude = 0.0;
   std::string name;     // From loc->name or station id for avi location (id is icao code)
   std::string type;     // From loc->fmisid if it exists, otherwise from loc->geoid or ICAO
-  boost::posix_time::ptime start_time = boost::posix_time::not_a_date_time;
-  boost::posix_time::ptime end_time = boost::posix_time::not_a_date_time;
+  Fmi::DateTime start_time = boost::posix_time::not_a_date_time;
+  Fmi::DateTime end_time = boost::posix_time::not_a_date_time;
   std::string keyword;  // Keyword used to get this location
 };
 

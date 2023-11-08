@@ -595,8 +595,8 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
       std::string cachecontrol = "public, max-age=" + Fmi::to_string(expires_seconds);
       theResponse.setHeader("Cache-Control", cachecontrol);
 
-      boost::posix_time::ptime t_expires =
-          state.getTime() + boost::posix_time::seconds(expires_seconds);
+      Fmi::DateTime t_expires =
+          state.getTime() + Fmi::Seconds(expires_seconds);
       std::string expiration = tformat->format(t_expires);
       theResponse.setHeader("Expires", expiration);
     }
@@ -897,12 +897,12 @@ void Plugin::updateMetaData(bool initial_phase)
   }
 }
 
-std::map<std::string, boost::posix_time::ptime> Plugin::getNotificationTimes(
-    SourceEngine source_engine, EngineMetaData& new_emd, const boost::posix_time::ptime& now) const
+std::map<std::string, Fmi::DateTime> Plugin::getNotificationTimes(
+    SourceEngine source_engine, EngineMetaData& new_emd, const Fmi::DateTime& now) const
 {
   try
   {
-    std::map<std::string, boost::posix_time::ptime> times;
+    std::map<std::string, Fmi::DateTime> times;
 
     const auto& new_md = new_emd.getMetaData(source_engine);
 
@@ -921,7 +921,7 @@ std::map<std::string, boost::posix_time::ptime> Plugin::getNotificationTimes(
       }
       else
       {
-        boost::optional<boost::posix_time::ptime> new_latest_data_update_time;
+        boost::optional<Fmi::DateTime> new_latest_data_update_time;
 
         switch (source_engine)
         {
@@ -983,11 +983,11 @@ void Plugin::checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) c
       database
     */
 
-    std::map<SourceEngine, std::map<std::string, boost::posix_time::ptime>>
+    std::map<SourceEngine, std::map<std::string, Fmi::DateTime>>
         times_to_notify;  // engine -> producer -> latest update time
     SourceEngine source_engines[] = {
         SourceEngine::Querydata, SourceEngine::Grid, SourceEngine::Observation, SourceEngine::Avi};
-    auto now = boost::posix_time::second_clock::universal_time();
+    auto now = Fmi::SecondClock::universal_time();
 
     for (auto source_engine : source_engines)
     {
