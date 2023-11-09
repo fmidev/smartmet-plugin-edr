@@ -18,10 +18,10 @@
 #pragma once
 #include "EDRMetaData.h"
 #include "Engines.h"
-#include <macgyver/DateTime.h>
 #include <engines/querydata/OriginTime.h>
 #include <engines/querydata/Producer.h>
 #include <engines/querydata/Q.h>
+#include <macgyver/DateTime.h>
 #include <macgyver/TimeZones.h>
 #include <timeseries/TimeSeriesInclude.h>
 

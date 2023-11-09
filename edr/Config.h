@@ -91,7 +91,7 @@ class Config : private boost::noncopyable
   const AviCollections &getAviCollections() const { return itsAviCollections; }
   const EDRAPI &getEDRAPI() const { return itsEDRAPI; }
   const CollectionInfoContainer &getCollectionInfo() const { return itsCollectionInfo; }
-  const ProducerParameters& getProducerParameters() const { return itsProducerParameters; }
+  const ProducerParameters &getProducerParameters() const { return itsProducerParameters; }
 
  private:
   libconfig::Config itsConfig;

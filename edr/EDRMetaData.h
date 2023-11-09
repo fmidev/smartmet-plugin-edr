@@ -5,8 +5,8 @@
 #include "Engines.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
-#include <macgyver/DateTime.h>
 #include <boost/optional.hpp>
+#include <macgyver/DateTime.h>
 #include <list>
 #include <map>
 #include <set>
@@ -137,7 +137,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     const SupportedDataQueries& sdq,
     const SupportedOutputFormats& sofs,
     const SupportedProducerLocations& spl,
-	const ProducerParameters& prodParams,
+    const ProducerParameters& prodParams,
     unsigned int observation_period);
 #endif
 #ifndef WITHOUT_AVI
@@ -157,7 +157,7 @@ void load_locations_avi(const Engine::Avi::Engine& aviEngine,
 #endif
 
 const Fmi::DateTime& get_latest_data_update_time(const EDRProducerMetaData& pmd,
-                                                            const std::string& producer);
+                                                 const std::string& producer);
 
 class EngineMetaData
 {
@@ -168,7 +168,7 @@ class EngineMetaData
   const std::map<SourceEngine, EDRProducerMetaData>& getMetaData() const;
   const std::time_t& getMetaDataUpdateTime() const { return itsMetaDataUpdateTime; }
   const Fmi::DateTime& getLatestDataUpdateTime(SourceEngine source_engine,
-                                                          const std::string& producer) const;
+                                               const std::string& producer) const;
   void setLatestDataUpdateTime(SourceEngine source_engine,
                                const std::string& producer,
                                const Fmi::DateTime& t);

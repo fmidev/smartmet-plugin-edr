@@ -65,9 +65,7 @@ void CoordinateFilter::add(double longitude, double latitude, double level)
   itsAllowedLevels[lonlat].insert(level);
 }
 
-void CoordinateFilter::add(double longitude,
-                           double latitude,
-                           const Fmi::DateTime &timestep)
+void CoordinateFilter::add(double longitude, double latitude, const Fmi::DateTime &timestep)
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedTimesteps[lonlat].insert(timestep);

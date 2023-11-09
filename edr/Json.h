@@ -1,7 +1,7 @@
 #pragma once
 
-#include <macgyver/DateTime.h>
 #include <boost/variant.hpp>
+#include <macgyver/DateTime.h>
 #include <iostream>
 #include <map>
 

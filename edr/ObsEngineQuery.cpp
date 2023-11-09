@@ -23,11 +23,10 @@ void print_settings(const Engine::Observation::Settings& settings)
   std::cout << settings;
 }
 
-TS::TimeSeriesByLocation timeseries_by_fmisid(
-    const std::string& producer,
-    const TS::TimeSeriesVectorPtr& observation_result,
-    const TS::TimeSeriesGeneratorCache::TimeList& tlist,
-    int fmisid_index)
+TS::TimeSeriesByLocation timeseries_by_fmisid(const std::string& producer,
+                                              const TS::TimeSeriesVectorPtr& observation_result,
+                                              const TS::TimeSeriesGeneratorCache::TimeList& tlist,
+                                              int fmisid_index)
 {
   try
   {
@@ -39,7 +38,7 @@ TS::TimeSeriesByLocation timeseries_by_fmisid(
       return ret;
     }
 
-	return TS::get_timeseries_by_fmisid(producer, observation_result, tlist, fmisid_index);
+    return TS::get_timeseries_by_fmisid(producer, observation_result, tlist, fmisid_index);
   }
   catch (...)
   {
@@ -64,10 +63,9 @@ TS::TimeSeriesGenerator::LocalTimeList get_timesteps(const TS::TimeSeries ts)
   }
 }
 
-TS::TimeSeries generate_timeseries(
-    const State& state,
-    const std::vector<Fmi::LocalDateTime>& timestep_vector,
-    const TS::Value& value)
+TS::TimeSeries generate_timeseries(const State& state,
+                                   const std::vector<Fmi::LocalDateTime>& timestep_vector,
+                                   const TS::Value& value)
 {
   try
   {
@@ -882,8 +880,8 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
 
     // Separate timeseries of different locations to their own data structures and add missing
     // timesteps
-    TS::TimeSeriesByLocation tsv_area = timeseries_by_fmisid(
-        producer, observation_result, tlist_all, fmisid_index);
+    TS::TimeSeriesByLocation tsv_area =
+        timeseries_by_fmisid(producer, observation_result, tlist_all, fmisid_index);
 
     std::vector<TS::FmisidTSVectorPair> tsv_area_with_added_fields;
     // add data for location- and time-related fields; these fields are added by timeseries

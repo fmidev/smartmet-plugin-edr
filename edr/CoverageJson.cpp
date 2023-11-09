@@ -400,46 +400,43 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
   }
 }
 
-void update_lon_lat_vector(const std::string& param_name,
-						   const TS::TimeSeries& ts,
-						   std::vector<double>& longitude_vector,
-						   std::vector<double>& latitude_vector)
+void update_lon_lat_vector(const std::string &param_name,
+                           const TS::TimeSeries &ts,
+                           std::vector<double> &longitude_vector,
+                           std::vector<double> &latitude_vector)
 {
   try
   {
-	if (!ts.empty())
-	  {
-		const TS::TimedValue &tv = ts.at(0);
-		double value = as_double(tv.value);
-		if (param_name == "longitude")
-		  longitude_vector.push_back(value);
-		else
-		  latitude_vector.push_back(value);
-	  }
-   }
+    if (!ts.empty())
+    {
+      const TS::TimedValue &tv = ts.at(0);
+      double value = as_double(tv.value);
+      if (param_name == "longitude")
+        longitude_vector.push_back(value);
+      else
+        latitude_vector.push_back(value);
+    }
+  }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
-void update_lon_lat_vector(const std::string& param_name,
-						   const TS::TimeSeriesGroupPtr& tsg,
-						   std::vector<double>& longitude_vector,
-						   std::vector<double>& latitude_vector)
+void update_lon_lat_vector(const std::string &param_name,
+                           const TS::TimeSeriesGroupPtr &tsg,
+                           std::vector<double> &longitude_vector,
+                           std::vector<double> &latitude_vector)
 {
   try
   {
-	for (const auto &llts : *tsg)
-	{
-	  const auto &ts = llts.timeseries;
-	  
-	  update_lon_lat_vector(param_name,
-							ts,
-							longitude_vector,
-							latitude_vector);
-	}
-   }
+    for (const auto &llts : *tsg)
+    {
+      const auto &ts = llts.timeseries;
+
+      update_lon_lat_vector(param_name, ts, longitude_vector, latitude_vector);
+    }
+  }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
@@ -482,11 +479,8 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       if (boost::get<TS::TimeSeriesPtr>(&tsdata))
       {
         TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-		update_lon_lat_vector(param_name,
-							  *ts,
-							  longitude_vector,
-							  latitude_vector);
-		continue;
+        update_lon_lat_vector(param_name, *ts, longitude_vector, latitude_vector);
+        continue;
       }
 
       if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
@@ -494,18 +488,15 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
         std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldnt be "
                      "here -> report error!!:\n"
                   << tsdata << std::endl;
-		continue;
+        continue;
       }
 
       if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
       {
         TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
 
-		update_lon_lat_vector(param_name,
-							  tsg,
-							  longitude_vector,
-							  latitude_vector);
-		continue;
+        update_lon_lat_vector(param_name, tsg, longitude_vector, latitude_vector);
+        continue;
       }
     }
 
@@ -543,8 +534,11 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       const auto &edr_parameter = engine_parameter_info.at(parameter_name);
 
       auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
-	  // Description field: 1) from config 2) from engine 3) parameter name
-	  auto description = Json::Value(!pinfo.description.empty() ? pinfo.description : (!edr_parameter.description.empty() ? edr_parameter.description : parameter_name));
+      // Description field: 1) from config 2) from engine 3) parameter name
+      auto description = Json::Value(
+          !pinfo.description.empty()
+              ? pinfo.description
+              : (!edr_parameter.description.empty() ? edr_parameter.description : parameter_name));
 
       auto label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter.name);
       auto symbol = (!pinfo.unit_symbol_value.empty() ? pinfo.unit_symbol_value : "");
@@ -557,7 +551,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       // characters cause problems metoffice test interface uses description
       // field -> set parameter name to description field
       parameter["description"] = Json::Value(Json::ValueType::objectValue);
-      parameter["description"][metadata.language] = description;//Json::Value(parameter_name);
+      parameter["description"][metadata.language] = description;  // Json::Value(parameter_name);
       parameter["unit"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["label"][metadata.language] = Json::Value(label);
@@ -893,60 +887,58 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
   }
 }
 
-
-Json::Value parse_parameter_names(const EDRMetaData& collection_emd)
+Json::Value parse_parameter_names(const EDRMetaData &collection_emd)
 {
   try
   {
-	// Parameters:
-	// Mandatory fields: id, type, observedProperty
-	// Optional fields: label, description, data-type, unit, extent,
-	// measurementType
-	auto parameter_names = Json::Value(Json::ValueType::objectValue);
+    // Parameters:
+    // Mandatory fields: id, type, observedProperty
+    // Optional fields: label, description, data-type, unit, extent,
+    // measurementType
+    auto parameter_names = Json::Value(Json::ValueType::objectValue);
 
-	for (const auto &name : collection_emd.parameter_names)
+    for (const auto &name : collection_emd.parameter_names)
     {
-	  if (name.empty())
-		continue;
-	  
-	  auto pinfo =
-		collection_emd.parameter_info->get_parameter_info(name, collection_emd.language);
-	  const auto &edr_param = collection_emd.parameters.at(name);
-	  auto param = Json::Value(Json::ValueType::objectValue);
-	  param["id"] = Json::Value(edr_param.name);
-	  param["type"] = Json::Value("Parameter");
-	  // Description field: 1) from config 2) from engine 3) parameter name
-	  param["description"] = Json::Value(
-										 !pinfo.description.empty()
-										 ? pinfo.description
-										 : (!edr_param.description.empty() ? edr_param.description : edr_param.name));
-	  if (!pinfo.unit_label.empty() || !pinfo.unit_symbol_value.empty() ||
-		  !pinfo.unit_symbol_type.empty())
-	  {
-		auto unit = Json::Value(Json::ValueType::objectValue);
-		unit["label"] = pinfo.unit_label;
-		auto unit_symbol = Json::Value(Json::ValueType::objectValue);
-		unit_symbol["value"] = pinfo.unit_symbol_value;
-		unit_symbol["type"] = pinfo.unit_symbol_type;
-		unit["symbol"] = unit_symbol;
-		param["unit"] = unit;
+      if (name.empty())
+        continue;
+
+      auto pinfo = collection_emd.parameter_info->get_parameter_info(name, collection_emd.language);
+      const auto &edr_param = collection_emd.parameters.at(name);
+      auto param = Json::Value(Json::ValueType::objectValue);
+      param["id"] = Json::Value(edr_param.name);
+      param["type"] = Json::Value("Parameter");
+      // Description field: 1) from config 2) from engine 3) parameter name
+      param["description"] = Json::Value(
+          !pinfo.description.empty()
+              ? pinfo.description
+              : (!edr_param.description.empty() ? edr_param.description : edr_param.name));
+      if (!pinfo.unit_label.empty() || !pinfo.unit_symbol_value.empty() ||
+          !pinfo.unit_symbol_type.empty())
+      {
+        auto unit = Json::Value(Json::ValueType::objectValue);
+        unit["label"] = pinfo.unit_label;
+        auto unit_symbol = Json::Value(Json::ValueType::objectValue);
+        unit_symbol["value"] = pinfo.unit_symbol_value;
+        unit_symbol["type"] = pinfo.unit_symbol_type;
+        unit["symbol"] = unit_symbol;
+        param["unit"] = unit;
       }
 
-	  auto label = (!pinfo.unit_label.empty()
-					? pinfo.unit_label
-					: (!edr_param.label.empty() ? edr_param.label : edr_param.name));
-	  
-	  // Observed property: Mandatory: label, Optional: id, description
-	  auto observedProperty = Json::Value(Json::ValueType::objectValue);
-	  observedProperty["label"] = Json::Value(label);
-	  //		  observedProperty["id"] = Json::Value("http://....");
-	  //		  observedProperty["description"] =
-	  // Json::Value("Description of property...");
-	  param["observedProperty"] = observedProperty;
-	  parameter_names[edr_param.name] = param;
-	}
+      auto label = (!pinfo.unit_label.empty()
+                        ? pinfo.unit_label
+                        : (!edr_param.label.empty() ? edr_param.label : edr_param.name));
 
-	return parameter_names;
+      // Observed property: Mandatory: label, Optional: id, description
+      auto observedProperty = Json::Value(Json::ValueType::objectValue);
+      observedProperty["label"] = Json::Value(label);
+      //		  observedProperty["id"] = Json::Value("http://....");
+      //		  observedProperty["description"] =
+      // Json::Value("Description of property...");
+      param["observedProperty"] = observedProperty;
+      parameter_names[edr_param.name] = param;
+    }
+
+    return parameter_names;
   }
   catch (...)
   {
@@ -955,22 +947,22 @@ Json::Value parse_parameter_names(const EDRMetaData& collection_emd)
 }
 
 void parse_instance_link(bool instances_exist,
-						 const EDRQuery &edr_query,
-						 const std::string& producer,
-						 Json::Value& links)
+                         const EDRQuery &edr_query,
+                         const std::string &producer,
+                         Json::Value &links)
 {
   try
   {
-     if (instances_exist)
-      {
-        auto instance_link = Json::Value(Json::ValueType::objectValue);
-        instance_link["href"] =
-            Json::Value((edr_query.host + "/collections/" + producer + "/instances"));
-        instance_link["hreflang"] = Json::Value("en");
-        instance_link["rel"] = Json::Value("collection");
-        instance_link["type"] = Json::Value("application/json");
-        links[1] = instance_link;
-      }
+    if (instances_exist)
+    {
+      auto instance_link = Json::Value(Json::ValueType::objectValue);
+      instance_link["href"] =
+          Json::Value((edr_query.host + "/collections/" + producer + "/instances"));
+      instance_link["hreflang"] = Json::Value("en");
+      instance_link["rel"] = Json::Value("collection");
+      instance_link["type"] = Json::Value("application/json");
+      links[1] = instance_link;
+    }
   }
   catch (...)
   {
@@ -979,11 +971,11 @@ void parse_instance_link(bool instances_exist,
 }
 
 EDRProducerMetaData get_producer_metadata(const EDRProducerMetaData &epmd,
-										  const EDRQuery &edr_query)
+                                          const EDRQuery &edr_query)
 {
   try
   {
-	EDRProducerMetaData ret;
+    EDRProducerMetaData ret;
 
     if (!edr_query.collection_id.empty())
     {
@@ -991,11 +983,11 @@ EDRProducerMetaData get_producer_metadata(const EDRProducerMetaData &epmd,
         ret[edr_query.collection_id] = epmd.at(edr_query.collection_id);
     }
     else
-	{
-	  ret = epmd;
-	}
+    {
+      ret = epmd;
+    }
 
-	return ret;
+    return ret;
   }
   catch (...)
   {
@@ -1004,19 +996,19 @@ EDRProducerMetaData get_producer_metadata(const EDRProducerMetaData &epmd,
 }
 
 bool process_instance(const EDRQuery &edr_query,
-					  const EDRMetaData& emd,
-					  const std::string instance_id)
+                      const EDRMetaData &emd,
+                      const std::string instance_id)
 {
   try
   {
-	if (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
-		instance_id != edr_query.instance_id)
-	  return false;
-	
-	if (emd.parameter_names.empty())
-	  return false;
-	
-	return true;
+    if (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
+        instance_id != edr_query.instance_id)
+      return false;
+
+    if (emd.parameter_names.empty())
+      return false;
+
+    return true;
   }
   catch (...)
   {
@@ -1024,30 +1016,28 @@ bool process_instance(const EDRQuery &edr_query,
   }
 }
 
-
-void parse_title(const EDRMetaData& emd,
-				 Json::Value& instance)
+void parse_title(const EDRMetaData &emd, Json::Value &instance)
 {
   try
   {
-	if (!emd.temporal_extent.time_periods.empty())
+    if (!emd.temporal_extent.time_periods.empty())
     {
-	  std::string title =
-		("Origintime: " +
-		 boost::posix_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z");
-	  title += (" Starttime: " +
-				boost::posix_time::to_iso_extended_string(
-														  emd.temporal_extent.time_periods.front().start_time) +
-				"Z");
-	  title += (" Endtime: " +
-				boost::posix_time::to_iso_extended_string(
-														  emd.temporal_extent.time_periods.front().end_time) +
-				"Z");
-	  if (emd.temporal_extent.time_periods.front().timestep)
-		title +=
-		  (" Timestep: " + Fmi::to_string(emd.temporal_extent.time_periods.front().timestep));
-	  instance["title"] = Json::Value(title);
-	}
+      std::string title =
+          ("Origintime: " +
+           boost::posix_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z");
+      title += (" Starttime: " +
+                boost::posix_time::to_iso_extended_string(
+                    emd.temporal_extent.time_periods.front().start_time) +
+                "Z");
+      title += (" Endtime: " +
+                boost::posix_time::to_iso_extended_string(
+                    emd.temporal_extent.time_periods.front().end_time) +
+                "Z");
+      if (emd.temporal_extent.time_periods.front().timestep)
+        title +=
+            (" Timestep: " + Fmi::to_string(emd.temporal_extent.time_periods.front().timestep));
+      instance["title"] = Json::Value(title);
+    }
   }
   catch (...)
   {
@@ -1055,25 +1045,24 @@ void parse_title(const EDRMetaData& emd,
   }
 }
 
-void parse_vertical_extent(const EDRMetaData& emd,
-						   Json::Value& extent)
+void parse_vertical_extent(const EDRMetaData &emd, Json::Value &extent)
 {
   try
   {
-	if (!emd.vertical_extent.levels.empty())
+    if (!emd.vertical_extent.levels.empty())
     {
-	  auto vertical = Json::Value(Json::ValueType::objectValue);
-	  auto vertical_interval = Json::Value(Json::ValueType::arrayValue);
-	  auto vertical_interval_values = Json::Value(Json::ValueType::arrayValue);
-	  for (unsigned int i = 0; i < emd.vertical_extent.levels.size(); i++)
-		vertical_interval_values[i] = emd.vertical_extent.levels.at(i);
-	  vertical_interval[0] = emd.vertical_extent.levels.front();
-	  vertical_interval[1] = emd.vertical_extent.levels.back();
-	  vertical["interval"] = vertical_interval;
-	  vertical["values"] = vertical_interval_values;
-	  vertical["vrs"] = emd.vertical_extent.vrs;
-	  extent["vertical"] = vertical;
-	}
+      auto vertical = Json::Value(Json::ValueType::objectValue);
+      auto vertical_interval = Json::Value(Json::ValueType::arrayValue);
+      auto vertical_interval_values = Json::Value(Json::ValueType::arrayValue);
+      for (unsigned int i = 0; i < emd.vertical_extent.levels.size(); i++)
+        vertical_interval_values[i] = emd.vertical_extent.levels.at(i);
+      vertical_interval[0] = emd.vertical_extent.levels.front();
+      vertical_interval[1] = emd.vertical_extent.levels.back();
+      vertical["interval"] = vertical_interval;
+      vertical["values"] = vertical_interval_values;
+      vertical["vrs"] = emd.vertical_extent.vrs;
+      extent["vertical"] = vertical;
+    }
   }
   catch (...)
   {
@@ -1143,14 +1132,14 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
     for (const auto &emd : emds)
     {
       auto instance_id = Fmi::to_iso_string(emd.temporal_extent.origin_time);
-	  
-	  if(!process_instance(edr_query, emd, instance_id))
-		 continue;
+
+      if (!process_instance(edr_query, emd, instance_id))
+        continue;
 
       auto instance = Json::Value(Json::ValueType::objectValue);
       instance["id"] = Json::Value(instance_id);
 
-	  parse_title(emd, instance);
+      parse_title(emd, instance);
 
       // Links
       /*
@@ -1181,7 +1170,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
       // Vertical (optional)
-	  parse_vertical_extent(emd, extent);
+      parse_vertical_extent(emd, extent);
 
       instance["extent"] = extent;
       // Optional: data_queries
@@ -1199,7 +1188,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       instance["crs"] = crs;
 
       // Parameter names (mandatory)
-	  auto parameter_names = parse_parameter_names(emd);
+      auto parameter_names = parse_parameter_names(emd);
       instance["parameter_names"] = parameter_names;
 
       instances[instance_index] = instance;
@@ -1220,15 +1209,14 @@ EDRMetaData get_most_recent_instance(const std::vector<EDRMetaData> &emds)
 {
   try
   {
-	EDRMetaData ret;
-	for (unsigned int i = 0; i < emds.size(); i++)
+    EDRMetaData ret;
+    for (unsigned int i = 0; i < emds.size(); i++)
     {
-	  if (i == 0 ||
-		  ret.temporal_extent.origin_time < emds.at(i).temporal_extent.origin_time)
-		ret = emds.at(i);
-	}
+      if (i == 0 || ret.temporal_extent.origin_time < emds.at(i).temporal_extent.origin_time)
+        ret = emds.at(i);
+    }
 
-	return ret;
+    return ret;
   }
   catch (...)
   {
@@ -1236,24 +1224,24 @@ EDRMetaData get_most_recent_instance(const std::vector<EDRMetaData> &emds)
   }
 }
 
-void get_collection_info_from_configuration_file(const EDRMetaData& collection_emd,
-												 std::string& title,
-												 std::string& description,
-												 std::set<std::string>& keyword_set)
+void get_collection_info_from_configuration_file(const EDRMetaData &collection_emd,
+                                                 std::string &title,
+                                                 std::string &description,
+                                                 std::set<std::string> &keyword_set)
 {
   try
   {
-	// Then get collection info from configuration file, if we didn't get it from engine
-	if (collection_emd.collection_info)
+    // Then get collection info from configuration file, if we didn't get it from engine
+    if (collection_emd.collection_info)
     {
-	  // Title, description, keywords (optional)
-	  if (title.empty())
-		title = collection_emd.collection_info->title;
-	  if (description.empty())
-		description = collection_emd.collection_info->description;
-	  if (keyword_set.empty())
-		keyword_set = collection_emd.collection_info->keywords;
-	}
+      // Title, description, keywords (optional)
+      if (title.empty())
+        title = collection_emd.collection_info->title;
+      if (description.empty())
+        description = collection_emd.collection_info->description;
+      if (keyword_set.empty())
+        keyword_set = collection_emd.collection_info->keywords;
+    }
   }
   catch (...)
   {
@@ -1261,14 +1249,13 @@ void get_collection_info_from_configuration_file(const EDRMetaData& collection_e
   }
 }
 
-void add_parameter_names_into_keywords(const EDRMetaData& collection_emd,
-									   Json::Value& keywords)
+void add_parameter_names_into_keywords(const EDRMetaData &collection_emd, Json::Value &keywords)
 {
   try
   {
-	// Add parameter names into keywords
-	for (const auto &name : collection_emd.parameter_names)
-	  keywords[keywords.size()] = name;
+    // Add parameter names into keywords
+    for (const auto &name : collection_emd.parameter_names)
+      keywords[keywords.size()] = name;
   }
   catch (...)
   {
@@ -1295,7 +1282,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
     {
       const auto &producer = item.first;
       const auto &emds = item.second;
-	  // Get the most recent instance
+      // Get the most recent instance
       EDRMetaData collection_emd = get_most_recent_instance(emds);
 
       if (collection_emd.parameter_names.empty())
@@ -1312,10 +1299,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       std::set<std::string> keyword_set = collection_emd.collection_info_engine.keywords;
 
       // Then get collection info from configuration file, if we didn't get it from engine
-	  get_collection_info_from_configuration_file(collection_emd,
-												  title,
-												  description,
-												  keyword_set);
+      get_collection_info_from_configuration_file(collection_emd, title, description, keyword_set);
 
       value["title"] = Json::Value(title);
       value["description"] = Json::Value(description);
@@ -1324,7 +1308,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         keywords[keywords.size()] = kword;
 
       // Add parameter names into keywords
-	  add_parameter_names_into_keywords(collection_emd, keywords);
+      add_parameter_names_into_keywords(collection_emd, keywords);
 
       if (keywords.size() > 0)
         value["keywords"] = keywords;
@@ -1342,7 +1326,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
       auto links = Json::Value(Json::ValueType::arrayValue);
       links[0] = collection_link;
-	  parse_instance_link(instances_exist, edr_query, producer, links);
+      parse_instance_link(instances_exist, edr_query, producer, links);
 
       value["links"] = links;
       // Extent (mandatory)
@@ -1363,7 +1347,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
       // Vertical (optional)
-	  parse_vertical_extent(collection_emd, extent);
+      parse_vertical_extent(collection_emd, extent);
 
       value["extent"] = extent;
       // Optional: data_queries
@@ -1409,19 +1393,19 @@ Json::Value parse_edr_metadata(const EDRProducerMetaData &epmd, const EDRQuery &
 {
   try
   {
-	//  std::cout << "parse_edr_metadata: " << edr_query << std::endl;
-	
-	Json::Value nulljson;
-	
-	if (edr_query.query_id == EDRQueryId::AllCollections ||
-		edr_query.query_id == EDRQueryId::SpecifiedCollection)
-	  return parse_edr_metadata_collections(epmd, edr_query);
-	
-	if (edr_query.query_id == EDRQueryId::SpecifiedCollectionAllInstances ||
-		edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
-	  return parse_edr_metadata_instances(epmd, edr_query);
-	
-	return nulljson;
+    //  std::cout << "parse_edr_metadata: " << edr_query << std::endl;
+
+    Json::Value nulljson;
+
+    if (edr_query.query_id == EDRQueryId::AllCollections ||
+        edr_query.query_id == EDRQueryId::SpecifiedCollection)
+      return parse_edr_metadata_collections(epmd, edr_query);
+
+    if (edr_query.query_id == EDRQueryId::SpecifiedCollectionAllInstances ||
+        edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
+      return parse_edr_metadata_instances(epmd, edr_query);
+
+    return nulljson;
   }
   catch (...)
   {
@@ -1429,26 +1413,26 @@ Json::Value parse_edr_metadata(const EDRProducerMetaData &epmd, const EDRQuery &
   }
 }
 
-void add_values(const TS::TimeSeriesPtr& ts,
-				int parameter_precision,
-				Json::Value& values,
-				Json::Value& json_param_object,
-				std::set<std::string>& timesteps)
+void add_values(const TS::TimeSeriesPtr &ts,
+                int parameter_precision,
+                Json::Value &values,
+                Json::Value &json_param_object,
+                std::set<std::string> &timesteps)
 {
   try
   {
-	  unsigned int values_index = 0;	
-	  for (unsigned int k = 0; k < ts->size(); k++)
-	  {
-		const auto &timed_value = ts->at(k);
-		add_value(timed_value,
-				  values,
-				  json_param_object["dataType"],
-				  timesteps,
-				  values_index,
-				  parameter_precision);
-		values_index++;
-	  }
+    unsigned int values_index = 0;
+    for (unsigned int k = 0; k < ts->size(); k++)
+    {
+      const auto &timed_value = ts->at(k);
+      add_value(timed_value,
+                values,
+                json_param_object["dataType"],
+                timesteps,
+                values_index,
+                parameter_precision);
+      values_index++;
+    }
   }
   catch (...)
   {
@@ -1456,70 +1440,65 @@ void add_values(const TS::TimeSeriesPtr& ts,
   }
 }
 
-
-void process_parameters_one_point(const std::vector<TS::TimeSeriesData>& outdata,
-								  const std::vector<Spine::Parameter>& query_parameters,
-								  const EDRMetaData& emd,
-								  const std::vector<TS::LonLat>& coordinates,
-								  const unsigned int& i,
-								  const boost::optional<int>& level,
-								  std::set<std::string>& timesteps,
-								  Json::Value& ranges,
-								  Json::Value& coverage)
+void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata,
+                                  const std::vector<Spine::Parameter> &query_parameters,
+                                  const EDRMetaData &emd,
+                                  const std::vector<TS::LonLat> &coordinates,
+                                  const unsigned int &i,
+                                  const boost::optional<int> &level,
+                                  std::set<std::string> &timesteps,
+                                  Json::Value &ranges,
+                                  Json::Value &coverage)
 {
   try
   {
     const auto &longitude_precision = emd.getPrecision("longitude");
     const auto &latitude_precision = emd.getPrecision("latitude");
-	// iterate columns (parameters)
-	for (unsigned int j = 0; j < outdata.size(); j++)
+    // iterate columns (parameters)
+    for (unsigned int j = 0; j < outdata.size(); j++)
     {
-	  auto parameter_name = query_parameters[j].name();
-	  const auto &parameter_precision = emd.getPrecision(parameter_name);
-	  boost::algorithm::to_lower(parameter_name);
-	  if (lon_lat_level_param(parameter_name))
-		continue;
-	  
-	  auto json_param_object = Json::Value(Json::ValueType::objectValue);
-	  auto tsdata = outdata.at(j);
-	  auto values = Json::Value(Json::ValueType::arrayValue);
-	  
-	  TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-	  if (i == 0)
-      {
-		coverage = add_prologue_one_point(level,
-										  emd.vertical_extent.level_type,
-										  coordinates.front().lon,
-										  coordinates.front().lat,
-										  longitude_precision,
-										  latitude_precision);
-		coverage["parameters"] = get_edr_series_parameters(query_parameters, emd);
-		json_param_object["type"] = Json::Value("NdArray");
-		auto axis_names = Json::Value(Json::ValueType::arrayValue);
-		axis_names[0] = Json::Value("t");
-		axis_names[1] = Json::Value("x");
-		axis_names[2] = Json::Value("y");
-		if (level)
-		  axis_names[3] = Json::Value("z");
-		json_param_object["axisNames"] = axis_names;
-		auto shape = Json::Value(Json::ValueType::arrayValue);
-		shape[0] = Json::Value(ts->size());
-		shape[1] = Json::Value(coordinates.size());
-		shape[2] = Json::Value(coordinates.size());
-		if (level)
-		  shape[3] = Json::Value(1);
-		json_param_object["shape"] = shape;
-	  }
-	  
-	  add_values(ts,
-				 parameter_precision,
-				 values,
-				 json_param_object,
-				 timesteps);
+      auto parameter_name = query_parameters[j].name();
+      const auto &parameter_precision = emd.getPrecision(parameter_name);
+      boost::algorithm::to_lower(parameter_name);
+      if (lon_lat_level_param(parameter_name))
+        continue;
 
-	  json_param_object["values"] = values;
-	  ranges[parameter_name] = json_param_object;
-	}
+      auto json_param_object = Json::Value(Json::ValueType::objectValue);
+      auto tsdata = outdata.at(j);
+      auto values = Json::Value(Json::ValueType::arrayValue);
+
+      TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
+      if (i == 0)
+      {
+        coverage = add_prologue_one_point(level,
+                                          emd.vertical_extent.level_type,
+                                          coordinates.front().lon,
+                                          coordinates.front().lat,
+                                          longitude_precision,
+                                          latitude_precision);
+        coverage["parameters"] = get_edr_series_parameters(query_parameters, emd);
+        json_param_object["type"] = Json::Value("NdArray");
+        auto axis_names = Json::Value(Json::ValueType::arrayValue);
+        axis_names[0] = Json::Value("t");
+        axis_names[1] = Json::Value("x");
+        axis_names[2] = Json::Value("y");
+        if (level)
+          axis_names[3] = Json::Value("z");
+        json_param_object["axisNames"] = axis_names;
+        auto shape = Json::Value(Json::ValueType::arrayValue);
+        shape[0] = Json::Value(ts->size());
+        shape[1] = Json::Value(coordinates.size());
+        shape[2] = Json::Value(coordinates.size());
+        if (level)
+          shape[3] = Json::Value(1);
+        json_param_object["shape"] = shape;
+      }
+
+      add_values(ts, parameter_precision, values, json_param_object, timesteps);
+
+      json_param_object["values"] = values;
+      ranges[parameter_name] = json_param_object;
+    }
   }
   catch (...)
   {
@@ -1545,15 +1524,8 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
     {
       const auto &outdata = outputData[i].second;
       // iterate columns (parameters)
-	  process_parameters_one_point(outdata,
-								   query_parameters,
-								   emd,
-								   coordinates,
-								   i,
-								   level,
-								   timesteps,
-								   ranges,
-								   coverage);
+      process_parameters_one_point(
+          outdata, query_parameters, emd, coordinates, i, level, timesteps, ranges, coverage);
     }
 
     auto &time_array = coverage["domain"]["axes"]["t"]["values"];
@@ -1571,95 +1543,95 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
   }
 }
 
-void process_ts_parameters_at_position(const TS::TimeSeriesPtr& ts_data,
-									   const TS::TimeSeriesPtr& ts_lon,
-									   const TS::TimeSeriesPtr& ts_lat,
-									   const TS::TimeSeriesPtr& ts_level,
-									   const std::string& parameter_name,
-									   const int& parameter_precision,
-									   const int& longitude_precision,
-									   const int& latitude_precision,
-									   const int& level_precision,
-									   Json::Value& coverages,								 
-									   unsigned int& coverages_index)
+void process_ts_parameters_at_position(const TS::TimeSeriesPtr &ts_data,
+                                       const TS::TimeSeriesPtr &ts_lon,
+                                       const TS::TimeSeriesPtr &ts_lat,
+                                       const TS::TimeSeriesPtr &ts_level,
+                                       const std::string &parameter_name,
+                                       const int &parameter_precision,
+                                       const int &longitude_precision,
+                                       const int &latitude_precision,
+                                       const int &level_precision,
+                                       Json::Value &coverages,
+                                       unsigned int &coverages_index)
 {
   try
   {
-	unsigned int values_index = 0;
-	for (unsigned int k = 0; k < ts_data->size(); k++)
+    unsigned int values_index = 0;
+    for (unsigned int k = 0; k < ts_data->size(); k++)
     {
-	  auto coverage_object = Json::Value(Json::ValueType::objectValue);
-	  coverage_object["type"] = Json::Value("Coverage");
-	  auto domain_object = Json::Value(Json::ValueType::objectValue);
-	  domain_object["type"] = Json::Value("Domain");
-	  auto x_object = Json::Value(Json::ValueType::objectValue);
-	  x_object["values"] = Json::Value(Json::ValueType::arrayValue);
-	  auto y_object = Json::Value(Json::ValueType::objectValue);
-	  y_object["values"] = Json::Value(Json::ValueType::arrayValue);
-	  auto z_object = Json::Value(Json::ValueType::objectValue);
-	  z_object["values"] = Json::Value(Json::ValueType::arrayValue);
-	  auto timestamp_object = Json::Value(Json::ValueType::objectValue);
-	  timestamp_object["values"] = Json::Value(Json::ValueType::arrayValue);
-	  
-	  // const auto& data_value = ts_data->at(k);
-	  const auto &lon_value = ts_lon->at(k);
-	  const auto &lat_value = ts_lat->at(k);
-	  auto &x_values = x_object["values"];
-	  auto &y_values = y_object["values"];
-	  Json::Value data_type;
-	  add_value(lon_value, x_values, data_type, values_index, longitude_precision);
-	  add_value(lat_value, y_values, data_type, values_index, latitude_precision);
-	  if (ts_level)
+      auto coverage_object = Json::Value(Json::ValueType::objectValue);
+      coverage_object["type"] = Json::Value("Coverage");
+      auto domain_object = Json::Value(Json::ValueType::objectValue);
+      domain_object["type"] = Json::Value("Domain");
+      auto x_object = Json::Value(Json::ValueType::objectValue);
+      x_object["values"] = Json::Value(Json::ValueType::arrayValue);
+      auto y_object = Json::Value(Json::ValueType::objectValue);
+      y_object["values"] = Json::Value(Json::ValueType::arrayValue);
+      auto z_object = Json::Value(Json::ValueType::objectValue);
+      z_object["values"] = Json::Value(Json::ValueType::arrayValue);
+      auto timestamp_object = Json::Value(Json::ValueType::objectValue);
+      timestamp_object["values"] = Json::Value(Json::ValueType::arrayValue);
+
+      // const auto& data_value = ts_data->at(k);
+      const auto &lon_value = ts_lon->at(k);
+      const auto &lat_value = ts_lat->at(k);
+      auto &x_values = x_object["values"];
+      auto &y_values = y_object["values"];
+      Json::Value data_type;
+      add_value(lon_value, x_values, data_type, values_index, longitude_precision);
+      add_value(lat_value, y_values, data_type, values_index, latitude_precision);
+      if (ts_level)
       {
-		const auto &level_value = ts_level->at(k);
-		auto &z_values = z_object["values"];
-		add_value(level_value, z_values, data_type, values_index, level_precision);
-	  }
-	  auto &timestamp_values = timestamp_object["values"];
-	  timestamp_values[values_index] = Json::Value(
-												   boost::posix_time::to_iso_extended_string(lon_value.time.utc_time()) + "Z");
-	  
-	  auto domain_object_axes = Json::Value(Json::ValueType::objectValue);
-	  domain_object_axes["x"] = x_object;
-	  domain_object_axes["y"] = y_object;
-	  if (ts_level)
-		domain_object_axes["z"] = z_object;
-	  domain_object_axes["t"] = timestamp_object;
-	  
-	  domain_object["axes"] = domain_object_axes;
-	  coverage_object["domain"] = domain_object;
-	  
-	  auto ranges_object = Json::Value(Json::ValueType::objectValue);
-	  auto parameter_object = Json::Value(Json::ValueType::objectValue);
-	  parameter_object["type"] = Json::Value("NdArray");
-	  auto shape_object = Json::Value(Json::ValueType::arrayValue);
-	  shape_object[0] = Json::Value(1);
-	  shape_object[1] = Json::Value(1);
-	  shape_object[2] = Json::Value(1);
-	  if (ts_level)
-		shape_object[3] = Json::Value(1);
-	  auto axis_object = Json::Value(Json::ValueType::arrayValue);
-	  axis_object[0] = Json::Value("t");
-	  axis_object[1] = Json::Value("x");
-	  axis_object[2] = Json::Value("y");
-	  if (ts_level)
-		axis_object[3] = Json::Value("z");
-	  auto values_array = Json::Value(Json::ValueType::arrayValue);
-	  const auto &data_value = ts_data->at(k);
-	  add_value(data_value, values_array, data_type, values_index, parameter_precision);
-	  parameter_object["dataType"] = data_type;
-	  
-	  //				values_array[0] = Json::Value(1.5784); //
-	  // todo
-	  parameter_object["shape"] = shape_object;
-	  parameter_object["axisNames"] = axis_object;
-	  parameter_object["values"] = values_array;
-	  ranges_object[parameter_name] = parameter_object;
-	  coverage_object["ranges"] = ranges_object;
-	  
-	  coverages[coverages_index] = coverage_object;
-	  coverages_index++;
-	}
+        const auto &level_value = ts_level->at(k);
+        auto &z_values = z_object["values"];
+        add_value(level_value, z_values, data_type, values_index, level_precision);
+      }
+      auto &timestamp_values = timestamp_object["values"];
+      timestamp_values[values_index] =
+          Json::Value(boost::posix_time::to_iso_extended_string(lon_value.time.utc_time()) + "Z");
+
+      auto domain_object_axes = Json::Value(Json::ValueType::objectValue);
+      domain_object_axes["x"] = x_object;
+      domain_object_axes["y"] = y_object;
+      if (ts_level)
+        domain_object_axes["z"] = z_object;
+      domain_object_axes["t"] = timestamp_object;
+
+      domain_object["axes"] = domain_object_axes;
+      coverage_object["domain"] = domain_object;
+
+      auto ranges_object = Json::Value(Json::ValueType::objectValue);
+      auto parameter_object = Json::Value(Json::ValueType::objectValue);
+      parameter_object["type"] = Json::Value("NdArray");
+      auto shape_object = Json::Value(Json::ValueType::arrayValue);
+      shape_object[0] = Json::Value(1);
+      shape_object[1] = Json::Value(1);
+      shape_object[2] = Json::Value(1);
+      if (ts_level)
+        shape_object[3] = Json::Value(1);
+      auto axis_object = Json::Value(Json::ValueType::arrayValue);
+      axis_object[0] = Json::Value("t");
+      axis_object[1] = Json::Value("x");
+      axis_object[2] = Json::Value("y");
+      if (ts_level)
+        axis_object[3] = Json::Value("z");
+      auto values_array = Json::Value(Json::ValueType::arrayValue);
+      const auto &data_value = ts_data->at(k);
+      add_value(data_value, values_array, data_type, values_index, parameter_precision);
+      parameter_object["dataType"] = data_type;
+
+      //				values_array[0] = Json::Value(1.5784); //
+      // todo
+      parameter_object["shape"] = shape_object;
+      parameter_object["axisNames"] = axis_object;
+      parameter_object["values"] = values_array;
+      ranges_object[parameter_name] = parameter_object;
+      coverage_object["ranges"] = ranges_object;
+
+      coverages[coverages_index] = coverage_object;
+      coverages_index++;
+    }
   }
   catch (...)
   {
@@ -1667,53 +1639,53 @@ void process_ts_parameters_at_position(const TS::TimeSeriesPtr& ts_data,
   }
 }
 
-void process_parameters_at_position(const std::vector<TS::TimeSeriesData>& outdata,
-									const std::vector<Spine::Parameter>& query_parameters,
-									const EDRMetaData& emd,
-									const unsigned int& longitude_index,
-									const unsigned int& latitude_index,
-									const boost::optional<unsigned int>& level_index,
-									Json::Value& coverages,								 
-									unsigned int& coverages_index)
+void process_parameters_at_position(const std::vector<TS::TimeSeriesData> &outdata,
+                                    const std::vector<Spine::Parameter> &query_parameters,
+                                    const EDRMetaData &emd,
+                                    const unsigned int &longitude_index,
+                                    const unsigned int &latitude_index,
+                                    const boost::optional<unsigned int> &level_index,
+                                    Json::Value &coverages,
+                                    unsigned int &coverages_index)
 {
   try
   {
     const auto &longitude_precision = emd.getPrecision("longitude");
     const auto &latitude_precision = emd.getPrecision("latitude");
     const auto level_precision = 0;
-	
-	for (unsigned int j = 0; j < outdata.size(); j++)
+
+    for (unsigned int j = 0; j < outdata.size(); j++)
     {
-	  auto parameter_name = query_parameters[j].name();
-	  const auto &parameter_precision = emd.getPrecision(parameter_name);
-	  boost::algorithm::to_lower(parameter_name);
-	  if (lon_lat_level_param(parameter_name))
-		continue;
-	  
-	  auto tsdata = outdata.at(j);
-	  auto tslon = outdata.at(longitude_index);
-	  auto tslat = outdata.at(latitude_index);
-	  TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-	  TS::TimeSeriesPtr ts_lon = *(boost::get<TS::TimeSeriesPtr>(&tslon));
-	  TS::TimeSeriesPtr ts_lat = *(boost::get<TS::TimeSeriesPtr>(&tslat));
-	  TS::TimeSeriesPtr ts_level = nullptr;
-	  if (level_index)
+      auto parameter_name = query_parameters[j].name();
+      const auto &parameter_precision = emd.getPrecision(parameter_name);
+      boost::algorithm::to_lower(parameter_name);
+      if (lon_lat_level_param(parameter_name))
+        continue;
+
+      auto tsdata = outdata.at(j);
+      auto tslon = outdata.at(longitude_index);
+      auto tslat = outdata.at(latitude_index);
+      TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
+      TS::TimeSeriesPtr ts_lon = *(boost::get<TS::TimeSeriesPtr>(&tslon));
+      TS::TimeSeriesPtr ts_lat = *(boost::get<TS::TimeSeriesPtr>(&tslat));
+      TS::TimeSeriesPtr ts_level = nullptr;
+      if (level_index)
       {
-		auto tslevel = outdata.at(*level_index);
-		ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
-	  }
-	  process_ts_parameters_at_position(ts_data,
-										ts_lon,
-										ts_lat,
-										ts_level,
-										parameter_name,
-										parameter_precision,
-										longitude_precision,
-										latitude_precision,
-										level_precision,
-										coverages,								 
-										coverages_index);
-	}
+        auto tslevel = outdata.at(*level_index);
+        ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
+      }
+      process_ts_parameters_at_position(ts_data,
+                                        ts_lon,
+                                        ts_lat,
+                                        ts_level,
+                                        parameter_name,
+                                        parameter_precision,
+                                        longitude_precision,
+                                        latitude_precision,
+                                        level_precision,
+                                        coverages,
+                                        coverages_index);
+    }
   }
   catch (...)
   {
@@ -1800,14 +1772,14 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     {
       const auto &outdata = output.second;
       // iterate columns (parameters)
-	  process_parameters_at_position(outdata,
-									  query_parameters,
-									  emd,
-									  longitude_index,
-									  latitude_index,
-									  level_index,
-									  coverages,								 
-									  coverages_index);
+      process_parameters_at_position(outdata,
+                                     query_parameters,
+                                     emd,
+                                     longitude_index,
+                                     latitude_index,
+                                     level_index,
+                                     coverages,
+                                     coverages_index);
     }
 
     coverage_collection["coverages"] = coverages;
@@ -1820,141 +1792,21 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
   }
 }
 
-void set_axis_names(const bool& levels_present,
-					Json::Value& axis_names)
+void set_axis_names(const bool &levels_present, Json::Value &axis_names)
 {
   try
   {
-	  axis_names[0] = Json::Value("x");
-	  axis_names[1] = Json::Value("y");
-	  if (levels_present)
-	  {
-		axis_names[2] = Json::Value("z");
-		axis_names[3] = Json::Value("t");
-	  }
-	  else
-	  {
-		axis_names[2] = Json::Value("t");
-	  }
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-void set_parameter_value(const time_coord_value& value,
-						 const int& parameter_precision,
-						 const bool& isAviProducer,
-						 Json::Value& values,
-						 Json::Value& range_item)
-{
-  try
-  {
-	if (value.value)
-	{
-	  values[0] = UtilityFunctions::json_value(*value.value, parameter_precision);
-	  range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
-	}
-	else
-	{
-	  values[0] = Json::Value();
-	  range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
-	}
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-
-void set_level_value(const bool& levels_present,
-					 const int& level,
-					 Json::Value& domain_axes)
-{
-  try
-  {
-	if (levels_present)
-	{
-	  auto domain_axes_z = Json::Value(Json::ValueType::objectValue);
-	  domain_axes_z["values"] = Json::Value(Json::ValueType::arrayValue);
-	  domain_axes_z["values"][0] = Json::Value(level);
-	  domain_axes["z"] = domain_axes_z;
-	}
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-void process_values(const std::string& parameter_name,
-					const int& parameter_precision,
-					const int& longitude_precision,
-					const int& latitude_precision,
-					const bool& isAviProducer,
-					std::vector<time_coord_value>& values,
-					const bool& levels_present,
-					const int& level,
-					Json::Value& coverages)
-{
-  try
-  {
-	for (const auto &value : values)
+    axis_names[0] = Json::Value("x");
+    axis_names[1] = Json::Value("y");
+    if (levels_present)
     {
-	  auto coverage = Json::Value(Json::ValueType::objectValue);
-	  coverage["type"] = Json::Value("Coverage");
-	  auto domain = Json::Value(Json::ValueType::objectValue);
-	  domain["type"] = Json::Value("Domain");
-	  auto domain_axes = Json::Value(Json::ValueType::objectValue);
-	  auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
-	  domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
-	  auto data_type = Json::Value(Json::ValueType::objectValue);
-	  domain_axes_x["values"][0] = Json::Value(value.lon, longitude_precision);
-	  auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
-	  domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
-	  domain_axes_y["values"][0] = Json::Value(value.lat, latitude_precision);
-	  auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
-	  domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
-	  domain_axes_t["values"][0] = Json::Value(value.time);
-	  domain_axes["x"] = domain_axes_x;
-	  domain_axes["y"] = domain_axes_y;
-	  domain_axes["t"] = domain_axes_t;
-	  set_level_value(levels_present,
-					  level,
-					  domain_axes);
-	  
-	  domain["axes"] = domain_axes;
-	  coverage["domain"] = domain;
-	  
-	  auto range_item = Json::Value(Json::ValueType::objectValue);
-	  range_item["type"] = Json::Value("NdArray");
-	  auto shape = Json::Value(Json::ValueType::arrayValue);
-	  shape[0] = Json::Value(1);
-	  shape[1] = Json::Value(1);
-	  shape[2] = Json::Value(1);
-	  if (levels_present)
-		shape[3] = Json::Value(1);
-	  
-	  range_item["shape"] = shape;
-	  auto axis_names = Json::Value(Json::ValueType::arrayValue);
-	  set_axis_names(levels_present, axis_names);
-	  
-	  range_item["axisNames"] = axis_names;
-	  auto parameter_values = Json::Value(Json::ValueType::arrayValue);
-	  set_parameter_value(value,
-						  parameter_precision,
-						  isAviProducer,
-						  parameter_values,
-						  range_item);
-
-	  range_item["values"] = parameter_values;
-	  auto ranges = Json::Value(Json::ValueType::objectValue);
-	  ranges[parameter_name] = range_item;
-	  coverage["ranges"] = ranges;
-	  coverages[coverages.size()] = coverage;
-	}
+      axis_names[2] = Json::Value("z");
+      axis_names[3] = Json::Value("t");
+    }
+    else
+    {
+      axis_names[2] = Json::Value("t");
+    }
   }
   catch (...)
   {
@@ -1962,35 +1814,145 @@ void process_values(const std::string& parameter_name,
   }
 }
 
-void process_coverage_collection_point_parameter(const DataPerLevel& dpl,
-												 const std::string& parameter_name,
-												 const int& parameter_precision,
-												 const int& longitude_precision,
-												 const int& latitude_precision,
-												 bool isAviProducer,
-												 bool& levels_present,
-												 Json::Value& coverages)
+void set_parameter_value(const time_coord_value &value,
+                         const int &parameter_precision,
+                         const bool &isAviProducer,
+                         Json::Value &values,
+                         Json::Value &range_item)
 {
   try
   {
-	for (const auto &dpl_item : dpl)
+    if (value.value)
     {
-	  int level = dpl_item.first;
-	  // Levels present in some item
-	  levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
-	  
-	  auto values = dpl_item.second;
-	  
-	  process_values(parameter_name,
-					 parameter_precision,
-					 longitude_precision,
-					 latitude_precision,
-					 isAviProducer,
-					 values,
-					 levels_present,
-					 level,
-					 coverages);
-	}
+      values[0] = UtilityFunctions::json_value(*value.value, parameter_precision);
+      range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
+    }
+    else
+    {
+      values[0] = Json::Value();
+      range_item["dataType"] = Json::Value(isAviProducer ? "string" : "float");
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void set_level_value(const bool &levels_present, const int &level, Json::Value &domain_axes)
+{
+  try
+  {
+    if (levels_present)
+    {
+      auto domain_axes_z = Json::Value(Json::ValueType::objectValue);
+      domain_axes_z["values"] = Json::Value(Json::ValueType::arrayValue);
+      domain_axes_z["values"][0] = Json::Value(level);
+      domain_axes["z"] = domain_axes_z;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void process_values(const std::string &parameter_name,
+                    const int &parameter_precision,
+                    const int &longitude_precision,
+                    const int &latitude_precision,
+                    const bool &isAviProducer,
+                    std::vector<time_coord_value> &values,
+                    const bool &levels_present,
+                    const int &level,
+                    Json::Value &coverages)
+{
+  try
+  {
+    for (const auto &value : values)
+    {
+      auto coverage = Json::Value(Json::ValueType::objectValue);
+      coverage["type"] = Json::Value("Coverage");
+      auto domain = Json::Value(Json::ValueType::objectValue);
+      domain["type"] = Json::Value("Domain");
+      auto domain_axes = Json::Value(Json::ValueType::objectValue);
+      auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
+      domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
+      auto data_type = Json::Value(Json::ValueType::objectValue);
+      domain_axes_x["values"][0] = Json::Value(value.lon, longitude_precision);
+      auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
+      domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
+      domain_axes_y["values"][0] = Json::Value(value.lat, latitude_precision);
+      auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
+      domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
+      domain_axes_t["values"][0] = Json::Value(value.time);
+      domain_axes["x"] = domain_axes_x;
+      domain_axes["y"] = domain_axes_y;
+      domain_axes["t"] = domain_axes_t;
+      set_level_value(levels_present, level, domain_axes);
+
+      domain["axes"] = domain_axes;
+      coverage["domain"] = domain;
+
+      auto range_item = Json::Value(Json::ValueType::objectValue);
+      range_item["type"] = Json::Value("NdArray");
+      auto shape = Json::Value(Json::ValueType::arrayValue);
+      shape[0] = Json::Value(1);
+      shape[1] = Json::Value(1);
+      shape[2] = Json::Value(1);
+      if (levels_present)
+        shape[3] = Json::Value(1);
+
+      range_item["shape"] = shape;
+      auto axis_names = Json::Value(Json::ValueType::arrayValue);
+      set_axis_names(levels_present, axis_names);
+
+      range_item["axisNames"] = axis_names;
+      auto parameter_values = Json::Value(Json::ValueType::arrayValue);
+      set_parameter_value(value, parameter_precision, isAviProducer, parameter_values, range_item);
+
+      range_item["values"] = parameter_values;
+      auto ranges = Json::Value(Json::ValueType::objectValue);
+      ranges[parameter_name] = range_item;
+      coverage["ranges"] = ranges;
+      coverages[coverages.size()] = coverage;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void process_coverage_collection_point_parameter(const DataPerLevel &dpl,
+                                                 const std::string &parameter_name,
+                                                 const int &parameter_precision,
+                                                 const int &longitude_precision,
+                                                 const int &latitude_precision,
+                                                 bool isAviProducer,
+                                                 bool &levels_present,
+                                                 Json::Value &coverages)
+{
+  try
+  {
+    for (const auto &dpl_item : dpl)
+    {
+      int level = dpl_item.first;
+      // Levels present in some item
+      levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
+
+      auto values = dpl_item.second;
+
+      process_values(parameter_name,
+                     parameter_precision,
+                     longitude_precision,
+                     latitude_precision,
+                     isAviProducer,
+                     values,
+                     levels_present,
+                     level,
+                     coverages);
+    }
   }
   catch (...)
   {
@@ -2013,7 +1975,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 
     const auto &longitude_precision = emd.getPrecision("longitude");
     const auto &latitude_precision = emd.getPrecision("latitude");
-	auto isAviProducer = emd.isAviProducer();
+    auto isAviProducer = emd.isAviProducer();
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
@@ -2024,14 +1986,14 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
       const auto &dpl = dpp_item.second;
 
       // Iterate data per level
-	  process_coverage_collection_point_parameter(dpl,
-												  parameter_name,
-												  parameter_precision,
-												  longitude_precision,
-												  latitude_precision,
-												  isAviProducer,
-												  levels_present,
-												  coverages);
+      process_coverage_collection_point_parameter(dpl,
+                                                  parameter_name,
+                                                  parameter_precision,
+                                                  longitude_precision,
+                                                  latitude_precision,
+                                                  isAviProducer,
+                                                  levels_present,
+                                                  coverages);
     }
 
     coverage_collection =
@@ -2046,78 +2008,77 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
   }
 }
 
-
-void process_coverage_collection_trajectory_parameter(const DataPerLevel& dpl,
-													  const std::string& parameter_name,
-													  const int& parameter_precision,
-													  const int& longitude_precision,
-													  const int& latitude_precision,
-													  bool& levels_present,
-													  Json::Value& coverages)
+void process_coverage_collection_trajectory_parameter(const DataPerLevel &dpl,
+                                                      const std::string &parameter_name,
+                                                      const int &parameter_precision,
+                                                      const int &longitude_precision,
+                                                      const int &latitude_precision,
+                                                      bool &levels_present,
+                                                      Json::Value &coverages)
 {
   try
   {
-     for (const auto &dpl_item : dpl)
-	 {
-	   int level = dpl_item.first;
-	   // Levels present in some item
-	   levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
-	   
-	   auto values = dpl_item.second;
-	   auto data_values = Json::Value(Json::ValueType::arrayValue);
-	   auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
-	   for (unsigned int i = 0; i < values.size(); i++)
-       {
-		 const auto &value = values.at(i);
-		 auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
-		 time_coord_value[0] = Json::Value(value.time);
-		 time_coord_value[1] = Json::Value(value.lon, longitude_precision);
-		 time_coord_value[2] = Json::Value(value.lat, latitude_precision);
-		 if (levels_present)
-		   time_coord_value[3] = Json::Value(level);
-		 time_coord_values[i] = time_coord_value;
-		 if (value.value)
-		   data_values[i] = UtilityFunctions::json_value(*value.value, parameter_precision);
-		 else
-		   data_values[i] = Json::Value();
-	   }
-	   
-	   auto coverage = Json::Value(Json::ValueType::objectValue);
-	   coverage["type"] = Json::Value("Coverage");
-	   auto coverage_domain = Json::Value(Json::ValueType::objectValue);
-	   coverage_domain["type"] = Json::Value("Domain");
-	   
-	   auto domain_axes = Json::Value(Json::ValueType::objectValue);
-	   auto domain_axes_composite = Json::Value(Json::ValueType::objectValue);
-	   domain_axes_composite["dataType"] = Json::Value("tuple");
-	   auto domain_axes_coordinates = Json::Value(Json::ValueType::arrayValue);
-	   domain_axes_coordinates[0] = Json::Value("t");
-	   domain_axes_coordinates[1] = Json::Value("x");
-	   domain_axes_coordinates[2] = Json::Value("y");
-	   if (levels_present)
-		 domain_axes_coordinates[3] = Json::Value("z");
-	   domain_axes_composite["coordinates"] = domain_axes_coordinates;
-	   domain_axes_composite["values"] = time_coord_values;
-	   domain_axes["composite"] = domain_axes_composite;
-	   coverage_domain["axes"] = domain_axes;
-	   
-	   auto domain_ranges = Json::Value(Json::ValueType::objectValue);
-	   auto domain_parameter = Json::Value(Json::ValueType::objectValue);
-	   domain_parameter["type"] = Json::Value("NdArray");
-	   domain_parameter["dataType"] = Json::Value("float");
-	   auto axis_names = Json::Value(Json::ValueType::arrayValue);
-	   axis_names[0] = Json::Value("composite");
-	   domain_parameter["axisNames"] = axis_names;
-	   auto shape = Json::Value(Json::ValueType::arrayValue);
-	   shape[0] = Json::Value(values.size());
-	   domain_parameter["shape"] = shape;
-	   domain_parameter["values"] = data_values;
-	   domain_ranges[parameter_name] = domain_parameter;
-	   coverage["domain"] = coverage_domain;
-	   coverage["ranges"] = domain_ranges;
-	   
-	   coverages[coverages.size()] = coverage;
-	 }
+    for (const auto &dpl_item : dpl)
+    {
+      int level = dpl_item.first;
+      // Levels present in some item
+      levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
+
+      auto values = dpl_item.second;
+      auto data_values = Json::Value(Json::ValueType::arrayValue);
+      auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
+      for (unsigned int i = 0; i < values.size(); i++)
+      {
+        const auto &value = values.at(i);
+        auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
+        time_coord_value[0] = Json::Value(value.time);
+        time_coord_value[1] = Json::Value(value.lon, longitude_precision);
+        time_coord_value[2] = Json::Value(value.lat, latitude_precision);
+        if (levels_present)
+          time_coord_value[3] = Json::Value(level);
+        time_coord_values[i] = time_coord_value;
+        if (value.value)
+          data_values[i] = UtilityFunctions::json_value(*value.value, parameter_precision);
+        else
+          data_values[i] = Json::Value();
+      }
+
+      auto coverage = Json::Value(Json::ValueType::objectValue);
+      coverage["type"] = Json::Value("Coverage");
+      auto coverage_domain = Json::Value(Json::ValueType::objectValue);
+      coverage_domain["type"] = Json::Value("Domain");
+
+      auto domain_axes = Json::Value(Json::ValueType::objectValue);
+      auto domain_axes_composite = Json::Value(Json::ValueType::objectValue);
+      domain_axes_composite["dataType"] = Json::Value("tuple");
+      auto domain_axes_coordinates = Json::Value(Json::ValueType::arrayValue);
+      domain_axes_coordinates[0] = Json::Value("t");
+      domain_axes_coordinates[1] = Json::Value("x");
+      domain_axes_coordinates[2] = Json::Value("y");
+      if (levels_present)
+        domain_axes_coordinates[3] = Json::Value("z");
+      domain_axes_composite["coordinates"] = domain_axes_coordinates;
+      domain_axes_composite["values"] = time_coord_values;
+      domain_axes["composite"] = domain_axes_composite;
+      coverage_domain["axes"] = domain_axes;
+
+      auto domain_ranges = Json::Value(Json::ValueType::objectValue);
+      auto domain_parameter = Json::Value(Json::ValueType::objectValue);
+      domain_parameter["type"] = Json::Value("NdArray");
+      domain_parameter["dataType"] = Json::Value("float");
+      auto axis_names = Json::Value(Json::ValueType::arrayValue);
+      axis_names[0] = Json::Value("composite");
+      domain_parameter["axisNames"] = axis_names;
+      auto shape = Json::Value(Json::ValueType::arrayValue);
+      shape[0] = Json::Value(values.size());
+      domain_parameter["shape"] = shape;
+      domain_parameter["values"] = data_values;
+      domain_ranges[parameter_name] = domain_parameter;
+      coverage["domain"] = coverage_domain;
+      coverage["ranges"] = domain_ranges;
+
+      coverages[coverages.size()] = coverage;
+    }
   }
   catch (...)
   {
@@ -2150,14 +2111,13 @@ Json::Value format_coverage_collection_trajectory(
       const auto &dpl = dpp_item.second;
       const auto &parameter_precision = emd.getPrecision(parameter_name);
 
-
-	  process_coverage_collection_trajectory_parameter(dpl,
-													   parameter_name,
-													   parameter_precision,
-													   longitude_precision,
-													   latitude_precision,
-													   levels_present,
-													   coverages);
+      process_coverage_collection_trajectory_parameter(dpl,
+                                                       parameter_name,
+                                                       parameter_precision,
+                                                       longitude_precision,
+                                                       latitude_precision,
+                                                       levels_present,
+                                                       coverages);
     }
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory");
@@ -2171,160 +2131,154 @@ Json::Value format_coverage_collection_trajectory(
   }
 }
 
-double get_level(const TS::TimeSeriesGroupPtr& tsg_level,
-				 const bool& levels_present,
-				 const unsigned int& tsg_index,
-				 const unsigned int& llts_index)
+double get_level(const TS::TimeSeriesGroupPtr &tsg_level,
+                 const bool &levels_present,
+                 const unsigned int &tsg_index,
+                 const unsigned int &llts_index)
 {
   try
   {
-	double level = std::numeric_limits<double>::max();
+    double level = std::numeric_limits<double>::max();
 
-	if (levels_present)
-	{
-	  const auto &llts_level = tsg_level->at(tsg_index);
-	  const auto &level_value = llts_level.timeseries.at(llts_index);
-	  if (boost::get<double>(&level_value.value) != nullptr)
-	  {
-		level = *(boost::get<double>(&level_value.value));
-	  }
-	  else if (boost::get<int>(&level_value.value) != nullptr)
-	  {
-		level = *(boost::get<int>(&level_value.value));
-	  }
-	}
-
-	return level;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-void add_time_coord_value(const TS::LonLatTimeSeries& llts_data,
-						  const TS::LonLatTimeSeries& llts_lon,
-						  const TS::LonLatTimeSeries& llts_lat,
-						  const TS::TimeSeriesGroupPtr& tsg_level,
-						  const unsigned int tsg_index,
-						  const bool& levels_present,
-						  unsigned int& levels_index,
-						  const CoordinateFilter &coordinate_filter,
-						  DataPerLevel& dpl)
-{
-  try
-  {
-	for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
-	{
-	  const auto &data_value = llts_data.timeseries.at(l);
-	  const auto &lon_value = llts_lon.timeseries.at(l);
-	  const auto &lat_value = llts_lat.timeseries.at(l);
-	  
-	  time_coord_value tcv;
-	  tcv.lon = as_double(lon_value.value);
-	  tcv.lat = as_double(lat_value.value);
-	  tcv.time =
-		(boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
-	  
-	  double level = get_level(tsg_level, levels_present, tsg_index, l);
-	  
-	  if (data_value.value != TS::None())
-		tcv.value = data_value.value;
-	  bool accept =
-		coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
-	  
-	  if (accept)
-		dpl[level].push_back(tcv);
-	  
-	  if (levels_present)
-	  {
-		levels_index++;
-		if (levels_index >= tsg_level->size())
-		  levels_index = 0;
-	  }
-	}
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-DataPerLevel get_data_per_level(const TS::TimeSeriesGroupPtr& tsg_data,
-								const TS::TimeSeriesGroupPtr& tsg_lon,
-								const TS::TimeSeriesGroupPtr& tsg_lat,
-								const TS::TimeSeriesGroupPtr& tsg_level,
-								const bool& levels_present,
-								const CoordinateFilter &coordinate_filter)
-{
-  try
-  {
-	DataPerLevel dpl;
-
-	unsigned int levels_index = 0;
-	for (unsigned int k = 0; k < tsg_data->size(); k++)
-	{
-	  const auto &llts_data = tsg_data->at(k);
-	  const auto &llts_lon = tsg_lon->at(k);
-	  const auto &llts_lat = tsg_lat->at(k);
-	  
-	  add_time_coord_value(llts_data,
-						   llts_lon,
-						   llts_lat,
-						   tsg_level,
-						   k,
-						   levels_present,
-						   levels_index,
-						   coordinate_filter,
-						   dpl);
-	}
-	return dpl;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-void process_parameter_data(const std::vector<TS::TimeSeriesData>& outdata,
-							const unsigned int& longitude_index,
-							const unsigned int& latitude_index,
-							const unsigned int& level_index,
-							const CoordinateFilter &coordinate_filter,
-							const std::vector<Spine::Parameter> &query_parameters,
-							const bool& levels_present,
-							DataPerParameter& dpp)
-{
-  try
-  {
-	for (unsigned int j = 0; j < outdata.size(); j++)
+    if (levels_present)
     {
-	  auto parameter_name = parse_parameter_name(query_parameters[j].name());
-	  
-	  if (lon_lat_level_param(parameter_name))
-		continue;
-
-	  auto tsdata = outdata.at(j);
-	  auto tslon = outdata.at(longitude_index);
-	  auto tslat = outdata.at(latitude_index);
-	  TS::TimeSeriesGroupPtr tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-	  TS::TimeSeriesGroupPtr tsg_lon = *(boost::get<TS::TimeSeriesGroupPtr>(&tslon));
-	  TS::TimeSeriesGroupPtr tsg_lat = *(boost::get<TS::TimeSeriesGroupPtr>(&tslat));
-	  TS::TimeSeriesGroupPtr tsg_level = nullptr;
-	  if (levels_present)
+      const auto &llts_level = tsg_level->at(tsg_index);
+      const auto &level_value = llts_level.timeseries.at(llts_index);
+      if (boost::get<double>(&level_value.value) != nullptr)
       {
-		auto tslevel = outdata.at(level_index);
-		tsg_level = *(boost::get<TS::TimeSeriesGroupPtr>(&tslevel));
-	  }
-	  
-	  DataPerLevel dpl = get_data_per_level(tsg_data,
-											tsg_lon,
-											tsg_lat,
-											tsg_level,
-											levels_present,
-											coordinate_filter);
-	  dpp[parameter_name] = dpl;
-	}
+        level = *(boost::get<double>(&level_value.value));
+      }
+      else if (boost::get<int>(&level_value.value) != nullptr)
+      {
+        level = *(boost::get<int>(&level_value.value));
+      }
+    }
+
+    return level;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void add_time_coord_value(const TS::LonLatTimeSeries &llts_data,
+                          const TS::LonLatTimeSeries &llts_lon,
+                          const TS::LonLatTimeSeries &llts_lat,
+                          const TS::TimeSeriesGroupPtr &tsg_level,
+                          const unsigned int tsg_index,
+                          const bool &levels_present,
+                          unsigned int &levels_index,
+                          const CoordinateFilter &coordinate_filter,
+                          DataPerLevel &dpl)
+{
+  try
+  {
+    for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
+    {
+      const auto &data_value = llts_data.timeseries.at(l);
+      const auto &lon_value = llts_lon.timeseries.at(l);
+      const auto &lat_value = llts_lat.timeseries.at(l);
+
+      time_coord_value tcv;
+      tcv.lon = as_double(lon_value.value);
+      tcv.lat = as_double(lat_value.value);
+      tcv.time = (boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
+
+      double level = get_level(tsg_level, levels_present, tsg_index, l);
+
+      if (data_value.value != TS::None())
+        tcv.value = data_value.value;
+      bool accept = coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
+
+      if (accept)
+        dpl[level].push_back(tcv);
+
+      if (levels_present)
+      {
+        levels_index++;
+        if (levels_index >= tsg_level->size())
+          levels_index = 0;
+      }
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+DataPerLevel get_data_per_level(const TS::TimeSeriesGroupPtr &tsg_data,
+                                const TS::TimeSeriesGroupPtr &tsg_lon,
+                                const TS::TimeSeriesGroupPtr &tsg_lat,
+                                const TS::TimeSeriesGroupPtr &tsg_level,
+                                const bool &levels_present,
+                                const CoordinateFilter &coordinate_filter)
+{
+  try
+  {
+    DataPerLevel dpl;
+
+    unsigned int levels_index = 0;
+    for (unsigned int k = 0; k < tsg_data->size(); k++)
+    {
+      const auto &llts_data = tsg_data->at(k);
+      const auto &llts_lon = tsg_lon->at(k);
+      const auto &llts_lat = tsg_lat->at(k);
+
+      add_time_coord_value(llts_data,
+                           llts_lon,
+                           llts_lat,
+                           tsg_level,
+                           k,
+                           levels_present,
+                           levels_index,
+                           coordinate_filter,
+                           dpl);
+    }
+    return dpl;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
+                            const unsigned int &longitude_index,
+                            const unsigned int &latitude_index,
+                            const unsigned int &level_index,
+                            const CoordinateFilter &coordinate_filter,
+                            const std::vector<Spine::Parameter> &query_parameters,
+                            const bool &levels_present,
+                            DataPerParameter &dpp)
+{
+  try
+  {
+    for (unsigned int j = 0; j < outdata.size(); j++)
+    {
+      auto parameter_name = parse_parameter_name(query_parameters[j].name());
+
+      if (lon_lat_level_param(parameter_name))
+        continue;
+
+      auto tsdata = outdata.at(j);
+      auto tslon = outdata.at(longitude_index);
+      auto tslat = outdata.at(latitude_index);
+      TS::TimeSeriesGroupPtr tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+      TS::TimeSeriesGroupPtr tsg_lon = *(boost::get<TS::TimeSeriesGroupPtr>(&tslon));
+      TS::TimeSeriesGroupPtr tsg_lat = *(boost::get<TS::TimeSeriesGroupPtr>(&tslat));
+      TS::TimeSeriesGroupPtr tsg_level = nullptr;
+      if (levels_present)
+      {
+        auto tslevel = outdata.at(level_index);
+        tsg_level = *(boost::get<TS::TimeSeriesGroupPtr>(&tslevel));
+      }
+
+      DataPerLevel dpl = get_data_per_level(
+          tsg_data, tsg_lon, tsg_lat, tsg_level, levels_present, coordinate_filter);
+      dpp[parameter_name] = dpl;
+    }
   }
   catch (...)
   {
@@ -2369,14 +2323,14 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
       const auto &outdata = output.second;
 
       // iterate columns (parameters)
-	  process_parameter_data(outdata,
-							 longitude_index,
-							 latitude_index,
-							 level_index,
-							 coordinate_filter,
-							 query_parameters,
-							 levels_present,
-							 dpp);
+      process_parameter_data(outdata,
+                             longitude_index,
+                             latitude_index,
+                             level_index,
+                             coordinate_filter,
+                             query_parameters,
+                             levels_present,
+                             dpp);
     }
     return dpp;
   }
@@ -2412,40 +2366,39 @@ Json::Value format_output_data_coverage_collection(
   }
 }
 
-void add_parameter(const std::string& parameter_name,
-				   const int& parameter_precision,
-				   const TS::TimeSeriesPtr& ts_data,
-				   const TS::TimeSeriesPtr& ts_level,
-				   const int& level_precision,
-				   const bool& firstParameter,
-				   Json::Value& values_array,
-				   Json::Value& level_values,
-				   std::map<std::string, Json::Value>& parameter_data_type)
+void add_parameter(const std::string &parameter_name,
+                   const int &parameter_precision,
+                   const TS::TimeSeriesPtr &ts_data,
+                   const TS::TimeSeriesPtr &ts_level,
+                   const int &level_precision,
+                   const bool &firstParameter,
+                   Json::Value &values_array,
+                   Json::Value &level_values,
+                   std::map<std::string, Json::Value> &parameter_data_type)
 {
   try
   {
-	Json::Value data_type_level;
-	Json::Value data_type_data;
-	unsigned int data_index = 0;
-	for (unsigned int k = 0; k < ts_data->size(); k++)
+    Json::Value data_type_level;
+    Json::Value data_type_data;
+    unsigned int data_index = 0;
+    for (unsigned int k = 0; k < ts_data->size(); k++)
     {
-	  const auto &data_value = ts_data->at(k);
-	  const auto &level_value = ts_level->at(k);
-	  add_value(data_value, values_array, data_type_data, data_index, parameter_precision);
-	  // All parameters have the same levels
-	  if (firstParameter)
-		add_value(level_value, level_values, data_type_level, data_index, level_precision);
-	  if (parameter_data_type.find(parameter_name) == parameter_data_type.end())
-		parameter_data_type[parameter_name] = data_type_data;
-	  data_index++;
-	}
+      const auto &data_value = ts_data->at(k);
+      const auto &level_value = ts_level->at(k);
+      add_value(data_value, values_array, data_type_data, data_index, parameter_precision);
+      // All parameters have the same levels
+      if (firstParameter)
+        add_value(level_value, level_values, data_type_level, data_index, level_precision);
+      if (parameter_data_type.find(parameter_name) == parameter_data_type.end())
+        parameter_data_type[parameter_name] = data_type_data;
+      data_index++;
+    }
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-
 
 Json::Value format_output_data_vertical_profile(
     const TS::OutputData &outputData,
@@ -2488,7 +2441,7 @@ Json::Value format_output_data_vertical_profile(
       if (lon_lat_level_param(parameter_name))
         continue;
 
-	  auto firstParameter = (j == 0);
+      auto firstParameter = (j == 0);
       auto tsdata = outdata.at(j);
       auto tslevel = outdata.at(level_index);
       TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
@@ -2496,17 +2449,17 @@ Json::Value format_output_data_vertical_profile(
 
       auto values_array = Json::Value(Json::ValueType::arrayValue);
 
-	  add_parameter(parameter_name,
-					parameter_precision,
-					ts_data,
-					ts_level,
-					level_precision,
-					firstParameter,
-					values_array,
-					level_values,
-					parameter_data_type);
+      add_parameter(parameter_name,
+                    parameter_precision,
+                    ts_data,
+                    ts_level,
+                    level_precision,
+                    firstParameter,
+                    values_array,
+                    level_values,
+                    parameter_data_type);
 
-      parameter_data_values[parameter_name] = values_array;	  
+      parameter_data_values[parameter_name] = values_array;
     }
 
     if (parameter_data_values.empty())
@@ -2737,21 +2690,21 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       auto properties = Json::Value(Json::ValueType::objectValue);
       properties["name"] = Json::Value(loc.name);
       auto detail_string = ("Id is " + loc.type);
-	  if(!loc.keyword.empty())
-		detail_string.append(" from " + loc.keyword);
+      if (!loc.keyword.empty())
+        detail_string.append(" from " + loc.keyword);
       properties["detail"] = Json::Value(detail_string);
       if (!edr_md->temporal_extent.time_periods.empty())
       {
         auto start_time = loc.start_time;
-		if(start_time.is_not_a_date_time())
-		  start_time = edr_md->temporal_extent.time_periods.front().start_time;
+        if (start_time.is_not_a_date_time())
+          start_time = edr_md->temporal_extent.time_periods.front().start_time;
         auto end_time = loc.end_time;
-		if(end_time.is_not_a_date_time())
-		  end_time = edr_md->temporal_extent.time_periods.back().end_time;
+        if (end_time.is_not_a_date_time())
+          end_time = edr_md->temporal_extent.time_periods.back().end_time;
         if (end_time.is_not_a_date_time())
           end_time = edr_md->temporal_extent.time_periods.back().start_time;
-		if(end_time > now)
-		  end_time = now;
+        if (end_time > now)
+          end_time = now;
         properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
                                              Fmi::to_iso_extended_string(end_time) + "Z");
       }

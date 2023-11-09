@@ -32,10 +32,7 @@ static Fmi::DateTime NOT_A_DATE_TIME;
 class TimePeriod
 {
  public:
-  TimePeriod(const Fmi::DateTime &t1, const Fmi::DateTime &t2)
-      : period_start(t1), period_end(t2)
-  {
-  }
+  TimePeriod(const Fmi::DateTime &t1, const Fmi::DateTime &t2) : period_start(t1), period_end(t2) {}
   void setStartTime(const Fmi::DateTime &t) { period_start = t; }
   void setEndTime(const Fmi::DateTime &t) { period_end = t; }
   const Fmi::DateTime &getStartTime() const { return period_start; }
@@ -126,7 +123,7 @@ void remove_duplicate_collection(const std::string &collection_name,
 }  // namespace
 
 const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
-                                                            const std::string &producer)
+                                                 const std::string &producer)
 {
   if (pmd.find(producer) != pmd.end())
   {
@@ -366,31 +363,31 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 #ifndef WITHOUT_OBSERVATION
 
 std::set<std::string> get_producer_parameters(const std::string &producer,
-											  const ProducerParameters& prodParams,
+                                              const ProducerParameters &prodParams,
                                               const Engine::Observation::ProducerMeasurandInfo &pmi)
 {
   try
   {
     std::set<std::string> ret;
 
-	// If no parameters defined for producer -> accept all
-	bool parametersDefined = prodParams.parametersDefined(producer);
+    // If no parameters defined for producer -> accept all
+    bool parametersDefined = prodParams.parametersDefined(producer);
 
     if (pmi.find(producer) != pmi.end())
     {
       const auto &mi = pmi.at(producer);
       for (const auto &item : mi)
-	  {
-		if(parametersDefined)
-		{
-		  // Add given name
-		  if(prodParams.isValidParameter(producer, item.first))
-			ret.insert(prodParams.parameterName(producer, item.first));
-		  continue;
-		}
+      {
+        if (parametersDefined)
+        {
+          // Add given name
+          if (prodParams.isValidParameter(producer, item.first))
+            ret.insert(prodParams.parameterName(producer, item.first));
+          continue;
+        }
 
-		ret.insert(item.first);
-	  }
+        ret.insert(item.first);
+      }
     }
 
     return ret;
@@ -527,7 +524,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     const SupportedDataQueries &sdq,
     const SupportedOutputFormats &sofs,
     const SupportedProducerLocations &spl,
-	const ProducerParameters& prodParam,
+    const ProducerParameters &prodParam,
     unsigned int observation_period)
 
 {
@@ -552,11 +549,11 @@ EDRProducerMetaData get_edr_metadata_obs(
       const auto &producer = item.first;
       const auto &obs_md = item.second;
       auto params = obs_md.parameters;
-	  auto measurand_params = get_producer_parameters(producer, prodParam, producer_measurand_info);
-	  // If valid parameters defined in config use only them
-	  if(!measurand_params.empty())
-		params.clear();
-	  params.insert(measurand_params.begin(), measurand_params.end());
+      auto measurand_params = get_producer_parameters(producer, prodParam, producer_measurand_info);
+      // If valid parameters defined in config use only them
+      if (!measurand_params.empty())
+        params.clear();
+      params.insert(measurand_params.begin(), measurand_params.end());
 
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Observation;
@@ -571,12 +568,10 @@ EDRProducerMetaData get_edr_metadata_obs(
       auto time_of_day = obs_md.period.last().time_of_day();
       auto end_date = obs_md.period.last().date();
       // In order to get rid of fractions of a second in end_time
-      Fmi::DateTime end_time(
-          end_date,
-          Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
+      Fmi::DateTime end_time(end_date,
+                             Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
       if (observation_period > 0)
-        temporal_extent_period.start_time =
-            (end_time - Fmi::Hours(observation_period));
+        temporal_extent_period.start_time = (end_time - Fmi::Hours(observation_period));
       else
         temporal_extent_period.start_time = obs_md.period.begin();
       temporal_extent_period.end_time = end_time;
@@ -615,8 +610,7 @@ EDRProducerMetaData get_edr_metadata_obs(
 #endif
 
 #ifndef WITHOUT_AVI
-std::vector<TimePeriod> get_time_periods(
-    const std::set<Fmi::LocalDateTime> &timesteps)
+std::vector<TimePeriod> get_time_periods(const std::set<Fmi::LocalDateTime> &timesteps)
 {
   try
   {
@@ -757,8 +751,7 @@ void parse_temporal_extent(const std::set<Fmi::LocalDateTime> &timesteps,
 }
 
 // Merge time periods when possible (even timesteps)
-edr_temporal_extent get_temporal_extent(
-    const std::set<Fmi::LocalDateTime> &timesteps)
+edr_temporal_extent get_temporal_extent(const std::set<Fmi::LocalDateTime> &timesteps)
 {
   try
   {
@@ -818,8 +811,8 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
     auto now = Fmi::SecondClock::universal_time();
     auto start_of_period =
-        (now - Fmi::Hours(
-                   period_length * 24));  // from config file avi.period_length (30 days default)
+        (now -
+         Fmi::Hours(period_length * 24));  // from config file avi.period_length (30 days default)
     std::string startTime = boost::posix_time::to_iso_string(start_of_period);
     std::string endTime = boost::posix_time::to_iso_string(now);
     queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
@@ -843,8 +836,7 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
       while (timeIter != aviData.itsValues[stationId]["messagetime"].end())
       {
-        Fmi::LocalDateTime timestep =
-            boost::get<Fmi::LocalDateTime>(*timeIter);
+        Fmi::LocalDateTime timestep = boost::get<Fmi::LocalDateTime>(*timeIter);
 
         timesteps.insert(timestep);
         timeIter++;
@@ -1014,8 +1006,8 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const SupportedOutputFormats &sofs,
                                          const SupportedProducerLocations &spl)
 {
-  using Fmi::Hours;
   using Fmi::DateTime;
+  using Fmi::Hours;
   using Fmi::TimeDuration;
 
   try
@@ -1278,8 +1270,8 @@ void EngineMetaData::removeDuplicates(bool report_removal)
   }
 }
 
-const Fmi::DateTime &EngineMetaData::getLatestDataUpdateTime(
-    SourceEngine source_engine, const std::string &producer) const
+const Fmi::DateTime &EngineMetaData::getLatestDataUpdateTime(SourceEngine source_engine,
+                                                             const std::string &producer) const
 {
   const auto &producer_meta_data = getMetaData(source_engine);
 

@@ -390,9 +390,9 @@ void Plugin::query(const State& state,
       gridEnabled = true;
 
     formatter.reset(fmt);
-    std::string mime =
-        ((q.output_format == IWXXM_FORMAT || q.output_format == TAC_FORMAT) ? "ascii"
-                                                                            : "application/json; charset=utf-8");
+    std::string mime = ((q.output_format == IWXXM_FORMAT || q.output_format == TAC_FORMAT)
+                            ? "ascii"
+                            : "application/json; charset=utf-8");
     response.setHeader("Content-Type", mime);
 
     // Calculate the hash value for the product.
@@ -595,8 +595,7 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
       std::string cachecontrol = "public, max-age=" + Fmi::to_string(expires_seconds);
       theResponse.setHeader("Cache-Control", cachecontrol);
 
-      Fmi::DateTime t_expires =
-          state.getTime() + Fmi::Seconds(expires_seconds);
+      Fmi::DateTime t_expires = state.getTime() + Fmi::Seconds(expires_seconds);
       std::string expiration = tformat->format(t_expires);
       theResponse.setHeader("Expires", expiration);
     }
@@ -865,7 +864,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                       data_queries,
                                                       output_formats,
                                                       itsSupportedLocations,
-													  itsConfig.getProducerParameters(),
+                                                      itsConfig.getProducerParameters(),
                                                       observation_period);
 
       engine_meta_data->addMetaData(SourceEngine::Observation, obs_engine_metadata);
@@ -897,8 +896,9 @@ void Plugin::updateMetaData(bool initial_phase)
   }
 }
 
-std::map<std::string, Fmi::DateTime> Plugin::getNotificationTimes(
-    SourceEngine source_engine, EngineMetaData& new_emd, const Fmi::DateTime& now) const
+std::map<std::string, Fmi::DateTime> Plugin::getNotificationTimes(SourceEngine source_engine,
+                                                                  EngineMetaData& new_emd,
+                                                                  const Fmi::DateTime& now) const
 {
   try
   {
@@ -1025,42 +1025,42 @@ void Plugin::updateSupportedLocations()
 {
   try
   {
-	std::set<std::string> obs_producers;
+    std::set<std::string> obs_producers;
 #ifndef WITHOUT_OBSERVATION
     if (!itsConfig.obsEngineDisabled())
     {
-	  obs_producers = itsEngines.obsEngine->getValidStationTypes();
-	  for(const auto& producer : obs_producers)
-	  {
-		Engine::Observation::Settings settings;
-		settings.stationtype = producer;
-		settings.allplaces = true;
-		Spine::Stations stations;
-		itsEngines.obsEngine->getStations(stations, settings);
-		SupportedLocations sls;
-		for(const auto& station : stations)
-		  {
-			if(station.fmisid == 0 || station.geoid == 0)
-			  continue;
-			location_info li(station);
-			sls[li.id] = li;
-		  }
-		if (!sls.empty())
-		  itsSupportedLocations[producer] = sls;		
-	  }
-	}
+      obs_producers = itsEngines.obsEngine->getValidStationTypes();
+      for (const auto& producer : obs_producers)
+      {
+        Engine::Observation::Settings settings;
+        settings.stationtype = producer;
+        settings.allplaces = true;
+        Spine::Stations stations;
+        itsEngines.obsEngine->getStations(stations, settings);
+        SupportedLocations sls;
+        for (const auto& station : stations)
+        {
+          if (station.fmisid == 0 || station.geoid == 0)
+            continue;
+          location_info li(station);
+          sls[li.id] = li;
+        }
+        if (!sls.empty())
+          itsSupportedLocations[producer] = sls;
+      }
+    }
 #endif
 
-	// Get locations using keywords
+    // Get locations using keywords
     auto producer_keywords = itsConfig.getProducerKeywords();
     Locus::QueryOptions opts;
     opts.SetLanguage(itsConfig.defaultLanguage());
     for (const auto& item : producer_keywords)
     {
       auto producer = item.first;
-	  // Use keywords except for observation producers
-	  if(obs_producers.find(producer) != obs_producers.end())
-		continue;
+      // Use keywords except for observation producers
+      if (obs_producers.find(producer) != obs_producers.end())
+        continue;
       Spine::LocationList producer_llist;
       SupportedLocations sls;
       for (const auto& keyword : item.second)

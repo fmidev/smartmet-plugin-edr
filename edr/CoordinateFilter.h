@@ -16,14 +16,8 @@ class CoordinateFilter
  public:
   void add(double longitude, double latitude, double level);
   void add(double longitude, double latitude, const Fmi::DateTime &timestep);
-  void add(double longitude,
-           double latitude,
-           double level,
-           const Fmi::DateTime &timestep);
-  bool accept(double longitude,
-              double latitude,
-              double level,
-              const Fmi::DateTime &timestep) const;
+  void add(double longitude, double latitude, double level, const Fmi::DateTime &timestep);
+  bool accept(double longitude, double latitude, double level, const Fmi::DateTime &timestep) const;
   bool isEmpty() const;
   std::string getLevels() const;
   std::string getDatetime() const;
