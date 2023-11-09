@@ -19,7 +19,7 @@ namespace EDR
 {
 struct CollectionInfo
 {
-  CollectionInfo() : title(""), description("") {}
+  CollectionInfo() = default;
   std::string title;
   std::string description;
   std::set<std::string> keywords;

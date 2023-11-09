@@ -26,7 +26,7 @@ const char* default_timezone = "localtime";
 namespace
 {
 
-void parse_ids(const boost::optional<std::string> string_param, std::vector<int>& id_vector)
+void parse_ids(const boost::optional<std::string>& string_param, std::vector<int>& id_vector)
 {
   try
   {

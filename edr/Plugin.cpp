@@ -969,7 +969,7 @@ std::map<std::string, Fmi::DateTime> Plugin::getNotificationTimes(SourceEngine s
   }
 }
 
-void Plugin::checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) const
+void Plugin::checkNewDataAndNotify(const boost::shared_ptr<EngineMetaData>& new_emd) const
 {
   try
   {
@@ -985,7 +985,7 @@ void Plugin::checkNewDataAndNotify(boost::shared_ptr<EngineMetaData>& new_emd) c
 
     std::map<SourceEngine, std::map<std::string, Fmi::DateTime>>
         times_to_notify;  // engine -> producer -> latest update time
-    SourceEngine source_engines[] = {
+    const SourceEngine source_engines[] = {
         SourceEngine::Querydata, SourceEngine::Grid, SourceEngine::Observation, SourceEngine::Avi};
     auto now = Fmi::SecondClock::universal_time();
 

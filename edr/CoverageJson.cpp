@@ -390,7 +390,7 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
-      ret.emplace_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
+      ret.emplace_back(longitude_vector.at(i), latitude_vector.at(i));
 
     return ret;
   }
@@ -505,7 +505,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
-      ret.emplace_back(TS::LonLat(longitude_vector.at(i), latitude_vector.at(i)));
+      ret.emplace_back(longitude_vector.at(i), latitude_vector.at(i));
 
     return ret;
   }
@@ -997,7 +997,7 @@ EDRProducerMetaData get_producer_metadata(const EDRProducerMetaData &epmd,
 
 bool process_instance(const EDRQuery &edr_query,
                       const EDRMetaData &emd,
-                      const std::string instance_id)
+                      const std::string &instance_id)
 {
   try
   {
@@ -1862,7 +1862,7 @@ void process_values(const std::string &parameter_name,
                     const int &longitude_precision,
                     const int &latitude_precision,
                     const bool &isAviProducer,
-                    std::vector<time_coord_value> &values,
+                    const std::vector<time_coord_value> &values,
                     const bool &levels_present,
                     const int &level,
                     Json::Value &coverages)

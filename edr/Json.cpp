@@ -411,7 +411,7 @@ std::string Value::values_to_string(unsigned int level) const
 
   // Order of fields in output document: id,title,description,links,output_formats,keywords,crs
 
-  std::array<const char *, 7> fields{
+  const std::array<const char *, 7> fields{
       "crs", "keywords", "output_formats", "links", "description", "title", "id"};
 
   for (const auto *field : fields)

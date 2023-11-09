@@ -96,7 +96,7 @@ class AviMetaData
         itsMessageTypes(std::move(theMessageTypes)),
         itsLocationCheck(theLocationCheck)
   {
-    itsParameters.emplace_back(AviParameter("message", "Aviation message"));
+    itsParameters.emplace_back("message", "Aviation message");
   }
   AviMetaData() = delete;
 

@@ -46,7 +46,7 @@ TS::TimeSeriesByLocation timeseries_by_fmisid(const std::string& producer,
   }
 }
 
-TS::TimeSeriesGenerator::LocalTimeList get_timesteps(const TS::TimeSeries ts)
+TS::TimeSeriesGenerator::LocalTimeList get_timesteps(const TS::TimeSeries& ts)
 {
   try
   {
@@ -901,8 +901,7 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
       auto observation_result_with_added_fields = handleObsParametersForArea(
           state, producer, loc, obsParameters, tsv_observation_result, ts_vector, query);
 
-      tsv_area_with_added_fields.emplace_back(
-          TS::FmisidTSVectorPair(val.first, observation_result_with_added_fields));
+      tsv_area_with_added_fields.emplace_back(val.first, observation_result_with_added_fields);
     }
 
 #ifdef MYDEBUG
@@ -1648,12 +1647,12 @@ std::vector<ObsParameter> ObsEngineQuery::getObsParameters(const Query& query) c
 
             if (parameter_columns.find(parameter_id) != parameter_columns.end())
             {
-              ret.emplace_back(ObsParameter(
-                  parameter, paramfuncs.functions, parameter_columns.at(parameter_id), true));
+              ret.emplace_back(
+                  parameter, paramfuncs.functions, parameter_columns.at(parameter_id), true);
             }
             else
             {
-              ret.emplace_back(ObsParameter(parameter, paramfuncs.functions, column_index, false));
+              ret.emplace_back(parameter, paramfuncs.functions, column_index, false);
               parameter_columns.insert(make_pair(parameter_id, column_index));
               column_index++;
             }

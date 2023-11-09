@@ -107,7 +107,7 @@ class GridInterface
                        const Query& masterquery,
                        const Spine::LocationPtr& loc,
                        const T::GeometryId_set& geometryIdList,
-                       std::vector<std::vector<T::Coordinate>>& polygonPath,
+                       const std::vector<std::vector<T::Coordinate>>& polygonPath,
                        uchar& locationType);
 
   void prepareQueryTimes(QueryServer::Query& gridQuery,
@@ -133,7 +133,7 @@ class GridInterface
                         const Spine::TaggedLocation& tloc,
                         const Spine::LocationPtr& loc,
                         const T::GeometryId_set& geometryIdList,
-                        std::vector<std::vector<T::Coordinate>>& polygonPath);
+                        const std::vector<std::vector<T::Coordinate>>& polygonPath);
 
  private:
   Engine::Grid::Engine* itsGridEngine;

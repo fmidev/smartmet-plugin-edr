@@ -746,7 +746,7 @@ void GridInterface::prepareLocation(QueryServer::Query& gridQuery,
                                     const Query& masterquery,
                                     const Spine::LocationPtr& loc,
                                     const T::GeometryId_set& geometryIdList,
-                                    std::vector<std::vector<T::Coordinate>>& polygonPath,
+                                    const std::vector<std::vector<T::Coordinate>>& polygonPath,
                                     uchar& locationType)
 {
   FUNCTION_TRACE
@@ -1028,7 +1028,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query& gridQuery,
                                      const Spine::TaggedLocation& /* tloc */,
                                      const Spine::LocationPtr& loc,
                                      const T::GeometryId_set& geometryIdList,
-                                     std::vector<std::vector<T::Coordinate>>& polygonPath)
+                                     const std::vector<std::vector<T::Coordinate>>& polygonPath)
 {
   FUNCTION_TRACE
   try

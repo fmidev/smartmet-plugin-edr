@@ -81,7 +81,7 @@ struct edr_temporal_extent
 
 struct edr_vertical_extent
 {
-  edr_vertical_extent() : vrs("Vertical Reference System"), level_type("") {}
+  edr_vertical_extent() : vrs("Vertical Reference System") {}
   std::string vrs;
   std::string level_type;
   std::vector<std::string> levels;

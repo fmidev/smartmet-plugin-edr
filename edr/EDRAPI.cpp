@@ -58,8 +58,7 @@ void EDRAPI::setSettings(const std::string& tmpldir, const APISettings& api_sett
       std::string content;
       std::ifstream in(template_file.c_str());
       if (!in)
-        throw Fmi::Exception(
-            BCP, "Failed to open '" + std::string(template_file.c_str()) + "' for reading!");
+        throw Fmi::Exception(BCP, "Failed to open '" + template_file + "' for reading!");
       content.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
       // Replace template filename with file content
       item.second = content;

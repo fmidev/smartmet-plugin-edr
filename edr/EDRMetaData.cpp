@@ -492,7 +492,7 @@ void process_parameters(const std::string &producer,
       boost::algorithm::to_lower(parameter_name);
       std::string description = p;
       std::string label = p;
-      std::string unit = "";
+      std::string unit;
 
       // Exclude external producers
       if (!is_external_producer(producer))
@@ -621,7 +621,7 @@ std::vector<TimePeriod> get_time_periods(const std::set<Fmi::LocalDateTime> &tim
     it++;
     while (it != timesteps.end())
     {
-      time_periods.push_back({it_previous->utc_time(), it->utc_time()});
+      time_periods.emplace_back(it_previous->utc_time(), it->utc_time());
       it_previous++;
       it++;
     }

@@ -104,7 +104,7 @@ std::set<std::string> ObsQueryParams::getObsProducers(const State& state) const
   {
     std::set<std::string> ret;
 #ifndef WITHOUT_OBSERVATION
-    auto obsengine = state.getObsEngine();
+    auto* obsengine = state.getObsEngine();
     if (obsengine != nullptr)
       ret = obsengine->getValidStationTypes();
 #endif

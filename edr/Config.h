@@ -39,7 +39,7 @@ class Config : private boost::noncopyable
   Config(Config &&other) = delete;
   Config &operator=(Config &&other) = delete;
 
-  const SmartMet::TimeSeries::RequestLimits &requestLimits() const { return itsRequestLimits; };
+  const SmartMet::TimeSeries::RequestLimits &requestLimits() const { return itsRequestLimits; }
   const SupportedOutputFormats &allSupportedOutputFormats() const
   {
     return itsSupportedOutputFormats;
