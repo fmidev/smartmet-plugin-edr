@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.11.10
+Version: 23.11.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -31,16 +31,16 @@ BuildRequires: smartmet-library-spine-devel >= 23.10.20
 BuildRequires: smartmet-library-locus-devel >= 23.7.28
 BuildRequires: smartmet-library-macgyver-devel >= 23.11.8
 BuildRequires: smartmet-library-grid-content-devel >= 23.11.10
-BuildRequires: smartmet-library-grid-files-devel >= 23.11.6
-BuildRequires: smartmet-library-newbase-devel >= 23.10.11
+BuildRequires: smartmet-library-grid-files-devel >= 23.11.16
+BuildRequires: smartmet-library-newbase-devel >= 23.11.14
 BuildRequires: smartmet-library-gis-devel >= 23.9.12
-BuildRequires: smartmet-library-timeseries-devel >= 23.10.30
+BuildRequires: smartmet-library-timeseries-devel >= 23.11.16
 BuildRequires: smartmet-engine-avi-devel >= 23.7.28
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 23.11.8
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 23.10.12
+BuildRequires: smartmet-engine-querydata-devel >= 23.11.16
 BuildRequires: smartmet-engine-gis-devel >= 23.8.28
 BuildRequires: smartmet-engine-grid-devel >= 23.11.10
 # obsengine can be disabled in configuration: not included intentionally
@@ -52,13 +52,13 @@ Requires: jsoncpp
 Requires: smartmet-library-gis >= 23.9.12
 Requires: smartmet-library-locus >= 23.7.28
 Requires: smartmet-library-macgyver >= 23.11.8
-Requires: smartmet-library-newbase >= 23.10.11
+Requires: smartmet-library-newbase >= 23.11.14
 Requires: smartmet-library-spine >= 23.10.20
-Requires: smartmet-library-timeseries >= 23.10.30
+Requires: smartmet-library-timeseries >= 23.11.16
 Requires: smartmet-library-gis >= 23.9.12
 Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.9.6
-Requires: smartmet-engine-querydata >= 23.10.12
+Requires: smartmet-engine-querydata >= 23.11.16
 Requires: smartmet-engine-gis >= 23.8.28
 Requires: smartmet-engine-grid >= 23.11.10
 Requires: smartmet-server >= 23.8.30
@@ -70,7 +70,7 @@ Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 23.9.6
 #TestRequires: smartmet-library-spine-plugin-test >= 23.10.20
-#TestRequires: smartmet-library-newbase-devel >= 23.10.11
+#TestRequires: smartmet-library-newbase-devel >= 23.11.14
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-test-data >= 23.11.8
@@ -79,7 +79,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 23.9.6
 #TestRequires: smartmet-engine-gis >= 23.8.28
-#TestRequires: smartmet-engine-querydata >= 23.10.12
+#TestRequires: smartmet-engine-querydata >= 23.11.16
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 23.11.8
 %endif
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Nov 16 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.11.16-1.fmi
+- Repackaged since TimeSeries library RequestLimits ABI changed
+
 * Fri Nov 10 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.11.10-1.fmi
 - Silenced several compiler warnings on unnecessary copies
 
