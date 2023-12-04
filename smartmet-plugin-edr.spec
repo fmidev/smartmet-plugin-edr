@@ -31,7 +31,7 @@ BuildRequires: smartmet-library-spine-devel >= 23.10.20
 BuildRequires: smartmet-library-locus-devel >= 23.7.28
 BuildRequires: smartmet-library-macgyver-devel >= 23.11.21
 BuildRequires: smartmet-library-grid-content-devel >= 23.11.27
-BuildRequires: smartmet-library-grid-files-devel >= 23.11.23
+BuildRequires: smartmet-library-grid-files-devel >= 23.11.28
 BuildRequires: smartmet-library-newbase-devel >= 23.11.21
 BuildRequires: smartmet-library-gis-devel >= 23.11.21
 BuildRequires: smartmet-library-timeseries-devel >= 23.11.21
@@ -40,7 +40,7 @@ BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 23.11.8
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 23.11.16
+BuildRequires: smartmet-engine-querydata-devel >= 23.12.1
 BuildRequires: smartmet-engine-gis-devel >= 23.8.28
 BuildRequires: smartmet-engine-grid-devel >= 23.11.17
 # obsengine can be disabled in configuration: not included intentionally
@@ -58,7 +58,7 @@ Requires: smartmet-library-timeseries >= 23.11.21
 Requires: smartmet-library-gis >= 23.11.21
 Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.9.6
-Requires: smartmet-engine-querydata >= 23.11.16
+Requires: smartmet-engine-querydata >= 23.12.1
 Requires: smartmet-engine-gis >= 23.8.28
 Requires: smartmet-engine-grid >= 23.11.17
 Requires: smartmet-server >= 23.8.30
@@ -79,7 +79,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 23.9.6
 #TestRequires: smartmet-engine-gis >= 23.8.28
-#TestRequires: smartmet-engine-querydata >= 23.11.16
+#TestRequires: smartmet-engine-querydata >= 23.12.1
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 23.11.8
 %endif
