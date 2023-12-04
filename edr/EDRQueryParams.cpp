@@ -13,13 +13,10 @@ namespace Plugin
 {
 namespace EDR
 {
-
-#define EDRException(description) \
-  Fmi::Exception(BCP, "EDRException").addParameter("description", description)
+#define EDRException(description) Fmi::Exception(BCP, description)
 
 namespace
 {
-
 bool is_data_query(const Spine::HTTP::Request& req,
                    const EDRQuery& edrQuery,
                    const EDRMetaData& edrMetaData)
