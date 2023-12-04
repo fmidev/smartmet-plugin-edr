@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.11.17
+Version: 23.12.4
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -29,12 +29,12 @@ BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 23.10.20
 BuildRequires: smartmet-library-locus-devel >= 23.7.28
-BuildRequires: smartmet-library-macgyver-devel >= 23.11.8
-BuildRequires: smartmet-library-grid-content-devel >= 23.11.10
-BuildRequires: smartmet-library-grid-files-devel >= 23.11.16
-BuildRequires: smartmet-library-newbase-devel >= 23.11.14
-BuildRequires: smartmet-library-gis-devel >= 23.9.12
-BuildRequires: smartmet-library-timeseries-devel >= 23.11.16
+BuildRequires: smartmet-library-macgyver-devel >= 23.11.21
+BuildRequires: smartmet-library-grid-content-devel >= 23.11.27
+BuildRequires: smartmet-library-grid-files-devel >= 23.11.23
+BuildRequires: smartmet-library-newbase-devel >= 23.11.21
+BuildRequires: smartmet-library-gis-devel >= 23.11.21
+BuildRequires: smartmet-library-timeseries-devel >= 23.11.21
 BuildRequires: smartmet-engine-avi-devel >= 23.7.28
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
 %if %{with observation}
@@ -42,25 +42,25 @@ BuildRequires: smartmet-engine-observation-devel >= 23.11.8
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 23.11.16
 BuildRequires: smartmet-engine-gis-devel >= 23.8.28
-BuildRequires: smartmet-engine-grid-devel >= 23.11.10
+BuildRequires: smartmet-engine-grid-devel >= 23.11.17
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 23.11.8
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 23.9.12
+Requires: smartmet-library-gis >= 23.11.21
 Requires: smartmet-library-locus >= 23.7.28
-Requires: smartmet-library-macgyver >= 23.11.8
-Requires: smartmet-library-newbase >= 23.11.14
+Requires: smartmet-library-macgyver >= 23.11.21
+Requires: smartmet-library-newbase >= 23.11.21
 Requires: smartmet-library-spine >= 23.10.20
-Requires: smartmet-library-timeseries >= 23.11.16
-Requires: smartmet-library-gis >= 23.9.12
+Requires: smartmet-library-timeseries >= 23.11.21
+Requires: smartmet-library-gis >= 23.11.21
 Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.9.6
 Requires: smartmet-engine-querydata >= 23.11.16
 Requires: smartmet-engine-gis >= 23.8.28
-Requires: smartmet-engine-grid >= 23.11.10
+Requires: smartmet-engine-grid >= 23.11.17
 Requires: smartmet-server >= 23.8.30
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
@@ -70,12 +70,12 @@ Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 23.9.6
 #TestRequires: smartmet-library-spine-plugin-test >= 23.10.20
-#TestRequires: smartmet-library-newbase-devel >= 23.11.14
+#TestRequires: smartmet-library-newbase-devel >= 23.11.21
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-test-data >= 23.11.8
-#TestRequires: smartmet-engine-grid-test >= 23.11.10
-#TestRequires: smartmet-library-gis >= 23.9.12
+#TestRequires: smartmet-engine-grid-test >= 23.11.17
+#TestRequires: smartmet-library-gis >= 23.11.21
 #TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 23.9.6
 #TestRequires: smartmet-engine-gis >= 23.8.28
@@ -83,7 +83,7 @@ Provides: %{SPECNAME}
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 23.11.8
 %endif
-#TestRequires: smartmet-engine-grid >= 23.11.10
+#TestRequires: smartmet-engine-grid >= 23.11.17
 #TestRequires: gdal35
 #TestRequires: libwebp13
 
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Dec  4 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.12.4-1.fmi
+- Improved EDR error messages in HTTP headers (BRAINSTORM-2812)
+
 * Fri Nov 17 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.11.17-1.fmi
 - Repackaged due to API changes in grid-files and grid-content
 
