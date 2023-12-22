@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.12.5
+Version: 23.12.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -30,8 +30,8 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 23.12.5
 BuildRequires: smartmet-library-locus-devel >= 23.7.28
 BuildRequires: smartmet-library-macgyver-devel >= 23.11.21
-BuildRequires: smartmet-library-grid-content-devel >= 23.11.27
-BuildRequires: smartmet-library-grid-files-devel >= 23.12.4
+BuildRequires: smartmet-library-grid-content-devel >= 23.12.22
+BuildRequires: smartmet-library-grid-files-devel >= 23.12.22
 BuildRequires: smartmet-library-newbase-devel >= 23.11.21
 BuildRequires: smartmet-library-gis-devel >= 23.11.21
 BuildRequires: smartmet-library-timeseries-devel >= 23.11.21
@@ -42,7 +42,7 @@ BuildRequires: smartmet-engine-observation-devel >= 23.12.4
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 23.12.4
 BuildRequires: smartmet-engine-gis-devel >= 23.8.28
-BuildRequires: smartmet-engine-grid-devel >= 23.11.17
+BuildRequires: smartmet-engine-grid-devel >= 23.12.22
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 23.12.4
@@ -60,7 +60,7 @@ Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 23.9.6
 Requires: smartmet-engine-querydata >= 23.12.4
 Requires: smartmet-engine-gis >= 23.8.28
-Requires: smartmet-engine-grid >= 23.11.17
+Requires: smartmet-engine-grid >= 23.12.22
 Requires: smartmet-server >= 23.12.5
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
@@ -74,7 +74,7 @@ Provides: %{SPECNAME}
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-test-data >= 23.11.8
-#TestRequires: smartmet-engine-grid-test >= 23.11.17
+#TestRequires: smartmet-engine-grid-test >= 23.12.22
 #TestRequires: smartmet-library-gis >= 23.11.21
 #TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 23.9.6
@@ -83,7 +83,7 @@ Provides: %{SPECNAME}
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 23.12.4
 %endif
-#TestRequires: smartmet-engine-grid >= 23.11.17
+#TestRequires: smartmet-engine-grid >= 23.12.22
 #TestRequires: gdal35
 #TestRequires: libwebp13
 
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Dec 22 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.12.22-1.fmi
+- Repackaged due to ThreadLock ABI changes
+
 * Tue Dec  5 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.12.5-1.fmi
 - Repackaged due to an ABI change in SmartMetPlugin
 
