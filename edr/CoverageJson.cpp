@@ -696,7 +696,7 @@ Json::Value add_prologue_one_point(boost::optional<int> level,
     referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_time["system"]["type"] = Json::Value("TemporalCRS");
+    referencing_time["system"]["type"] = Json::Value("TemporalRS");
     referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (level)
@@ -803,7 +803,7 @@ Json::Value add_prologue_multi_point(boost::optional<int> level,
     referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_time["system"]["type"] = Json::Value("TemporalCRS");
+    referencing_time["system"]["type"] = Json::Value("TemporalRS");
     referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (level)
@@ -863,7 +863,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
     referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_time["system"]["type"] = Json::Value("TemporalCRS");
+    referencing_time["system"]["type"] = Json::Value("TemporalRS");
     referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (levels_exists)
@@ -1749,7 +1749,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_time["system"]["type"] = Json::Value("TemporalCRS");
+    referencing_time["system"]["type"] = Json::Value("TemporalRS");
     referencing_time["system"]["calendar"] = Json::Value("Gregorian");
     referencing[0] = referencing_xy;
     if (level_index)
@@ -2524,7 +2524,7 @@ Json::Value format_output_data_vertical_profile(
     referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
     referencing_time["coordinates"][0] = Json::Value("t");
     referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_time["system"]["type"] = Json::Value("TemporalCRS");
+    referencing_time["system"]["type"] = Json::Value("TemporalRS");
     referencing_time["system"]["calendar"] = Json::Value("Gregorian");
 
     referencing[0] = referencing_xy;

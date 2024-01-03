@@ -2724,7 +2724,7 @@
 			"system" : 
 			{
 				"calendar" : "Gregorian",
-				"type" : "TemporalCRS"
+				"type" : "TemporalRS"
 			}
 		}
 	],
