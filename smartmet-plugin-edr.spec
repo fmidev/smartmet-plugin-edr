@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 23.12.22
+Version: 24.1.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Jan  3 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.1.3-1.fmi
+- Fixed TemporalCRS to TemporalRS (BRAINSTORM-2820)
+
 * Fri Dec 22 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.12.22-1.fmi
 - Repackaged due to ThreadLock ABI changes
 
