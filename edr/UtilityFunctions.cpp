@@ -208,7 +208,15 @@ double get_double(const TS::Value& val, double default_value)
     else if (boost::get<std::string>(&val) != nullptr)
     {
       std::string value = *(boost::get<std::string>(&val));
-      ret = Fmi::stod(value);
+
+      try
+      {
+        ret = Fmi::stod(value);
+      }
+      catch (...)
+      {
+        ret = kFloatMissing;
+      }
     }
 
     return ret;
