@@ -215,7 +215,7 @@ double get_double(const TS::Value& val, double default_value)
       }
       catch (...)
       {
-        ret = kFloatMissing;
+        ret = default_value;
       }
     }
 
