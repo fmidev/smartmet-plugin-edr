@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/cube?bbox=25,60,26,61&datetime=200808051200&parameter-name=Temperature HTTP/1.0
+

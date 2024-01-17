@@ -111,7 +111,11 @@ EDRQueryParams::EDRQueryParams(const State& state,
 
     EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
 
-    if (emd.vertical_extent.levels.empty() && itsEDRQuery.query_type == EDRQueryType::Cube)
+    // Allow missing vertical extent when processing cube query for non grid source data
+    // (e.g. observations, surface querydata and aviation messages; BRAINSTORM-2827)
+
+    if (emd.vertical_extent.levels.empty() && itsEDRQuery.query_type == EDRQueryType::Cube &&
+        emd.metadata_source == SourceEngine::Grid)
       throw EDRException("Error! Cube query not possible for '" + itsEDRQuery.collection_id +
                          "', because there is no vertical extent!");
 

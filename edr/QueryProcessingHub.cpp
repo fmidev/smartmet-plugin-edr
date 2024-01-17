@@ -450,6 +450,16 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(
     Fmi::DateTime latestTimestep = masterquery.latestTimestep;
     bool startTimeUTC = masterquery.toptions.startTimeUTC;
 
+    // Ignore level(s) when processing (cube) query for data which has no vertical extent
+    // (e.g. observations, surface querydata and aviation messages; BRAINSTORM-2827)
+
+    const auto& edr_query = masterquery.edrQuery();
+    const auto& producer = edr_query.collection_id;
+    EDRMetaData emd = thePlugin.getProducerMetaData(producer);
+
+    if (emd.vertical_extent.levels.empty())
+      masterquery.levels.clear();
+
     // This loop will iterate through the producers, collecting as much
     // data in order as is possible. The later producers patch the data
     // *after* the first ones if possible.
@@ -516,10 +526,6 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(
 #ifndef WITHOUT_OBSERVATION
     PostProcessing::fix_precisions(masterquery, obsParameters);
 #endif
-
-    const auto& edr_query = masterquery.edrQuery();
-    const auto& producer = edr_query.collection_id;
-    EDRMetaData emd = thePlugin.getProducerMetaData(producer);
 
     setPrecisions(emd, masterquery);
 
