@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.1.4
+Version: 24.1.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Jan 17 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> - 24.1.17-1.fmi
+- Check size of bbox vector containing elements of splitted user given bbox string before referencing vector's fixed elements/indexes 0-3 to avoid crash if bbox string is invalid (BRAINSTORM-2839)
+- Allow source data to have missing vertical extent when processing cube query for non grid source data (e.g. observations, surface querydata and aviation messages; BRAINSTORM-2827)
+- Catch Fmi::stod() exception(s) when trying to convert string to double (BRAINSTORM-2824)
+
 * Thu Jan  4 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.1.4-1.fmi
 - Repackaged due to ABI changes in TimeSeriesGeneratorOptions
 
