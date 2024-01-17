@@ -56,16 +56,15 @@ ObsQueryParams::ObsQueryParams(const Spine::HTTP::Request& req)
       string bbox = *req.getParameter("bbox");
       vector<string> parts;
       boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
-      std::string lat2(parts[3]);
-      auto radius_pos = lat2.find(':');
-      if (radius_pos != string::npos)
-        lat2.resize(radius_pos);
-
       // Bounding box must contain exactly 4 elements
       if (parts.size() != 4)
       {
         throw Fmi::Exception(BCP, "Invalid bounding box '" + bbox + "'!");
       }
+      std::string lat2(parts[3]);
+      auto radius_pos = lat2.find(':');
+      if (radius_pos != string::npos)
+        lat2.resize(radius_pos);
 
       if (!parts[0].empty())
         boundingBox["minx"] = Fmi::stod(parts[0]);
