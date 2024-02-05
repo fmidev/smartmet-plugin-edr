@@ -30,8 +30,8 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 24.1.30
 BuildRequires: smartmet-library-locus-devel >= 23.7.28
 BuildRequires: smartmet-library-macgyver-devel >= 24.1.17
-BuildRequires: smartmet-library-grid-content-devel >= 23.12.22
-BuildRequires: smartmet-library-grid-files-devel >= 24.1.30
+BuildRequires: smartmet-library-grid-content-devel >= 24.2.5
+BuildRequires: smartmet-library-grid-files-devel >= 24.2.5
 BuildRequires: smartmet-library-newbase-devel >= 24.1.30
 BuildRequires: smartmet-library-gis-devel >= 24.1.3
 BuildRequires: smartmet-library-timeseries-devel >= 24.1.30
@@ -42,7 +42,7 @@ BuildRequires: smartmet-engine-observation-devel >= 24.1.17
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 24.1.19
 BuildRequires: smartmet-engine-gis-devel >= 24.1.30
-BuildRequires: smartmet-engine-grid-devel >= 24.1.4
+BuildRequires: smartmet-engine-grid-devel >= 24.2.5
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 24.1.17
@@ -60,7 +60,7 @@ Requires: smartmet-engine-avi >= 23.7.28
 Requires: smartmet-engine-geonames >= 24.1.30
 Requires: smartmet-engine-querydata >= 24.1.19
 Requires: smartmet-engine-gis >= 24.1.30
-Requires: smartmet-engine-grid >= 24.1.4
+Requires: smartmet-engine-grid >= 24.2.5
 Requires: smartmet-server >= 24.1.29
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-filesystem
@@ -74,7 +74,7 @@ Provides: %{SPECNAME}
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-test-data >= 23.11.8
-#TestRequires: smartmet-engine-grid-test >= 24.1.4
+#TestRequires: smartmet-engine-grid-test >= 24.2.5
 #TestRequires: smartmet-library-gis >= 24.1.3
 #TestRequires: smartmet-engine-avi >= 23.7.28
 #TestRequires: smartmet-engine-geonames >= 24.1.30
@@ -83,7 +83,7 @@ Provides: %{SPECNAME}
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 24.1.17
 %endif
-#TestRequires: smartmet-engine-grid >= 24.1.4
+#TestRequires: smartmet-engine-grid >= 24.2.5
 #TestRequires: gdal35
 #TestRequires: libwebp13
 
