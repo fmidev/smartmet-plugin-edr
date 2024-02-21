@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.2.20
+Version: 24.2.21
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Feb 21 2024 Mika Heiskanen <mheiskan@rhel8.dev.fmi.fi> - 24.2.21-1.fmi
+- Removed support for obsolete bk_hydrometa producer
+
 * Tue Feb 20 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> 24.2.20-1.fmi
 - Repackaged due to grid-files ABI changes
 
