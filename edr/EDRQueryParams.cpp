@@ -775,10 +775,33 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
         levelId = producer_parts[2];
     }
 
+    std::string cleaned_param_names;
+
+    if (parameter_names.empty())
+    {
+      for (const auto &param : emd.parameters)
+      {
+        if (!cleaned_param_names.empty())
+          cleaned_param_names += ",";
+
+        if (!grid_producer)
+        {
+          cleaned_param_names += param.first;
+          continue;
+        }
+
+        std::string p(param.first);
+        handleGridParameter(p, producerId, geometryId, levelId, z);
+
+        cleaned_param_names += p;
+      }
+
+      return cleaned_param_names;
+    }
+
     std::list<std::string> param_names;
     boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
 
-    std::string cleaned_param_names;
     for (auto p : param_names)
     {
       boost::algorithm::to_lower(p);
