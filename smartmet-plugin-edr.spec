@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.2.29
+Version: 24.3.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Mar 11 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.3.11-1.fmi
+- Fixed parameter name generation for parameters defined in configuration files
+
 * Thu Feb 29 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.2.29-1.fmi
 - Allow missing 'parameter-name' -option (BRAINSTORM-2874)
 
