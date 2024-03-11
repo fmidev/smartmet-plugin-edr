@@ -924,12 +924,10 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd)
         param["unit"] = unit;
       }
 
-      auto label = (!pinfo.unit_label.empty()
-                        ? pinfo.unit_label
-                        : (!edr_param.label.empty() ? edr_param.label : edr_param.name));
-
       // Observed property: Mandatory: label, Optional: id, description
+
       auto observedProperty = Json::Value(Json::ValueType::objectValue);
+      auto label = (!edr_param.label.empty() ? edr_param.label : edr_param.name);
       observedProperty["label"] = Json::Value(label);
       //		  observedProperty["id"] = Json::Value("http://....");
       //		  observedProperty["description"] =
