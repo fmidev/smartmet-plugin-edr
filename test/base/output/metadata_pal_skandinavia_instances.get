@@ -417,7 +417,7 @@
 					"type" : "Parameter",
 					"observedProperty" : 
 					{
-						"label" : "Celsius"
+						"label" : "Temperature"
 					},
 					"unit" : 
 					{
