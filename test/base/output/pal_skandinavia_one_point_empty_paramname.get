@@ -1,0 +1,1338 @@
+{
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "PointSeries",
+		"referencing" : 
+		[
+			{
+				"coordinates" : 
+				[
+					"y",
+					"x"
+				],
+				"system" : 
+				{
+					"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
+					"type" : "GeographicCRS"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
+				{
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
+				}
+			}
+		],
+		"type" : "Domain",
+		"axes" : 
+		{
+			"t" : 
+			{
+				"values" : 
+				[
+					"2008-08-05T09:00:00Z"
+				]
+			},
+			"x" : 
+			{
+				"values" : 
+				[
+					24.93840
+				]
+			},
+			"y" : 
+			{
+				"values" : 
+				[
+					60.16990
+				]
+			}
+		}
+	},
+	"parameters" : 
+	{
+		"dewpoint" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Kastepiste"
+			},
+			"observedProperty" : 
+			{
+				"id" : "DewPoint",
+				"label" : 
+				{
+					"fi" : "DewPoint"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "DewPoint"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"fogintensity" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Density of Fog"
+			},
+			"observedProperty" : 
+			{
+				"id" : "FogIntensity",
+				"label" : 
+				{
+					"fi" : "FogIntensity"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "FogIntensity"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"highcloudcover" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "High Cloud Cover"
+			},
+			"observedProperty" : 
+			{
+				"id" : "HighCloudCover",
+				"label" : 
+				{
+					"fi" : "HighCloudCover"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "HighCloudCover"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"hourlymaximumgust" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "MaxGustMS"
+			},
+			"observedProperty" : 
+			{
+				"id" : "HourlyMaximumGust",
+				"label" : 
+				{
+					"fi" : "HourlyMaximumGust"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "HourlyMaximumGust"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"humidity" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Suhteellinen kosteus"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Humidity",
+				"label" : 
+				{
+					"fi" : "Humidity"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Humidity"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"kindex" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "K-indeksi"
+			},
+			"observedProperty" : 
+			{
+				"id" : "KIndex",
+				"label" : 
+				{
+					"fi" : "KIndex"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "KIndex"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"lowcloudcover" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Low Cloud Cover"
+			},
+			"observedProperty" : 
+			{
+				"id" : "LowCloudCover",
+				"label" : 
+				{
+					"fi" : "LowCloudCover"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "LowCloudCover"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"mediumcloudcover" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Medium Cloud Cover"
+			},
+			"observedProperty" : 
+			{
+				"id" : "MediumCloudCover",
+				"label" : 
+				{
+					"fi" : "MediumCloudCover"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "MediumCloudCover"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"middleandlowcloudcover" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Middle+Low Cloud Cover"
+			},
+			"observedProperty" : 
+			{
+				"id" : "MiddleAndLowCloudCover",
+				"label" : 
+				{
+					"fi" : "MiddleAndLowCloudCover"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "MiddleAndLowCloudCover"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"pop" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "PoP"
+			},
+			"observedProperty" : 
+			{
+				"id" : "PoP",
+				"label" : 
+				{
+					"fi" : "PoP"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "PoP"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"precipitation1h" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Precipitation mm/h"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Precipitation1h",
+				"label" : 
+				{
+					"fi" : "Precipitation1h"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Precipitation1h"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"precipitationform" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Precipitation Form"
+			},
+			"observedProperty" : 
+			{
+				"id" : "PrecipitationForm",
+				"label" : 
+				{
+					"fi" : "PrecipitationForm"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "PrecipitationForm"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"precipitationtype" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Precipitation Type"
+			},
+			"observedProperty" : 
+			{
+				"id" : "PrecipitationType",
+				"label" : 
+				{
+					"fi" : "PrecipitationType"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "PrecipitationType"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"pressure" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Pintapaine"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Pressure",
+				"label" : 
+				{
+					"fi" : "Pressure"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Pressure"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"probabilitythunderstorm" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Probability of Thunder"
+			},
+			"observedProperty" : 
+			{
+				"id" : "ProbabilityThunderstorm",
+				"label" : 
+				{
+					"fi" : "ProbabilityThunderstorm"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "ProbabilityThunderstorm"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"radiationglobal" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Auringon s‰teily"
+			},
+			"observedProperty" : 
+			{
+				"id" : "RadiationGlobal",
+				"label" : 
+				{
+					"fi" : "RadiationGlobal"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "RadiationGlobal"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"radiationlw" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Pitk‰aaltoinen s‰teily"
+			},
+			"observedProperty" : 
+			{
+				"id" : "RadiationLW",
+				"label" : 
+				{
+					"fi" : "RadiationLW"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "RadiationLW"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"temperature" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman l√§mp√∂tila"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "ÀöC"
+				}
+			}
+		},
+		"totalcloudcover" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Total Cloud Cover"
+			},
+			"observedProperty" : 
+			{
+				"id" : "TotalCloudCover",
+				"label" : 
+				{
+					"fi" : "TotalCloudCover"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "TotalCloudCover"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"weathersymbol1" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Precipitation Symbol"
+			},
+			"observedProperty" : 
+			{
+				"id" : "WeatherSymbol1",
+				"label" : 
+				{
+					"fi" : "WeatherSymbol1"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "WeatherSymbol1"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"weathersymbol3" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Weather Symbol"
+			},
+			"observedProperty" : 
+			{
+				"id" : "WeatherSymbol3",
+				"label" : 
+				{
+					"fi" : "WeatherSymbol3"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "WeatherSymbol3"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"winddirection" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Wind dir"
+			},
+			"observedProperty" : 
+			{
+				"id" : "WindDirection",
+				"label" : 
+				{
+					"fi" : "WindDirection"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "WindDirection"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"windspeedms" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Wind speed"
+			},
+			"observedProperty" : 
+			{
+				"id" : "WindSpeedMS",
+				"label" : 
+				{
+					"fi" : "WindSpeedMS"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "WindSpeedMS"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"windums" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "U"
+			},
+			"observedProperty" : 
+			{
+				"id" : "WindUMS",
+				"label" : 
+				{
+					"fi" : "WindUMS"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "WindUMS"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"windvectorms" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Wind vector"
+			},
+			"observedProperty" : 
+			{
+				"id" : "WindVectorMS",
+				"label" : 
+				{
+					"fi" : "WindVectorMS"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "WindVectorMS"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		},
+		"windvms" : 
+		{
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "V"
+			},
+			"observedProperty" : 
+			{
+				"id" : "WindVMS",
+				"label" : 
+				{
+					"fi" : "WindVMS"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "WindVMS"
+				},
+				"symbol" : 
+				{
+					"type" : "",
+					"value" : ""
+				}
+			}
+		}
+	},
+	"ranges" : 
+	{
+		"dewpoint" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				11
+			]
+		},
+		"fogintensity" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				0
+			]
+		},
+		"highcloudcover" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				30
+			]
+		},
+		"hourlymaximumgust" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				20
+			]
+		},
+		"humidity" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				78
+			]
+		},
+		"kindex" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				21
+			]
+		},
+		"lowcloudcover" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				100
+			]
+		},
+		"mediumcloudcover" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				100
+			]
+		},
+		"middleandlowcloudcover" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				100
+			]
+		},
+		"pop" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				87
+			]
+		},
+		"precipitation1h" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				0.7
+			]
+		},
+		"precipitationform" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				1
+			]
+		},
+		"precipitationtype" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				1
+			]
+		},
+		"pressure" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				1004
+			]
+		},
+		"probabilitythunderstorm" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				0
+			]
+		},
+		"radiationglobal" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				165
+			]
+		},
+		"radiationlw" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				357
+			]
+		},
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				14.9
+			]
+		},
+		"totalcloudcover" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				100
+			]
+		},
+		"weathersymbol1" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				63
+			]
+		},
+		"weathersymbol3" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				32
+			]
+		},
+		"winddirection" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				80
+			]
+		},
+		"windspeedms" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				17
+			]
+		},
+		"windums" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				-17
+			]
+		},
+		"windvectorms" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				1608
+			]
+		},
+		"windvms" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				-3
+			]
+		}
+	}
+}
