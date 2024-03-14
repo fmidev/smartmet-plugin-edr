@@ -457,7 +457,7 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
         itsCoordinateFilter.add(Fmi::stod(parts[0]),
                                 Fmi::stod(parts[1]),
                                 Fmi::stod(parts[2]),
-                                boost::posix_time::from_time_t(Fmi::stod(parts[3])));
+                                Fmi::date_time::from_time_t(Fmi::stod(parts[3])));
       }
     }
     else if (geometry_name == "LINESTRINGZ")
@@ -492,7 +492,7 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
         wkt.append(parts[0] + " " + parts[1] + ",");
         itsCoordinateFilter.add(Fmi::stod(parts[0]),
                                 Fmi::stod(parts[1]),
-                                boost::posix_time::from_time_t(Fmi::stod(parts[2])));
+                                Fmi::date_time::from_time_t(Fmi::stod(parts[2])));
       }
     }
     else

@@ -390,7 +390,7 @@ void add_value(const TS::TimedValue &tv,
   try
   {
     const auto &t = tv.time;
-    timesteps.insert(boost::posix_time::to_iso_extended_string(t.utc_time()) + "Z");
+    timesteps.insert(Fmi::date_time::to_iso_extended_string(t.utc_time()) + "Z");
     add_value(tv, values_array, data_type, values_index, precision);
   }
   catch (...)
@@ -489,7 +489,7 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
           add_value(timed_value, parameter_values, k, parameter_precision);
           add_value(timed_value, time_values, k, parameter_precision);
           time_values[k] = Json::Value(
-              boost::posix_time::to_iso_extended_string(timed_value.time.utc_time()) + "Z");
+              Fmi::date_time::to_iso_extended_string(timed_value.time.utc_time()) + "Z");
         }
         auto properties = Json::Value(Json::ValueType::objectValue);
         parameter_name = parse_parameter_name(query_parameters[j].originalName());
@@ -537,7 +537,7 @@ void add_position_features(Json::Value &features,
       coordinate_xyz coord(lon_value, lat_value, level_value);
       auto key = hash_value(coord);
       auto timestep = Json::Value(
-          boost::posix_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
+          Fmi::date_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
       timesteps_per_coordinate[key].push_back(timestep);
       parameter_values_per_coordinate[key].push_back(
           UtilityFunctions::json_value(ts_data->at(k).value, parameter_precision));
@@ -693,7 +693,7 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
         time_coord_value tcv;
         tcv.lon = as_double(lon_value.value);
         tcv.lat = as_double(lat_value.value);
-        tcv.time = (boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
+        tcv.time = (Fmi::date_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
 
         double level = std::numeric_limits<double>::max();
         if (levels_present)

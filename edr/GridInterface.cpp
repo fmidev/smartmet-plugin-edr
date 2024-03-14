@@ -667,12 +667,12 @@ void GridInterface::prepareGeneration(QueryServer::Query& gridQuery,
 
     if (masterquery.origintime)
     {
-      if (masterquery.origintime == Fmi::DateTime(boost::date_time::pos_infin))
+      if (masterquery.origintime == Fmi::DateTime(Fmi::DateTime::POS_INFINITY))
       {
         // Generation: latest, newest
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::LatestGeneration;
       }
-      else if (masterquery.origintime == Fmi::DateTime(boost::date_time::neg_infin))
+      else if (masterquery.origintime == Fmi::DateTime(Fmi::DateTime::NEG_INFINITY))
       {
         // Generation: oldest
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::OldestGeneration;
@@ -1265,7 +1265,7 @@ void GridInterface::exteractCoordinatesAndAggrecationTimes(
         {
           // This value is added for aggregation. We should remove it later.
 
-          auto dt = boost::posix_time::from_time_t(
+          auto dt = Fmi::date_time::from_time_t(
               gridQuery->mQueryParameterList[p].mValueList[x]->mForecastTimeUTC);
           Fmi::LocalDateTime queryTime(dt, tz);
 
@@ -1373,7 +1373,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
 
             for (int t = 0; t < tLen; t++)
             {
-              auto dt = boost::posix_time::from_time_t(
+              auto dt = Fmi::date_time::from_time_t(
                   gridQuery->mQueryParameterList[pid].mValueList[t]->mForecastTimeUTC);
               Fmi::LocalDateTime queryTime(dt, tz);
 
@@ -1487,7 +1487,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
               TS::TimeSeries ts(state.getLocalTimePool());
               for (int t = 0; t < tLen; t++)
               {
-                auto dt = boost::posix_time::from_time_t(
+                auto dt = Fmi::date_time::from_time_t(
                     gridQuery->mQueryParameterList[pid].mValueList[t]->mForecastTimeUTC);
                 Fmi::LocalDateTime queryTime(dt, tz);
 
@@ -1540,7 +1540,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
                ft != gridQuery->mForecastTimeList.end();
                ++ft)
           {
-            auto dt = boost::posix_time::from_time_t(*ft);
+            auto dt = Fmi::date_time::from_time_t(*ft);
             Fmi::LocalDateTime queryTime(dt, tz);
             /*
                             if (xLen == 1)
@@ -1955,7 +1955,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
               {
                 if (gridQuery->mQueryParameterList[idx].mValueList[t]->mModificationTime > 0)
                 {
-                  auto utcT = boost::posix_time::from_time_t(
+                  auto utcT = Fmi::date_time::from_time_t(
                       gridQuery->mQueryParameterList[idx].mValueList[t]->mModificationTime);
                   Fmi::LocalDateTime modTime(utcT, tz);
                   TS::TimedValue tsValue(queryTime, masterquery.timeformatter->format(modTime));

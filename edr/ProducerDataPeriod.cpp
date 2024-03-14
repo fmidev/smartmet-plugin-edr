@@ -12,8 +12,6 @@
 #include <string>
 
 using namespace boost;
-using namespace local_time;
-using namespace gregorian;
 
 namespace SmartMet
 {
@@ -33,12 +31,12 @@ Fmi::LocalDateTime ProducerDataPeriod::getTime(const std::string& producer,
       Fmi::TimeZonePtr tz = timezones.time_zone_from_string(timezone);
 
       if (itsDataPeriod.find(producer) == itsDataPeriod.end())
-        return Fmi::LocalDateTime(not_a_date_time, tz);
+        return Fmi::LocalDateTime(Fmi::DateTime::NOT_A_DATE_TIME, tz);
 
       if (time_enum == STARTTIME)
         return {itsDataPeriod.at(producer).begin(), tz};
 
-      return {itsDataPeriod.at(producer).last() + boost::posix_time::microseconds(1), tz};
+      return {itsDataPeriod.at(producer).last() + Fmi::Microseconds(1), tz};
     }
     catch (...)
     {
@@ -60,10 +58,10 @@ Fmi::DateTime ProducerDataPeriod::getTime(const std::string& producer, eTime tim
       if (time_enum == STARTTIME)
         return itsDataPeriod.at(producer).begin();
 
-      return (itsDataPeriod.at(producer).last() + boost::posix_time::microseconds(1));
+      return itsDataPeriod.at(producer).last() + Fmi::Microseconds(1);
     }
 
-    return not_a_date_time;
+    return Fmi::DateTime::NOT_A_DATE_TIME;
   }
   catch (...)
   {
@@ -109,7 +107,7 @@ void ProducerDataPeriod::getObsEngineDataPeriods(const Engine::Observation::Engi
           continue;
 
         itsDataPeriod.insert(
-            make_pair(producer, boost::posix_time::time_period(now - Fmi::Hours(24), now)));
+            make_pair(producer, Fmi::TimePeriod(now - Fmi::Hours(24), now)));
       }
     }
   }

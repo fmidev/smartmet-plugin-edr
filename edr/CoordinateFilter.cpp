@@ -123,8 +123,8 @@ std::string CoordinateFilter::getLevels() const
 // Get datetime
 std::string CoordinateFilter::getDatetime() const
 {
-  Fmi::DateTime starttime(boost::posix_time::not_a_date_time);
-  Fmi::DateTime endtime(boost::posix_time::not_a_date_time);
+  Fmi::DateTime starttime(Fmi::DateTime::NOT_A_DATE_TIME);
+  Fmi::DateTime endtime(Fmi::DateTime::NOT_A_DATE_TIME);
 
   if (!itsAllowedTimesteps.empty())
     get_time_interval(itsAllowedTimesteps, starttime, endtime);
@@ -132,8 +132,8 @@ std::string CoordinateFilter::getDatetime() const
     get_time_interval(itsAllowedLevelsTimesteps, starttime, endtime);
 
   if (!starttime.is_not_a_date_time())
-    return (boost::posix_time::to_iso_extended_string(starttime) + "Z/" +
-            boost::posix_time::to_iso_extended_string(endtime) + "Z");
+    return (Fmi::date_time::to_iso_extended_string(starttime) + "Z/" +
+            Fmi::date_time::to_iso_extended_string(endtime) + "Z");
 
   return {};
 }

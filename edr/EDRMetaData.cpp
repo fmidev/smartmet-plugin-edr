@@ -45,8 +45,8 @@ class TimePeriod
   }
 
  private:
-  Fmi::DateTime period_start = boost::posix_time::not_a_date_time;
-  Fmi::DateTime period_end = boost::posix_time::not_a_date_time;
+  Fmi::DateTime period_start = Fmi::DateTime::NOT_A_DATE_TIME;
+  Fmi::DateTime period_end = Fmi::DateTime::NOT_A_DATE_TIME;
 };
 namespace
 {
@@ -296,13 +296,13 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       if (gmd.times.size() > 1)
         begin_iter++;
       const auto &start_time_plus_one = *begin_iter;
-      auto timestep_duration = (boost::posix_time::from_iso_string(start_time_plus_one) -
-                                boost::posix_time::from_iso_string(start_time));
+      auto timestep_duration = (Fmi::DateTime::from_iso_string(start_time_plus_one) -
+                                Fmi::DateTime::from_iso_string(start_time));
       edr_temporal_extent temporal_extent;
-      temporal_extent.origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
+      temporal_extent.origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
       edr_temporal_extent_period temporal_extent_period;
-      temporal_extent_period.start_time = boost::posix_time::from_iso_string(start_time);
-      temporal_extent_period.end_time = boost::posix_time::from_iso_string(end_time);
+      temporal_extent_period.start_time = Fmi::DateTime::from_iso_string(start_time);
+      temporal_extent_period.end_time = Fmi::DateTime::from_iso_string(end_time);
       temporal_extent_period.timestep = (timestep_duration.total_seconds() / 60);
       temporal_extent_period.timesteps = gmd.times.size();
       temporal_extent.time_periods.push_back(temporal_extent_period);
@@ -341,7 +341,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       epmd[producerId].push_back(producer_emd);
       // Update latest data update time
-      auto origin_time = boost::posix_time::from_iso_string(gmd.analysisTime);
+      auto origin_time = Fmi::date_time::from_iso_string(gmd.analysisTime);
       if (latest_update_times.find(producerId) == latest_update_times.end() ||
           latest_update_times.at(producerId) < origin_time)
         latest_update_times[producerId] = origin_time;
@@ -813,8 +813,8 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     auto start_of_period =
         (now -
          Fmi::Hours(period_length * 24));  // from config file avi.period_length (30 days default)
-    std::string startTime = boost::posix_time::to_iso_string(start_of_period);
-    std::string endTime = boost::posix_time::to_iso_string(now);
+    std::string startTime = Fmi::date_time::to_iso_string(start_of_period);
+    std::string endTime = Fmi::date_time::to_iso_string(now);
     queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
     queryOptions.itsTimeOptions.itsEndTime = "timestamptz '" + endTime + "Z'";
     queryOptions.itsTimeOptions.itsTimeFormat = "iso";
