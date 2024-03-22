@@ -341,7 +341,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       epmd[producerId].push_back(producer_emd);
       // Update latest data update time
-      auto origin_time = Fmi::date_time::from_iso_string(gmd.analysisTime);
+      auto origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
       if (latest_update_times.find(producerId) == latest_update_times.end() ||
           latest_update_times.at(producerId) < origin_time)
         latest_update_times[producerId] = origin_time;
