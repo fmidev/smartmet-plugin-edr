@@ -24,6 +24,7 @@ struct time_coord_value
 
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>;  // level -> array of values
 using DataPerParameter = std::map<std::string, DataPerLevel>;          // parameter_name -> data
+using ParameterNames = std::map<std::string, std::string>;             // parameter_name -> origname
 
 double as_double(const TS::Value &value)
 {
@@ -1495,6 +1496,7 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
       add_values(ts, parameter_precision, values, json_param_object, timesteps);
 
       json_param_object["values"] = values;
+      parameter_name = parse_parameter_name(query_parameters[j].originalName());
       ranges[parameter_name] = json_param_object;
     }
   }
@@ -1676,7 +1678,7 @@ void process_parameters_at_position(const std::vector<TS::TimeSeriesData> &outda
                                         ts_lon,
                                         ts_lat,
                                         ts_level,
-                                        parameter_name,
+                                        parse_parameter_name(query_parameters[j].originalName()),
                                         parameter_precision,
                                         longitude_precision,
                                         latitude_precision,
@@ -1856,6 +1858,7 @@ void set_level_value(const bool &levels_present, const int &level, Json::Value &
 }
 
 void process_values(const std::string &parameter_name,
+                    const std::string &output_name,
                     const int &parameter_precision,
                     const int &longitude_precision,
                     const int &latitude_precision,
@@ -1911,7 +1914,7 @@ void process_values(const std::string &parameter_name,
 
       range_item["values"] = parameter_values;
       auto ranges = Json::Value(Json::ValueType::objectValue);
-      ranges[parameter_name] = range_item;
+      ranges[output_name] = range_item;
       coverage["ranges"] = ranges;
       coverages[coverages.size()] = coverage;
     }
@@ -1924,6 +1927,7 @@ void process_values(const std::string &parameter_name,
 
 void process_coverage_collection_point_parameter(const DataPerLevel &dpl,
                                                  const std::string &parameter_name,
+                                                 const std::string &output_name,
                                                  const int &parameter_precision,
                                                  const int &longitude_precision,
                                                  const int &latitude_precision,
@@ -1942,6 +1946,7 @@ void process_coverage_collection_point_parameter(const DataPerLevel &dpl,
       auto values = dpl_item.second;
 
       process_values(parameter_name,
+                     output_name,
                      parameter_precision,
                      longitude_precision,
                      latitude_precision,
@@ -1959,6 +1964,7 @@ void process_coverage_collection_point_parameter(const DataPerLevel &dpl,
 }
 
 Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
+                                             const ParameterNames &dpn,
                                              const EDRMetaData &emd,
                                              const std::vector<Spine::Parameter> &query_parameters)
 {
@@ -1977,6 +1983,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
+    auto output_name = dpn.cbegin();
     for (const auto &dpp_item : dpp)
     {
       const auto &parameter_name = dpp_item.first;
@@ -1986,12 +1993,14 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
       // Iterate data per level
       process_coverage_collection_point_parameter(dpl,
                                                   parameter_name,
+                                                  output_name->second,
                                                   parameter_precision,
                                                   longitude_precision,
                                                   latitude_precision,
                                                   isAviProducer,
                                                   levels_present,
                                                   coverages);
+      output_name++;
     }
 
     coverage_collection =
@@ -2086,6 +2095,7 @@ void process_coverage_collection_trajectory_parameter(const DataPerLevel &dpl,
 
 Json::Value format_coverage_collection_trajectory(
     const DataPerParameter &dpp,
+    const ParameterNames &dpn,
     const EDRMetaData &emd,
     const std::vector<Spine::Parameter> &query_parameters)
 {
@@ -2103,6 +2113,7 @@ Json::Value format_coverage_collection_trajectory(
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
+    auto output_name = dpn.cbegin();
     for (const auto &dpp_item : dpp)
     {
       const auto &parameter_name = dpp_item.first;
@@ -2110,12 +2121,13 @@ Json::Value format_coverage_collection_trajectory(
       const auto &parameter_precision = emd.getPrecision(parameter_name);
 
       process_coverage_collection_trajectory_parameter(dpl,
-                                                       parameter_name,
+                                                       output_name->second,
                                                        parameter_precision,
                                                        longitude_precision,
                                                        latitude_precision,
                                                        levels_present,
                                                        coverages);
+      output_name++;
     }
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory");
@@ -2249,7 +2261,8 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
                             const CoordinateFilter &coordinate_filter,
                             const std::vector<Spine::Parameter> &query_parameters,
                             const bool &levels_present,
-                            DataPerParameter &dpp)
+                            DataPerParameter &dpp,
+                            ParameterNames &dpn)
 {
   try
   {
@@ -2276,6 +2289,7 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
       DataPerLevel dpl = get_data_per_level(
           tsg_data, tsg_lon, tsg_lat, tsg_level, levels_present, coordinate_filter);
       dpp[parameter_name] = dpl;
+      dpn[parameter_name] = parse_parameter_name(query_parameters[j].originalName());
     }
   }
   catch (...)
@@ -2287,7 +2301,8 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
 DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
-                                        const std::vector<Spine::Parameter> &query_parameters)
+                                        const std::vector<Spine::Parameter> &query_parameters,
+                                        ParameterNames &dpn)
 {
   try
   {
@@ -2301,9 +2316,6 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
     unsigned int longitude_index;
     unsigned int latitude_index;
     unsigned int level_index;
-    const auto &last_param = query_parameters.back();
-    auto last_param_name = last_param.name();
-    boost::algorithm::to_lower(last_param_name);
     if (levels_present)
     {
       level_index = (query_parameters.size() - 1);
@@ -2328,7 +2340,8 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
                              coordinate_filter,
                              query_parameters,
                              levels_present,
-                             dpp);
+                             dpp,
+                             dpn);
     }
     return dpp;
   }
@@ -2351,12 +2364,13 @@ Json::Value format_output_data_coverage_collection(
     if (outputData.empty())
       Json::Value();
 
-    auto dpp = get_data_per_parameter(outputData, levels, coordinate_filter, query_parameters);
+    ParameterNames dpn;
+    auto dpp = get_data_per_parameter(outputData, levels, coordinate_filter, query_parameters, dpn);
 
     if (query_type == EDRQueryType::Trajectory)
-      return format_coverage_collection_trajectory(dpp, emd, query_parameters);
+      return format_coverage_collection_trajectory(dpp, dpn, emd, query_parameters);
 
-    return format_coverage_collection_point(dpp, emd, query_parameters);
+    return format_coverage_collection_point(dpp, dpn, emd, query_parameters);
   }
   catch (...)
   {
@@ -2416,9 +2430,6 @@ Json::Value format_output_data_vertical_profile(
     const auto &longitude_precision = emd.getPrecision("longitude");
     const auto &latitude_precision = emd.getPrecision("latitude");
     auto level_precision = 0;
-    const auto &last_param = query_parameters.back();
-    auto last_param_name = last_param.name();
-    boost::algorithm::to_lower(last_param_name);
     unsigned int level_index = (query_parameters.size() - 1);
     unsigned int latitude_index = (query_parameters.size() - 2);
     unsigned int longitude_index = (query_parameters.size() - 3);
@@ -2446,6 +2457,7 @@ Json::Value format_output_data_vertical_profile(
       TS::TimeSeriesPtr ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
 
       auto values_array = Json::Value(Json::ValueType::arrayValue);
+      parameter_name = parse_parameter_name(query_parameters[j].originalName());
 
       add_parameter(parameter_name,
                     parameter_precision,

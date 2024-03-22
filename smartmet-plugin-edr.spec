@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 24.3.22
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -113,6 +113,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Mar 22 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.3.22-2.fmi
+- Use the same parameter names for 'parameters' and 'ranges'/'features' json elements; BRAINSTORM-2889
+
 * Fri Mar 22 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.3.22-1.fmi
 - Avoid string use for time value manipulations in GridInterface::prepareQueryTimes
 
