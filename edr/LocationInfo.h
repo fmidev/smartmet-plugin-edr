@@ -27,9 +27,9 @@ struct location_info
   }
   location_info(const Spine::Station& station)
       : id(station.fmisid != 0 ? Fmi::to_string(station.fmisid) : Fmi::to_string(station.geoid)),
-        longitude(station.longitude_out),
-        latitude(station.latitude_out),
-        name(station.station_formal_name_fi),
+        longitude(station.longitude),
+        latitude(station.latitude),
+        name(station.formal_name_fi),
         type("fmisid"),
         start_time(station.station_start),
         end_time(station.station_end)
