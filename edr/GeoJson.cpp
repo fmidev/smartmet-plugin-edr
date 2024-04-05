@@ -37,6 +37,7 @@ struct time_coord_value
 
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>;  // level -> array of values
 using DataPerParameter = std::map<std::string, DataPerLevel>;          // parameter_name -> data
+using ParameterNames = std::map<std::string, std::string>;             // parameter_name -> origname
 
 std::size_t hash_value(const coordinate_xyz &coord)
 {
@@ -491,6 +492,7 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
               boost::posix_time::to_iso_extended_string(timed_value.time.utc_time()) + "Z");
         }
         auto properties = Json::Value(Json::ValueType::objectValue);
+        parameter_name = parse_parameter_name(query_parameters[j].originalName());
         properties[parameter_name] = parameter_values;
         properties["time"] = time_values;
         feature["properties"] = properties;
@@ -647,7 +649,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
                               ts_lon,
                               ts_lat,
                               ts_level,
-                              parameter_name,
+                              parse_parameter_name(query_parameters[j].originalName()),
                               parameter_precision,
                               lon_precision,
                               lat_precision,
@@ -735,7 +737,8 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
                                         const EDRMetaData & /* emd */,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
-                                        const std::vector<Spine::Parameter> &query_parameters)
+                                        const std::vector<Spine::Parameter> &query_parameters,
+                                        ParameterNames &dpn)
 {
   try
   {
@@ -793,6 +796,7 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
             tsg_data, tsg_lon, tsg_lat, tsg_level, levels_present, coordinate_filter);
 
         dpp[parameter_name] = dpl;
+        dpn[parameter_name] = parse_parameter_name(query_parameters[j].originalName());
       }
     }
     return dpp;
@@ -896,9 +900,12 @@ Json::Value format_output_data_feature_collection(
     double bbox_xmax = -180.0;
     double bbox_ymax = -90.0;
 
-    auto dpp = get_data_per_parameter(outputData, emd, levels, coordinate_filter, query_parameters);
+    ParameterNames dpn;
+    auto dpp = get_data_per_parameter(
+        outputData, emd, levels, coordinate_filter, query_parameters, dpn);
 
     auto features = Json::Value(Json::ValueType::arrayValue);
+    auto output_name = dpn.cbegin();
     for (const auto &item : dpp)
     {
       const auto &parameter_name = item.first;
@@ -922,13 +929,14 @@ Json::Value format_output_data_feature_collection(
 
         add_collection_level_features(features,
                                       time_coord_values,
-                                      parameter_name,
+                                      output_name->second,
                                       parameter_precision,
                                       lon_precision,
                                       lat_precision,
                                       level_precision,
                                       level);
       }
+      output_name++;
     }
 
     if (features.size() > 0)
