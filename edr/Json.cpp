@@ -49,9 +49,11 @@ std::string value_type_to_string(ValueType type)
 
 namespace
 {
-std::string tabs(unsigned int level)
+std::string tabs(bool pretty, unsigned int level)
 {
-  return std::string(level, '\t');
+  if (pretty)
+    return std::string(level, '\t');
+  return {};
 }
 
 ValueType get_value_type(const DataValue &dv)
@@ -365,6 +367,7 @@ Value &Value::operator[](ArrayIndex index)
 }
 
 std::string Value::data_value_vector_to_string(const std::vector<Value> &data_value_vector,
+                                               bool pretty,
                                                unsigned int level)
 {
   std::string value_array;
@@ -375,11 +378,11 @@ std::string Value::data_value_vector_to_string(const std::vector<Value> &data_va
       auto new_value = val.data_value.to_string(val.precision);
       if (!value_array.empty() && !new_value.empty())
         value_array.append(COMMA_PLUS_NEWLINE);
-      value_array.append(tabs(level + 2) + new_value);
+      value_array.append(tabs(pretty, level + 2) + new_value);
     }
     else
     {
-      auto new_value = val.to_string_impl(level + 2);
+      auto new_value = val.to_string_impl(pretty, level + 2);
       if (!value_array.empty() && !new_value.empty())
       {
         if (boost::algorithm::starts_with(new_value, NEWLINE))
@@ -393,12 +396,12 @@ std::string Value::data_value_vector_to_string(const std::vector<Value> &data_va
   return value_array;
 }
 
-std::string Value::values_to_string(unsigned int level) const
+std::string Value::values_to_string(bool pretty, unsigned int level) const
 {
   std::string result;
 
   if (values.empty())
-    return data_value_vector_to_string(level);
+    return data_value_vector_to_string(pretty, level);
 
   std::vector<std::string> keys;
   for (const auto &item : values)
@@ -421,16 +424,16 @@ std::string Value::values_to_string(unsigned int level) const
   for (const auto &key : keys)
   {
     const auto &value_obj = values.at(key);
-    std::string value = (tabs(level + 1) + "\"" + key + "\" : ");
+    std::string value = (tabs(pretty, level + 1) + "\"" + key + "\" : ");
     if (!value_obj.data_value_vector.empty())
     {
-      auto value_array = data_value_vector_to_string(value_obj.data_value_vector, level);
+      auto value_array = data_value_vector_to_string(value_obj.data_value_vector, pretty, level);
 
       if (boost::algorithm::starts_with(value_array, NEWLINE))
-        value.append(NEWLINE + tabs(level + 1) + LEFT_SQUARE_BRACKET);
+        value.append(NEWLINE + tabs(pretty, level + 1) + LEFT_SQUARE_BRACKET);
       else
-        value.append(NEWLINE + tabs(level + 1) + LEFT_SQUARE_BRACKET_PLUS_NEWLINE);
-      value.append(value_array + NEWLINE + tabs(level + 1) + RIGHT_SQUARE_BRACKET);
+        value.append(NEWLINE + tabs(pretty, level + 1) + LEFT_SQUARE_BRACKET_PLUS_NEWLINE);
+      value.append(value_array + NEWLINE + tabs(pretty, level + 1) + RIGHT_SQUARE_BRACKET);
     }
     else
     {
@@ -450,7 +453,7 @@ std::string Value::values_to_string(unsigned int level) const
   return result;
 }
 
-std::string Value::data_value_vector_to_string(unsigned int level) const
+std::string Value::data_value_vector_to_string(bool pretty, unsigned int level) const
 {
   auto ret = std::string();
 
@@ -460,40 +463,41 @@ std::string Value::data_value_vector_to_string(unsigned int level) const
     if (dv.valueType < ValueType::arrayValue)
       value = dv.data_value.to_string(dv.precision);
     else
-      value = dv.to_string();
+      value = dv.to_string(pretty);
     if (!value.empty())
     {
       if (!ret.empty() && !boost::algorithm::ends_with(ret, LEFT_ROUND_BRACKET_PLUS_NEWLINE) &&
           !boost::algorithm::ends_with(ret, RIGHT_ROUND_BRACKET_PLUS_COMMA))
         ret.append(COMMA_PLUS_NEWLINE);
-      ret.append(tabs(level + 1) + value);
+      ret.append(tabs(pretty, level + 1) + value);
     }
   }
 
   if (ret.empty())
     return ret;
 
-  return (tabs(level) + LEFT_SQUARE_BRACKET_PLUS_NEWLINE + ret + NEWLINE + tabs(level) +
-          RIGHT_SQUARE_BRACKET);
+  return (tabs(pretty, level) + LEFT_SQUARE_BRACKET_PLUS_NEWLINE + ret + NEWLINE +
+          tabs(pretty, level) + RIGHT_SQUARE_BRACKET);
 }
 
-std::string Value::to_string_impl(unsigned int level) const
+std::string Value::to_string_impl(bool pretty, unsigned int level) const
 {
   if (valueType == ValueType::arrayValue)
-    return data_value_vector_to_string(level);
+    return data_value_vector_to_string(pretty, level);
 
-  std::string result = (level == 0 ? LEFT_ROUND_BRACKET_PLUS_NEWLINE
-                                   : (NEWLINE + tabs(level) + LEFT_ROUND_BRACKET_PLUS_NEWLINE));
+  std::string result =
+      (level == 0 ? LEFT_ROUND_BRACKET_PLUS_NEWLINE
+                  : (NEWLINE + tabs(pretty, level) + LEFT_ROUND_BRACKET_PLUS_NEWLINE));
 
-  result.append(values_to_string(level));
+  result.append(values_to_string(pretty, level));
   std::string children_string;
   for (const auto &item : children)
   {
     auto child_key = item.first;
-    auto child_value = item.second.to_string_impl(level + 1);
+    auto child_value = item.second.to_string_impl(pretty, level + 1);
     if (!children_string.empty())
       children_string.append(COMMA_PLUS_NEWLINE);
-    children_string.append(tabs(level + 1) + "\"" + child_key + "\" : " + child_value);
+    children_string.append(tabs(pretty, level + 1) + "\"" + child_key + "\" : " + child_value);
   }
   if (!result.empty() && !boost::algorithm::ends_with(result, LEFT_ROUND_BRACKET_PLUS_NEWLINE) &&
       !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) &&
@@ -501,19 +505,19 @@ std::string Value::to_string_impl(unsigned int level) const
     result.append(COMMA_PLUS_NEWLINE);
 
   result.append(children_string);
-  result.append(NEWLINE + tabs(level) + "}");
+  result.append(NEWLINE + tabs(pretty, level) + "}");
 
   return result;
 }
 
-std::string Value::to_string() const
+std::string Value::to_string(bool pretty) const
 {
-  return to_string_impl(0);
+  return to_string_impl(pretty, 0);
 }
 
-std::string Value::toStyledString() const
+std::string Value::toStyledString(bool pretty) const
 {
-  return to_string();
+  return to_string(pretty);
 }
 
 std::string Value::value() const

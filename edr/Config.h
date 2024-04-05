@@ -93,6 +93,8 @@ class Config : private boost::noncopyable
   const CollectionInfoContainer &getCollectionInfo() const { return itsCollectionInfo; }
   const ProducerParameters &getProducerParameters() const { return itsProducerParameters; }
 
+  bool getPretty() const { return itsPretty; }
+
  private:
   libconfig::Config itsConfig;
   std::string itsDefaultPrecision = "normal";
@@ -109,6 +111,8 @@ class Config : private boost::noncopyable
 
   Spine::TableFormatterOptions itsFormatterOptions;
   Precisions itsPrecisions;
+
+  bool itsPretty = false;
 
   std::map<std::string, Engine::Gis::postgis_identifier> postgis_identifiers;
   std::string itsDefaultPostGISIdentifierKey;
