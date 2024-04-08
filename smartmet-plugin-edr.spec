@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.4.4
+Version: 24.4.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -113,6 +113,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Apr  8 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.8-1.fmi
+- Output vertical profile as CoverageCollection (BRAINSTORM-2900)
+
 * Thu Apr  4 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.4-1.fmi
 - Merged BRAINSTORM-2889 branch to master
 
