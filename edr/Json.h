@@ -86,7 +86,7 @@ class Value
   Value &operator=(const Value &value);
   Value &operator[](const std::string &key);
   Value &operator[](ArrayIndex index);
-  std::string toStyledString() const;
+  std::string toStyledString(bool pretty) const;
   void append(const Value &value);
   std::size_t size() const { return data_value_vector.size(); }
 
@@ -97,13 +97,14 @@ class Value
   const_iterator end() const;
 
  private:
-  std::string to_string() const;
-  std::string to_string_impl(unsigned int level) const;
+  std::string to_string(bool pretty) const;
+  std::string to_string_impl(bool pretty, unsigned int level) const;
   std::string value() const;
-  std::string values_to_string(unsigned int level) const;
+  std::string values_to_string(bool pretty, unsigned int level) const;
   static std::string data_value_vector_to_string(const std::vector<Value> &data_value_vector,
+                                                 bool pretty,
                                                  unsigned int level);
-  std::string data_value_vector_to_string(unsigned int level) const;
+  std::string data_value_vector_to_string(bool pretty, unsigned int level) const;
 
   DataValue data_value;                   // Value is stored here
   std::vector<Value> data_value_vector;   // // Vector of values

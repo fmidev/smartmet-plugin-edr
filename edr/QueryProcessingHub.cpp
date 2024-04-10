@@ -312,7 +312,7 @@ boost::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const St
     else
     {
       auto result = processMetaDataQuery(state, edr_query);
-      table.set(0, 0, result.toStyledString());
+      table.set(0, 0, result.toStyledString(state.pretty()));
     }
     return {};
   }
@@ -541,7 +541,7 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                           masterquery.levels,
                                                           masterquery.coordinateFilter(),
                                                           masterquery.poptions.parameters());
-      table.set(0, 0, result.toStyledString());
+      table.set(0, 0, result.toStyledString(state.pretty()));
     }
     else if (masterquery.output_format == GEO_JSON_FORMAT)
     {
@@ -551,7 +551,7 @@ boost::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      masterquery.levels,
                                                      masterquery.coordinateFilter(),
                                                      masterquery.poptions.parameters());
-      table.set(0, 0, result.toStyledString());
+      table.set(0, 0, result.toStyledString(state.pretty()));
     }
 
     return {};

@@ -576,6 +576,7 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
 
     auto expires_seconds = itsConfig.expirationTime();
     State state(*this);
+    state.setPretty(Spine::optional_bool(request.getParameter("pretty"), itsConfig.getPretty()));
 
     theResponse.setStatus(Spine::HTTP::Status::ok);
 

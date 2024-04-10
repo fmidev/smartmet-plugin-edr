@@ -1017,6 +1017,7 @@ Config::Config(const string &configfile)
     itsConfig.lookupValue("gridengine_disabled", itsGridEngineDisabled);
     itsConfig.lookupValue("primaryForecastSource", itsPrimaryForecastSource);
     itsConfig.lookupValue("prevent_observation_database_query", itsPreventObsEngineDatabaseQuery);
+    itsConfig.lookupValue("pretty", itsPretty);
 
     if (itsConfig.exists("maxdistance"))
     {

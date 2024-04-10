@@ -77,6 +77,9 @@ class State
   EDRMetaData getProducerMetaData(const std::string& producer) const;
   bool isValidCollection(const std::string& producer) const;
 
+  void setPretty(bool flag) { itsPretty = flag; }
+  bool pretty() const { return itsPretty; }
+
  private:
   const Plugin& itsPlugin;
   Fmi::DateTime itsTime;
@@ -88,6 +91,7 @@ class State
 
   mutable QCache itsQCache;
   mutable TimedQCache itsTimedQCache;
+  bool itsPretty = false;
 
 };  // class State
 
