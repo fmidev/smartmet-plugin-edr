@@ -91,7 +91,7 @@ class State
 
   mutable QCache itsQCache;
   mutable TimedQCache itsTimedQCache;
-  bool itsPretty = true;
+  bool itsPretty = false;
 
 };  // class State
 
