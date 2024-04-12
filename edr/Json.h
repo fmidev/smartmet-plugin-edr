@@ -13,7 +13,7 @@ namespace EDR
 {
 namespace Json
 {
-static unsigned int DEFAULT_PRECISION = 4;
+static int DEFAULT_PRECISION = -1;
 
 enum class ValueType
 {
@@ -56,7 +56,7 @@ class DataValue
   DataValue(double value) : data(value) {}
   DataValue(const NullValue &value) : data(value) {}
 
-  std::string to_string(unsigned int precision = DEFAULT_PRECISION) const;
+  std::string to_string(int precision = DEFAULT_PRECISION) const;
   ValueType valueType() const;
   const boost::variant<NullValue, std::string, double, std::size_t, bool> &get_data() const
   {
@@ -79,7 +79,7 @@ class Value
   Value(bool value);
   Value(int value);
   Value(std::size_t value);
-  Value(double value, unsigned int precision = DEFAULT_PRECISION);
+  Value(double value, int precision = DEFAULT_PRECISION);
   Value(const NullValue &value);
 
   Value(const Value &value);
@@ -113,7 +113,7 @@ class Value
   std::map<std::string, Value> key_map;   // Temporary store of values
   ValueType valueType;
   std::string nodeKey;
-  unsigned int precision{4};  // default value for precision (in case of double)
+  int precision = DEFAULT_PRECISION;  // default value for precision (in case of double)
   Value *parentNode{nullptr};
   const ValueVectorType::const_iterator beginIter;
   const ValueVectorType::const_iterator endIter;

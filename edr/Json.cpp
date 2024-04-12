@@ -117,7 +117,7 @@ std::string json_encode(const std::string &input)
   return output;
 }
 
-std::string data_value_to_string(const DataValue &dv, unsigned int precision)
+std::string data_value_to_string(const DataValue &dv, int precision)
 {
   std::string ret;
 
@@ -215,7 +215,7 @@ Value::Value(bool value)
 {
 }
 
-Value::Value(double value, unsigned int prec /*= DEFAULT_PRECISION*/)
+Value::Value(double value, int prec /*= DEFAULT_PRECISION*/)
     : data_value(value),
       valueType(ValueType::doubleValue),
       nodeKey(UNINITIALIZED_KEY),
@@ -544,7 +544,7 @@ void Value::append(const Value &value)
     data_value_vector.push_back(value);
 }
 
-std::string DataValue::to_string(unsigned int precision /*= DEFAULT_PRECISION*/) const
+std::string DataValue::to_string(int precision /*= DEFAULT_PRECISION*/) const
 {
   return (data_value_to_string(*this, precision));
 }

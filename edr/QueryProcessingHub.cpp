@@ -20,7 +20,6 @@ namespace EDR
 {
 namespace
 {
-
 void parameters_hash_value(const Spine::HTTP::Request& request, std::size_t& hash)
 {
   try

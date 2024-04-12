@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.4.10
+Version: 24.4.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -113,6 +113,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Apr 12 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.4.12-1.fmi
+- Use -1 (all significant digits) as default precision instead of 4 (BRAINSTORM-2896)
+
 * Wed Apr 10 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.4.10-1.fmi
 - By default JSON prettyprint is now off. Querystring option pretty can be used to override
 

@@ -26,7 +26,7 @@ namespace Plugin
 namespace EDR
 {
 #define MAX_TIME_PERIODS 300
-#define DEFAULT_PRECISION 4
+#define DEFAULT_PRECISION -1
 static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
 static Fmi::DateTime NOT_A_DATE_TIME;
 class TimePeriod
