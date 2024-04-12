@@ -15,7 +15,6 @@ namespace EDR
 {
 namespace UtilityFunctions
 {
-
 bool is_special_parameter(const std::string& paramname)
 {
   try
@@ -273,7 +272,7 @@ Json::Value json_value(const TS::Value& val, int precision)
     auto double_value = get_double(val, kFloatMissing);
 
     if (double_value != kFloatMissing)
-      return {double_value, static_cast<unsigned int>(precision)};
+      return {double_value, precision};
 
     auto int_value = get_int(val);
 
