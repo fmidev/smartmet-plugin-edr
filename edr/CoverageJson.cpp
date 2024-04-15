@@ -2425,7 +2425,7 @@ Json::Value format_output_data_vertical_profile(
     if (outputData.empty())
       Json::Value();
 
-    Json::Value coverage;
+    Json::Value coverageCollection;
 
     const auto &longitude_precision = emd.getPrecision("longitude");
     const auto &latitude_precision = emd.getPrecision("latitude");
@@ -2473,7 +2473,18 @@ Json::Value format_output_data_vertical_profile(
     }
 
     if (parameter_data_values.empty())
-      return coverage;
+      return coverageCollection;
+
+    coverageCollection = Json::Value(Json::ValueType::objectValue);
+    coverageCollection["type"] = Json::Value("CoverageCollection");
+    coverageCollection["domainType"] = Json::Value("VerticalProfile");
+    coverageCollection["parameters"] = get_edr_series_parameters(query_parameters, emd);
+    coverageCollection["coverages"] = Json::Value(Json::ValueType::arrayValue);
+
+    auto coordinates = get_coordinates(outputData, query_parameters);
+    auto axis_names = Json::Value(Json::ValueType::arrayValue);
+    axis_names[0] = Json::Value("t");
+    axis_names[1] = Json::Value("z");
 
     auto tslon = outdata.at(longitude_index);
     auto tslat = outdata.at(latitude_index);
@@ -2482,35 +2493,6 @@ Json::Value format_output_data_vertical_profile(
     // Only one position, timestep
     const auto &lon_timed_value = ts_lon->front();
     const auto &lat_timed_value = ts_lat->front();
-    std::string timestep =
-        (boost::posix_time::to_iso_extended_string(lon_timed_value.time.utc_time()) + "Z");
-    auto t_array = Json::Value(Json::ValueType::arrayValue);
-    t_array[0] = Json::Value(timestep);
-
-    coverage["type"] = Json::Value("Coverage");
-    auto domain = Json::Value(Json::ValueType::objectValue);
-
-    domain["type"] = Json::Value("Domain");
-    domain["domainType"] = Json::Value("VerticalProfile");
-
-    domain["axes"] = Json::Value(Json::ValueType::objectValue);
-
-    domain["axes"]["x"] = Json::Value(Json::ValueType::objectValue);
-    domain["axes"]["x"]["values"] = Json::Value(Json::ValueType::arrayValue);
-    auto &x_array = domain["axes"]["x"]["values"];
-    domain["axes"]["y"] = Json::Value(Json::ValueType::objectValue);
-    domain["axes"]["y"]["values"] = Json::Value(Json::ValueType::arrayValue);
-    auto &y_array = domain["axes"]["y"]["values"];
-    auto coordinates = get_coordinates(outputData, query_parameters);
-
-    // One position coordinates do not change
-    x_array[0] = UtilityFunctions::json_value(lon_timed_value.value, longitude_precision);
-    y_array[0] = UtilityFunctions::json_value(lat_timed_value.value, latitude_precision);
-    // One timestep
-    domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
-    domain["axes"]["t"]["values"] = t_array;
-    domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
-    domain["axes"]["z"]["values"] = level_values;
 
     // Referencing x,y coordinates
     auto referencing = Json::Value(Json::ValueType::arrayValue);
@@ -2541,30 +2523,76 @@ Json::Value format_output_data_vertical_profile(
     referencing[1] = referencing_z;
     referencing[2] = referencing_time;
 
-    domain["referencing"] = referencing;
-    coverage["domain"] = domain;
-    coverage["parameters"] = get_edr_series_parameters(query_parameters, emd);
+    coverageCollection["referencing"] = referencing;
 
-    auto ranges = Json::Value(Json::ValueType::objectValue);
-    for (const auto &item : parameter_data_values)
+    // Iterate coverages/timesteps
+    auto timeIter = ts_lon->begin();
+    auto timeSteps = (ts_lon->size() / levels.size());
+
+    for (size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps); tStep++, timeIter++)
     {
-      const auto &param_name = item.first;
+      auto ranges = Json::Value(Json::ValueType::objectValue);
+      auto domain = Json::Value(Json::ValueType::objectValue);
 
-      auto param_range = Json::Value(Json::ValueType::objectValue);
-      param_range["type"] = Json::Value("NdArray");
-      param_range["dataType"] = parameter_data_type.at(param_name);  // Json::Value("float");
-      auto axis_names = Json::Value(Json::ValueType::arrayValue);
-      axis_names[0] = Json::Value("z");
-      auto shape = Json::Value(Json::ValueType::arrayValue);
-      shape[0] = Json::Value(item.second.size());
-      param_range["axisNames"] = axis_names;
-      param_range["shape"] = shape;
-      param_range["values"] = item.second;
-      ranges[param_name] = param_range;
+      domain["type"] = Json::Value("Domain");
+      domain["domainType"] = Json::Value("VerticalProfile");
+
+      domain["axes"] = Json::Value(Json::ValueType::objectValue);
+      domain["axes"]["x"] = Json::Value(Json::ValueType::objectValue);
+      domain["axes"]["x"]["values"] = Json::Value(Json::ValueType::arrayValue);
+      auto &x_array = domain["axes"]["x"]["values"];
+      domain["axes"]["y"] = Json::Value(Json::ValueType::objectValue);
+      domain["axes"]["y"]["values"] = Json::Value(Json::ValueType::arrayValue);
+      auto &y_array = domain["axes"]["y"]["values"];
+
+      // One position coordinates do not change
+      x_array[0] = UtilityFunctions::json_value(lon_timed_value.value, longitude_precision);
+      y_array[0] = UtilityFunctions::json_value(lat_timed_value.value, latitude_precision);
+
+      auto levelArray = Json::Value(Json::ValueType::arrayValue);
+      size_t levelIdx = 0;
+      for (auto level : levels)
+        levelArray[levelIdx++] = Json::Value(level);
+      domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
+      domain["axes"]["z"]["values"] = levelArray;
+
+      for (auto &item : parameter_data_values)
+      {
+        const auto &param_name = item.first;
+
+        auto param_range = Json::Value(Json::ValueType::objectValue);
+        param_range["type"] = Json::Value("NdArray");
+        param_range["dataType"] = parameter_data_type.at(param_name);  // Json::Value("float");
+        param_range["axisNames"] = axis_names;
+        std::string timestep =
+            (boost::posix_time::to_iso_extended_string(timeIter->time.utc_time()) + "Z");
+        auto t_array = Json::Value(Json::ValueType::arrayValue);
+        t_array[0] = Json::Value(timestep);
+        domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
+        domain["axes"]["t"]["values"] = t_array;
+
+        // Every n'th item value has data for the timestep
+        auto valueArray = Json::Value(Json::ValueType::arrayValue);
+        size_t itemCnt = ts_lon->size();
+        for (size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt); itemIdx += timeSteps, valIdx++)
+          valueArray[valIdx] = item.second[itemIdx];
+
+        auto shape = Json::Value(Json::ValueType::arrayValue);
+        shape[0] = valueArray.size();
+
+        param_range["shape"] = shape;
+        param_range["values"] = valueArray;
+        ranges[param_name] = param_range;
+      }
+
+      Json::Value coverage = Json::Value(Json::ValueType::objectValue);
+      coverage["type"] = Json::Value("Coverage");
+      coverage["domain"] = domain;
+      coverage["ranges"] = ranges;
+      coverageCollection["coverages"][coverageIdx++] = coverage;
     }
-    coverage["ranges"] = ranges;
 
-    return coverage;
+    return coverageCollection;
   }
   catch (...)
   {
