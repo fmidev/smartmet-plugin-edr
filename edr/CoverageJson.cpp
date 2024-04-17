@@ -1194,6 +1194,12 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       instance_index++;
     }
 
+    if (
+        (instance_index == 1) &&
+        (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
+       )
+      return instances[0];
+
     result["instances"] = instances;
 
     return result;
