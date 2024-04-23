@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.4.12
+Version: 24.4.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -113,6 +113,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Apr 17 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.17-1.fmi
+- Output specific collection instance as a collection (BRAINSTORM-2912)
+
+* Mon Apr 15 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.15-1.fmi
+- Output vertical profile as CoverageCollection (BRAINSTORM-2900)
+
 * Fri Apr 12 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.4.12-1.fmi
 - Use -1 (all significant digits) as default precision instead of 4 (BRAINSTORM-2896)
 

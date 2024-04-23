@@ -1,83 +1,116 @@
 {
-	"type" : "Coverage",
-	"domain" : 
-	{
-		"domainType" : "VerticalProfile",
-		"referencing" : 
-		[
-			{
-				"coordinates" : 
-				[
-					"y",
-					"x"
-				],
-				"system" : 
-				{
-					"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
-					"type" : "GeographicCRS"
-				}
-			},
-			{
-				"coordinates" : 
-				[
-					"z"
-				],
-				"system" : 
-				{
-					"id" : "PressureLevel",
-					"type" : "VerticalCRS"
-				}
-			},
-			{
-				"coordinates" : 
-				[
-					"t"
-				],
-				"system" : 
-				{
-					"calendar" : "Gregorian",
-					"type" : "TemporalRS"
-				}
-			}
-		],
-		"type" : "Domain",
-		"axes" : 
+	"coverages" : 
+	[
 		{
-			"t" : 
+			"type" : "Coverage",
+			"domain" : 
 			{
-				"values" : 
-				[
-					"2008-09-09T09:00:00Z"
-				]
+				"domainType" : "VerticalProfile",
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T09:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							24.93840
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.16990
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							300,
+							500,
+							700,
+							850,
+							925,
+							1000
+						]
+					}
+				}
 			},
-			"x" : 
+			"ranges" : 
 			{
-				"values" : 
-				[
-					24.93840
-				]
-			},
-			"y" : 
-			{
-				"values" : 
-				[
-					60.16990
-				]
-			},
-			"z" : 
-			{
-				"values" : 
-				[
-					1000,
-					925,
-					850,
-					700,
-					500,
-					300
-				]
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						6
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						11.9,
+						6.9,
+						4.9,
+						0.8,
+						-13.1,
+						-41.9
+					]
+				}
 			}
 		}
-	},
+	],
+	"domainType" : "VerticalProfile",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"y",
+				"x"
+			],
+			"system" : 
+			{
+				"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"id" : "PressureLevel",
+				"type" : "VerticalCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
 	"parameters" : 
 	{
 		"temperature" : 
@@ -107,31 +140,6 @@
 					"value" : "˚C"
 				}
 			}
-		}
-	},
-	"ranges" : 
-	{
-		"temperature" : 
-		{
-			"axisNames" : 
-			[
-				"z"
-			],
-			"dataType" : "float",
-			"shape" : 
-			[
-				6
-			],
-			"type" : "NdArray",
-			"values" : 
-			[
-				11.9,
-				6.9,
-				4.9,
-				0.8,
-				-13.1,
-				-41.9
-			]
 		}
 	}
 }
