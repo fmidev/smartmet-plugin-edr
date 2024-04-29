@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.4.17
+Version: 24.4.29
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -113,6 +113,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Apr 29 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.29-1.fmi
+- Fixed bug in determining whether processing metatadata or data query (BRAINSTORM-2921)
+
 * Wed Apr 17 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.17-1.fmi
 - Output specific collection instance as a collection (BRAINSTORM-2912)
 
