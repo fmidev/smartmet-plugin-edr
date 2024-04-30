@@ -115,6 +115,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Mon Apr 29 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.29-1.fmi
 - Fixed bug in determining whether processing metatadata or data query (BRAINSTORM-2921)
+- Set vertical profile 'axes' time axis outside of parameter/datavalue loop for the timestep on CoverageJson output. Setting it unnecessarily withing the parameter loop also resulted into extra '__uninitialized__' json child object for axes (BRAINSTORM-2900)
 
 * Wed Apr 17 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.4.17-1.fmi
 - Output specific collection instance as a collection (BRAINSTORM-2912)
