@@ -2562,6 +2562,13 @@ Json::Value format_output_data_vertical_profile(
       domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
       domain["axes"]["z"]["values"] = levelArray;
 
+      std::string timestep =
+          (boost::posix_time::to_iso_extended_string(timeIter->time.utc_time()) + "Z");
+      auto t_array = Json::Value(Json::ValueType::arrayValue);
+      t_array[0] = Json::Value(timestep);
+      domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
+      domain["axes"]["t"]["values"] = t_array;
+
       for (auto &item : parameter_data_values)
       {
         const auto &param_name = item.first;
@@ -2570,12 +2577,6 @@ Json::Value format_output_data_vertical_profile(
         param_range["type"] = Json::Value("NdArray");
         param_range["dataType"] = parameter_data_type.at(param_name);  // Json::Value("float");
         param_range["axisNames"] = axis_names;
-        std::string timestep =
-            (boost::posix_time::to_iso_extended_string(timeIter->time.utc_time()) + "Z");
-        auto t_array = Json::Value(Json::ValueType::arrayValue);
-        t_array[0] = Json::Value(timestep);
-        domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
-        domain["axes"]["t"]["values"] = t_array;
 
         // Every n'th item value has data for the timestep
         auto valueArray = Json::Value(Json::ValueType::arrayValue);
