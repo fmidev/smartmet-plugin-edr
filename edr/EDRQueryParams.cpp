@@ -215,6 +215,14 @@ EDRQueryParams::EDRQueryParams(const State& state,
     {
       parseCube();
     }
+    else if (
+             (itsEDRQuery.query_type == EDRQueryType::Position) ||
+             (itsEDRQuery.query_type == EDRQueryType::Radius) ||
+             (itsEDRQuery.query_type == EDRQueryType::Area) ||
+             (itsEDRQuery.query_type == EDRQueryType::Trajectory) ||
+             (itsEDRQuery.query_type == EDRQueryType::Corridor)
+            )
+      throw EDRException("Missing coords option!");
 
     // EDR datetime
     parseDateTime(state, emd);
