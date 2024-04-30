@@ -23,19 +23,61 @@ bool is_data_query(const Spine::HTTP::Request& req,
 {
   try
   {
-    auto pcount = req.getParameterCount();
-    // If more than one parameters -> data query
-    if (pcount > 1)
-      return true;
-    if (pcount == 1)
+    // Metadata query:
+    //
+    //   ** uri field count and index: uri parts are ignored upto 'collections'
+    //
+    //        1            2       [ 3        [ 4         ]][ 3/5      ]] ** count
+    //        0            1       [ 2        [ 3         ]][ 2/4      ]] ** index
+    //   /edr/collections[/COLLNAME[/instances[/INSTANCEID]][/locations]]
+    //
+    // Data query: other cases
+    //
+    //   /edr/collections/COLLNAME[/instances/INSTANCEID]/location/LOCID?...
+    //   /edr/collections/COLLNAME[/instances/INSTANCEID]/{position|area|...}?...
+    //
+    // Data query types (wkt may be passed thru as is):
+    //
+    //   position   coords=wkt|POINT|MULTIPOINT|MULTIPOINTZ
+    //   area       coords=wkt|POLYGON|MULTIPOLYGON&z=lo/hi
+    //   corridor   coords=LINESTRING[ZM|Z|M]&corridor-width=width&width-units={km|mi}
+    //   radius     coords=wkt|POINT|MULTIPOINT|MULTIPOINTZ&within=radius&within-units={km|mi}
+    //   trajectory coords=LINESTRING[ZM|Z|M]
+    //   cube       coords=wkt|POLYGON&minz=lo&maxz=hi|bbox=bllon,bllat,trlon,trlat&z=lo/hi
+    //
+    //   locations/LOCID
+
+    std::vector<std::string> resParts;
+    std::string res = req.getResource();
+    boost::algorithm::split(resParts, res, boost::algorithm::is_any_of("/"));
+    auto numParts = resParts.size();
+    size_t resIdx = 0;
+
+    for (auto const &part : resParts)
     {
-      // If only one parameter and it is 'f' -> metadata query, except AVI queries
-      auto fparam = req.getParameter("f");
-      return (fparam && edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
+      if (part == "collections")
+        break;
+
+      resIdx++;
     }
 
-    // If no parameters it is metadata query except for non empty AVI query
-    return (edrMetaData.isAviProducer() && !edrQuery.instance_id.empty());
+    if (resIdx == 0)
+      throw Fmi::Exception::Trace(BCP, "URI has no 'collections' part");
+
+    if ((numParts > 0) && (resParts[numParts - 1].empty()))
+      numParts--;
+
+    auto lastIdx = numParts - 1;
+
+    if ((lastIdx - resIdx) < 2)
+      return false;
+
+    resIdx += ((resParts[resIdx + 2] == "instances") ? 4 : 2);
+
+    if ((lastIdx < resIdx) || ((lastIdx == resIdx) && (resParts[resIdx] == "locations")))
+      return false;
+
+    return true;
   }
   catch (...)
   {
@@ -173,6 +215,14 @@ EDRQueryParams::EDRQueryParams(const State& state,
     {
       parseCube();
     }
+    else if (
+             (itsEDRQuery.query_type == EDRQueryType::Position) ||
+             (itsEDRQuery.query_type == EDRQueryType::Radius) ||
+             (itsEDRQuery.query_type == EDRQueryType::Area) ||
+             (itsEDRQuery.query_type == EDRQueryType::Trajectory) ||
+             (itsEDRQuery.query_type == EDRQueryType::Corridor)
+            )
+      throw EDRException("Missing coords option!");
 
     // EDR datetime
     parseDateTime(state, emd);
