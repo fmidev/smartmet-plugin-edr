@@ -51,6 +51,7 @@ struct EDRQuery
   std::string host;
   std::string collection_id;
   std::string instance_id;
+  std::string location_id;
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;

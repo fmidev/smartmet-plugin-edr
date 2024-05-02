@@ -51,14 +51,17 @@ bool is_data_query(const Spine::HTTP::Request& req,
     std::string res = req.getResource();
     boost::algorithm::split(resParts, res, boost::algorithm::is_any_of("/"));
     auto numParts = resParts.size();
-    size_t resIdx = 0;
+    size_t resIdx = 0, idx = 0;
 
     for (auto const &part : resParts)
     {
       if (part == "collections")
+      {
+        resIdx = idx;
         break;
+      }
 
-      resIdx++;
+      idx++;
     }
 
     if (resIdx == 0)
@@ -149,7 +152,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
     if (resource_parts.size() > 1 && resource_parts.front().empty())
       resource_parts.erase(resource_parts.begin());
 
-    auto invalid_query_type = parseEDRQuery(state, resource);
+    auto invalid_query_type = parseEDRQuery(state, config, resource);
 
     EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
 
@@ -295,6 +298,9 @@ std::string EDRQueryParams::parseLocations(const State& state,
     if (itsEDRQuery.query_type == EDRQueryType::Locations)
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
+    if (resource_parts.size() > 6)
+      itsEDRQuery.location_id = resource_parts.at(6);
+
     return {};
   }
   catch (...)
@@ -331,7 +337,9 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
 {
   try
   {
-    if (resource_parts.at(3) == "instances")
+    auto instances = (resource_parts.at(3) == "instances");
+
+    if (instances)
     {
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
       if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
@@ -347,7 +355,12 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
     if (resource_parts.size() > 4)
-      itsEDRQuery.instance_id = resource_parts.at(4);
+    {
+      if (instances)
+        itsEDRQuery.instance_id = resource_parts.at(4);
+      else
+        itsEDRQuery.location_id = resource_parts.at(4);
+    }
 
     return {};
   }
@@ -380,7 +393,8 @@ std::string EDRQueryParams::parseResourceParts2AndBeyond(
   }
 }
 
-std::string EDRQueryParams::parseEDRQuery(const State& state, const std::string& resource)
+std::string EDRQueryParams::parseEDRQuery(
+    const State& state, const Config& config, const std::string& resource)
 {
   try
   {
@@ -396,31 +410,29 @@ std::string EDRQueryParams::parseEDRQuery(const State& state, const std::string&
           "Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area, "
           "Corridor query");
 
+    // Omit baseurl when parsing the uri.
+    //
+    // Initially base url was expected to be "/edr" but now it may be other/longer too;
+    // drop off 'extra' uri parts (if any) from the start, leaving an array starting
+    // from fixed 'edr' to satisfy parsing of the rest of the uri
+
+    auto baseUrl = config.defaultUrl();
+    auto pos = resource.find(baseUrl);
+    if (pos == std::string::npos)
+      throw EDRException("URI does not match registration url");
+
     std::vector<std::string> resource_parts;
-    boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
+    std::string edrResource = "edr" + resource.substr(pos + baseUrl.size());
+    boost::algorithm::split(resource_parts, edrResource, boost::algorithm::is_any_of("/"));
     if (resource_parts.size() > 1 && resource_parts.front().empty())
       resource_parts.erase(resource_parts.begin());
 
     if (resource_parts.size() < 2)
       return {};
 
-    size_t resIdx = 0;
-    for (auto const &part : resource_parts)
-    {
-      if (part == "collections")
-        break;
-
-      resIdx++;
-    }
-    if (resIdx == 0)
-      throw EDRException("URI has no 'collections' part");
-
-    // Initially base url was expected to be "/edr" but now it may be other/longer too;
-    // drop off 'extra' uri parts (if any) from the start, leaving an array starting
-    // from the part preceeding 'collections' to satisfy parsing of the rest of the uri
-
-    if (resIdx > 1)
-      resource_parts.erase(resource_parts.begin(), resource_parts.begin() + (resIdx - 1));
+    // First keyword must be collections
+    if (resource_parts.at(1) != "collections")
+      throw EDRException("Invalid path '" + resource + "'");
 
     // By default get all collections
     itsEDRQuery.query_id = EDRQueryId::AllCollections;
@@ -654,7 +666,7 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd)
       throw EDRException("Location query is not supported by collection '" +
                          itsEDRQuery.collection_id + "'");
 
-    auto location_id = itsEDRQuery.instance_id;
+    auto location_id = itsEDRQuery.location_id;
 
     if (emd.locations->find(location_id) == emd.locations->end())
     {

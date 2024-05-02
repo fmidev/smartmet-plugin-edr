@@ -34,7 +34,7 @@ class EDRQueryParams
   bool isAviProducer(const EDRProducerMetaData& avi_metadata, const std::string& producer) const;
 
  private:
-  std::string parseEDRQuery(const State& state, const std::string& resource);
+  std::string parseEDRQuery(const State& state, const Config& config, const std::string& resource);
   std::string parseResourceParts2AndBeyond(const State& state,
                                            const std::vector<std::string>& resource_parts);
   std::string parseResourceParts3AndBeyond(const State& state,
