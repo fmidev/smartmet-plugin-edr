@@ -62,7 +62,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
     }
 
     if (resIdx == 0)
-      throw Fmi::Exception::Trace(BCP, "URI has no 'collections' part");
+      throw EDRException("URI has no 'collections' part");
 
     if ((numParts > 0) && (resParts[numParts - 1].empty()))
       numParts--;
@@ -85,7 +85,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
   }
 }
 
-std::string resolve_host(const Spine::HTTP::Request& theRequest)
+std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::string &base_url)
 {
   try
   {
@@ -117,7 +117,7 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest)
     if (apikey)
       host.append(("/fmi-apikey/" + *apikey));
 
-    return (protocol + host + "/edr");
+    return (protocol + host + base_url);
   }
   catch (...)
   {
@@ -135,7 +135,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
   try
   {
     auto resource = req.getResource();
-    itsEDRQuery.host = resolve_host(req);
+    itsEDRQuery.host = resolve_host(req, config.defaultUrl());
 
     if (config.getEDRAPI().isEDRAPIQuery(resource))
     {
@@ -401,19 +401,26 @@ std::string EDRQueryParams::parseEDRQuery(const State& state, const std::string&
     if (resource_parts.size() > 1 && resource_parts.front().empty())
       resource_parts.erase(resource_parts.begin());
 
-    if (resource_parts.empty())
+    if (resource_parts.size() < 2)
       return {};
 
-    // Data query must start with 'edr'
-    if (resource_parts.at(0) != "edr")
-      return {};
+    size_t resIdx = 0;
+    for (auto const &part : resource_parts)
+    {
+      if (part == "collections")
+        break;
 
-    if (resource_parts.size() == 1)
-      return {};
+      resIdx++;
+    }
+    if (resIdx == 0)
+      throw EDRException("URI has no 'collections' part");
 
-    // First keyword must be collections
-    if (resource_parts.at(1) != "collections")
-      throw EDRException(("Invalid path '/edr/" + resource_parts.at(1) + "'"));
+    // Initially base url was expected to be "/edr" but now it may be other/longer too;
+    // drop off 'extra' uri parts (if any) from the start, leaving an array starting
+    // from the part preceeding 'collections' to satisfy parsing of the rest of the uri
+
+    if (resIdx > 1)
+      resource_parts.erase(resource_parts.begin(), resource_parts.begin() + (resIdx - 1));
 
     // By default get all collections
     itsEDRQuery.query_id = EDRQueryId::AllCollections;
