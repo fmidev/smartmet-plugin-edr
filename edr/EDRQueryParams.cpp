@@ -416,7 +416,10 @@ std::string EDRQueryParams::parseEDRQuery(
     // drop off 'extra' uri parts (if any) from the start, leaving an array starting
     // from fixed 'edr' to satisfy parsing of the rest of the uri
 
-    auto baseUrl = config.defaultUrl();
+    std::string baseUrl = config.defaultUrl();
+    if (baseUrl.back() == '/')
+      baseUrl.pop_back();
+
     auto pos = resource.find(baseUrl);
     if (pos == std::string::npos)
       throw EDRException("URI does not match registration url");
