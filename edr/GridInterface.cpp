@@ -1,6 +1,6 @@
 // ======================================================================
 /*!
- * \brief SmartMet TimeSeries plugin implementation
+ * \brief SmartMet EDR plugin implementation
  */
 // ======================================================================
 #include "GridInterface.h"
@@ -47,7 +47,6 @@ namespace EDR
 {
 namespace
 {
-
 void erase_redundant_timesteps(TS::TimeSeries& ts, std::set<Fmi::LocalDateTime>& aggregationTimes)
 {
   FUNCTION_TRACE
@@ -269,9 +268,9 @@ void GridInterface::insertFileQueries(QueryServer::Query& query,
         // newQuery.mProducerNameList;
         newQuery.mForecastTimeList.insert((*val)->mForecastTimeUTC);
         newQuery.mAttributeList = query.mAttributeList;
-        // newQuery.mCoordinateType;
-        // newQuery.mAreaCoordinates;
-        // newQuery.mRadius;
+        newQuery.mCoordinateType = query.mCoordinateType;
+        newQuery.mAreaCoordinates = query.mAreaCoordinates;
+        newQuery.mRadius = query.mRadius;
         newQuery.mTimezone = query.mTimezone;
         newQuery.mStartTime = (*val)->mForecastTimeUTC;
         newQuery.mEndTime = (*val)->mForecastTimeUTC;
@@ -429,7 +428,8 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
     // from the beginning of the day (by using localtime).
 
     if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::TimeSteps ||
-        masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::FixedTimes)
+        masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::FixedTimes ||
+        masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::GraphTimes)
     {
       Fmi::DateTime startT = startTime;
       if (startTimeUTC)
@@ -441,10 +441,16 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
       startTimeUTC = false;
       unsigned seconds = startT.time_of_day().total_seconds();
 
-      grid_startTime = Fmi::DateTime(startT.date(), Fmi::Seconds(seconds - seconds % step));
-      seconds = endTime.time_of_day().total_seconds();
+      uint tstep = step;
+      if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::GraphTimes)
+        tstep = 3600;
 
-      grid_endTime = Fmi::DateTime(endTime.date(), Fmi::Seconds(seconds - seconds % 3600));
+      uint diff = seconds % tstep;
+      uint next = tstep;
+      if (diff == 0)
+        next = 0;
+
+      grid_startTime = Fmi::DateTime(startT.date(), Fmi::Seconds(seconds - diff + next));
     }
 
     // If the daylight saving time is in the request time interval then we need
@@ -464,7 +470,9 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
       {
         // Adding one hour to the end time because of the daylight saving.
 
-        grid_endTime += Fmi::Minutes(60);
+        auto ptime = grid_endTime;
+        ptime = ptime + boost::posix_time::minutes(60);
+        grid_endTime = ptime;
       }
     }
 
@@ -491,9 +499,10 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
 
     // At this point we should know the actual start and end times of the request.
 
-    if (masterquery.toptions.startTimeData || masterquery.toptions.endTimeData ||
-        masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::DataTimes ||
-        masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::GraphTimes)
+    if (masterquery.toptions.days.empty() &&
+        (masterquery.toptions.startTimeData || masterquery.toptions.endTimeData ||
+         masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::DataTimes ||
+         masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::GraphTimes))
     {
       // This is a time-range request, which means that
       //
@@ -512,13 +521,27 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
         // startTime is "data", which means that we should read all the data from the beginning
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::StartTimeFromData;
         grid_startTime = y1900; // "19000101T000000";
+
+        if (!masterquery.toptions.endTimeData)
+          gridQuery.mTimesteps = steps;
       }
 
       if (masterquery.toptions.endTimeData)
       {
         // endTime is "data", which means that we should read all the data to the end
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::EndTimeFromData;
-        grid_endTime = y2100; // "21000101T000000";
+        grid_endTime = y2100;
+      }
+
+      if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::DataTimes)
+      {
+        gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::TimeStepIsData;
+      }
+
+      if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::GraphTimes)
+      {
+        gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::TimeStepIsData |
+                           QueryServer::Query::Flags::ForceStartTime;
       }
 
       if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::TimeSteps)
@@ -546,8 +569,9 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
         if (daylightSavingActive)
           gridQuery.mMaxParameterValues++;
 
+        gridQuery.mTimesteps = gridQuery.mMaxParameterValues;
         if (grid_startTime == grid_endTime)
-          grid_endTime = y2100; // "21000101T000000";
+          grid_endTime = y2100; // "21000101T000000"
       }
     }
     else
@@ -582,7 +606,7 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
         if (latestTime != startTime && s <= latestTimeUTC)
           additionOk = false;
 
-        if (!masterquery.toptions.timeList.empty())
+        if (additionOk && !masterquery.toptions.timeList.empty())
         {
           // If we have a list of predefined hours (for example, hour=4,8,12) the we should
           // ignore timesteps that does not match these hours. These hours are defined in
@@ -591,6 +615,13 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
           std::string ss = Fmi::to_iso_string(localTime.local_time());
           uint idx = Fmi::stoi(ss.substr(9, 4));
           if (masterquery.toptions.timeList.find(idx) == masterquery.toptions.timeList.end())
+            additionOk = false;
+        }
+
+        if (additionOk && !masterquery.toptions.days.empty())
+        {
+          auto d = localTime.local_time().date().day();
+          if (masterquery.toptions.days.find(d) == masterquery.toptions.days.end())
             additionOk = false;
         }
 
@@ -746,7 +777,7 @@ void GridInterface::prepareLocation(QueryServer::Query& gridQuery,
                                     const Query& masterquery,
                                     const Spine::LocationPtr& loc,
                                     const T::GeometryId_set& geometryIdList,
-                                    const std::vector<std::vector<T::Coordinate>>& polygonPath,
+                                    std::vector<std::vector<T::Coordinate>>& polygonPath,
                                     uchar& locationType)
 {
   FUNCTION_TRACE
@@ -770,6 +801,25 @@ void GridInterface::prepareLocation(QueryServer::Query& gridQuery,
         break;
 
       case Spine::Location::Wkt:
+      {
+        OGRwkbGeometryType geomType =
+            masterquery.wktGeometries.getGeometry(loc->name)->getGeometryType();
+
+        switch (geomType)
+        {
+          case wkbMultiLineString:
+          case wkbMultiPoint:
+          case wkbLineString:
+            locationType = QueryServer::QueryParameter::LocationType::Path;
+            break;
+
+          default:
+            locationType = QueryServer::QueryParameter::LocationType::Polygon;
+            break;
+        }
+      }
+      break;
+
       case Spine::Location::Area:
       case Spine::Location::BoundingBox:
         locationType = QueryServer::QueryParameter::LocationType::Polygon;
@@ -862,8 +912,10 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
 
       // Agregation intervals:
 
-      if (masterquery.maxAggregationIntervals.find(param.name()) !=
-          masterquery.maxAggregationIntervals.end())
+      if ((paramfunc->functions.innerFunction.exists() ||
+           paramfunc->functions.outerFunction.exists()) &&
+          masterquery.maxAggregationIntervals.find(param.name()) !=
+              masterquery.maxAggregationIntervals.end())
       {
         unsigned int aggregationIntervalBehind =
             masterquery.maxAggregationIntervals.at(param.name()).behind;
@@ -875,6 +927,7 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
           qParam.mTimestepsBefore = aggregationIntervalBehind / 60;
           qParam.mTimestepsAfter = aggregationIntervalAhead / 60;
           qParam.mTimestepSizeInMinutes = 60;
+          qParam.mFlags = qParam.mFlags | QueryServer::QueryParameter::Flags::AggregationParameter;
         }
       }
 
@@ -932,37 +985,35 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
             qParam.mGeometryId = toInt32(parameters[0].mGeometryId);
           }
         }
+      }
 
-        if (qParam.mParameterLevel < 0)
-          qParam.mParameterLevel = origLevel;
-
-        switch (mode)
-        {
-          case 0:
-            if (qParam.mParameterLevelId == 2)
-            {
-              // Grib uses Pa and querydata hPa, so we have to convert the value.
-              qParam.mParameterLevel = C_INT(qParam.mParameterLevel * 100);
-              qParam.mFlags =
-                  qParam.mFlags | QueryServer::QueryParameter::Flags::PressureLevelInterpolation;
-            }
-            break;
-
-          case 1:
-            qParam.mFlags =
-                qParam.mFlags | QueryServer::QueryParameter::Flags::PressureLevelInterpolation;
-            qParam.mParameterLevelId = 2;
+      switch (mode)
+      {
+        case 0:
+          if (qParam.mParameterLevelId == 2)
+          {
             // Grib uses Pa and querydata hPa, so we have to convert the value.
             qParam.mParameterLevel = C_INT(qParam.mParameterLevel * 100);
-            break;
+            //qParam.mFlags |= QueryServer::QueryParameter::Flags::PressureLevels;
+          }
+          break;
 
-          case 2:
-            qParam.mParameterLevelId = 0;
-            qParam.mFlags =
-                qParam.mFlags | QueryServer::QueryParameter::Flags::HeightLevelInterpolation;
-            break;
-        }
+        case 1:
+          qParam.mParameterLevelId = 2;
+          // Grib uses Pa and querydata hPa, so we have to convert the value.
+          qParam.mParameterLevel = C_INT(qParam.mParameterLevel * 100);
+          qParam.mFlags |= QueryServer::QueryParameter::Flags::PressureLevels;
+          break;
+
+        case 2:
+          //qParam.mParameterLevelId = 0;
+          qParam.mFlags |= QueryServer::QueryParameter::Flags::MetricLevels;
+          break;
       }
+
+
+      if (qParam.mParameterLevel < 0)
+        qParam.mParameterLevel = origLevel;
 
       size_t len = parameters.size();
       if (len > 1)
@@ -1028,7 +1079,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query& gridQuery,
                                      const Spine::TaggedLocation& /* tloc */,
                                      const Spine::LocationPtr& loc,
                                      const T::GeometryId_set& geometryIdList,
-                                     const std::vector<std::vector<T::Coordinate>>& polygonPath)
+                                     std::vector<std::vector<T::Coordinate>>& polygonPath)
 {
   FUNCTION_TRACE
   try
@@ -1091,9 +1142,13 @@ void GridInterface::findLevelId(Query& masterquery,
     // Checking if the level type is defined in the request.
 
     if (strcasecmp(masterquery.leveltype.c_str(), "pressure") == 0)
+    {
       levelId = 2;
+    }
     else if (strcasecmp(masterquery.leveltype.c_str(), "model") == 0)
+    {
       levelId = 3;
+    }
 
     // Checking it the level type is defined in the producer's alias definition.
 
@@ -1167,7 +1222,7 @@ void GridInterface::findLevels(Query& masterquery,
               // Fetching pressure levels.
               itsGridEngine->getProducerParameterLevelList(producerName, 2, 0.01, tmpLevels);
               for (auto lev = tmpLevels.rbegin(); lev != tmpLevels.rend(); ++lev)
-                levels.emplace_back(*lev);
+                levels.emplace_back(*lev*100);
             }
             else if (levelId == 3)
             {
@@ -1190,7 +1245,7 @@ void GridInterface::findLevels(Query& masterquery,
                   case 2:  // Pressure level
                     itsGridEngine->getProducerParameterLevelList(producerName, 2, 0.01, tmpLevels);
                     for (auto lev = tmpLevels.rbegin(); lev != tmpLevels.rend(); ++lev)
-                      levels.emplace_back(*lev);
+                      levels.emplace_back(*lev*100);
                     break;
 
                   case 3:  // model
@@ -1215,7 +1270,7 @@ void GridInterface::findLevels(Query& masterquery,
             // If the level type is "pressure" then we should use these levels in reverse order.
             for (auto level = masterquery.levels.rbegin(); level != masterquery.levels.rend();
                  ++level)
-              levels.emplace_back((double)(*level));
+              levels.emplace_back((double)(*level*100));
           }
           else
           {
@@ -1226,14 +1281,16 @@ void GridInterface::findLevels(Query& masterquery,
         }
         break;
 
-      case 1:
+      case 1:  // OP
         levelId = 2;
         for (const auto& level : masterquery.pressures)
-          levels.emplace_back((double)level);
+          levels.emplace_back((double)level*100);
         break;
 
       case 2:
-        levelId = 3;
+        if (levelId == 2)
+          levelId = 0;
+
         for (auto level : masterquery.heights)
           levels.push_back(static_cast<double>(level));
         break;
@@ -1254,39 +1311,51 @@ void GridInterface::exteractCoordinatesAndAggrecationTimes(
   FUNCTION_TRACE
   try
   {
+    bool timezoneIsUTC = false;
+    if (!tz || strcasecmp(tz->std_zone_name().c_str(), "UTC") == 0)
+      timezoneIsUTC = true;
+
     int pLen = C_INT(gridQuery->mQueryParameterList.size());
     for (int p = 0; p < pLen; p++)
     {
-      uint xLen = gridQuery->mQueryParameterList[p].mValueList.size();
-      for (uint x = 0; x < xLen; x++)
+      uint tLen = gridQuery->mQueryParameterList[p].mValueList.size();
+      if (tLen > 0)
       {
-        if ((gridQuery->mQueryParameterList[p].mValueList[x]->mFlags &
-             QueryServer::ParameterValues::Flags::AggregationValue) != 0)
+        std::string prevLocalTime;
+        for (uint t = 0; t < tLen; t++)
         {
-          // This value is added for aggregation. We should remove it later.
-
           auto dt = boost::posix_time::from_time_t(
-              gridQuery->mQueryParameterList[p].mValueList[x]->mForecastTimeUTC);
+              gridQuery->mQueryParameterList[p].mValueList[t]->mForecastTimeUTC);
           Fmi::LocalDateTime queryTime(dt, tz);
+          std::string lt = Fmi::to_iso_string(queryTime.local_time());
 
-          aggregationTimes.insert(queryTime);
-        }
-
-        if (coordinates.empty())
-        {
-          uint len = gridQuery->mQueryParameterList[p].mValueList[x]->mValueList.getLength();
-          if (len > 0)
+          if ((gridQuery->mQueryParameterList[p].mValueList[t]->mFlags &
+               QueryServer::ParameterValues::Flags::AggregationValue) != 0 ||
+              (!timezoneIsUTC && prevLocalTime == lt))
           {
-            for (uint v = 0; v < len; v++)
+            // This value is added for aggregation or it has same localtime
+            // as the previous timestep. We should remove it after aggregation.
+
+            aggregationTimes.insert(queryTime);
+          }
+
+          if (coordinates.empty())
+          {
+            uint len = gridQuery->mQueryParameterList[p].mValueList[t]->mValueList.getLength();
+            if (len > 0)
             {
-              T::GridValue val;
-              if (gridQuery->mQueryParameterList[p].mValueList[x]->mValueList.getGridValueByIndex(
-                      v, val))
+              for (uint v = 0; v < len; v++)
               {
-                coordinates.emplace_back(T::Coordinate(val.mX, val.mY));
+                T::GridValue val;
+                if (gridQuery->mQueryParameterList[p].mValueList[t]->mValueList.getGridValueByIndex(
+                        v, val))
+                {
+                  coordinates.emplace_back(T::Coordinate(val.mX, val.mY));
+                }
               }
             }
           }
+          prevLocalTime = lt;
         }
       }
     }
@@ -1307,6 +1376,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
                                         const Spine::TaggedLocation& tloc,
                                         const Spine::LocationPtr& loc,
                                         const std::string& country,
+                                        int levelId,
                                         double level)
 {
   FUNCTION_TRACE
@@ -1373,6 +1443,19 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
 
             for (int t = 0; t < tLen; t++)
             {
+              if (t > rLen)
+              {
+                Fmi::Exception exception(BCP, "Not enough timesteps!");
+                exception.addParameter("Parameter", gridQuery->mQueryParameterList[pid].mParam);
+                exception.addParameter("t", std::to_string(t));
+                exception.addParameter("rLen", std::to_string(rLen));
+                exception.addParameter("tLen", std::to_string(tLen));
+                exception.addDetail(
+                    "A possible reason: grid-engine and timeseries aggregation used at the same "
+                    "time.");
+                throw exception;
+              }
+
               auto dt = boost::posix_time::from_time_t(
                   gridQuery->mQueryParameterList[pid].mValueList[t]->mForecastTimeUTC);
               Fmi::LocalDateTime queryTime(dt, tz);
@@ -1511,14 +1594,14 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
                   case 4:  // latlon
                   {
                     TS::TimedValue tsValue(queryTime,
-                                           TS::LonLat(coordinates[i].x(), coordinates[i].y()));
+                                           TS::LonLat(coordinates[i].y(), coordinates[i].x()));
                     ts.emplace_back(tsValue);
                   }
                   break;
                   case 5:  // lonlat
                   {
                     TS::TimedValue tsValue(queryTime,
-                                           TS::LonLat(coordinates[i].y(), coordinates[i].x()));
+                                           TS::LonLat(coordinates[i].x(), coordinates[i].y()));
                     ts.emplace_back(tsValue);
                   }
                   break;
@@ -1736,16 +1819,22 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
               //    @I-3    => The complete parameter identifier (for example: T-K:ECG:1093:6:2:3:7)
 
               std::string n;
+              int idx = -1;
 
               if (gridQuery->mQueryParameterList[pid].mParam.substr(2, 1) == "-")
-                n = gridQuery->mQueryParameterList[pid].mParam.substr(1, 1);
-              else if (gridQuery->mQueryParameterList[pid].mParam.substr(3, 1) == "-")
-                n = gridQuery->mQueryParameterList[pid].mParam.substr(1, 2);
-
-              auto opt_idx = Fmi::stoi_opt(gridQuery->mQueryParameterList[pid].mParam.substr(3));
-              if (opt_idx && *opt_idx >= 0 && *opt_idx < pLen)
               {
-                auto cpid = pidList.find(((ulonglong)(*opt_idx) << 32) + t);
+                n = gridQuery->mQueryParameterList[pid].mParam.substr(1, 1);
+                idx = std::stoi(gridQuery->mQueryParameterList[pid].mParam.substr(3));
+              }
+              else if (gridQuery->mQueryParameterList[pid].mParam.substr(3, 1) == "-")
+              {
+                n = gridQuery->mQueryParameterList[pid].mParam.substr(1, 2);
+                idx = std::stoi(gridQuery->mQueryParameterList[pid].mParam.substr(4));
+              }
+
+              if (idx >= 0 && idx < pLen)
+              {
+                auto cpid = pidList.find(((ulonglong)(idx) << 32) + t);
                 if (cpid != pidList.end())
                 {
                   uint i = cpid->second;
@@ -1776,10 +1865,21 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
                   }
                   else if (n == "G")  // Generation
                   {
-                    TS::TimedValue tsValue(
-                        queryTime,
-                        C_INT(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId));
-                    tsForNonGridParam->emplace_back(tsValue);
+                    T::GenerationInfo info;
+                    if (itsGridEngine->getGenerationInfoById(
+                            C_INT(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId),
+                            info))
+                    {
+                      TS::TimedValue tsValue(queryTime, info.mName);
+                      tsForNonGridParam->emplace_back(tsValue);
+                    }
+                    else
+                    {
+                      TS::TimedValue tsValue(
+                          queryTime,
+                          C_INT(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId));
+                      tsForNonGridParam->emplace_back(tsValue);
+                    }
                   }
                   else if (n == "GM")  // Geometry
                   {
@@ -1846,6 +1946,9 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
 
               int idx = 0;
               int levelValue = level;
+              if (levelValue > 0  &&  levelId == 2)
+                levelValue = level / 100;
+
               while (idx < pLen && levelValue <= 0)
               {
                 if (gridQuery->mQueryParameterList[idx].mValueList[t]->mParameterLevel > 0)
@@ -2184,6 +2287,7 @@ void GridInterface::processGridQuery(const State& state,
                             tloc,
                             loc,
                             country,
+                            qLevelId,
                             level);
       }
     }
