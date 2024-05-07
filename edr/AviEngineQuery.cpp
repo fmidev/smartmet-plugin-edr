@@ -247,9 +247,9 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
     bool hasEndTime = (!query.toptions.endTime.is_special());
 
     if (hasStartTime)
-      startTime = boost::posix_time::to_iso_string(query.toptions.startTime);
+        startTime = Fmi::date_time::to_iso_string(query.toptions.startTime);
     if (hasEndTime)
-      endTime = boost::posix_time::to_iso_string(query.toptions.endTime);
+      endTime = Fmi::date_time::to_iso_string(query.toptions.endTime);
 
     if (hasStartTime && hasEndTime && (startTime != endTime))
     {

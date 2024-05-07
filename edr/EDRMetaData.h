@@ -56,8 +56,8 @@ struct edr_spatial_extent
 struct edr_temporal_extent_period
 {
   edr_temporal_extent_period()
-      : start_time(boost::posix_time::not_a_date_time),
-        end_time(boost::posix_time::not_a_date_time),
+      : start_time(Fmi::DateTime::NOT_A_DATE_TIME),
+        end_time(Fmi::DateTime::NOT_A_DATE_TIME),
         timestep(0),
         timesteps(0)
   {
@@ -71,7 +71,7 @@ struct edr_temporal_extent_period
 struct edr_temporal_extent
 {
   edr_temporal_extent()
-      : origin_time(boost::posix_time::not_a_date_time), trs("Temporal Reference System")
+      : origin_time(Fmi::DateTime::NOT_A_DATE_TIME), trs("Temporal Reference System")
   {
   }
   Fmi::DateTime origin_time;

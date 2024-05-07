@@ -626,7 +626,7 @@ void add_value(const TS::TimedValue &tv,
   try
   {
     const auto &t = tv.time;
-    timesteps.insert(boost::posix_time::to_iso_extended_string(t.utc_time()) + "Z");
+    timesteps.insert(Fmi::date_time::to_iso_extended_string(t.utc_time()) + "Z");
     add_value(tv, values_array, data_type, values_index, precision);
   }
   catch (...)
@@ -1023,13 +1023,13 @@ void parse_title(const EDRMetaData &emd, Json::Value &instance)
     {
       std::string title =
           ("Origintime: " +
-           boost::posix_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z");
+           Fmi::date_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z");
       title += (" Starttime: " +
-                boost::posix_time::to_iso_extended_string(
+                Fmi::date_time::to_iso_extended_string(
                     emd.temporal_extent.time_periods.front().start_time) +
                 "Z");
       title += (" Endtime: " +
-                boost::posix_time::to_iso_extended_string(
+                Fmi::date_time::to_iso_extended_string(
                     emd.temporal_extent.time_periods.front().end_time) +
                 "Z");
       if (emd.temporal_extent.time_periods.front().timestep)
@@ -1595,7 +1595,7 @@ void process_ts_parameters_at_position(const TS::TimeSeriesPtr &ts_data,
       }
       auto &timestamp_values = timestamp_object["values"];
       timestamp_values[values_index] =
-          Json::Value(boost::posix_time::to_iso_extended_string(lon_value.time.utc_time()) + "Z");
+          Json::Value(Fmi::date_time::to_iso_extended_string(lon_value.time.utc_time()) + "Z");
 
       auto domain_object_axes = Json::Value(Json::ValueType::objectValue);
       domain_object_axes["x"] = x_object;
@@ -2199,7 +2199,7 @@ void add_time_coord_value(const TS::LonLatTimeSeries &llts_data,
       time_coord_value tcv;
       tcv.lon = as_double(lon_value.value);
       tcv.lat = as_double(lat_value.value);
-      tcv.time = (boost::posix_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
+      tcv.time = (Fmi::date_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
 
       double level = get_level(tsg_level, levels_present, tsg_index, l);
 
@@ -2563,7 +2563,7 @@ Json::Value format_output_data_vertical_profile(
       domain["axes"]["z"]["values"] = levelArray;
 
       std::string timestep =
-          (boost::posix_time::to_iso_extended_string(timeIter->time.utc_time()) + "Z");
+          (Fmi::date_time::to_iso_extended_string(timeIter->time.utc_time()) + "Z");
       auto t_array = Json::Value(Json::ValueType::arrayValue);
       t_array[0] = Json::Value(timestep);
       domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
