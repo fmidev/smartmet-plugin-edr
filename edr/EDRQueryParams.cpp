@@ -6,6 +6,7 @@
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <string>
+#include "UtilityFunctions.h"
 
 namespace SmartMet
 {
@@ -632,11 +633,11 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
       wkt = parseTrajectoryAndCorridor(coords);
     else if (itsEDRQuery.query_type == EDRQueryType::Cube)
     {
-      auto minz = Spine::optional_string(req.getParameter("minz"), "");
-      auto maxz = Spine::optional_string(req.getParameter("minz"), "");
-      if (minz.empty() || maxz.empty())
-        throw EDRException("No minz, maxz parameter defined for Cube query!");
-      req.addParameter("z", minz + "/" + maxz);
+      auto z = Spine::optional_string(req.getParameter("z"), "");
+      bool zIsRange = false;
+      std::string zLo, zHi;
+
+      UtilityFunctions::parseRangeListValue(z, zIsRange, zLo, zHi);
     }
 
     auto crs = Spine::optional_string(req.getParameter("crs"), "EPSG:4326");
@@ -702,25 +703,26 @@ void EDRQueryParams::parseCube()
     if (bbox.empty())
       throw EDRException("Query parameter 'bbox' or 'coords' must be defined for Cube");
 
-    std::vector<std::string> parts;
-    boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
-    if (parts.size() != 4)
-      throw EDRException(
-          "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner "
-          "y,upper left corner x,upper left corner y"
-          "<upper right coordinate>, e.g.  bbox=19.4,59.6,31.6,70.1");
+    auto z = Fmi::trim_copy(Spine::optional_string(req.getParameter("z"), ""));
+    bool zIsRange = false;
+    std::string zLo, zHi;
+
+    auto parts = UtilityFunctions::parseBBoxAndZ(bbox, z, zIsRange, zLo, zHi);
+    size_t idx = ((parts.size() == 4) ? 2 : 3);
+
     auto lower_left_x = parts[0];
     auto lower_left_y = parts[1];
-    auto upper_right_x = parts[2];
-    auto upper_right_y = parts[3];
-    boost::algorithm::trim(lower_left_x);
-    boost::algorithm::trim(lower_left_y);
-    boost::algorithm::trim(upper_right_x);
-    boost::algorithm::trim(upper_right_y);
+    auto upper_right_x = parts[idx++];
+    auto upper_right_y = parts[idx++];
     auto wkt = ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
                 upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x +
                 " " + lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
     req.addParameter("wkt", wkt);
+
+    if (z.empty() && zIsRange)
+      // z range from bbox
+      req.addParameter("z", zLo + "/" + zHi);
+
     req.removeParameter("bbox");
   }
   catch (...)
@@ -914,16 +916,18 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
     double min_level = std::numeric_limits<double>::min();
     double max_level = std::numeric_limits<double>::max();
     bool range = false;
-    if (z.find('/') != std::string::npos)
+
+    std::string zLo, zHi;
+    if (UtilityFunctions::parseRangeListValue(z, range, zLo, zHi))
     {
-      std::vector<std::string> parts;
-      boost::algorithm::split(parts, z, boost::algorithm::is_any_of("/"));
-      min_level = Fmi::stod(parts[0]);
-      max_level = Fmi::stod(parts[1]);
-      z.clear();
-      range = true;
+      if (range)
+      {
+        min_level = Fmi::stod(zLo);
+        max_level = Fmi::stod(zHi);
+        z.clear();
+      }
     }
-    if (!range && z.empty())
+    else
       z = itsCoordinateFilter.getLevels();
     // If no level given get all levels
     if (z.empty() && !emd.vertical_extent.levels.empty())

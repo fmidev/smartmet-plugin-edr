@@ -290,6 +290,173 @@ Json::Value json_value(const TS::Value& val, int precision)
   }
 }
 
+//
+// Parse range/list/value. If isRange is set (cube query), only value range (lo/hi) is accepted.
+// Values are validated by converting to double. Throws on invalid or missing values.
+//
+// If value range is given, isRange is set to true and the range values are set to loValue/hiValue.
+// If value list is given, first/last value are set to loValue/hiValue.
+// Single value is set to loValue.
+//
+// Returns true if nonempty valueStr is given.
+//
+bool parseRangeListValue(const std::string &valueStr,
+                         bool &isRange, std::string &loValue, std::string &hiValue)
+{
+  auto onlyRange = isRange;
+
+  try
+  {
+    isRange = false;
+    loValue.clear();
+    hiValue.clear();
+
+    auto v = boost::algorithm::trim_copy(valueStr);
+    if (v.empty())
+      return false;
+
+    bool isList = false;
+
+    std::vector<std::string> parts, listParts;
+    boost::algorithm::split(parts, v, boost::algorithm::is_any_of("/"));
+
+    if (onlyRange && (parts.size() != 2))
+      throw Fmi::Exception(BCP, "");
+
+    if (parts.size() == 1)
+    {
+      std::vector<std::string> listParts;
+      boost::algorithm::split(listParts, parts[0], boost::algorithm::is_any_of(","));
+
+      if (listParts.size() == 1)
+      {
+        loValue = boost::algorithm::trim_copy(parts[0]);
+        Fmi::stod(loValue);
+
+        return true;
+      }
+
+      parts.swap(listParts);
+      isList = true;
+    }
+
+    if (!isList)
+    {
+      if (parts.size() != 2)
+        throw Fmi::Exception(BCP, "");
+
+      loValue = boost::algorithm::trim_copy(parts[0]);
+      hiValue = boost::algorithm::trim_copy(parts[1]);
+
+      if (loValue.empty() || hiValue.empty() || (Fmi::stod(loValue) > Fmi::stod(hiValue)))
+        throw Fmi::Exception(BCP, "");
+
+      isRange = true;
+
+      return true;
+    }
+
+    for (auto &part : parts)
+    {
+      boost::algorithm::trim(part);
+      if (part.empty())
+        throw Fmi::Exception(BCP, "");
+
+      Fmi::stod(part);
+    }
+
+    loValue = parts[0];
+    hiValue = parts[parts.size() - 1];
+
+    return true;
+  }
+  catch (...)
+  {
+    if (onlyRange)
+      throw Fmi::Exception(BCP, "Invalid z parameter, numeric min/max range expected");
+    else
+      throw Fmi::Exception(
+          BCP, "Invalid z parameter, numeric value, list of values or min/max range expected");
+  }
+}
+
+//
+// Parses 2d (blx,bly,trx,try) or 3d (blx,bly,blz,trx,try,trz) bbox and z -coordinate
+// range/list/value (lo/hi or value[,value,...]).
+//
+// If bbox is 3d and z is empty, zIsRange is set to true and bbox lo/hi is set to zLo/zHi.
+//
+std::vector<std::string> parseBBoxAndZ(const std::string &bbox, const std::string &z,
+                                       bool &zIsRange, std::string &zLo, std::string &zHi)
+{
+  bool hasZ = parseRangeListValue(z, zIsRange, zLo, zHi);
+
+  try
+  {
+    if (boost::algorithm::trim_copy(bbox).empty())
+      return {};
+
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
+
+    if ((parts.size() != 4) && (parts.size() != 6))
+      throw Fmi::Exception(BCP, "");
+
+    for (auto &part : parts)
+    {
+      boost::algorithm::trim(part);
+      if (part.empty())
+        throw Fmi::Exception(BCP, "");
+
+      Fmi::stod(part);
+    }
+
+    if ((!hasZ) && (parts.size() == 6))
+    {
+       zLo = parts[2];
+       zHi = parts[5];
+       zIsRange = true;
+    }
+
+    return parts;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(
+        BCP,
+        "Invalid bbox parameter, format is bbox=lower left corner x,lower left corner y"
+        "[,lower left corner z],upper right corner x,upper right corner y"
+        "[,upper right corner z], e.g. bbox=19.4,59.6,31.6,70.1");
+  }
+}
+
+//
+// Parses 2d (blx,bly,trx,try) or 3d (blx,bly,blz,trx,try,trz) bbox.
+// Returns 2d bbox if parse2d is set.
+//
+std::vector<std::string> parseBBox(const std::string &bbox, bool parse2d)
+{
+  try
+  {
+    std::string zLo, zHi;
+    bool zIsRange = false;
+
+    auto parts = parseBBoxAndZ(bbox, "", zIsRange, zLo, zHi);
+
+    if (parse2d && (parts.size() == 6))
+    {
+      parts.erase(parts.begin() + 2);
+      parts.pop_back();
+    }
+
+    return parts;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
 }  // namespace UtilityFunctions
 }  // namespace EDR
 }  // namespace Plugin

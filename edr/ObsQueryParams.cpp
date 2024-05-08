@@ -6,6 +6,7 @@
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
 #endif
+#include "UtilityFunctions.h"
 
 using namespace std;
 
@@ -54,13 +55,14 @@ ObsQueryParams::ObsQueryParams(const Spine::HTTP::Request& req)
     if (!!req.getParameter("bbox"))
     {
       string bbox = *req.getParameter("bbox");
-      vector<string> parts;
-      boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
+
       // Bounding box must contain exactly 4 elements
-      if (parts.size() != 4)
-      {
-        throw Fmi::Exception(BCP, "Invalid bounding box '" + bbox + "'!");
-      }
+      //
+      // Since this constructor is called e.g. for querydata collections too which may have
+      // vertical axis, allow 3d bbox but ignore z -coordinates
+
+      auto parts = UtilityFunctions::parseBBox(bbox, true);
+
       std::string lat2(parts[3]);
       auto radius_pos = lat2.find(':');
       if (radius_pos != string::npos)

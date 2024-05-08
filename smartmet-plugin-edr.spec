@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.5.7
+Version: 24.5.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -113,6 +113,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed May  8 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.5.8-1.fmi
+- Changes/fixes for cube. Support 3d bbox. Validate bbox and z range/list/value. Using z -parameter instead of minz and maxz -parameters when querying with coords -parameter (BRAINSTORM-2925)
+
 * Tue May  7 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.5.7-1.fmi
 - Use Date library (https://github.com/HowardHinnant/date) instead of boost date_time
 
