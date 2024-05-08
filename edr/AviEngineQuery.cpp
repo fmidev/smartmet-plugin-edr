@@ -161,10 +161,6 @@ void checkAviEngineAreaQuery(const Query &query, SmartMet::Engine::Avi::QueryOpt
         queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
         wkt = wkt.substr(0, n);
       }
-
-      queryOptions.itsDistinctMessages = true;
-      queryOptions.itsFilterMETARs = true;
-      queryOptions.itsExcludeSPECIs = false;
     }
     queryOptions.itsLocationOptions.itsWKTs.itsWKTs.push_back(wkt);
   }
