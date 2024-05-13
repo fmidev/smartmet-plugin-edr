@@ -485,6 +485,7 @@ void Config::parse_config_api_settings()
 
     std::string templatedir = "/usr/share/smartmet/edr";
     edr_api.lookupValue("templatedir", templatedir);
+    Fmi::trim(templatedir);
 
     if (templatedir.empty())
       throw Fmi::Exception(
@@ -511,7 +512,19 @@ void Config::parse_config_api_settings()
         std::string url_setting;
         std::string template_setting;
         api_item.lookupValue("url", url_setting);
+        Fmi::trim(url_setting);
+        if ((url_setting.size() == 0) || (url_setting.front() != '/'))
+          url_setting = itsDefaultUrl + "/" + url_setting;
+        if (url_setting.size() < 2)
+          throw Fmi::Exception(BCP, "url '" + url_setting + "' is not valid");
+        if (url_setting.back() == '/')
+          url_setting.pop_back();
+        if (conf_api_settings.count(url_setting) > 0)
+          throw Fmi::Exception(BCP, "url '" + url_setting + "' is duplicate");
         api_item.lookupValue("template", template_setting);
+        Fmi::trim(template_setting);
+        if (template_setting.empty())
+          throw Fmi::Exception(BCP, "template cannot be empty");
         conf_api_settings[url_setting] = template_setting;
       }
       catch (const std::exception &e)
@@ -1007,9 +1020,16 @@ Config::Config(const string &configfile)
     if (itsDefaultLanguage.empty())
       throw Fmi::Exception(BCP, "Default language code cannot be empty");
 
-    // Optional settings
+    // Optional settings. Ensure base url starts with '/' but does not end with it
     itsConfig.lookupValue("timeformat", itsDefaultTimeFormat);
     itsConfig.lookupValue("url", itsDefaultUrl);
+    Fmi::trim(itsDefaultUrl);
+    if ((itsDefaultUrl.size() > 0) && (itsDefaultUrl.front() != '/'))
+      itsDefaultUrl = "/" + itsDefaultUrl;
+    if (itsDefaultUrl.size() < 2)
+      throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");
+    if (itsDefaultUrl.back() == '/')
+      itsDefaultUrl.pop_back();
     itsConfig.lookupValue("expires", itsExpirationTime);
     itsConfig.lookupValue("aviengine_disabled", itsAviEngineDisabled);
     itsConfig.lookupValue("observation_disabled", itsObsEngineDisabled);

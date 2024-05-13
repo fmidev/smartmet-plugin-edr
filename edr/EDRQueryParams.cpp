@@ -418,8 +418,6 @@ std::string EDRQueryParams::parseEDRQuery(
     // from fixed 'edr' to satisfy parsing of the rest of the uri
 
     std::string baseUrl = config.defaultUrl();
-    if (baseUrl.back() == '/')
-      baseUrl.pop_back();
 
     auto pos = resource.find(baseUrl);
     if (pos == std::string::npos)
@@ -428,8 +426,8 @@ std::string EDRQueryParams::parseEDRQuery(
     std::vector<std::string> resource_parts;
     std::string edrResource = "edr" + resource.substr(pos + baseUrl.size());
     boost::algorithm::split(resource_parts, edrResource, boost::algorithm::is_any_of("/"));
-    if (resource_parts.size() > 1 && resource_parts.front().empty())
-      resource_parts.erase(resource_parts.begin());
+    if (resource_parts.size() > 1 && resource_parts.back().empty())
+      resource_parts.pop_back();
 
     if (resource_parts.size() < 2)
       return {};
