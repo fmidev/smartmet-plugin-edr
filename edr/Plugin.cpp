@@ -744,6 +744,19 @@ void Plugin::init()
     // Initialization done, register services. We are aware that throwing
     // from a separate thread will cause a crash, but these should never
     // fail.
+
+    // Handler for the main content: /edr/...
+    if (!itsReactor->addContentHandler(
+            this,
+            itsConfig.defaultUrl() + "/",
+            [this](Spine::Reactor& theReactor,
+                   const Spine::HTTP::Request& theRequest,
+                   Spine::HTTP::Response& theResponse)
+            { callRequestHandler(theReactor, theRequest, theResponse); },
+            true))
+      throw Fmi::Exception(BCP, "Failed to register edr content handler");
+
+    // Handler for plain '/edr' (landing page)
     if (!itsReactor->addContentHandler(
             this,
             itsConfig.defaultUrl(),
@@ -751,7 +764,7 @@ void Plugin::init()
                    const Spine::HTTP::Request& theRequest,
                    Spine::HTTP::Response& theResponse)
             { callRequestHandler(theReactor, theRequest, theResponse); },
-            true))
+            false))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
     // Get locations

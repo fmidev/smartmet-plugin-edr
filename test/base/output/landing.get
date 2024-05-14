@@ -1,0 +1,38 @@
+{
+  "title": "FMI EDR Server",
+  "description": "API for querying meteorological datasets. Conforms to OGC API Environmental Data Retrieval specification",
+  "provider": {
+    "name": "FMI",
+    "url": "www.fmi.fi"
+  },
+  "contact": {
+    "email": "edr@fmi.fi"
+  },
+  "links": [
+    {
+      "href": "http://smartmet.fmi.fi/edr/?f=JSON",
+      "rel": "self",
+      "type": "application/json",
+      "title": "Landing Page in JSON"
+    },
+    {
+      "href": "http://smartmet.fmi.fi/edr/api?f=JSON",
+      "rel": "service-desc",
+      "type": "application/json",
+      "title": "API description in JSON"
+    },
+    {
+      "href": "http://smartmet.fmi.fi/edr/conformance?f=JSON",
+      "rel": "conformance",
+      "type": "application/json",
+      "title": "Conformance Declaration in JSON"
+    },
+    {
+      "href": "http://smartmet.fmi.fi/edr/collections",
+      "rel": "data",
+      "type": "application/json",
+      "title": "Collections metadata in JSON"
+    }
+  ]
+}
+
