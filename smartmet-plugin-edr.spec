@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.5.13
+Version: 24.5.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -113,6 +113,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue May 14 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.5.14-1.fmi
+- Do not accept 'intances' query for avi and observation collections (BRAINSTORM-2947)
+- Register edr plugin baseurl with and without ending '/'; without to serve landing page e.g. at path /edr and with to block wildcard -like uri behaviour which resulted server to pass e.g. uri /edrmistake/collections to edr plugin (BRAINSTORM-2927)
+
 * Mon May 13 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.5.13-1.fmi
 - Changes/fixes for cube. Support 3d bbox. Validate bbox and z range/list/value. Using z -parameter instead of minz and maxz -parameters when querying with coords -parameter (BRAINSTORM-2925)
 - Ensure configured edr base url starts with '/' but does not end with it. Added some validity checks for edr api url path and template configuration. Prefix edr api url paths with base url if they do not start with '/' (BRAINSTORM-2927)

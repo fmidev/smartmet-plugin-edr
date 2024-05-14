@@ -342,6 +342,10 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
 
     if (instances)
     {
+       auto epmd = state.getProducerMetaData(resource_parts.at(2));
+       if (!epmd.sourceHasInstances())
+         throw EDRException("Collection '" + resource_parts.at(2) + "' does not have instances!");
+
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
       if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
         return parseInstances(state, resource_parts);

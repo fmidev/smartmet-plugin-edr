@@ -106,7 +106,11 @@ struct EDRMetaData
   SourceEngine metadata_source = SourceEngine::Undefined;
   Fmi::DateTime latest_data_update_time;
   int getPrecision(const std::string& parameter_name) const;
+  bool isObsProducer() const { return metadata_source == SourceEngine::Observation; }
   bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
+  bool sourceHasInstances() const {
+      return !(data_queries.empty() || isObsProducer() || isAviProducer());
+  }
 };
 
 using EDRProducerMetaData =
