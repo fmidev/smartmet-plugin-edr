@@ -1,7 +1,5 @@
 #include "UtilityFunctions.h"
 #include "State.h"
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/observation/Keywords.h>
 #include <timeseries/ParameterKeywords.h>
@@ -300,8 +298,10 @@ Json::Value json_value(const TS::Value& val, int precision)
 //
 // Returns true if nonempty valueStr is given.
 //
-bool parseRangeListValue(const std::string &valueStr,
-                         bool &isRange, std::string &loValue, std::string &hiValue)
+bool parseRangeListValue(const std::string& valueStr,
+                         bool& isRange,
+                         std::string& loValue,
+                         std::string& hiValue)
 {
   auto onlyRange = isRange;
 
@@ -356,7 +356,7 @@ bool parseRangeListValue(const std::string &valueStr,
       return true;
     }
 
-    for (auto &part : parts)
+    for (auto& part : parts)
     {
       boost::algorithm::trim(part);
       if (part.empty())
@@ -386,8 +386,11 @@ bool parseRangeListValue(const std::string &valueStr,
 //
 // If bbox is 3d and z is empty, zIsRange is set to true and bbox lo/hi is set to zLo/zHi.
 //
-std::vector<std::string> parseBBoxAndZ(const std::string &bbox, const std::string &z,
-                                       bool &zIsRange, std::string &zLo, std::string &zHi)
+std::vector<std::string> parseBBoxAndZ(const std::string& bbox,
+                                       const std::string& z,
+                                       bool& zIsRange,
+                                       std::string& zLo,
+                                       std::string& zHi)
 {
   bool hasZ = parseRangeListValue(z, zIsRange, zLo, zHi);
 
@@ -402,7 +405,7 @@ std::vector<std::string> parseBBoxAndZ(const std::string &bbox, const std::strin
     if ((parts.size() != 4) && (parts.size() != 6))
       throw Fmi::Exception(BCP, "");
 
-    for (auto &part : parts)
+    for (auto& part : parts)
     {
       boost::algorithm::trim(part);
       if (part.empty())
@@ -413,9 +416,9 @@ std::vector<std::string> parseBBoxAndZ(const std::string &bbox, const std::strin
 
     if ((!hasZ) && (parts.size() == 6))
     {
-       zLo = parts[2];
-       zHi = parts[5];
-       zIsRange = true;
+      zLo = parts[2];
+      zHi = parts[5];
+      zIsRange = true;
     }
 
     return parts;
@@ -434,7 +437,7 @@ std::vector<std::string> parseBBoxAndZ(const std::string &bbox, const std::strin
 // Parses 2d (blx,bly,trx,try) or 3d (blx,bly,blz,trx,try,trz) bbox.
 // Returns 2d bbox if parse2d is set.
 //
-std::vector<std::string> parseBBox(const std::string &bbox, bool parse2d)
+std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d)
 {
   try
   {
