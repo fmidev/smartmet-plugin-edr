@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.5.14
+Version: 24.5.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu May 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.5.16-1.fmi
+- Validate instance id (BRAINSTORM-2933). Removed some leftover error checks never executed
+
 * Tue May 14 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.5.14-1.fmi
 - Do not accept 'intances' query for avi and observation collections (BRAINSTORM-2947)
 - Register edr plugin baseurl with and without ending '/'; without to serve landing page e.g. at path /edr and with to block wildcard -like uri behaviour which resulted server to pass e.g. uri /edrmistake/collections to edr plugin (BRAINSTORM-2927)

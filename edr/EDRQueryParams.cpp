@@ -1,3 +1,4 @@
+#include "Plugin.h"
 #include "EDRQueryParams.h"
 #include "EDRDefs.h"
 #include "EDRMetaData.h"
@@ -297,10 +298,12 @@ std::string EDRQueryParams::parseLocations(const State& state,
       return resource_parts.at(5);
 
     if (itsEDRQuery.query_type == EDRQueryType::Locations)
+    {
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
-    if (resource_parts.size() > 6)
-      itsEDRQuery.location_id = resource_parts.at(6);
+      if (resource_parts.size() > 6)
+        itsEDRQuery.location_id = resource_parts.at(6);
+    }
 
     return {};
   }
@@ -317,10 +320,9 @@ std::string EDRQueryParams::parseInstances(const State& state,
   {
     itsEDRQuery.instance_id = resource_parts.at(4);
     itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;
-    if (itsEDRQuery.query_type == EDRQueryType::Locations && resource_parts.size() != 5)
-      throw EDRException(
-          "Missing 'locationId' in Locations query! Format "
-          "'/edr/collections/{collectionId}/locations/{locationId}'");
+
+    if (!state.getPlugin().isValidInstance(itsEDRQuery.collection_id, itsEDRQuery.instance_id))
+      throw EDRException("Instance id '" + itsEDRQuery.instance_id + "' is not valid");
 
     if (resource_parts.size() > 5 && !resource_parts.at(5).empty())
       return parseLocations(state, resource_parts);
@@ -357,13 +359,10 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
       return resource_parts.at(3);
 
     if (itsEDRQuery.query_type == EDRQueryType::Locations)
+    {
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
-    if (resource_parts.size() > 4)
-    {
-      if (instances)
-        itsEDRQuery.instance_id = resource_parts.at(4);
-      else
+      if (resource_parts.size() > 4)
         itsEDRQuery.location_id = resource_parts.at(4);
     }
 
@@ -403,18 +402,6 @@ std::string EDRQueryParams::parseEDRQuery(
 {
   try
   {
-    // If query_type is position, radius, trajectory -> coords is required
-    auto coords = Spine::optional_string(req.getParameter("coords"), "");
-    if ((itsEDRQuery.query_type == EDRQueryType::Position ||
-         itsEDRQuery.query_type == EDRQueryType::Radius ||
-         itsEDRQuery.query_type == EDRQueryType::Trajectory ||
-         itsEDRQuery.query_type == EDRQueryType::Area ||
-         itsEDRQuery.query_type == EDRQueryType::Corridor) &&
-        coords.empty())
-      throw EDRException(
-          "Query parameter 'coords' must be defined for Position, Radius, Trajectory, Area, "
-          "Corridor query");
-
     // Omit baseurl when parsing the uri.
     //
     // Initially base url was expected to be "/edr" but now it may be other/longer too;

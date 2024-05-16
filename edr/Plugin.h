@@ -46,6 +46,7 @@ class Plugin : public SmartMetPlugin
 #endif
   EDRMetaData getProducerMetaData(const std::string& producer) const;
   bool isValidCollection(const std::string& producer) const;
+  bool isValidInstance(const std::string& producer, const std::string& instanceId) const;
 
  protected:
   void init() override;

@@ -1201,7 +1201,33 @@ bool Plugin::isValidCollection(const std::string& producer) const
 {
   auto metadata = itsMetaData.load();
 
+  if (!metadata)
+    return false;
+
   return metadata->isValidCollection(producer);
+}
+
+bool Plugin::isValidInstance(const std::string& producer, const std::string& instanceId) const
+{
+  auto metadata = itsMetaData.load();
+
+  if (!metadata)
+    return false;
+
+  for (const auto& item : metadata->getMetaData())
+  {
+    const auto& engine_metadata = item.second;
+    EDRProducerMetaData::const_iterator epmd = engine_metadata.find(producer);
+
+    if (epmd != engine_metadata.end())
+    {
+      for (auto const& md : epmd->second)
+        if (Fmi::date_time::to_iso_string(md.temporal_extent.origin_time) == instanceId)
+          return true;
+    }
+  }
+
+  return false;
 }
 
 // ----------------------------------------------------------------------
