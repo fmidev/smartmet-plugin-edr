@@ -2268,6 +2268,11 @@ void GridInterface::processGridQuery(const State& state,
                             country,
                             qLevelId,
                             level);
+
+        // Since each level is fetched as a separate parameter (not by setting level id in loop),
+        // loop only once
+
+        break;
       }
     }
   }

@@ -107,6 +107,7 @@ struct EDRMetaData
   Fmi::DateTime latest_data_update_time;
   int getPrecision(const std::string& parameter_name) const;
   bool isObsProducer() const { return metadata_source == SourceEngine::Observation; }
+  bool isGridProducer() const { return metadata_source == SourceEngine::Grid; }
   bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
   bool sourceHasInstances() const {
       return !(data_queries.empty() || isObsProducer() || isAviProducer());

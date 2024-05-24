@@ -525,10 +525,22 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
     const auto &config_parameter_info = *metadata.parameter_info;
 
     auto parameters = Json::Value(Json::ValueType::objectValue);
+    std::string prev_param;
+    auto isGridProducer = metadata.isGridProducer();
 
     for (const auto &p : query_parameters)
     {
       auto parameter_name = parse_parameter_name(p.originalName());
+      boost::algorithm::to_lower(parameter_name);
+
+      if (isGridProducer)
+      {
+        if (parameter_name == prev_param)
+          continue;
+
+        prev_param = parameter_name;
+      }
+
       if (lon_lat_level_param(parameter_name))
         continue;
 
@@ -2275,6 +2287,7 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
     for (unsigned int j = 0; j < outdata.size(); j++)
     {
       auto parameter_name = parse_parameter_name(query_parameters[j].name());
+      boost::algorithm::to_lower(parameter_name);
 
       if (lon_lat_level_param(parameter_name))
         continue;
@@ -2390,6 +2403,7 @@ void add_parameter(const std::string &parameter_name,
                    const TS::TimeSeriesPtr &ts_level,
                    const int &level_precision,
                    const bool &firstParameter,
+                   unsigned int &data_index,
                    Json::Value &values_array,
                    Json::Value &level_values,
                    std::map<std::string, Json::Value> &parameter_data_type)
@@ -2398,7 +2412,6 @@ void add_parameter(const std::string &parameter_name,
   {
     Json::Value data_type_level;
     Json::Value data_type_data;
-    unsigned int data_index = 0;
     for (unsigned int k = 0; k < ts_data->size(); k++)
     {
       const auto &data_value = ts_data->at(k);
@@ -2447,6 +2460,10 @@ Json::Value format_output_data_vertical_profile(
     std::map<std::string, Json::Value> parameter_data_type;
     //	std::map<std::string, Json::Value> parameter_level_values;
     auto level_values = Json::Value(Json::ValueType::arrayValue);
+    auto values_array = Json::Value(Json::ValueType::arrayValue);
+    std::string prev_param;
+    unsigned int data_index = 0;
+    auto isGridProducer = emd.isGridProducer();
     // iterate columns (parameters)
     for (unsigned int j = 0; j < outdata.size(); j++)
     {
@@ -2456,14 +2473,37 @@ Json::Value format_output_data_vertical_profile(
       if (lon_lat_level_param(parameter_name))
         continue;
 
-      auto firstParameter = (j == 0);
+      auto firstParameter = prev_param.empty();
+      auto resetDataIndex = ((!firstParameter) && (!isGridProducer));
       auto tsdata = outdata.at(j);
       auto tslevel = outdata.at(level_index);
       TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
       TS::TimeSeriesPtr ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
 
-      auto values_array = Json::Value(Json::ValueType::arrayValue);
       parameter_name = parse_parameter_name(query_parameters[j].originalName());
+
+      if (isGridProducer)
+      {
+        // Parameter's levels are fetched as separate parameters, append their data
+        // into single parameter/values_array
+
+        if (parameter_name != prev_param)
+        {
+          if (!firstParameter)
+          {
+            parameter_data_values[prev_param] = values_array;
+            resetDataIndex = true;
+          }
+
+          prev_param = parameter_name;
+        }
+      }
+
+      if (resetDataIndex)
+      {
+        values_array = Json::Value(Json::ValueType::arrayValue);
+        data_index = 0;
+      }
 
       add_parameter(parameter_name,
                     parameter_precision,
@@ -2471,12 +2511,17 @@ Json::Value format_output_data_vertical_profile(
                     ts_level,
                     level_precision,
                     firstParameter,
+                    data_index,
                     values_array,
                     level_values,
                     parameter_data_type);
 
-      parameter_data_values[parameter_name] = values_array;
+      if (!isGridProducer)
+        parameter_data_values[parameter_name] = values_array;
     }
+
+    if (isGridProducer && (!prev_param.empty()))
+      parameter_data_values[prev_param] = values_array;
 
     if (parameter_data_values.empty())
       return coverageCollection;
@@ -2533,7 +2578,7 @@ Json::Value format_output_data_vertical_profile(
 
     // Iterate coverages/timesteps
     auto timeIter = ts_lon->begin();
-    auto timeSteps = (ts_lon->size() / levels.size());
+    auto timeSteps = (isGridProducer ? ts_lon->size() : (ts_lon->size() / levels.size()));
 
     for (size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps); tStep++, timeIter++)
     {
@@ -2580,7 +2625,7 @@ Json::Value format_output_data_vertical_profile(
 
         // Every n'th item value has data for the timestep
         auto valueArray = Json::Value(Json::ValueType::arrayValue);
-        size_t itemCnt = ts_lon->size();
+        size_t itemCnt = (isGridProducer ? item.second.size() : ts_lon->size());
         for (size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt); itemIdx += timeSteps, valIdx++)
           valueArray[valIdx] = item.second[itemIdx];
 

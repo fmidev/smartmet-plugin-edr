@@ -807,7 +807,17 @@ void EDRQueryParams::handleGridParameter(std::string& p,
     if (!levelId.empty())
       p.append(":" + levelId);
     if (!z.empty())
-      p.append(":" + z);
+    {
+      std::vector<std::string> levels;
+      std::string param = p;
+      p.clear();
+
+      boost::algorithm::split(levels, z, boost::algorithm::is_any_of(","));
+      for (auto const level : levels)
+        p.append(param + ":" + level + ",");
+
+      p.pop_back();
+    }
   }
   catch (...)
   {
@@ -931,7 +941,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
         z.append(l);
       }
     }
-    if (!z.empty() && !grid_producer)
+    if (!z.empty())
       req.addParameter("levels", z);
 
     // EDR parameter-name
