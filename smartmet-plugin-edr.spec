@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.5.24
+Version: 24.5.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon May 27 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.5.27-1.fmi
+- Use prefix without trailing '/' and do not register separate handler for langing page
+
 * Fri May 24 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.5.24-1.fmi
 - Bug fixes to handle grid collection level data query (BRAINSTORM-2949)
 
