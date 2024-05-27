@@ -460,7 +460,7 @@ void Plugin::query(const State& state,
     std::swap(out, *result);
 
     // Too many flash data requests with empty output filling the logs...
-#if 0    
+#if 0
     if (result->empty())
     {
       std::cerr << "Warning: Empty output for request " << request.getQueryString() << " from "
@@ -748,23 +748,12 @@ void Plugin::init()
     // Handler for the main content: /edr/...
     if (!itsReactor->addContentHandler(
             this,
-            itsConfig.defaultUrl() + "/",
-            [this](Spine::Reactor& theReactor,
-                   const Spine::HTTP::Request& theRequest,
-                   Spine::HTTP::Response& theResponse)
-            { callRequestHandler(theReactor, theRequest, theResponse); },
-            true))
-      throw Fmi::Exception(BCP, "Failed to register edr content handler");
-
-    // Handler for plain '/edr' (landing page)
-    if (!itsReactor->addContentHandler(
-            this,
             itsConfig.defaultUrl(),
             [this](Spine::Reactor& theReactor,
                    const Spine::HTTP::Request& theRequest,
                    Spine::HTTP::Response& theResponse)
             { callRequestHandler(theReactor, theRequest, theResponse); },
-            false))
+            true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
     // Get locations

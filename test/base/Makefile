@@ -16,7 +16,7 @@ test-sqlite test-oracle test-postgresql:
 	if grep --quiet "#define WGS84 1" /usr/include/smartmet/newbase/NFmiGlobals.h; then for f in tmp/*.wgs84; do mv $$f tmp/$$(basename $$f .wgs84); done; fi
 	sed -e "s:@DB_TYPE@:$(DB_TYPE):g" cnf/reactor.conf.in >cnf/reactor.conf
 	mkdir -p failures
-	ok=true; $(TEST_RUNNER) smartmet-plugin-test --handler /edr/ -e tmp/ \
+	ok=true; $(TEST_RUNNER) smartmet-plugin-test --handler /edr -e tmp/ \
 		--reactor-config cnf/reactor.conf \
 		--failures-dir failures \
 		$(foreach fn, input/.testignore_$(DB_TYPE) $(EXTRA_IGNORE), --ignore $(fn)) \
