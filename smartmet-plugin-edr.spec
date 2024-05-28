@@ -34,18 +34,18 @@ BuildRequires: smartmet-library-grid-content-devel >= 24.5.8
 BuildRequires: smartmet-library-grid-files-devel >= 24.5.22
 BuildRequires: smartmet-library-newbase-devel >= 24.5.17
 BuildRequires: smartmet-library-gis-devel >= 24.4.24
-BuildRequires: smartmet-library-timeseries-devel >= 24.5.21
+BuildRequires: smartmet-library-timeseries-devel >= 24.5.28
 BuildRequires: smartmet-engine-avi-devel >= 24.5.16
 BuildRequires: smartmet-engine-geonames-devel >= 24.5.16
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 24.5.21
+BuildRequires: smartmet-engine-observation-devel >= 24.5.28
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 24.5.16
+BuildRequires: smartmet-engine-querydata-devel >= 24.5.28
 BuildRequires: smartmet-engine-gis-devel >= 24.5.24
 BuildRequires: smartmet-engine-grid-devel >= 24.5.16
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 24.5.21
+#Requires: smartmet-engine-observation >= 24.5.28
 #%endif
 Requires: fmt >= %{smartmet_fmt_min}, fmt < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -54,12 +54,12 @@ Requires: smartmet-library-locus >= 23.7.28
 Requires: smartmet-library-macgyver >= 24.5.16
 Requires: smartmet-library-newbase >= 24.5.17
 Requires: smartmet-library-spine >= 24.5.21
-Requires: smartmet-library-timeseries >= 24.5.21
+Requires: smartmet-library-timeseries >= 24.5.28
 Requires: smartmet-library-gis >= 24.4.24
 Requires: smartmet-library-grid-files >= 24.5.22
 Requires: smartmet-engine-avi >= 24.5.16
 Requires: smartmet-engine-geonames >= 24.5.16
-Requires: smartmet-engine-querydata >= 24.5.16
+Requires: smartmet-engine-querydata >= 24.5.28
 Requires: smartmet-engine-gis >= 24.5.24
 Requires: smartmet-engine-grid >= 24.5.16
 Requires: smartmet-server >= 24.5.16
