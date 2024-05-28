@@ -53,7 +53,7 @@ void storeAviData(const State &state,
         auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
         auto longitude = boost::get<double>(*(aviData.itsValues[stationId]["longitude"].cbegin()));
         auto latitude = boost::get<double>(*(aviData.itsValues[stationId]["latitude"].cbegin()));
-        TS::TimeSeries ts(state.getLocalTimePool());
+        TS::TimeSeries ts;
         for (auto &value : aviData.itsValues[stationId][column.itsName])
         {
           auto dt = boost::get<Fmi::LocalDateTime>(*timeIter);

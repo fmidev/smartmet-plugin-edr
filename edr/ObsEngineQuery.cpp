@@ -69,7 +69,7 @@ TS::TimeSeries generate_timeseries(const State& state,
 {
   try
   {
-    TS::TimeSeries timeseries(state.getLocalTimePool());
+    TS::TimeSeries timeseries;
 
     for (const auto& timestep : timestep_vector)
       timeseries.emplace_back(TS::TimedValue(timestep, value));
@@ -378,7 +378,6 @@ void ObsEngineQuery::processObsEngineQuery(const State& state,
       for (auto& item : settingsVector)
       {
         Engine::Observation::Settings& settings = item.settings;
-        settings.localTimePool = state.getLocalTimePool();
         settings.requestLimits = itsPlugin.itsConfig.requestLimits();
 
         check_request_limit(itsPlugin.itsConfig.requestLimits(),
@@ -478,7 +477,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(
       {
         // add data for time fields
         Spine::Location location(0, 0, "", query.timezone);
-        TS::TimeSeries timeseries(state.getLocalTimePool());
+        TS::TimeSeries timeseries;
         for (const auto& timestep : timestep_vector)
         {
           TS::Value value = TS::time_parameter(paramname,
@@ -556,7 +555,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::doAggregationForPlaces(
       }
       else
       {
-        tsptr = boost::make_shared<TS::TimeSeries>(state.getLocalTimePool());
+        tsptr = boost::make_shared<TS::TimeSeries>();
         *tsptr = ts;
       }
       aggregated_observation_result->push_back(*tsptr);
@@ -779,7 +778,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
       if (TS::is_location_parameter(paramname) &&
           !UtilityFunctions::is_flash_or_mobile_producer(producer))
       {
-        TS::TimeSeries location_ts(state.getLocalTimePool());
+        TS::TimeSeries location_ts;
 
         for (const auto& ts : ts_vector)
         {
@@ -800,7 +799,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
         Spine::Location dummyloc(0, 0, "", query.timezone);
 
         TS::TimeSeriesGroupPtr grp(new TS::TimeSeriesGroup);
-        TS::TimeSeries time_ts(state.getLocalTimePool());
+        TS::TimeSeries time_ts;
 
         for (const auto& ts : ts_vector)
         {

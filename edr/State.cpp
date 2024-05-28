@@ -20,8 +20,7 @@ namespace EDR
 
 State::State(const Plugin& thePlugin)
     : itsPlugin(thePlugin),
-      itsTime(Fmi::SecondClock::universal_time()),
-      itsLocalTimePool(std::make_shared<TS::LocalTimePool>())
+      itsTime(Fmi::SecondClock::universal_time())
 {
 }
 
@@ -250,11 +249,6 @@ Engine::Querydata::Q State::get(const Engine::Querydata::Producer& theProducer,
     throw Fmi::Exception::Trace(BCP, "Failed to get querydata for the requested origintime")
         .disableStackTrace();
   }
-}
-
-TS::LocalTimePoolPtr State::getLocalTimePool() const
-{
-  return itsLocalTimePool;
 }
 
 EDRMetaData State::getProducerMetaData(const std::string& producer) const

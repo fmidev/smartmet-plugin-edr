@@ -73,7 +73,6 @@ class State
   Engine::Querydata::Q get(const Engine::Querydata::Producer& theProducer) const;
   Engine::Querydata::Q get(const Engine::Querydata::Producer& theProducer,
                            const Engine::Querydata::OriginTime& theOriginTime) const;
-  TS::LocalTimePoolPtr getLocalTimePool() const;
   EDRMetaData getProducerMetaData(const std::string& producer) const;
   bool isValidCollection(const std::string& producer) const;
 
@@ -83,7 +82,6 @@ class State
  private:
   const Plugin& itsPlugin;
   Fmi::DateTime itsTime;
-  TS::LocalTimePoolPtr itsLocalTimePool{nullptr};
 
   // Querydata caches - always make the same choice for same locations and producers
   using QCache = std::map<Engine::Querydata::Producer, Engine::Querydata::Q>;
