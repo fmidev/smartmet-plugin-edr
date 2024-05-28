@@ -813,7 +813,7 @@ void EDRQueryParams::handleGridParameter(std::string& p,
       p.clear();
 
       boost::algorithm::split(levels, z, boost::algorithm::is_any_of(","));
-      for (auto const level : levels)
+      for (auto const& level : levels)
         p.append(param + ":" + level + ",");
 
       p.pop_back();
