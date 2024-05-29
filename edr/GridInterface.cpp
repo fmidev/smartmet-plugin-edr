@@ -1390,9 +1390,9 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
       {
         std::vector<TS::TimeSeriesData> aggregatedData;
 
-        TS::TimeSeriesPtr tsForParameter;
-        TS::TimeSeriesPtr tsForNonGridParam;
-        TS::TimeSeriesGroupPtr tsForGroup;
+        TS::TimeSeriesPtr tsForParameter(new TS::TimeSeries);
+        TS::TimeSeriesPtr tsForNonGridParam(new TS::TimeSeries);
+        TS::TimeSeriesGroupPtr tsForGroup(new TS::TimeSeriesGroup);
 
         int columns = 0, rows = 0;
 
