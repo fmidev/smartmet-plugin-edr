@@ -69,6 +69,13 @@ void report_duplicate_collection(const std::string &collection,
             << std::endl;
 }
 
+void report_invalid_analysistime(const std::string &collection, const std::string &analysisTime)
+{
+  std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Ignored collection '" +
+                collection + "' with invalid analysistime " + analysisTime + ANSI_FG_DEFAULT)
+            << std::endl;
+}
+
 const std::set<std::string> &get_supported_data_queries(const std::string &producer,
                                                         const SupportedDataQueries &sdq)
 {
@@ -299,7 +306,15 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       auto timestep_duration = (Fmi::DateTime::from_iso_string(start_time_plus_one) -
                                 Fmi::DateTime::from_iso_string(start_time));
       edr_temporal_extent temporal_extent;
-      temporal_extent.origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
+      try
+      {
+        temporal_extent.origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
+      }
+      catch (...)
+      {
+        report_invalid_analysistime(producerId, gmd.analysisTime);
+        continue;
+      }
       edr_temporal_extent_period temporal_extent_period;
       temporal_extent_period.start_time = Fmi::DateTime::from_iso_string(start_time);
       temporal_extent_period.end_time = Fmi::DateTime::from_iso_string(end_time);
