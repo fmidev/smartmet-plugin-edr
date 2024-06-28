@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.6.7
+Version: 24.6.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Jun 12 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.6.12-1.fmi
+- Added repeating interval support for z -parameter (BRAINSTORM-2976)
+
 * Fri Jun  7 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.6.7-1.fmi
 - Optimization: avoid using Fmi::format_time
 - Ignore collections with invalid analysistime; filesys2smartmet uses analysistime embedded in file name

@@ -289,20 +289,23 @@ Json::Value json_value(const TS::Value& val, int precision)
 }
 
 //
-// Parse range/list/value. If isRange is set (cube query), only value range (lo/hi) is accepted.
-// Values are validated by converting to double. Throws on invalid or missing values.
+// Parse range/list/repeat/value. If isRange is set (cube query), only value range (lo/hi)
+// is accepted. Values are validated by converting to double. Throws on invalid or missing values.
 //
-// If value range is given, isRange is set to true and the range values are set to loValue/hiValue.
-// If value list is given, first/last value are set to loValue/hiValue.
-// Single value is set to loValue.
+// - if value range is given, isRange is set to true and the range values are set to loValue/hiValue
+// - if value list is given, first/last value are set to loValue/hiValue
+// - if repeating interval (Rn/start/step) is given, the generated value list is set to valueStr
+//   and first/last value are set to loValue/hiValue
+// - single value is set to loValue
 //
 // Returns true if nonempty valueStr is given.
 //
-bool parseRangeListValue(const std::string& valueStr,
+bool parseRangeListValue(std::string& valueStr,
                          bool& isRange,
                          std::string& loValue,
                          std::string& hiValue)
 {
+  const int maxRepeat = 999;
   auto onlyRange = isRange;
 
   try
@@ -342,16 +345,57 @@ bool parseRangeListValue(const std::string& valueStr,
 
     if (!isList)
     {
+      int repeat = 0;
+
+      if (parts.size() == 3)
+      {
+        // Repeating interval Rn/start/step
+
+        if (toupper(parts[0].front()) != 'R')
+          throw Fmi::Exception(BCP, "");
+
+        parts[0].erase(parts[0].begin());
+        boost::algorithm::trim(parts[0]);
+        repeat = Fmi::stoi(parts[0]);
+
+        if (repeat <= 0)
+          throw Fmi::Exception(BCP, "");
+
+        parts.erase(parts.begin());
+      }
+
       if (parts.size() != 2)
         throw Fmi::Exception(BCP, "");
 
       loValue = boost::algorithm::trim_copy(parts[0]);
       hiValue = boost::algorithm::trim_copy(parts[1]);
 
-      if (loValue.empty() || hiValue.empty() || (Fmi::stod(loValue) > Fmi::stod(hiValue)))
+      if (
+          loValue.empty() || hiValue.empty() || (repeat > maxRepeat) ||
+          ((repeat == 0) && (Fmi::stod(loValue) > Fmi::stod(hiValue)))
+         )
         throw Fmi::Exception(BCP, "");
 
-      isRange = true;
+      if (repeat > 0)
+      {
+        auto z = Fmi::stod(loValue);
+        auto v = z;
+        auto step = Fmi::stod(hiValue);
+
+        valueStr.clear();
+
+        for (int r = 0; (r < repeat); r++, z += step)
+        {
+          v = z;
+          valueStr += (Fmi::to_string(z) + ",");
+        }
+
+        valueStr.pop_back();
+
+        hiValue = Fmi::to_string(v);
+      }
+
+      isRange = (repeat == 0);
 
       return true;
     }
@@ -376,7 +420,9 @@ bool parseRangeListValue(const std::string& valueStr,
       throw Fmi::Exception(BCP, "Invalid z parameter, numeric min/max range expected");
     else
       throw Fmi::Exception(
-          BCP, "Invalid z parameter, numeric value, list of values or min/max range expected");
+          BCP,
+          "Invalid z parameter, numeric value, list of values, repeating interval "
+          "or min/max range expected");
   }
 }
 
@@ -387,7 +433,7 @@ bool parseRangeListValue(const std::string& valueStr,
 // If bbox is 3d and z is empty, zIsRange is set to true and bbox lo/hi is set to zLo/zHi.
 //
 std::vector<std::string> parseBBoxAndZ(const std::string& bbox,
-                                       const std::string& z,
+                                       std::string& z,
                                        bool& zIsRange,
                                        std::string& zLo,
                                        std::string& zHi)
@@ -441,10 +487,10 @@ std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d)
 {
   try
   {
-    std::string zLo, zHi;
+    std::string z, zLo, zHi;
     bool zIsRange = false;
 
-    auto parts = parseBBoxAndZ(bbox, "", zIsRange, zLo, zHi);
+    auto parts = parseBBoxAndZ(bbox, z, zIsRange, zLo, zHi);
 
     if (parse2d && (parts.size() == 6))
     {
