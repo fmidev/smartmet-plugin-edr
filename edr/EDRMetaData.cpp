@@ -18,6 +18,7 @@
 #include <engines/observation/ObservableProperty.h>
 #endif
 #include <boost/any.hpp>
+#include <algorithm>
 
 namespace SmartMet
 {
@@ -851,7 +852,7 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
       while (timeIter != aviData.itsValues[stationId]["messagetime"].end())
       {
-        Fmi::LocalDateTime timestep = boost::get<Fmi::LocalDateTime>(*timeIter);
+        Fmi::LocalDateTime timestep = std::get<Fmi::LocalDateTime>(*timeIter);
 
         timesteps.insert(timestep);
         timeIter++;
@@ -930,13 +931,13 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
 
       // Icao code filtering to ignore e.g. ILxx stations
 
-      auto icao = boost::get<std::string>(icaoCode);
+      auto icao = std::get<std::string>(icaoCode);
 
       if (aviCollection.filter(icao))
         continue;
 
-      auto lat = boost::get<double>(latitude);
-      auto lon = boost::get<double>(longitude);
+      auto lat = std::get<double>(latitude);
+      auto lon = std::get<double>(longitude);
 
       if (useDataBBox)
       {
@@ -957,7 +958,7 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
       }
 
       amd.addStation(
-          AviStation(stationId, icao, boost::get<double>(latitude), boost::get<double>(longitude)));
+          AviStation(stationId, icao, std::get<double>(latitude), std::get<double>(longitude)));
     }
 
     if (!amd.getStations().empty() && useDataBBox)

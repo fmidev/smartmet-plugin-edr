@@ -28,8 +28,9 @@ using ParameterNames = std::map<std::string, std::string>;             // parame
 
 double as_double(const TS::Value &value)
 {
-  return (boost::get<double>(&value) != nullptr ? *(boost::get<double>(&value))
-                                                : Fmi::stod(*(boost::get<std::string>(&value))));
+  // FIXME: may cause nullptr dereference
+  return (std::get_if<double>(&value) != nullptr ? *(std::get_if<double>(&value))
+                                                : Fmi::stod(*(std::get_if<std::string>(&value))));
 }
 
 bool lon_lat_level_param(const std::string &name)
@@ -459,10 +460,11 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
     if (outdata.empty())
       return ret;
 
+    // FIXME: avoid unnecessary repleating std::get_if<>
     const auto &outdata_front = outdata.front();
-    if (boost::get<TS::TimeSeriesVectorPtr>(&outdata_front))
+    if (std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front))
     {
-      TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&outdata_front));
+      TS::TimeSeriesVectorPtr tsv = *(std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front));
       return get_coordinates(tsv, query_parameters);
     }
 
@@ -477,14 +479,14 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
         continue;
 
       auto tsdata = outdata.at(i);
-      if (boost::get<TS::TimeSeriesPtr>(&tsdata))
+      if (std::get_if<TS::TimeSeriesPtr>(&tsdata))
       {
-        TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
+        TS::TimeSeriesPtr ts = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
         update_lon_lat_vector(param_name, *ts, longitude_vector, latitude_vector);
         continue;
       }
 
-      if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
+      if (std::get_if<TS::TimeSeriesVectorPtr>(&tsdata))
       {
         std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldnt be "
                      "here -> report error!!:\n"
@@ -492,9 +494,9 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
         continue;
       }
 
-      if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
+      if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
       {
-        TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+        TS::TimeSeriesGroupPtr tsg = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
 
         update_lon_lat_vector(param_name, tsg, longitude_vector, latitude_vector);
         continue;
@@ -596,23 +598,24 @@ void add_value(const TS::TimedValue &tv,
   {
     const auto &val = tv.value;
 
-    if (boost::get<double>(&val) != nullptr)
+    // FIXME: avoid unnecessary repeating std::get_if<>
+    if (std::get_if<double>(&val) != nullptr)
     {
       if (values_index == 0)
         data_type = Json::Value("float");
-      values_array[values_index] = Json::Value(*(boost::get<double>(&val)), precision);
+      values_array[values_index] = Json::Value(*(std::get_if<double>(&val)), precision);
     }
-    else if (boost::get<int>(&val) != nullptr)
+    else if (std::get_if<int>(&val) != nullptr)
     {
       if (values_index == 0)
         data_type = Json::Value("int");
-      values_array[values_index] = Json::Value(*(boost::get<int>(&val)));
+      values_array[values_index] = Json::Value(*(std::get_if<int>(&val)));
     }
-    else if (boost::get<std::string>(&val) != nullptr)
+    else if (std::get_if<std::string>(&val) != nullptr)
     {
       if (values_index == 0)
         data_type = Json::Value("string");
-      values_array[values_index] = Json::Value(*(boost::get<std::string>(&val)));
+      values_array[values_index] = Json::Value(*(std::get_if<std::string>(&val)));
     }
     else
     {
@@ -1484,7 +1487,8 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
       auto tsdata = outdata.at(j);
       auto values = Json::Value(Json::ValueType::arrayValue);
 
-      TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
+      // FIXME: may cause nullptr dereference
+      TS::TimeSeriesPtr ts = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
       if (i == 0)
       {
         coverage = add_prologue_one_point(level,
@@ -1683,14 +1687,15 @@ void process_parameters_at_position(const std::vector<TS::TimeSeriesData> &outda
       auto tsdata = outdata.at(j);
       auto tslon = outdata.at(longitude_index);
       auto tslat = outdata.at(latitude_index);
-      TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-      TS::TimeSeriesPtr ts_lon = *(boost::get<TS::TimeSeriesPtr>(&tslon));
-      TS::TimeSeriesPtr ts_lat = *(boost::get<TS::TimeSeriesPtr>(&tslat));
+      // FIXME: may cause nullptr dereference
+      TS::TimeSeriesPtr ts_data = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
+      TS::TimeSeriesPtr ts_lon = *(std::get_if<TS::TimeSeriesPtr>(&tslon));
+      TS::TimeSeriesPtr ts_lat = *(std::get_if<TS::TimeSeriesPtr>(&tslat));
       TS::TimeSeriesPtr ts_level = nullptr;
       if (level_index)
       {
         auto tslevel = outdata.at(*level_index);
-        ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
+        ts_level = *(std::get_if<TS::TimeSeriesPtr>(&tslevel));
       }
       process_ts_parameters_at_position(ts_data,
                                         ts_lon,
@@ -2172,13 +2177,13 @@ double get_level(const TS::TimeSeriesGroupPtr &tsg_level,
     {
       const auto &llts_level = tsg_level->at(tsg_index);
       const auto &level_value = llts_level.timeseries.at(llts_index);
-      if (boost::get<double>(&level_value.value) != nullptr)
+      if (std::get_if<double>(&level_value.value) != nullptr)
       {
-        level = *(boost::get<double>(&level_value.value));
+        level = *(std::get_if<double>(&level_value.value));
       }
-      else if (boost::get<int>(&level_value.value) != nullptr)
+      else if (std::get_if<int>(&level_value.value) != nullptr)
       {
-        level = *(boost::get<int>(&level_value.value));
+        level = *(std::get_if<int>(&level_value.value));
       }
     }
 
@@ -2295,14 +2300,15 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
       auto tsdata = outdata.at(j);
       auto tslon = outdata.at(longitude_index);
       auto tslat = outdata.at(latitude_index);
-      TS::TimeSeriesGroupPtr tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-      TS::TimeSeriesGroupPtr tsg_lon = *(boost::get<TS::TimeSeriesGroupPtr>(&tslon));
-      TS::TimeSeriesGroupPtr tsg_lat = *(boost::get<TS::TimeSeriesGroupPtr>(&tslat));
+      // FIXME: may cause nullptr dereference
+      TS::TimeSeriesGroupPtr tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
+      TS::TimeSeriesGroupPtr tsg_lon = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslon));
+      TS::TimeSeriesGroupPtr tsg_lat = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslat));
       TS::TimeSeriesGroupPtr tsg_level = nullptr;
       if (levels_present)
       {
         auto tslevel = outdata.at(level_index);
-        tsg_level = *(boost::get<TS::TimeSeriesGroupPtr>(&tslevel));
+        tsg_level = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslevel));
       }
 
       DataPerLevel dpl = get_data_per_level(
@@ -2477,8 +2483,9 @@ Json::Value format_output_data_vertical_profile(
       auto resetDataIndex = ((!firstParameter) && (!isGridProducer));
       auto tsdata = outdata.at(j);
       auto tslevel = outdata.at(level_index);
-      TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-      TS::TimeSeriesPtr ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
+      // FIXME: may cause nullptr dereference
+      TS::TimeSeriesPtr ts_data = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
+      TS::TimeSeriesPtr ts_level = *(std::get_if<TS::TimeSeriesPtr>(&tslevel));
 
       parameter_name = parse_parameter_name(query_parameters[j].originalName());
 
@@ -2539,8 +2546,9 @@ Json::Value format_output_data_vertical_profile(
 
     auto tslon = outdata.at(longitude_index);
     auto tslat = outdata.at(latitude_index);
-    TS::TimeSeriesPtr ts_lon = *(boost::get<TS::TimeSeriesPtr>(&tslon));
-    TS::TimeSeriesPtr ts_lat = *(boost::get<TS::TimeSeriesPtr>(&tslat));
+    // FIXME: may cause nullptr dereference
+    TS::TimeSeriesPtr ts_lon = *(std::get_if<TS::TimeSeriesPtr>(&tslon));
+    TS::TimeSeriesPtr ts_lat = *(std::get_if<TS::TimeSeriesPtr>(&tslat));
     // Only one position, timestep
     const auto &lon_timed_value = ts_lon->front();
     const auto &lat_timed_value = ts_lat->front();
@@ -2675,7 +2683,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
 
     const auto &tsdata_first = outdata_first.at(0);
 
-    if (boost::get<TS::TimeSeriesPtr>(&tsdata_first))
+    if (std::get_if<TS::TimeSeriesPtr>(&tsdata_first))
     {
       // Zero or one levels
       if (levels.size() <= 1)
@@ -2692,14 +2700,14 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       //      return format_output_data_position(outputData, emd, query_parameters);
     }
 
-    if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first))
+    if (std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
     {
       if (outdata_first.size() > 1)
         std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
                      "nothing -> report error! "
                   << std::endl;
       std::vector<TS::TimeSeriesData> tsd;
-      TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first));
+      TS::TimeSeriesVectorPtr tsv = *(std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first));
       for (const auto &ts : *tsv)
       {
         TS::TimeSeriesPtr tsp(new TS::TimeSeries(ts));
@@ -2719,7 +2727,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       return format_output_data_position(od, emd, query_parameters);
     }
 
-    if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata_first))
+    if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
     {
       return format_output_data_coverage_collection(
           outputData, emd, levels, coordinate_filter, query_parameters, query_type);

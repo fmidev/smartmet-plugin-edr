@@ -11,6 +11,7 @@
 #include "Engines.h"
 #include "Query.h"
 #include "State.h"
+#include <macgyver/AtomicSharedPtr.h>
 
 namespace SmartMet
 {
@@ -103,7 +104,7 @@ class Plugin : public SmartMetPlugin
   // pointer and must be used via atomic_load and atomic_store, since CTPP::CDT
   // is not thread safe.
 
-  boost::atomic_shared_ptr<EngineMetaData> itsMetaData;
+  Fmi::AtomicSharedPtr<EngineMetaData> itsMetaData;
 
 #ifndef WITHOUT_OBSERVATION
   // Observable properties read from observation engine once

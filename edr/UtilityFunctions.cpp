@@ -197,13 +197,13 @@ double get_double(const TS::Value& val, double default_value)
   {
     double ret = default_value;
 
-    if (boost::get<int>(&val) != nullptr)
-      ret = *(boost::get<int>(&val));
-    else if (boost::get<double>(&val) != nullptr)
-      ret = *(boost::get<double>(&val));
-    else if (boost::get<std::string>(&val) != nullptr)
+    if (std::get_if<int>(&val) != nullptr)
+      ret = *(std::get_if<int>(&val));
+    else if (std::get_if<double>(&val) != nullptr)
+      ret = *(std::get_if<double>(&val));
+    else if (std::get_if<std::string>(&val) != nullptr)
     {
-      std::string value = *(boost::get<std::string>(&val));
+      std::string value = *(std::get_if<std::string>(&val));
 
       try
       {
@@ -229,10 +229,10 @@ int get_int(const TS::Value& val, int default_value = kFloatMissing)
   {
     int ret = default_value;
 
-    if (boost::get<int>(&val) != nullptr)
-      ret = *(boost::get<int>(&val));
-    else if (boost::get<double>(&val) != nullptr)
-      ret = *(boost::get<double>(&val));
+    if (std::get_if<int>(&val) != nullptr)
+      ret = *(std::get_if<int>(&val));
+    else if (std::get_if<double>(&val) != nullptr)
+      ret = *(std::get_if<double>(&val));
 
     return ret;
   }
@@ -248,12 +248,12 @@ std::string get_string(const TS::Value& val, const std::string& default_value = 
   {
     std::string ret = default_value;
 
-    if (boost::get<int>(&val) != nullptr)
-      ret = Fmi::to_string(*(boost::get<int>(&val)));
-    else if (boost::get<double>(&val) != nullptr)
-      ret = Fmi::to_string(*(boost::get<double>(&val)));
-    else if (boost::get<std::string>(&val) != nullptr)
-      ret = *(boost::get<std::string>(&val));
+    if (std::get_if<int>(&val) != nullptr)
+      ret = Fmi::to_string(*(std::get_if<int>(&val)));
+    else if (std::get_if<double>(&val) != nullptr)
+      ret = Fmi::to_string(*(std::get_if<double>(&val)));
+    else if (std::get_if<std::string>(&val) != nullptr)
+      ret = *(std::get_if<std::string>(&val));
 
     return ret;
   }

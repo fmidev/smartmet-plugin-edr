@@ -700,8 +700,8 @@ TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateQEngineQueryTimes(
         topt.mode == TS::TimeSeriesGeneratorOptions::TimeSteps)
     {
       topt.mode = TS::TimeSeriesGeneratorOptions::DataTimes;
-      topt.timeSteps = boost::none;
-      topt.timeStep = boost::none;
+      topt.timeSteps = std::nullopt;
+      topt.timeStep = std::nullopt;
       topt.timeList.clear();
 
       // generate timelist for aggregation

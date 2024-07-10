@@ -356,7 +356,8 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
       {
         if (!messages.empty() && masterquery.output_format == TAC_FORMAT)
           messages += "\n";
-        messages += *(boost::get<std::string>(&timed_value.value));
+        // FIXME: may cause nullptr dereference
+        messages += *(std::get_if<std::string>(&timed_value.value));
       }
     }
 
@@ -381,7 +382,7 @@ void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData
       {
         const auto& outdata = output.second;
         const auto& tsdata = outdata.at(0);
-        const auto& tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+        const auto& tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
         messages += parseIWXXMAndTACMessages(tsg_data, masterquery);
       }
       if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
