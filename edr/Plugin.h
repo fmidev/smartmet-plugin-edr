@@ -88,7 +88,7 @@ class Plugin : public SmartMetPlugin
   void updateMetaData(bool initial_phase);
   void updateSupportedLocations();
   void updateParameterInfo();
-  void checkNewDataAndNotify(const boost::shared_ptr<EngineMetaData>& new_emd) const;
+  void checkNewDataAndNotify(const std::shared_ptr<EngineMetaData>& new_emd) const;
   std::map<std::string, Fmi::DateTime> getNotificationTimes(SourceEngine source_engine,
                                                             EngineMetaData& new_emd,
                                                             const Fmi::DateTime& now) const;

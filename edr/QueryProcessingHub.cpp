@@ -295,7 +295,7 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state,
   }
 }
 
-boost::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state,
+std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state,
                                                                         const Query& masterquery,
                                                                         Spine::Table& table) const
 {
@@ -398,7 +398,7 @@ void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData
   }
 }
 
-boost::shared_ptr<std::string> QueryProcessingHub::processQuery(
+std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     const State& state,
     Spine::Table& table,
     Query& masterquery,

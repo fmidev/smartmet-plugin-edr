@@ -26,7 +26,7 @@ class QueryProcessingHub
  public:
   QueryProcessingHub(const Plugin& thePlugin);
 
-  boost::shared_ptr<std::string> processQuery(const State& state,
+  std::shared_ptr<std::string> processQuery(const State& state,
                                               Spine::Table& table,
                                               Query& masterquery,
                                               const QueryServer::QueryStreamer_sptr& queryStreamer,
@@ -38,7 +38,7 @@ class QueryProcessingHub
 
  private:
   Json::Value processMetaDataQuery(const State& state, const EDRQuery& edr_query) const;
-  boost::shared_ptr<std::string> processMetaDataQuery(const State& state,
+  std::shared_ptr<std::string> processMetaDataQuery(const State& state,
                                                       const Query& masterquery,
                                                       Spine::Table& table) const;
 

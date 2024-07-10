@@ -1,6 +1,6 @@
 #include "CoverageJson.h"
 #include "UtilityFunctions.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 
@@ -19,7 +19,7 @@ struct time_coord_value
   std::string time;
   double lon;
   double lat;
-  boost::optional<TS::Value> value;
+  std::optional<TS::Value> value;
 };
 
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>;  // level -> array of values
@@ -647,7 +647,7 @@ void add_value(const TS::TimedValue &tv,
   }
 }
 
-Json::Value add_prologue_one_point(boost::optional<int> level,
+Json::Value add_prologue_one_point(std::optional<int> level,
                                    const std::string &level_type,
                                    double longitude,
                                    double latitude,
@@ -734,7 +734,7 @@ Json::Value add_prologue_one_point(boost::optional<int> level,
   }
 }
 
-Json::Value add_prologue_multi_point(boost::optional<int> level,
+Json::Value add_prologue_multi_point(std::optional<int> level,
                                      const EDRMetaData &emd,
                                      const std::vector<TS::LonLat> &coordinates)
 {
@@ -1462,7 +1462,7 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
                                   const EDRMetaData &emd,
                                   const std::vector<TS::LonLat> &coordinates,
                                   const unsigned int &i,
-                                  const boost::optional<int> &level,
+                                  const std::optional<int> &level,
                                   std::set<std::string> &timesteps,
                                   Json::Value &ranges,
                                   Json::Value &coverage)
@@ -1526,7 +1526,7 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
 
 Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
-                                         boost::optional<int> level,
+                                         std::optional<int> level,
                                          const std::vector<Spine::Parameter> &query_parameters)
 {
   try
@@ -1662,7 +1662,7 @@ void process_parameters_at_position(const std::vector<TS::TimeSeriesData> &outda
                                     const EDRMetaData &emd,
                                     const unsigned int &longitude_index,
                                     const unsigned int &latitude_index,
-                                    const boost::optional<unsigned int> &level_index,
+                                    const std::optional<unsigned int> &level_index,
                                     Json::Value &coverages,
                                     unsigned int &coverages_index)
 {
@@ -1722,7 +1722,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     Json::Value coverage_collection;
     unsigned int longitude_index;
     unsigned int latitude_index;
-    boost::optional<unsigned int> level_index;
+    std::optional<unsigned int> level_index;
     const auto &last_param = query_parameters.back();
     auto last_param_name = last_param.name();
     boost::algorithm::to_lower(last_param_name);
@@ -2680,7 +2680,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       // Zero or one levels
       if (levels.size() <= 1)
       {
-        boost::optional<int> level;
+        std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
         return format_output_data_one_point(outputData, emd, level, query_parameters);
@@ -2710,7 +2710,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       // Zero or one levels
       if (levels.size() <= 1)
       {
-        boost::optional<int> level;
+        std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
         return format_output_data_one_point(od, emd, level, query_parameters);

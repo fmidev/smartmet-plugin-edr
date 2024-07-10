@@ -1,6 +1,6 @@
 #include "GeoJson.h"
 #include "UtilityFunctions.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
@@ -18,13 +18,13 @@ namespace
 struct coordinate_xyz
 {
   coordinate_xyz() : x(0.0), y(0.0) {}
-  coordinate_xyz(double x_val, double y_val, boost::optional<double> z_val)
+  coordinate_xyz(double x_val, double y_val, std::optional<double> z_val)
       : x(x_val), y(y_val), z(z_val)
   {
   }
   double x;
   double y;
-  boost::optional<double> z;
+  std::optional<double> z;
 };
 
 struct time_coord_value
@@ -32,7 +32,7 @@ struct time_coord_value
   std::string time;
   double lon = 0;
   double lat = 0;
-  boost::optional<TS::Value> value;
+  std::optional<TS::Value> value;
 };
 
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>;  // level -> array of values
@@ -440,7 +440,7 @@ Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, i
 
 Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
-                                         boost::optional<int> /* level */,
+                                         std::optional<int> /* level */,
                                          const std::vector<Spine::Parameter> &query_parameters)
 {
   try
@@ -531,7 +531,7 @@ void add_position_features(Json::Value &features,
     {
       auto lon_value = to_double(ts_lon->at(k));
       auto lat_value = to_double(ts_lat->at(k));
-      boost::optional<double> level_value;
+      std::optional<double> level_value;
       if (ts_level)
         level_value = to_int(ts_level->at(k));
       coordinate_xyz coord(lon_value, lat_value, level_value);
@@ -602,7 +602,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     auto level_precision = 0;
     unsigned int longitude_index = 0;
     unsigned int latitude_index = 0;
-    boost::optional<unsigned int> level_index;
+    std::optional<unsigned int> level_index;
     const auto &last_param = query_parameters.back();
     auto last_param_name = last_param.name();
     boost::algorithm::to_lower(last_param_name);
@@ -814,13 +814,13 @@ void add_collection_level_features(Json::Value &features,
                                    int lon_precision,
                                    int lat_precision,
                                    int level_precision,
-                                   const boost::optional<double> &level)
+                                   const std::optional<double> &level)
 {
   try
   {
     std::map<size_t, coordinate_xyz> coordinates;
     std::map<size_t, std::vector<std::string>> timestamps_per_coordinate;
-    std::map<size_t, std::vector<boost::optional<TS::Value>>> values_per_coordinate;
+    std::map<size_t, std::vector<std::optional<TS::Value>>> values_per_coordinate;
     for (const auto &item3 : time_coord_values)
     {
       coordinate_xyz coord(item3.lon, item3.lat, level);
@@ -913,7 +913,7 @@ Json::Value format_output_data_feature_collection(
       const auto parameter_precision = emd.getPrecision(parameter_name);
       for (const auto &item2 : level_values)
       {
-        boost::optional<double> level;
+        std::optional<double> level;
         if (item2.first != std::numeric_limits<double>::max())
           level = item2.first;
         const auto &time_coord_values = item2.second;
@@ -1001,7 +1001,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       // Zero or one levels
       if (levels.size() <= 1)
       {
-        boost::optional<int> level;
+        std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
         return format_output_data_one_point(outputData, emd, level, query_parameters);
@@ -1029,7 +1029,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       // Zero or one levels
       if (levels.size() <= 1)
       {
-        boost::optional<int> level;
+        std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
         return format_output_data_one_point(od, emd, level, query_parameters);
