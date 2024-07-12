@@ -17,7 +17,6 @@
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
-#include <boost/any.hpp>
 #include <algorithm>
 
 namespace SmartMet
