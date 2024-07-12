@@ -60,16 +60,16 @@ ValueType get_value_type(const DataValue &dv)
 {
   const auto &data = dv.get_data();
 
-  if (boost::get<std::string>(&data) != nullptr)
+  if (std::get_if<std::string>(&data) != nullptr)
     return ValueType::stringValue;
 
-  if (boost::get<std::size_t>(&data) != nullptr)
+  if (std::get_if<std::size_t>(&data) != nullptr)
     return ValueType::intValue;
 
-  if (boost::get<double>(&data) != nullptr)
+  if (std::get_if<double>(&data) != nullptr)
     return ValueType::doubleValue;
 
-  if (boost::get<bool>(&data) != nullptr)
+  if (std::get_if<bool>(&data) != nullptr)
     return ValueType::boolValue;
 
   return ValueType::nullValue;
@@ -127,23 +127,23 @@ std::string data_value_to_string(const DataValue &dv, int precision)
 
   if (vt == ValueType::stringValue)
   {
-    auto str = *(boost::get<std::string>(&data));
+    auto str = *(std::get_if<std::string>(&data));
     ret = "\"" + json_encode(str) + "\"";
   }
   else if (vt == ValueType::intValue)
   {
-    ret = Fmi::to_string(*(boost::get<std::size_t>(&data)));
+    ret = Fmi::to_string(*(std::get_if<std::size_t>(&data)));
   }
   else if (vt == ValueType::boolValue)
   {
-    auto bool_value = *(boost::get<bool>(&data));
+    auto bool_value = *(std::get_if<bool>(&data));
     ret = (bool_value ? "true" : "false");
   }
   else if (vt == ValueType::doubleValue)
   {
     Fmi::ValueFormatterParam fmtParam("null", "fixed");
     Fmi::ValueFormatter formatter(fmtParam);
-    double value = *(boost::get<double>(&data));
+    double value = *(std::get_if<double>(&data));
     ret = formatter.format(value, precision);
   }
   else if (vt == ValueType::nullValue)

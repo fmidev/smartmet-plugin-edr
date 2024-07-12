@@ -5,7 +5,7 @@
 #include "Engines.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <macgyver/DateTime.h>
 #include <list>
 #include <map>

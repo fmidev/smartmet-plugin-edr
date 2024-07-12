@@ -1,6 +1,6 @@
 #include "GeoJson.h"
 #include "UtilityFunctions.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
@@ -18,13 +18,13 @@ namespace
 struct coordinate_xyz
 {
   coordinate_xyz() : x(0.0), y(0.0) {}
-  coordinate_xyz(double x_val, double y_val, boost::optional<double> z_val)
+  coordinate_xyz(double x_val, double y_val, std::optional<double> z_val)
       : x(x_val), y(y_val), z(z_val)
   {
   }
   double x;
   double y;
-  boost::optional<double> z;
+  std::optional<double> z;
 };
 
 struct time_coord_value
@@ -32,7 +32,7 @@ struct time_coord_value
   std::string time;
   double lon = 0;
   double lat = 0;
-  boost::optional<TS::Value> value;
+  std::optional<TS::Value> value;
 };
 
 using DataPerLevel = std::map<double, std::vector<time_coord_value>>;  // level -> array of values
@@ -51,8 +51,9 @@ std::size_t hash_value(const coordinate_xyz &coord)
 
 double as_double(const TS::Value &value)
 {
-  return (boost::get<double>(&value) != nullptr ? *(boost::get<double>(&value))
-                                                : Fmi::stod(*(boost::get<std::string>(&value))));
+  // FIXME: may cause nullptr dereference if value is neither of double or std::string
+  return (std::get_if<double>(&value) != nullptr ? *(std::get_if<double>(&value))
+                                                : Fmi::stod(*(std::get_if<std::string>(&value))));
 }
 
 bool lon_lat_level_param(const std::string &name)
@@ -169,10 +170,11 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
     if (outdata.empty())
       return ret;
 
+    // FIXME: optimize std::get_if<> use to avoid duplicate code
     const auto &outdata_front = outdata.front();
-    if (boost::get<TS::TimeSeriesVectorPtr>(&outdata_front))
+    if (std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front))
     {
-      TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&outdata_front));
+      TS::TimeSeriesVectorPtr tsv = *(std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front));
       return get_coordinates(tsv, query_parameters);
     }
 
@@ -187,9 +189,9 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
         continue;
 
       auto tsdata = outdata.at(i);
-      if (boost::get<TS::TimeSeriesPtr>(&tsdata))
+      if (std::get_if<TS::TimeSeriesPtr>(&tsdata))
       {
-        TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
+        TS::TimeSeriesPtr ts = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
         if (!ts->empty())
         {
           const TS::TimedValue &tv = ts->at(0);
@@ -200,15 +202,15 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
             latitude_vector.push_back(value);
         }
       }
-      else if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata))
+      else if (std::get_if<TS::TimeSeriesVectorPtr>(&tsdata))
       {
         std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldnt be "
                      "here -> report error!!:\n"
                   << tsdata << std::endl;
       }
-      else if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata))
+      else if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
       {
-        TS::TimeSeriesGroupPtr tsg = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+        TS::TimeSeriesGroupPtr tsg = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
 
         get_coordinates(longitude_vector, latitude_vector, tsg, param_name);
       }
@@ -286,18 +288,18 @@ int to_int(const TS::TimedValue &tv)
 {
   int ret = std::numeric_limits<int>::max();
 
-  if (boost::get<int>(&tv.value) != nullptr)
-    ret = *(boost::get<int>(&tv.value));
-  else if (boost::get<double>(&tv.value) != nullptr)
-    ret = *(boost::get<double>(&tv.value));
+  if (std::get_if<int>(&tv.value) != nullptr)
+    ret = *(std::get_if<int>(&tv.value));
+  else if (std::get_if<double>(&tv.value) != nullptr)
+    ret = *std::get_if<double>(&tv.value);
 
   return ret;
 }
 
 double to_double(const TS::TimedValue &tv)
 {
-  if (boost::get<double>(&tv.value) != nullptr)
-    return *(boost::get<double>(&tv.value));
+  if (std::get_if<double>(&tv.value) != nullptr)
+    return *(std::get_if<double>(&tv.value));
 
   return std::numeric_limits<double>::max();
 }
@@ -311,17 +313,17 @@ void add_value(const TS::TimedValue &tv,
   {
     const auto &val = tv.value;
 
-    if (boost::get<double>(&val) != nullptr)
+    if (std::get_if<double>(&val) != nullptr)
     {
-      values_array[values_index] = Json::Value(*(boost::get<double>(&val)), precision);
+      values_array[values_index] = Json::Value(*(std::get_if<double>(&val)), precision);
     }
-    else if (boost::get<int>(&val) != nullptr)
+    else if (std::get_if<int>(&val) != nullptr)
     {
-      values_array[values_index] = Json::Value(*(boost::get<int>(&val)));
+      values_array[values_index] = Json::Value(*(std::get_if<int>(&val)));
     }
-    else if (boost::get<std::string>(&val) != nullptr)
+    else if (std::get_if<std::string>(&val) != nullptr)
     {
-      values_array[values_index] = Json::Value(*(boost::get<std::string>(&val)));
+      values_array[values_index] = Json::Value(*(std::get_if<std::string>(&val)));
     }
     else
     {
@@ -346,23 +348,23 @@ void add_value(const TS::TimedValue &tv,
   {
     const auto &val = tv.value;
 
-    if (boost::get<double>(&val) != nullptr)
+    if (std::get_if<double>(&val) != nullptr)
     {
       if (values_index == 0)
         data_type = Json::Value("float");
-      values_array[values_index] = Json::Value(*(boost::get<double>(&val)), precision);
+      values_array[values_index] = Json::Value(*(std::get_if<double>(&val)), precision);
     }
-    else if (boost::get<int>(&val) != nullptr)
+    else if (std::get_if<int>(&val) != nullptr)
     {
       if (values_index == 0)
         data_type = Json::Value("int");
-      values_array[values_index] = Json::Value(*(boost::get<int>(&val)));
+      values_array[values_index] = Json::Value(*(std::get_if<int>(&val)));
     }
-    else if (boost::get<std::string>(&val) != nullptr)
+    else if (std::get_if<std::string>(&val) != nullptr)
     {
       if (values_index == 0)
         data_type = Json::Value("string");
-      values_array[values_index] = Json::Value(*(boost::get<std::string>(&val)));
+      values_array[values_index] = Json::Value(*(std::get_if<std::string>(&val)));
     }
     else
     {
@@ -440,7 +442,7 @@ Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, i
 
 Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
-                                         boost::optional<int> /* level */,
+                                         std::optional<int> /* level */,
                                          const std::vector<Spine::Parameter> &query_parameters)
 {
   try
@@ -480,7 +482,8 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
           continue;
 
         auto tsdata = outdata.at(j);
-        TS::TimeSeriesPtr ts = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
+        // FIXME: may cause nullptr dereference
+        TS::TimeSeriesPtr ts = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
         auto parameter_values = Json::Value(Json::ValueType::arrayValue);
         auto time_values = Json::Value(Json::ValueType::arrayValue);
         for (unsigned int k = 0; k < ts->size(); k++)
@@ -531,7 +534,7 @@ void add_position_features(Json::Value &features,
     {
       auto lon_value = to_double(ts_lon->at(k));
       auto lat_value = to_double(ts_lat->at(k));
-      boost::optional<double> level_value;
+      std::optional<double> level_value;
       if (ts_level)
         level_value = to_int(ts_level->at(k));
       coordinate_xyz coord(lon_value, lat_value, level_value);
@@ -602,7 +605,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     auto level_precision = 0;
     unsigned int longitude_index = 0;
     unsigned int latitude_index = 0;
-    boost::optional<unsigned int> level_index;
+    std::optional<unsigned int> level_index;
     const auto &last_param = query_parameters.back();
     auto last_param_name = last_param.name();
     boost::algorithm::to_lower(last_param_name);
@@ -634,14 +637,15 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
         auto tsdata = outdata.at(j);
         auto tslon = outdata.at(longitude_index);
         auto tslat = outdata.at(latitude_index);
-        TS::TimeSeriesPtr ts_data = *(boost::get<TS::TimeSeriesPtr>(&tsdata));
-        TS::TimeSeriesPtr ts_lon = *(boost::get<TS::TimeSeriesPtr>(&tslon));
-        TS::TimeSeriesPtr ts_lat = *(boost::get<TS::TimeSeriesPtr>(&tslat));
+        // FIXME: may cause nullptr dereference
+        TS::TimeSeriesPtr ts_data = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
+        TS::TimeSeriesPtr ts_lon = *(std::get_if<TS::TimeSeriesPtr>(&tslon));
+        TS::TimeSeriesPtr ts_lat = *(std::get_if<TS::TimeSeriesPtr>(&tslat));
         TS::TimeSeriesPtr ts_level = nullptr;
         if (level_index)
         {
           auto tslevel = outdata.at(*level_index);
-          ts_level = *(boost::get<TS::TimeSeriesPtr>(&tslevel));
+          ts_level = *(std::get_if<TS::TimeSeriesPtr>(&tslevel));
         }
 
         add_position_features(features,
@@ -700,13 +704,13 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
         {
           const auto &llts_level = tsg_level->at(k);
           const auto &level_value = llts_level.timeseries.at(l);
-          if (boost::get<double>(&level_value.value) != nullptr)
+          if (std::get_if<double>(&level_value.value) != nullptr)
           {
-            level = *(boost::get<double>(&level_value.value));
+            level = *(std::get_if<double>(&level_value.value));
           }
-          else if (boost::get<int>(&level_value.value) != nullptr)
+          else if (std::get_if<int>(&level_value.value) != nullptr)
           {
-            level = *(boost::get<int>(&level_value.value));
+            level = *(std::get_if<int>(&level_value.value));
           }
         }
 
@@ -782,14 +786,16 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
         auto tsdata = outdata.at(j);
         auto tslon = outdata.at(longitude_index);
         auto tslat = outdata.at(latitude_index);
-        TS::TimeSeriesGroupPtr tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
-        TS::TimeSeriesGroupPtr tsg_lon = *(boost::get<TS::TimeSeriesGroupPtr>(&tslon));
-        TS::TimeSeriesGroupPtr tsg_lat = *(boost::get<TS::TimeSeriesGroupPtr>(&tslat));
+        // FIXME: may cause nullptr dereference
+        TS::TimeSeriesGroupPtr tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
+        TS::TimeSeriesGroupPtr tsg_lon = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslon));
+        TS::TimeSeriesGroupPtr tsg_lat = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslat));
         TS::TimeSeriesGroupPtr tsg_level = nullptr;
         if (levels_present)
         {
           auto tslevel = outdata.at(level_index);
-          tsg_level = *(boost::get<TS::TimeSeriesGroupPtr>(&tslevel));
+          // FIXME: may cause nullptr dereference
+          tsg_level = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslevel));
         }
 
         DataPerLevel dpl = get_parameter_data(
@@ -814,13 +820,13 @@ void add_collection_level_features(Json::Value &features,
                                    int lon_precision,
                                    int lat_precision,
                                    int level_precision,
-                                   const boost::optional<double> &level)
+                                   const std::optional<double> &level)
 {
   try
   {
     std::map<size_t, coordinate_xyz> coordinates;
     std::map<size_t, std::vector<std::string>> timestamps_per_coordinate;
-    std::map<size_t, std::vector<boost::optional<TS::Value>>> values_per_coordinate;
+    std::map<size_t, std::vector<std::optional<TS::Value>>> values_per_coordinate;
     for (const auto &item3 : time_coord_values)
     {
       coordinate_xyz coord(item3.lon, item3.lat, level);
@@ -913,7 +919,7 @@ Json::Value format_output_data_feature_collection(
       const auto parameter_precision = emd.getPrecision(parameter_name);
       for (const auto &item2 : level_values)
       {
-        boost::optional<double> level;
+        std::optional<double> level;
         if (item2.first != std::numeric_limits<double>::max())
           level = item2.first;
         const auto &time_coord_values = item2.second;
@@ -996,12 +1002,12 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
 
     const auto &tsdata_first = outdata_first.at(0);
 
-    if (boost::get<TS::TimeSeriesPtr>(&tsdata_first))
+    if (std::get_if<TS::TimeSeriesPtr>(&tsdata_first))
     {
       // Zero or one levels
       if (levels.size() <= 1)
       {
-        boost::optional<int> level;
+        std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
         return format_output_data_one_point(outputData, emd, level, query_parameters);
@@ -1011,14 +1017,15 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       return format_output_data_position(outputData, emd, query_parameters);
     }
 
-    if (boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first))
+    if (std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
     {
       if (outdata_first.size() > 1)
         std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
                      "nothing -> report error! "
                   << std::endl;
       std::vector<TS::TimeSeriesData> tsd;
-      TS::TimeSeriesVectorPtr tsv = *(boost::get<TS::TimeSeriesVectorPtr>(&tsdata_first));
+      // FIXME: may cause nullptr dereference
+      TS::TimeSeriesVectorPtr tsv = *(std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first));
       for (const auto &ts : *tsv)
       {
         TS::TimeSeriesPtr tsp(new TS::TimeSeries(ts));
@@ -1029,7 +1036,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       // Zero or one levels
       if (levels.size() <= 1)
       {
-        boost::optional<int> level;
+        std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
         return format_output_data_one_point(od, emd, level, query_parameters);
@@ -1038,7 +1045,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       return format_output_data_position(od, emd, query_parameters);
     }
 
-    if (boost::get<TS::TimeSeriesGroupPtr>(&tsdata_first))
+    if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
     {
       return format_output_data_feature_collection(
           outputData, emd, levels, coordinate_filter, query_parameters, query_type);
