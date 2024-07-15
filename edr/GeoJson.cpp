@@ -51,9 +51,7 @@ std::size_t hash_value(const coordinate_xyz &coord)
 
 double as_double(const TS::Value &value)
 {
-  // FIXME: may cause nullptr dereference if value is neither of double or std::string
-  return (std::get_if<double>(&value) != nullptr ? *(std::get_if<double>(&value))
-                                                : Fmi::stod(*(std::get_if<std::string>(&value))));
+  return value.as_double();
 }
 
 bool lon_lat_level_param(const std::string &name)
@@ -170,11 +168,10 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
     if (outdata.empty())
       return ret;
 
-    // FIXME: optimize std::get_if<> use to avoid duplicate code
     const auto &outdata_front = outdata.front();
-    if (std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front))
+    if (const auto* ptr = std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front))
     {
-      TS::TimeSeriesVectorPtr tsv = *(std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front));
+      TS::TimeSeriesVectorPtr tsv = *ptr;
       return get_coordinates(tsv, query_parameters);
     }
 
@@ -189,9 +186,9 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
         continue;
 
       auto tsdata = outdata.at(i);
-      if (std::get_if<TS::TimeSeriesPtr>(&tsdata))
+      if (const auto* ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
       {
-        TS::TimeSeriesPtr ts = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
+        TS::TimeSeriesPtr ts = *ptr;
         if (!ts->empty())
         {
           const TS::TimedValue &tv = ts->at(0);
@@ -208,9 +205,9 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
                      "here -> report error!!:\n"
                   << tsdata << std::endl;
       }
-      else if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+      else if (const auto* ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
       {
-        TS::TimeSeriesGroupPtr tsg = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
+        TS::TimeSeriesGroupPtr tsg = *ptr;
 
         get_coordinates(longitude_vector, latitude_vector, tsg, param_name);
       }
@@ -288,18 +285,18 @@ int to_int(const TS::TimedValue &tv)
 {
   int ret = std::numeric_limits<int>::max();
 
-  if (std::get_if<int>(&tv.value) != nullptr)
-    ret = *(std::get_if<int>(&tv.value));
-  else if (std::get_if<double>(&tv.value) != nullptr)
-    ret = *std::get_if<double>(&tv.value);
+  if (const auto* ptr = std::get_if<int>(&tv.value))
+    ret = *ptr;
+  else if (const auto* ptr = std::get_if<double>(&tv.value))
+    ret = *ptr;
 
   return ret;
 }
 
 double to_double(const TS::TimedValue &tv)
 {
-  if (std::get_if<double>(&tv.value) != nullptr)
-    return *(std::get_if<double>(&tv.value));
+  if (const auto* ptr = std::get_if<double>(&tv.value))
+    return *ptr;
 
   return std::numeric_limits<double>::max();
 }
@@ -313,17 +310,17 @@ void add_value(const TS::TimedValue &tv,
   {
     const auto &val = tv.value;
 
-    if (std::get_if<double>(&val) != nullptr)
+    if (const auto* ptr = std::get_if<double>(&val))
     {
-      values_array[values_index] = Json::Value(*(std::get_if<double>(&val)), precision);
+      values_array[values_index] = Json::Value(*ptr, precision);
     }
-    else if (std::get_if<int>(&val) != nullptr)
+    else if (const auto* ptr = std::get_if<int>(&val))
     {
-      values_array[values_index] = Json::Value(*(std::get_if<int>(&val)));
+      values_array[values_index] = Json::Value(*ptr);
     }
-    else if (std::get_if<std::string>(&val) != nullptr)
+    else if (const auto* ptr = std::get_if<std::string>(&val))
     {
-      values_array[values_index] = Json::Value(*(std::get_if<std::string>(&val)));
+      values_array[values_index] = Json::Value(*ptr);
     }
     else
     {
@@ -348,23 +345,23 @@ void add_value(const TS::TimedValue &tv,
   {
     const auto &val = tv.value;
 
-    if (std::get_if<double>(&val) != nullptr)
+    if (const auto* ptr = std::get_if<double>(&val))
     {
       if (values_index == 0)
         data_type = Json::Value("float");
-      values_array[values_index] = Json::Value(*(std::get_if<double>(&val)), precision);
+      values_array[values_index] = Json::Value(*ptr, precision);
     }
-    else if (std::get_if<int>(&val) != nullptr)
+    else if (const auto* ptr = std::get_if<int>(&val))
     {
       if (values_index == 0)
         data_type = Json::Value("int");
-      values_array[values_index] = Json::Value(*(std::get_if<int>(&val)));
+      values_array[values_index] = Json::Value(*ptr);
     }
-    else if (std::get_if<std::string>(&val) != nullptr)
+    else if (const auto* ptr = std::get_if<std::string>(&val))
     {
       if (values_index == 0)
         data_type = Json::Value("string");
-      values_array[values_index] = Json::Value(*(std::get_if<std::string>(&val)));
+      values_array[values_index] = Json::Value(*ptr);
     }
     else
     {
@@ -482,8 +479,7 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
           continue;
 
         auto tsdata = outdata.at(j);
-        // FIXME: may cause nullptr dereference
-        TS::TimeSeriesPtr ts = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
+        TS::TimeSeriesPtr ts = std::get<TS::TimeSeriesPtr>(tsdata);
         auto parameter_values = Json::Value(Json::ValueType::arrayValue);
         auto time_values = Json::Value(Json::ValueType::arrayValue);
         for (unsigned int k = 0; k < ts->size(); k++)
@@ -637,15 +633,14 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
         auto tsdata = outdata.at(j);
         auto tslon = outdata.at(longitude_index);
         auto tslat = outdata.at(latitude_index);
-        // FIXME: may cause nullptr dereference
-        TS::TimeSeriesPtr ts_data = *(std::get_if<TS::TimeSeriesPtr>(&tsdata));
-        TS::TimeSeriesPtr ts_lon = *(std::get_if<TS::TimeSeriesPtr>(&tslon));
-        TS::TimeSeriesPtr ts_lat = *(std::get_if<TS::TimeSeriesPtr>(&tslat));
+        TS::TimeSeriesPtr ts_data = std::get<TS::TimeSeriesPtr>(tsdata);
+        TS::TimeSeriesPtr ts_lon = std::get<TS::TimeSeriesPtr>(tslon);
+        TS::TimeSeriesPtr ts_lat = std::get<TS::TimeSeriesPtr>(tslat);
         TS::TimeSeriesPtr ts_level = nullptr;
         if (level_index)
         {
           auto tslevel = outdata.at(*level_index);
-          ts_level = *(std::get_if<TS::TimeSeriesPtr>(&tslevel));
+          ts_level = std::get<TS::TimeSeriesPtr>(tslevel);
         }
 
         add_position_features(features,
@@ -704,13 +699,13 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
         {
           const auto &llts_level = tsg_level->at(k);
           const auto &level_value = llts_level.timeseries.at(l);
-          if (std::get_if<double>(&level_value.value) != nullptr)
+          if (const auto* ptr = std::get_if<double>(&level_value.value))
           {
-            level = *(std::get_if<double>(&level_value.value));
+            level = *ptr;
           }
-          else if (std::get_if<int>(&level_value.value) != nullptr)
+          else if (const auto* ptr = std::get_if<int>(&level_value.value))
           {
-            level = *(std::get_if<int>(&level_value.value));
+            level = *ptr;
           }
         }
 
@@ -786,16 +781,14 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
         auto tsdata = outdata.at(j);
         auto tslon = outdata.at(longitude_index);
         auto tslat = outdata.at(latitude_index);
-        // FIXME: may cause nullptr dereference
-        TS::TimeSeriesGroupPtr tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
-        TS::TimeSeriesGroupPtr tsg_lon = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslon));
-        TS::TimeSeriesGroupPtr tsg_lat = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslat));
+        TS::TimeSeriesGroupPtr tsg_data = std::get<TS::TimeSeriesGroupPtr>(tsdata);
+        TS::TimeSeriesGroupPtr tsg_lon = std::get<TS::TimeSeriesGroupPtr>(tslon);
+        TS::TimeSeriesGroupPtr tsg_lat = std::get<TS::TimeSeriesGroupPtr>(tslat);
         TS::TimeSeriesGroupPtr tsg_level = nullptr;
         if (levels_present)
         {
           auto tslevel = outdata.at(level_index);
-          // FIXME: may cause nullptr dereference
-          tsg_level = *(std::get_if<TS::TimeSeriesGroupPtr>(&tslevel));
+          tsg_level = std::get<TS::TimeSeriesGroupPtr>(tslevel);
         }
 
         DataPerLevel dpl = get_parameter_data(
@@ -1017,15 +1010,14 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       return format_output_data_position(outputData, emd, query_parameters);
     }
 
-    if (std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
+    if (const auto* ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
     {
       if (outdata_first.size() > 1)
         std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
                      "nothing -> report error! "
                   << std::endl;
       std::vector<TS::TimeSeriesData> tsd;
-      // FIXME: may cause nullptr dereference
-      TS::TimeSeriesVectorPtr tsv = *(std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first));
+      TS::TimeSeriesVectorPtr tsv = *ptr;
       for (const auto &ts : *tsv)
       {
         TS::TimeSeriesPtr tsp(new TS::TimeSeries(ts));

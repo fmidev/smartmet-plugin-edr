@@ -356,8 +356,10 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
       {
         if (!messages.empty() && masterquery.output_format == TAC_FORMAT)
           messages += "\n";
-        // FIXME: may cause nullptr dereference
-        messages += *(std::get_if<std::string>(&timed_value.value));
+        if (const auto* ptr = std::get_if<std::string>(&timed_value.value))
+          messages += *ptr;
+        // FIXME: should we have else branch here?
+        //        (earlier it would cause SIGSEGV due to missing check for nullptr)
       }
     }
 

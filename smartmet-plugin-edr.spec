@@ -34,7 +34,7 @@ BuildRequires: smartmet-library-grid-content-devel >= 24.7.12
 BuildRequires: smartmet-library-grid-files-devel >= 24.7.12
 BuildRequires: smartmet-library-newbase-devel >= 24.7.12
 BuildRequires: smartmet-library-gis-devel >= 24.7.12
-BuildRequires: smartmet-library-timeseries-devel >= 24.7.12
+BuildRequires: smartmet-library-timeseries-devel >= 24.7.15
 BuildRequires: smartmet-engine-avi-devel >= 24.7.12
 BuildRequires: smartmet-engine-geonames-devel >= 24.7.12
 %if %{with observation}
@@ -54,7 +54,7 @@ Requires: smartmet-library-locus >= 24.7.12
 Requires: smartmet-library-macgyver >= 24.7.12
 Requires: smartmet-library-newbase >= 24.7.12
 Requires: smartmet-library-spine >= 24.7.12
-Requires: smartmet-library-timeseries >= 24.7.12
+Requires: smartmet-library-timeseries >= 24.7.15
 Requires: smartmet-library-gis >= 24.7.12
 Requires: smartmet-library-grid-files >= 24.7.12
 Requires: smartmet-engine-avi >= 24.7.12

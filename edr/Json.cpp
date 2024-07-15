@@ -132,18 +132,18 @@ std::string data_value_to_string(const DataValue &dv, int precision)
   }
   else if (vt == ValueType::intValue)
   {
-    ret = Fmi::to_string(*(std::get_if<std::size_t>(&data)));
+    ret = Fmi::to_string(std::get<std::size_t>(data));
   }
   else if (vt == ValueType::boolValue)
   {
-    auto bool_value = *(std::get_if<bool>(&data));
+    auto bool_value = std::get<bool>(data);
     ret = (bool_value ? "true" : "false");
   }
   else if (vt == ValueType::doubleValue)
   {
     Fmi::ValueFormatterParam fmtParam("null", "fixed");
     Fmi::ValueFormatter formatter(fmtParam);
-    double value = *(std::get_if<double>(&data));
+    double value = std::get<double>(data);
     ret = formatter.format(value, precision);
   }
   else if (vt == ValueType::nullValue)
