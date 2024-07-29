@@ -390,9 +390,13 @@ void Plugin::query(const State& state,
       gridEnabled = true;
 
     formatter.reset(fmt);
-    std::string mime = ((q.output_format == IWXXM_FORMAT || q.output_format == TAC_FORMAT)
-                            ? "ascii"
-                            : "application/json; charset=utf-8");
+    std::string mime;
+    if (q.output_format == IWXXM_FORMAT)
+      mime = "text/xml";
+    else if (q.output_format == TAC_FORMAT)
+      mime = "text/plain";
+    else
+      mime = "application/json; charset=utf-8";
     response.setHeader("Content-Type", mime);
 
     // Calculate the hash value for the product.
