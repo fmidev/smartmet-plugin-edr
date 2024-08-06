@@ -295,7 +295,7 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state,
   }
 }
 
-boost::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state,
+std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state,
                                                                         const Query& masterquery,
                                                                         Spine::Table& table) const
 {
@@ -356,7 +356,10 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
       {
         if (!messages.empty() && masterquery.output_format == TAC_FORMAT)
           messages += "\n";
-        messages += *(boost::get<std::string>(&timed_value.value));
+        if (const auto* ptr = std::get_if<std::string>(&timed_value.value))
+          messages += *ptr;
+        // FIXME: should we have else branch here?
+        //        (earlier it would cause SIGSEGV due to missing check for nullptr)
       }
     }
 
@@ -381,7 +384,7 @@ void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData
       {
         const auto& outdata = output.second;
         const auto& tsdata = outdata.at(0);
-        const auto& tsg_data = *(boost::get<TS::TimeSeriesGroupPtr>(&tsdata));
+        const auto& tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
         messages += parseIWXXMAndTACMessages(tsg_data, masterquery);
       }
       if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
@@ -398,7 +401,7 @@ void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData
   }
 }
 
-boost::shared_ptr<std::string> QueryProcessingHub::processQuery(
+std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     const State& state,
     Spine::Table& table,
     Query& masterquery,

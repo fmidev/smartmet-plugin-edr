@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/variant.hpp>
+#include <variant>
 #include <macgyver/DateTime.h>
 #include <iostream>
 #include <map>
@@ -58,13 +58,13 @@ class DataValue
 
   std::string to_string(int precision = DEFAULT_PRECISION) const;
   ValueType valueType() const;
-  const boost::variant<NullValue, std::string, double, std::size_t, bool> &get_data() const
+  const std::variant<NullValue, std::string, double, std::size_t, bool> &get_data() const
   {
     return data;
   }
 
  private:
-  boost::variant<NullValue, std::string, double, std::size_t, bool> data;
+  std::variant<NullValue, std::string, double, std::size_t, bool> data;
 };
 
 using ArrayIndex = std::size_t;

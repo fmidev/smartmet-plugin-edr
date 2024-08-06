@@ -108,7 +108,7 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
     std::string host = *host_header;
 
     // Apikey
-    boost::optional<std::string> apikey;
+    std::optional<std::string> apikey;
     try
     {
       // Deduce apikey for layer filtering

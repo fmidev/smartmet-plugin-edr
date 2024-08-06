@@ -11,6 +11,7 @@
 #include "Engines.h"
 #include "Query.h"
 #include "State.h"
+#include <macgyver/AtomicSharedPtr.h>
 
 namespace SmartMet
 {
@@ -88,7 +89,7 @@ class Plugin : public SmartMetPlugin
   void updateMetaData(bool initial_phase);
   void updateSupportedLocations();
   void updateParameterInfo();
-  void checkNewDataAndNotify(const boost::shared_ptr<EngineMetaData>& new_emd) const;
+  void checkNewDataAndNotify(const std::shared_ptr<EngineMetaData>& new_emd) const;
   std::map<std::string, Fmi::DateTime> getNotificationTimes(SourceEngine source_engine,
                                                             EngineMetaData& new_emd,
                                                             const Fmi::DateTime& now) const;
@@ -103,7 +104,7 @@ class Plugin : public SmartMetPlugin
   // pointer and must be used via atomic_load and atomic_store, since CTPP::CDT
   // is not thread safe.
 
-  boost::atomic_shared_ptr<EngineMetaData> itsMetaData;
+  Fmi::AtomicSharedPtr<EngineMetaData> itsMetaData;
 
 #ifndef WITHOUT_OBSERVATION
   // Observable properties read from observation engine once

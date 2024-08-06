@@ -51,12 +51,12 @@ void storeAviData(const State &state,
       for (auto stationId : aviData.itsStationIds)
       {
         auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
-        auto longitude = boost::get<double>(*(aviData.itsValues[stationId]["longitude"].cbegin()));
-        auto latitude = boost::get<double>(*(aviData.itsValues[stationId]["latitude"].cbegin()));
+        auto longitude = std::get<double>(*(aviData.itsValues[stationId]["longitude"].cbegin()));
+        auto latitude = std::get<double>(*(aviData.itsValues[stationId]["latitude"].cbegin()));
         TS::TimeSeries ts;
         for (auto &value : aviData.itsValues[stationId][column.itsName])
         {
-          auto dt = boost::get<Fmi::LocalDateTime>(*timeIter);
+          auto dt = std::get<Fmi::LocalDateTime>(*timeIter);
           TS::TimedValue tv(dt, value);
           ts.push_back(tv);
           timeIter++;

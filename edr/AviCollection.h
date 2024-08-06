@@ -7,7 +7,7 @@
 #pragma once
 
 #include "AviMetaData.h"
-#include <boost/optional.hpp>
+#include <optional>
 #include <list>
 #include <set>
 #include <string>
@@ -24,7 +24,7 @@ class AviCollection
   const std::string &getName() const { return itsName; }
   const std::set<std::string> &getMessageTypes() const { return itsMessageTypes; }
   const std::set<std::string> &getCountries() const { return itsCountries; }
-  const boost::optional<AviBBox> &getBBox() const { return itsBBox; }
+  const std::optional<AviBBox> &getBBox() const { return itsBBox; }
   const std::set<std::string> &getIcaos() const { return itsIcaos; }
   const std::set<std::string> &getIcaoFilters() const { return itsIcaoFilters; }
   bool getLocationCheck() const { return itsLocationCheck; }
@@ -45,7 +45,7 @@ class AviCollection
   std::string itsName;
   std::set<std::string> itsMessageTypes;
   std::set<std::string> itsCountries;
-  boost::optional<AviBBox> itsBBox;
+  std::optional<AviBBox> itsBBox;
   std::set<std::string> itsIcaos;
   std::set<std::string> itsIcaoFilters;
   bool itsLocationCheck = false;

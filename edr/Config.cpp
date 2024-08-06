@@ -7,7 +7,6 @@
 #include "Config.h"
 #include "EDRQuery.h"
 #include "Precision.h"
-#include <boost/foreach.hpp>
 #include <grid-files/common/GeneralFunctions.h>
 #include <grid-files/common/ShowFunction.h>
 #include <macgyver/Exception.h>
@@ -863,7 +862,7 @@ void Config::parse_config_parameter_aliases(const std::string &configfile)
   if (!aliasFiles.isArray())
     throw Fmi::Exception(BCP, "Configured value of 'parameterAliasFiles' must be an array");
 
-  boost::filesystem::path path(configfile);
+  std::filesystem::path path(configfile);
 
   for (int i = 0; i < aliasFiles.getLength(); ++i)
   {
@@ -994,7 +993,7 @@ Config::Config(const string &configfile)
     if (configfile.empty())
       throw Fmi::Exception(BCP, "EDR configuration file cannot be empty");
 
-    boost::filesystem::path p = configfile;
+    std::filesystem::path p = configfile;
     p.remove_filename();
     itsConfig.setIncludeDir(p.c_str());
 

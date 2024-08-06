@@ -30,7 +30,7 @@ namespace EDR
 namespace
 {
 
-std::set<std::string> get_metadata_parameters(const boost::shared_ptr<EngineMetaData>& metadata)
+std::set<std::string> get_metadata_parameters(const std::shared_ptr<EngineMetaData>& metadata)
 {
   std::set<std::string> parameter_names;
 
@@ -101,7 +101,7 @@ Spine::TableFormatter::Names get_headers(const std::vector<Spine::Parameter>& pa
       }
       else
       {
-        const boost::optional<int>& sensor_no = p.getSensorNumber();
+        const std::optional<int>& sensor_no = p.getSensorNumber();
         if (sensor_no)
         {
           header_name += ("_#" + Fmi::to_string(*sensor_no));
@@ -173,7 +173,7 @@ bool etag_only(const Spine::HTTP::Request& request,
   }
 }
 
-void parse_lonlats(const boost::optional<std::string>& lonlats,
+void parse_lonlats(const std::optional<std::string>& lonlats,
                    Spine::HTTP::Request& request,
                    std::string& wkt_multipoint)
 {
@@ -202,7 +202,7 @@ void parse_lonlats(const boost::optional<std::string>& lonlats,
   }
 }
 
-void parse_latlons(const boost::optional<std::string>& latlons,
+void parse_latlons(const std::optional<std::string>& latlons,
                    Spine::HTTP::Request& request,
                    std::string& wkt_multipoint)
 {
@@ -231,7 +231,7 @@ void parse_latlons(const boost::optional<std::string>& latlons,
   }
 }
 
-void parse_places(const boost::optional<std::string>& places,
+void parse_places(const std::optional<std::string>& places,
                   Spine::HTTP::Request& request,
                   std::string& wkt_multipoint,
                   const Engine::Geonames::Engine* geoEngine)
@@ -262,7 +262,7 @@ void parse_places(const boost::optional<std::string>& places,
   }
 }
 
-void parse_fmisids(const boost::optional<std::string>& fmisid,
+void parse_fmisids(const std::optional<std::string>& fmisid,
                    Spine::HTTP::Request& request,
                    std::vector<int>& fmisids)
 {
@@ -283,7 +283,7 @@ void parse_fmisids(const boost::optional<std::string>& fmisid,
   }
 }
 
-void parse_lpnns(const boost::optional<std::string>& lpnn,
+void parse_lpnns(const std::optional<std::string>& lpnn,
                  Spine::HTTP::Request& request,
                  std::vector<int>& lpnns)
 {
@@ -304,7 +304,7 @@ void parse_lpnns(const boost::optional<std::string>& lpnn,
   }
 }
 
-void parse_wmos(const boost::optional<std::string>& wmo,
+void parse_wmos(const std::optional<std::string>& wmo,
                 Spine::HTTP::Request& request,
                 std::vector<int>& wmos)
 {
@@ -352,11 +352,11 @@ void Plugin::query(const State& state,
 
     Query q(state, request, itsConfig);
 
-    boost::shared_ptr<std::string> obj;
+    std::shared_ptr<std::string> obj;
     std::string timeheader;
     std::string producer_option;
     high_resolution_clock::time_point t3;
-    boost::shared_ptr<Spine::TableFormatter> formatter;
+    std::shared_ptr<Spine::TableFormatter> formatter;
     QueryServer::QueryStreamer_sptr queryStreamer;
 
     if (!q.isEDRMetaDataQuery())
@@ -390,9 +390,13 @@ void Plugin::query(const State& state,
       gridEnabled = true;
 
     formatter.reset(fmt);
-    std::string mime = ((q.output_format == IWXXM_FORMAT || q.output_format == TAC_FORMAT)
-                            ? "ascii"
-                            : "application/json; charset=utf-8");
+    std::string mime;
+    if (q.output_format == IWXXM_FORMAT)
+      mime = "text/xml";
+    else if (q.output_format == TAC_FORMAT)
+      mime = "text/plain";
+    else
+      mime = "application/json; charset=utf-8";
     response.setHeader("Content-Type", mime);
 
     // Calculate the hash value for the product.
@@ -456,7 +460,7 @@ void Plugin::query(const State& state,
         Fmi::to_string(std::chrono::duration_cast<std::chrono::microseconds>(t5 - t4).count()));
 
     // TODO: Should use std::move when it has become available
-    boost::shared_ptr<std::string> result(new std::string());
+    std::shared_ptr<std::string> result(new std::string());
     std::swap(out, *result);
 
     // Too many flash data requests with empty output filling the logs...
@@ -584,7 +588,7 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
 
     // Adding response headers
 
-    boost::shared_ptr<Fmi::TimeFormatter> tformat(Fmi::TimeFormatter::create("http"));
+    std::shared_ptr<Fmi::TimeFormatter> tformat(Fmi::TimeFormatter::create("http"));
 
     if (expires_seconds == 0)
     {
@@ -816,7 +820,7 @@ void Plugin::updateMetaData(bool initial_phase)
 {
   try
   {
-    boost::shared_ptr<EngineMetaData> engine_meta_data(boost::make_shared<EngineMetaData>());
+    std::shared_ptr<EngineMetaData> engine_meta_data(std::make_shared<EngineMetaData>());
 
     const auto& default_language = itsConfig.defaultLanguage();
     const auto* parameter_info = &itsConfigParameterInfo;
@@ -924,7 +928,7 @@ std::map<std::string, Fmi::DateTime> Plugin::getNotificationTimes(SourceEngine s
       }
       else
       {
-        boost::optional<Fmi::DateTime> new_latest_data_update_time;
+        std::optional<Fmi::DateTime> new_latest_data_update_time;
 
         switch (source_engine)
         {
@@ -972,7 +976,7 @@ std::map<std::string, Fmi::DateTime> Plugin::getNotificationTimes(SourceEngine s
   }
 }
 
-void Plugin::checkNewDataAndNotify(const boost::shared_ptr<EngineMetaData>& new_emd) const
+void Plugin::checkNewDataAndNotify(const std::shared_ptr<EngineMetaData>& new_emd) const
 {
   try
   {
