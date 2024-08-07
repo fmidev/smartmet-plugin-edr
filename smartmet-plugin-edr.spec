@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.7.29
+Version: 24.8.7
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Aug  7 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.8.7-1.fmi
+- Update to gdal-3.8, geos-3.12, proj-94 and fmt-11
+
 * Mon Jul 29 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.7.29-1.fmi
 - Set correct mime type for IWXXM and TAC format output (BRAINSTORM-2961)
 
