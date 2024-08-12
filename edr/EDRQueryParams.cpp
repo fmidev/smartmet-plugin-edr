@@ -755,12 +755,24 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
     if (datetime.empty())
       throw EDRException("Missing datetime option");
 
+    // https://docs.ogc.org/is/19-086r6/19-086r6.html#req_core_rc-time-response
+    // Do not allow use of durations
     if (datetime.find('/') != std::string::npos)
     {
       std::vector<std::string> datetime_parts;
       boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
       auto starttime = datetime_parts.at(0);
       auto endtime = datetime_parts.at(1);
+
+      bool cErr = (datetime_parts.size() != 2);
+      bool sErr = ((starttime.size() > 0) && (toupper(starttime[0]) == 'P'));
+      bool eErr = ((endtime.size() > 0) && (toupper(endtime[0]) == 'P'));
+      if (cErr || sErr || eErr)
+      {
+        auto const &ts = (cErr ? datetime : (sErr ? starttime : endtime));
+        throw EDRException("Invalid 'datetime' parameter value '" + ts + "'");
+      }
+
       if (starttime == "..")
         req.addParameter("starttime", "data");
       else
@@ -785,6 +797,9 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
         req.addParameter("starttime", datetime);
         req.addParameter("endtime", datetime);
       }
+
+      if ((datetime.size() > 0) && (toupper(datetime[0]) == 'P'))
+        throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
     }
   }
   catch (...)
