@@ -3,7 +3,7 @@
   "description": "API for querying meteorological datasets. Conforms to OGC API Environmental Data Retrieval specification",
   "provider": {
     "name": "FMI",
-    "url": "www.fmi.fi"
+    "url": "https://www.fmi.fi"
   },
   "contact": {
     "email": "edr@fmi.fi"

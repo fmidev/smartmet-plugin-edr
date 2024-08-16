@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.8.12
+Version: 24.8.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Aug 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.8.16-1.fmi
+- Fixed provider url at landing page (BRAINSTORM-3006)
+
 * Mon Aug 12 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.8.12-1.fmi
 - datetime parameter: do not allow use of durations (BRAINSTORM-2957)
 
