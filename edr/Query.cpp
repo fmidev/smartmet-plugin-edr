@@ -228,6 +228,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
     wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
 
     toptions = TS::parseTimes(req);
+    toptions.mode = TS::TimeSeriesGeneratorOptions::DataTimes;
 
 #ifdef MYDEBUG
     std::cout << "Time options: " << std::endl << toptions << std::endl;
