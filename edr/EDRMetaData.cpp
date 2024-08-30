@@ -69,6 +69,13 @@ void report_duplicate_collection(const std::string &collection,
             << std::endl;
 }
 
+void report_missing_data(const std::string &collection)
+{
+  std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Ignored collection '" +
+                collection + "' with no timesteps"+ ANSI_FG_DEFAULT)
+            << std::endl;
+}
+
 void report_invalid_analysistime(const std::string &collection, const std::string &analysisTime)
 {
   std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Ignored collection '" +
@@ -140,6 +147,82 @@ const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
   return NOT_A_DATE_TIME;
 }
 
+bool extract_temporal_extent_periods(
+    const std::list<Fmi::DateTime> &times, edr_temporal_extent &temporal_extent)
+{
+  try
+  {
+    const auto begin_iter = times.begin();
+    const auto end_iter = times.end();
+    if (begin_iter == end_iter)
+      return false;
+
+    auto it = begin_iter, first_it = begin_iter, last_it = begin_iter;
+    int laststep = 0, step = 0, timesteps = 0;
+
+    for ( ; ; it++)
+    {
+      if ((it != begin_iter) && (it != end_iter))
+      {
+        auto timestep_duration = (*it - *last_it);
+        step = (timestep_duration.total_seconds() / 60);
+
+        if (laststep == 0)
+          laststep = step;
+      }
+
+      if ((it == end_iter) || (step != laststep))
+      {
+        edr_temporal_extent_period temporal_extent_period;
+        temporal_extent_period.start_time = *first_it;
+        temporal_extent_period.end_time = *last_it;
+        temporal_extent_period.timestep = laststep;
+        temporal_extent_period.timesteps = timesteps;
+        temporal_extent.time_periods.push_back(temporal_extent_period);
+
+        if (laststep > 0)
+          temporal_extent.time_steps.insert(laststep);
+
+        if (it == end_iter)
+          break;
+
+        first_it = last_it;
+        last_it = it;
+        laststep = step;
+        timesteps = 1;
+      }
+      else
+      {
+        last_it = it;
+        timesteps++;
+      }
+    }
+
+    std::set<int> tss;
+
+    for (auto timestep : temporal_extent.time_steps)
+    {
+      if ((timestep < 1440) && ((1440 % timestep) == 0))
+      {
+        for (auto ts = 2 * timestep; (ts <= 1440); ts += timestep)
+        {
+          if ((1440 % ts) == 0)
+            tss.insert(ts);
+        }
+      }
+    }
+
+    temporal_extent.time_steps.insert(tss.begin(), tss.end());
+
+    return true;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+    return false;
+  }
+}
+
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
                                         const std::string &default_language,
                                         const ParameterInfo *pinfo,
@@ -165,6 +248,12 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       if (!cic.isVisibleCollection(SourceEngine::Querydata, qmd.producer))
         continue;
 
+      if (qmd.times.begin() == qmd.times.end())
+      {
+        report_missing_data(qmd.producer);
+        continue;
+      }
+
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Querydata;
 
@@ -186,12 +275,10 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 
       edr_temporal_extent temporal_extent;
       temporal_extent.origin_time = qmd.originTime;
-      edr_temporal_extent_period temporal_extent_period;
-      temporal_extent_period.start_time = qmd.firstTime;
-      temporal_extent_period.end_time = qmd.lastTime;
-      temporal_extent_period.timestep = qmd.timeStep;
-      temporal_extent_period.timesteps = qmd.nTimeSteps;
-      temporal_extent.time_periods.push_back(temporal_extent_period);
+
+      if (!extract_temporal_extent_periods(qmd.times, temporal_extent))
+        continue;
+
       producer_emd.temporal_extent = temporal_extent;
 
       for (const auto &p : qmd.parameters)
@@ -257,6 +344,12 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       if (!cic.isVisibleCollection(SourceEngine::Grid, producerId))
         continue;
 
+      if (gmd.times.begin() == gmd.times.end())
+      {
+        report_missing_data(producerId);
+        continue;
+      }
+
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Grid;
 
@@ -295,16 +388,6 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       producer_emd.spatial_extent.bbox_ymax =
           std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
 
-      auto begin_iter = gmd.times.begin();
-      auto end_iter = gmd.times.end();
-      end_iter--;
-      const auto &end_time = *end_iter;
-      const auto &start_time = *begin_iter;
-      if (gmd.times.size() > 1)
-        begin_iter++;
-      const auto &start_time_plus_one = *begin_iter;
-      auto timestep_duration = (Fmi::DateTime::from_iso_string(start_time_plus_one) -
-                                Fmi::DateTime::from_iso_string(start_time));
       edr_temporal_extent temporal_extent;
       try
       {
@@ -315,12 +398,15 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
         report_invalid_analysistime(producerId, gmd.analysisTime);
         continue;
       }
-      edr_temporal_extent_period temporal_extent_period;
-      temporal_extent_period.start_time = Fmi::DateTime::from_iso_string(start_time);
-      temporal_extent_period.end_time = Fmi::DateTime::from_iso_string(end_time);
-      temporal_extent_period.timestep = (timestep_duration.total_seconds() / 60);
-      temporal_extent_period.timesteps = gmd.times.size();
-      temporal_extent.time_periods.push_back(temporal_extent_period);
+
+      std::list<Fmi::DateTime> times;
+
+      for (auto it = gmd.times.begin(); (it != gmd.times.end()); it++)
+        times.emplace_back(Fmi::DateTime::from_iso_string(*it));
+
+      if (!extract_temporal_extent_periods(times, temporal_extent))
+        continue;
+
       producer_emd.temporal_extent = temporal_extent;
 
       for (const auto &p : gmd.parameters)
@@ -816,9 +902,7 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsExcludeSPECIs = false;
     queryOptions.itsLocationOptions.itsCountries.push_back("FI");
 
-    queryOptions.itsParameters.push_back("icao");
     queryOptions.itsParameters.push_back("messagetime");
-    queryOptions.itsParameters.push_back("messagetype");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
     queryOptions.itsMessageTypes.push_back(message_type);

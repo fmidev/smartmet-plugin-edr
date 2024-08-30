@@ -77,6 +77,7 @@ struct edr_temporal_extent
   Fmi::DateTime origin_time;
   std::string trs;
   std::vector<edr_temporal_extent_period> time_periods;
+  std::set<int> time_steps;
 };
 
 struct edr_vertical_extent

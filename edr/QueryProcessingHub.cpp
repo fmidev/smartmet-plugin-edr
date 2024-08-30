@@ -269,6 +269,40 @@ void fetch_static_location_values(const Query& query,
   }
 }
 
+void check_timestep(const Query& masterquery, const EDRMetaData& emd, const std::string& producer)
+{
+  try
+  {
+    if (masterquery.toptions.timeStep && (*masterquery.toptions.timeStep != 0))
+    {
+      if (emd.temporal_extent.time_steps.empty())
+      {
+        Fmi::Exception ex(
+            BCP, "timestep option is not applicable to collection '" + producer + "'!");
+        ex.disableLogging();
+        throw ex;
+      }
+
+      for (auto ts : emd.temporal_extent.time_steps)
+      {
+        if ((unsigned int) ts == *masterquery.toptions.timeStep)
+          return;
+      }
+
+      auto tss = Fmi::to_string(*masterquery.toptions.timeStep);
+
+      Fmi::Exception ex(
+          BCP, "timestep " + tss + " is not applicable to collection '" + producer + "'!");
+      ex.disableLogging();
+      throw ex;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 }  // namespace
 
 QueryProcessingHub::QueryProcessingHub(const Plugin& thePlugin)
@@ -458,6 +492,9 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     const auto& edr_query = masterquery.edrQuery();
     const auto& producer = edr_query.collection_id;
     EDRMetaData emd = thePlugin.getProducerMetaData(producer);
+
+    if (masterquery.toptions.timeStep)
+      check_timestep(masterquery, emd, producer);
 
     if (emd.vertical_extent.levels.empty())
       masterquery.levels.clear();

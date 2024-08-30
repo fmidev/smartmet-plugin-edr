@@ -1390,6 +1390,32 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         output_formats[i++] = Json::Value(f);
       value["output_formats"] = output_formats;
 
+      if (collection_emd.temporal_extent.time_steps.size() > 0)
+      {
+        auto timesteps = Json::Value(Json::ValueType::arrayValue);
+        for (auto ts : collection_emd.temporal_extent.time_steps)
+        {
+          timesteps[timesteps.size()] = Json::Value(ts);
+        }
+
+        auto interval = Json::Value(Json::ValueType::arrayValue);
+        auto itl = collection_emd.temporal_extent.time_steps.end();
+        itl--;
+        interval[0] = Json::Value(*(collection_emd.temporal_extent.time_steps.begin()));
+        interval[1] = Json::Value(*itl);
+
+        auto timestepdim = Json::Value(Json::ValueType::objectValue);
+        timestepdim["id"] = Json::Value("timestep");
+        timestepdim["interval"] = interval;
+        timestepdim["values"] = timesteps;
+        timestepdim["reference"] = Json::Value("minutes");
+
+        auto custom = Json::Value(Json::ValueType::arrayValue);
+        custom[0] = timestepdim;
+
+        value["custom"] = custom;
+      }
+
       collections[collection_index++] = value;
     }
 

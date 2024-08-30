@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.8.22
+Version: 24.8.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Aug 30 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.8.30-1.fmi
+- Added custom timestep dimension (BRAINSTORM-3013)
+
 * Fri Aug 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.8.22-1.fmi
 - Fetch data using timestep=data (BRAINSTORM-3010)
 
