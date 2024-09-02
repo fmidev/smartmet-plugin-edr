@@ -1080,6 +1080,43 @@ void parse_vertical_extent(const EDRMetaData &emd, Json::Value &extent)
   }
 }
 
+void add_timestep_dimension(
+    const edr_temporal_extent &temporal_extent, Json::Value &collection)
+{
+  try
+  {
+    if (temporal_extent.time_steps.size() > 0)
+    {
+      auto timesteps = Json::Value(Json::ValueType::arrayValue);
+      for (auto ts : temporal_extent.time_steps)
+      {
+        timesteps[timesteps.size()] = Json::Value(ts);
+      }
+
+      auto interval = Json::Value(Json::ValueType::arrayValue);
+      auto itl = temporal_extent.time_steps.end();
+      itl--;
+      interval[0] = Json::Value(*(temporal_extent.time_steps.begin()));
+      interval[1] = Json::Value(*itl);
+
+      auto timestepdim = Json::Value(Json::ValueType::objectValue);
+      timestepdim["id"] = Json::Value("timestep");
+      timestepdim["interval"] = interval;
+      timestepdim["values"] = timesteps;
+      timestepdim["reference"] = Json::Value("minutes");
+
+      auto custom = Json::Value(Json::ValueType::arrayValue);
+      custom[0] = timestepdim;
+
+      collection["custom"] = custom;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 /*
 clang-format off
 
@@ -1200,6 +1237,9 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       // Parameter names (mandatory)
       auto parameter_names = parse_parameter_names(emd);
       instance["parameter_names"] = parameter_names;
+
+      // Timestep dimension (allowed timesteps for &timestep=n)
+      add_timestep_dimension(emd.temporal_extent, instance);
 
       instances[instance_index] = instance;
       instance_index++;
@@ -1390,31 +1430,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
         output_formats[i++] = Json::Value(f);
       value["output_formats"] = output_formats;
 
-      if (collection_emd.temporal_extent.time_steps.size() > 0)
-      {
-        auto timesteps = Json::Value(Json::ValueType::arrayValue);
-        for (auto ts : collection_emd.temporal_extent.time_steps)
-        {
-          timesteps[timesteps.size()] = Json::Value(ts);
-        }
-
-        auto interval = Json::Value(Json::ValueType::arrayValue);
-        auto itl = collection_emd.temporal_extent.time_steps.end();
-        itl--;
-        interval[0] = Json::Value(*(collection_emd.temporal_extent.time_steps.begin()));
-        interval[1] = Json::Value(*itl);
-
-        auto timestepdim = Json::Value(Json::ValueType::objectValue);
-        timestepdim["id"] = Json::Value("timestep");
-        timestepdim["interval"] = interval;
-        timestepdim["values"] = timesteps;
-        timestepdim["reference"] = Json::Value("minutes");
-
-        auto custom = Json::Value(Json::ValueType::arrayValue);
-        custom[0] = timestepdim;
-
-        value["custom"] = custom;
-      }
+      // Timestep dimension (allowed timesteps for &timestep=n)
+      add_timestep_dimension(collection_emd.temporal_extent, value);
 
       collections[collection_index++] = value;
     }
