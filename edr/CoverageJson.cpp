@@ -2542,7 +2542,10 @@ Json::Value format_output_data_vertical_profile(
                     parameter_data_type);
 
       if (!isGridProducer)
+      {
         parameter_data_values[parameter_name] = values_array;
+        prev_param = parameter_name;
+      }
     }
 
     if (isGridProducer && (!prev_param.empty()))
