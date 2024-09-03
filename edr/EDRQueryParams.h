@@ -49,7 +49,8 @@ class EDRQueryParams
   void parseDateTime(const State& state, const EDRMetaData& emd);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
-                                      bool grid_producer);
+                                      bool grid_producer,
+                                      bool &noReqParams);
   std::string cleanParameterNames(const std::string& parameter_names,
                                   const EDRMetaData& emd,
                                   bool grid_producer,

@@ -233,14 +233,18 @@ EDRQueryParams::EDRQueryParams(const State& state,
     parseDateTime(state, emd);
 
     // EDR parameter names and z
-    auto parameter_names = parseParameterNamesAndZ(state, emd, grid_producer);
+    bool noReqParams = false;
+    auto parameter_names = parseParameterNamesAndZ(state, emd, grid_producer, noReqParams);
 
     if (parameter_names.empty())
     {
       if (emd.parameters.empty())
         throw EDRException("No metadata for " + itsEDRQuery.collection_id + "!");
 
-      throw EDRException("Missing parameter-name option!");
+      if (noReqParams)
+        throw EDRException("Missing parameter-name option!");
+
+      throw EDRException("No matching parameter names given!");
     }
 
     // If f-option is misssing, default output format is CoverageJSON
@@ -922,7 +926,8 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
 
 std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
                                                     const EDRMetaData& emd,
-                                                    bool grid_producer)
+                                                    bool grid_producer,
+                                                    bool &noReqParams)
 {
   try
   {
@@ -961,6 +966,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
 
     // EDR parameter-name
     auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
+    noReqParams = parameter_names.empty();
 
 #ifndef WITHOUT_AVI
     if (parameter_names.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))

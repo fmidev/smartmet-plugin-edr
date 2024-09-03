@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.8.30
+Version: 24.9.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Sep  3 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.3-1.fmi
+- Added custom timestep dimension for 'instances' query too. Test result changes due to timestep dimension (BRAINSTORM-3013)
+- Fixed bug in coverage json output; when fetching multiple querydata parameters, each parameter was handled as if it was the first (BRAINSTORM-3018)
+- Fixed error message given if collection has no given parameters (BRAINSTORM-3019)
+
 * Fri Aug 30 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.8.30-1.fmi
 - Added custom timestep dimension (BRAINSTORM-3013)
 
