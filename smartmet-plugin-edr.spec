@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.9.3
+Version: 24.9.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -38,14 +38,14 @@ BuildRequires: smartmet-library-timeseries-devel >= 24.8.7
 BuildRequires: smartmet-engine-avi-devel >= 24.8.7
 BuildRequires: smartmet-engine-geonames-devel >= 24.8.7
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 24.8.15
+BuildRequires: smartmet-engine-observation-devel >= 24.9.12
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 24.9.2
 BuildRequires: smartmet-engine-gis-devel >= 24.8.7
 BuildRequires: smartmet-engine-grid-devel >= 24.9.3
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 24.8.15
+#Requires: smartmet-engine-observation >= 24.9.12
 #%endif
 Requires: fmt-libs >= %{smartmet_fmt_min}, fmt-libs < %{smartmet_fmt_max}
 Requires: jsoncpp
@@ -68,7 +68,7 @@ Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
-#TestRequires: smartmet-utils-devel >= 24.8.21
+#TestRequires: smartmet-utils-devel >= 24.9.10
 #TestRequires: smartmet-library-spine-plugin-test >= 24.8.12
 #TestRequires: smartmet-library-newbase-devel >= 24.8.21
 #TestRequires: redis
@@ -81,7 +81,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 24.8.7
 #TestRequires: smartmet-engine-querydata >= 24.9.2
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 24.8.15
+#TestRequires: smartmet-engine-observation >= 24.9.12
 %endif
 #TestRequires: smartmet-engine-grid >= 24.9.3
 #TestRequires: gdal38-libs
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Sep 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.16-1.fmi
+- Fixed flash observation query result data vs edr query parameters indexing bug caused by special parameter 'data_source' (BRAINSTORM-3029)
+
 * Tue Sep  3 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.3-1.fmi
 - Added custom timestep dimension for 'instances' query too. Test result changes due to timestep dimension (BRAINSTORM-3013)
 - Fixed bug in coverage json output; when fetching multiple querydata parameters, each parameter was handled as if it was the first (BRAINSTORM-3018)

@@ -520,6 +520,8 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 {
   try
   {
+    static const edr_parameter emptyEDRParameterInfo("", "");
+
     const auto &engine_parameter_info = metadata.parameters;
     const auto &config_parameter_info = *metadata.parameter_info;
 
@@ -543,7 +545,12 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       if (lon_lat_level_param(parameter_name))
         continue;
 
-      const auto &edr_parameter = engine_parameter_info.at(parameter_name);
+      // BRAINSTORM-3029; when fetching flash 'data_source' -parameter, expanded parameters
+      // ('<column>_data_source') do not (currently) have engine_parameter info
+
+      bool hasParam = (engine_parameter_info.find(parameter_name) != engine_parameter_info.end());
+      const auto &edr_parameter =
+          (hasParam ? engine_parameter_info.at(parameter_name) : emptyEDRParameterInfo);
 
       auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
       // Description field: 1) from config 2) from engine 3) parameter name

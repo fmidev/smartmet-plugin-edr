@@ -498,8 +498,20 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(
       {
         // add data fields fetched from observation
         auto result = *observation_result;
+
+        // BRAINSTORM-3029; to keep returned result data vs query_parameters indexing intact,
+        // store empty parameter results too.
+        //
+        // Should an empty result still be ignored, obs_result_field_index must be increased;
+        // was not so before, causing all data to be lost after 1'st empty result
+        //
+        /*
         if (result[obs_result_field_index].empty())
+        {
+          obs_result_field_index++;
           continue;
+        }
+        */
 
         auto result_at_index = result[obs_result_field_index];
 
