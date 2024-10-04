@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.9.16
+Version: 24.10.4
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct  4 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.10.4-1.fmi
+- Fixed collection 'interval' to report only first and last time of the collection, not the start and end time of each period having different timestep. Also fixed the time format from range to single time value, start and end time are separate array items (BRAINSTORM-3042)
+- Fixed collection interval 'values' to report first time instant as repeating interval start time when timestep changes, not the last time instant of the previous timestep (BRAINSTORM-3042)
+
 * Tue Sep 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.16-1.fmi
 - Fixed flash observation query result data vs edr query parameters indexing bug caused by special parameter 'data_source' (BRAINSTORM-3029)
 
