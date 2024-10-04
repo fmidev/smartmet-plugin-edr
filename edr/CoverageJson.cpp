@@ -129,14 +129,18 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
         for (unsigned int i = 0; i < temporal_extent.time_periods.size(); i++)
         {
           const auto &temporal_extent_period = temporal_extent.time_periods.at(i);
-          temporal_interval_array[i] =
-              Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z/" +
-                          Fmi::to_iso_extended_string(temporal_extent_period.end_time) + "Z");
           temporal_interval_values[i] =
               Json::Value("R" + Fmi::to_string(temporal_extent_period.timesteps) + "/" +
                           Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z/PT" +
                           Fmi::to_string(temporal_extent_period.timestep) + "M");
         }
+        auto sz = temporal_extent.time_periods.size();
+        const auto &first_temporal_extent_period = temporal_extent.time_periods.at(0);
+        temporal_interval_array[0] =
+            Json::Value(Fmi::to_iso_extended_string(first_temporal_extent_period.start_time) + "Z");
+        const auto &last_temporal_extent_period = temporal_extent.time_periods.at(sz - 1);
+        temporal_interval_array[1] =
+            Json::Value(Fmi::to_iso_extended_string(last_temporal_extent_period.end_time) + "Z");
         temporal_interval[0] = temporal_interval_array;
         temporal["interval"] = temporal_interval;
         temporal["values"] = temporal_interval_values;
