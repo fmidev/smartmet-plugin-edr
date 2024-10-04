@@ -186,7 +186,7 @@ bool extract_temporal_extent_periods(
         if (it == end_iter)
           break;
 
-        first_it = last_it;
+        first_it = it;
         last_it = it;
         laststep = step;
         timesteps = 1;
