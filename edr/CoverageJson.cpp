@@ -1119,7 +1119,7 @@ void add_timestep_dimension(
       auto custom = Json::Value(Json::ValueType::arrayValue);
       custom[0] = timestepdim;
 
-      collection["custom"] = custom;
+      collection["extent"]["custom"] = custom;
     }
   }
   catch (...)

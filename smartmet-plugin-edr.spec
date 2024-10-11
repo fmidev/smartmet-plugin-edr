@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.10.4
+Version: 24.10.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 11 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.10.11-1.fmi
+- Moved custom dimension specification within extent specification (BRAINSTORM-3046)
+
 * Fri Oct  4 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.10.4-1.fmi
 - Fixed collection 'interval' to report only first and last time of the collection, not the start and end time of each period having different timestep. Also fixed the time format from range to single time value, start and end time are separate array items (BRAINSTORM-3042)
 - Fixed collection interval 'values' to report first time instant as repeating interval start time when timestep changes, not the last time instant of the previous timestep (BRAINSTORM-3042)
