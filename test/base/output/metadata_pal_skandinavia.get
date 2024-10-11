@@ -50,29 +50,6 @@
 	[
 		"CRS:84"
 	],
-	"custom" : 
-	[
-		{
-			"id" : "timestep",
-			"interval" : 
-			[
-				60,
-				1440
-			],
-			"reference" : "minutes",
-			"values" : 
-			[
-				60,
-				120,
-				180,
-				240,
-				360,
-				480,
-				720,
-				1440
-			]
-		}
-	],
 	"data_queries" : 
 	{
 		"area" : 
@@ -268,6 +245,29 @@
 	},
 	"extent" : 
 	{
+		"custom" : 
+		[
+			{
+				"id" : "timestep",
+				"interval" : 
+				[
+					60,
+					1440
+				],
+				"reference" : "minutes",
+				"values" : 
+				[
+					60,
+					120,
+					180,
+					240,
+					360,
+					480,
+					720,
+					1440
+				]
+			}
+		],
 		"spatial" : 
 		{
 			"crs" : "CRS:84",
