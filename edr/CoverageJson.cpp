@@ -2636,7 +2636,7 @@ Json::Value format_output_data_vertical_profile(
     auto timeIter = ts_lon->begin();
     auto timeSteps = (isGridProducer ? ts_lon->size() : (ts_lon->size() / levels.size()));
 
-    for (size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps); tStep++, timeIter++)
+    for (std::size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps); tStep++, timeIter++)
     {
       auto ranges = Json::Value(Json::ValueType::objectValue);
       auto domain = Json::Value(Json::ValueType::objectValue);
@@ -2657,7 +2657,7 @@ Json::Value format_output_data_vertical_profile(
       y_array[0] = UtilityFunctions::json_value(lat_timed_value.value, latitude_precision);
 
       auto levelArray = Json::Value(Json::ValueType::arrayValue);
-      size_t levelIdx = 0;
+      std::size_t levelIdx = 0;
       for (auto level : levels)
         levelArray[levelIdx++] = Json::Value(level);
       domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
@@ -2681,8 +2681,8 @@ Json::Value format_output_data_vertical_profile(
 
         // Every n'th item value has data for the timestep
         auto valueArray = Json::Value(Json::ValueType::arrayValue);
-        size_t itemCnt = (isGridProducer ? item.second.size() : ts_lon->size());
-        for (size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt); itemIdx += timeSteps, valIdx++)
+        std::size_t itemCnt = (isGridProducer ? item.second.size() : ts_lon->size());
+        for (std::size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt); itemIdx += timeSteps, valIdx++)
           valueArray[valIdx] = item.second[itemIdx];
 
         auto shape = Json::Value(Json::ValueType::arrayValue);

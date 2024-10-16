@@ -440,7 +440,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     Spine::Table& table,
     Query& masterquery,
     const QueryServer::QueryStreamer_sptr& queryStreamer,
-    size_t& product_hash)
+    std::size_t& product_hash)
 {
   try
   {
