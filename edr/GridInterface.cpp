@@ -165,7 +165,7 @@ bool GridInterface::containsParameterWithGridProducer(const Query& masterquery)
       Spine::Parameter param = paramfunc.parameter;
       // printf("PARAM %s\n",param.name().c_str());
 
-      uint len = param.name().length();
+      const uint len = param.name().length();
       char buf[len + 1];
       strcpy(buf, param.name().c_str());
       for (uint t = 0; t < len; t++)
@@ -2144,21 +2144,33 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
 
           if (!tsForNonGridParam->empty())
           {
-            aggregatedData.emplace_back(erase_redundant_timesteps(
-                TS::aggregate(tsForNonGridParam, paramFuncs[pIdx].functions), aggregationTimes));
+            TS::TimeSeriesPtr aggregatedTs = TS::aggregate(
+                tsForNonGridParam,
+                paramFuncs[pIdx].functions,
+                tsForNonGridParam->getTimes());
+            aggregatedTs = erase_redundant_timesteps(aggregatedTs, aggregationTimes);
+            aggregatedData.emplace_back(aggregatedTs);
           }
         }
 
         if (!tsForParameter->empty())
         {
-          aggregatedData.emplace_back(erase_redundant_timesteps(
-              TS::aggregate(tsForParameter, paramFuncs[pIdx].functions), aggregationTimes));
+          TS::TimeSeriesPtr aggregatedTs = TS::aggregate(
+              tsForParameter,
+              paramFuncs[pIdx].functions,
+              tsForParameter->getTimes());
+          aggregatedTs = erase_redundant_timesteps(aggregatedTs, aggregationTimes);
+          aggregatedData.emplace_back(aggregatedTs);
         }
 
         if (!tsForGroup->empty())
         {
-          aggregatedData.emplace_back(erase_redundant_timesteps(
-              TS::aggregate(tsForGroup, paramFuncs[pIdx].functions), aggregationTimes));
+          TS::TimeSeriesGroupPtr aggregatedTsg = TS::aggregate(
+              tsForGroup,
+              paramFuncs[pIdx].functions,
+              tsForGroup->front().getTimes());
+          aggregatedTsg = erase_redundant_timesteps(aggregatedTsg, aggregationTimes);
+          aggregatedData.emplace_back(aggregatedTsg);
         }
 
         PostProcessing::store_data(aggregatedData, masterquery, outputData);
