@@ -668,7 +668,8 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       TS::TimeSeriesGenerator::LocalTimeList* agg_times = nullptr;
       if (acceptAllTimesteps)
       {
-        agg_times_full = get_all_timesteps(query, observation_result->at(0), tz);
+        if (!observation_result->empty())
+          agg_times_full = get_all_timesteps(query, observation_result->front(), tz);
         agg_times = &agg_times_full;
       }
       else
@@ -996,7 +997,9 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
       if (query.toptions.all() || UtilityFunctions::is_flash_producer(producer) ||
           UtilityFunctions::is_mobile_producer(producer) || producer == SYKE_PRODUCER)
       {
-        tlist = get_timesteps(tsg->at(0).timeseries);
+        tlist.clear();
+        if (!tsg->empty())
+          tlist = get_timesteps(tsg->front().timeseries);
       }
       else
       {
