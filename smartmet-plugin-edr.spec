@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.11.28
+Version: 24.11.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -27,39 +27,39 @@ BuildRequires: fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 24.11.19
+BuildRequires: smartmet-library-spine-devel >= 24.11.8
 BuildRequires: smartmet-library-locus-devel >= 24.9.28
 BuildRequires: smartmet-library-macgyver-devel >= 24.10.28
-BuildRequires: smartmet-library-grid-content-devel >= 24.10.31
-BuildRequires: smartmet-library-grid-files-devel >= 24.10.31
-BuildRequires: smartmet-library-newbase-devel >= 24.11.6
-BuildRequires: smartmet-library-gis-devel >= 24.11.12
-BuildRequires: smartmet-library-timeseries-devel >= 24.11.22
+BuildRequires: smartmet-library-grid-content-devel >= 24.10.23
+BuildRequires: smartmet-library-grid-files-devel >= 24.10.23
+BuildRequires: smartmet-library-newbase-devel >= 24.10.15
+BuildRequires: smartmet-library-gis-devel >= 24.8.7
+BuildRequires: smartmet-library-timeseries-devel >= 24.11.8
 BuildRequires: smartmet-engine-avi-devel >= 24.11.8
-BuildRequires: smartmet-engine-geonames-devel >= 24.11.19
+BuildRequires: smartmet-engine-geonames-devel >= 24.11.8
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 24.11.26
+BuildRequires: smartmet-engine-observation-devel >= 24.11.8
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 24.11.13
+BuildRequires: smartmet-engine-querydata-devel >= 24.11.8
 BuildRequires: smartmet-engine-gis-devel >= 24.11.8
 BuildRequires: smartmet-engine-grid-devel >= 24.11.8
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 24.11.26
+#Requires: smartmet-engine-observation >= 24.11.8
 #%endif
 Requires: fmt-libs >= %{smartmet_fmt_min}, fmt-libs < %{smartmet_fmt_max}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 24.11.12
+Requires: smartmet-library-gis >= 24.8.7
 Requires: smartmet-library-locus >= 24.9.28
 Requires: smartmet-library-macgyver >= 24.10.28
-Requires: smartmet-library-newbase >= 24.11.6
-Requires: smartmet-library-spine >= 24.11.19
-Requires: smartmet-library-timeseries >= 24.11.22
-Requires: smartmet-library-gis >= 24.11.12
-Requires: smartmet-library-grid-files >= 24.10.31
+Requires: smartmet-library-newbase >= 24.10.15
+Requires: smartmet-library-spine >= 24.11.8
+Requires: smartmet-library-timeseries >= 24.11.8
+Requires: smartmet-library-gis >= 24.8.7
+Requires: smartmet-library-grid-files >= 24.10.23
 Requires: smartmet-engine-avi >= 24.11.8
-Requires: smartmet-engine-geonames >= 24.11.19
-Requires: smartmet-engine-querydata >= 24.11.13
+Requires: smartmet-engine-geonames >= 24.11.8
+Requires: smartmet-engine-querydata >= 24.11.8
 Requires: smartmet-engine-gis >= 24.11.8
 Requires: smartmet-engine-grid >= 24.11.8
 Requires: smartmet-server >= 24.11.8
@@ -69,19 +69,19 @@ Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 24.9.10
-#TestRequires: smartmet-library-spine-plugin-test >= 24.11.19
-#TestRequires: smartmet-library-newbase-devel >= 24.11.6
+#TestRequires: smartmet-library-spine-plugin-test >= 24.11.8
+#TestRequires: smartmet-library-newbase-devel >= 24.10.15
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 24.8.7
 #TestRequires: smartmet-test-data >= 24.8.12
-#TestRequires: smartmet-engine-grid-test >= 24.11.8
-#TestRequires: smartmet-library-gis >= 24.11.12
+#TestRequires: smartmet-engine-grid-test >= 24.10.23
+#TestRequires: smartmet-library-gis >= 24.8.7
 #TestRequires: smartmet-engine-avi >= 24.11.8
-#TestRequires: smartmet-engine-geonames >= 24.11.19
+#TestRequires: smartmet-engine-geonames >= 24.11.8
 #TestRequires: smartmet-engine-gis >= 24.11.8
-#TestRequires: smartmet-engine-querydata >= 24.11.13
+#TestRequires: smartmet-engine-querydata >= 24.11.8
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 24.11.26
+#TestRequires: smartmet-engine-observation >= 24.11.8
 %endif
 #TestRequires: smartmet-engine-grid >= 24.11.8
 #TestRequires: gdal38-libs
@@ -112,9 +112,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
-* Thu Nov 28 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.11.28-1.fmi
-- Improved speed of icebuoy queries when a BBOX is used
-
 * Fri Nov 22 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.11.22-1.fmi
 - Aggregation update according to smartmet-library-timeseries ABI changes
 
