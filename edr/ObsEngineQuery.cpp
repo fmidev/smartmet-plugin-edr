@@ -677,8 +677,8 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
         agg_times = tlist.get();
       }
 
-      auto aggregated_observation_result = doAggregationForPlaces(
-          state, obsParameters, observation_result, *agg_times, parameterResultIndexes);
+      auto aggregated_observation_result =
+          doAggregationForPlaces(state, obsParameters, observation_result, *agg_times, parameterResultIndexes);
 
       if (aggregated_observation_result->empty())
       {
@@ -692,10 +692,12 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       std::cout << *aggregated_observation_result << std::endl;
 #endif
 
-      aggregated_observation_result =
-          TS::erase_redundant_timesteps(aggregated_observation_result, *agg_times);
+      aggregated_observation_result = TS::erase_redundant_timesteps(aggregated_observation_result, *agg_times);
 
-      PostProcessing::store_data(aggregated_observation_result, query, outputData);
+      PostProcessing::store_data(
+          aggregated_observation_result,
+          query,
+          outputData);
     }
   }
   catch (...)
@@ -1543,12 +1545,8 @@ void ObsEngineQuery::resolveStationsForBBox(
     wktString = Fmi::OGR::exportToWkt(*geom);
     if (!UtilityFunctions::is_flash_or_mobile_producer(producer) ||
         UtilityFunctions::is_icebuoy_or_copernicus_producer(producer))
-    {
       stationSettings.fmisids =
           get_fmisids_for_wkt(itsPlugin.itsEngines.obsEngine, settings, wktString);
-      // No need to use the WKT in the SQL anymore
-      wktString.clear();
-    }
   }
   catch (...)
   {
