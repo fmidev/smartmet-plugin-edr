@@ -423,7 +423,8 @@ void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData
       }
       if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
       {
-        messages.insert(0, "<collect:meteorologicalInformation>\n");
+        messages.insert(
+          0, "<collect:meteorologicalInformation xmlns:collect=\"https://schemas.wmo.int/collect/1.2\">\n");
         messages.append("\n</collect:meteorologicalInformation>");
       }
       table.set(0, 0, messages);
