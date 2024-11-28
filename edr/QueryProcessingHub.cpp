@@ -234,6 +234,17 @@ void check_in_keyword_locations(Query& masterquery,
   }
 }
 
+bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams)
+{
+  return std::all_of(
+    theParams.begin(),
+    theParams.end(),
+    [](const Spine::Parameter& param)
+    {
+      return TS::is_location_parameter(param.name()) || param.name() == "plaace";
+    });
+}
+
 void fetch_static_location_values(const Query& query,
                                   const Engine::Geonames::Engine& geoEngine,
                                   const Engine::Gis::GeometryStorage& geometryStorage,
@@ -251,14 +262,25 @@ void fetch_static_location_values(const Query& query,
       for (const auto& tloc : query.loptions->locations())
       {
         Spine::LocationPtr loc = tloc.loc;
+        std::string place = loc->name;
+
         if (loc->type == Spine::Location::Path || loc->type == Spine::Location::Area)
+        {
           loc = get_location_for_area(tloc, geometryStorage, query.language, geoEngine);
+        }
         else if (loc->type == Spine::Location::Wkt)
           loc = query.wktGeometries.getLocation(tloc.loc->name);
 
-        std::string val = TS::location_parameter(
+        if (param.name() == "place")
+        {
+          data.set(column, row++, place);
+        }
+        else
+        {
+          std::string val = TS::location_parameter(
             loc, pname, query.valueformatter, query.timezone, query.precisions[column], query.crs);
-        data.set(column, row++, val);
+          data.set(column, row++, val);
+        }
       }
       column++;
     }
@@ -456,7 +478,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     check_in_keyword_locations(masterquery, thePlugin.itsGeometryStorage);
 
     // if only location related parameters queried, use shortcut
-    if (TS::is_plain_location_query(masterquery.poptions.parameters()))
+    if (is_static_location_query(masterquery.poptions.parameters()))
     {
       fetch_static_location_values(
           masterquery, *theEngines.geoEngine, thePlugin.itsGeometryStorage, table);
