@@ -765,6 +765,8 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
     {
       std::vector<std::string> datetime_parts;
       boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
+      if (datetime_parts.size() != 2)  // Cannot have size()==1, because above check. size() > 2 is however not OK
+        throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
       auto starttime = datetime_parts.at(0);
       auto endtime = datetime_parts.at(1);
 
