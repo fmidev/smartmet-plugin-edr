@@ -1411,7 +1411,7 @@ void ObsEngineQuery::resolveStationsForPath(
         boost::algorithm::split(parts, loc_name, boost::algorithm::is_any_of(","));
         if (parts.size() % 2)
           throw Fmi::Exception(
-              BCP, "Path " + loc_name + "is invalid, because it has odd number of coordinates!");
+              BCP, "Path '" + loc_name + "' is invalid, because it has odd number of coordinates!");
 
         std::string wkt = "LINESTRING(";
         for (unsigned int i = 0; i < parts.size(); i += 2)
