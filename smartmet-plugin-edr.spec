@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.11.28
+Version: 25.1.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Jan  9 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.1.9-1.fmi
+- Fix missing size check of boost::algorithm::split result before use
+
 * Thu Nov 28 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> - 24.11.28-1.fmi
 - Added 'collect' namespace specification; BRAINSTORM-3086
 
