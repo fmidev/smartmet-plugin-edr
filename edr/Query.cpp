@@ -106,7 +106,7 @@ void set_agg_interval_ahead(TS::DataFunction& func, unsigned int interval)
   }
 }
 
-void add_sql_data_filter(const Spine::HTTP::Request& req,
+[[maybe_unused]] void add_sql_data_filter(const Spine::HTTP::Request& req,
                          const std::string& param_name,
                          TS::DataFilter& dataFilter)
 {

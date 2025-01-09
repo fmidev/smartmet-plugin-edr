@@ -744,6 +744,7 @@ Json::Value add_prologue_one_point(std::optional<int> level,
   }
 }
 
+[[maybe_unused]]
 Json::Value add_prologue_multi_point(std::optional<int> level,
                                      const EDRMetaData &emd,
                                      const std::vector<TS::LonLat> &coordinates)
