@@ -18,7 +18,7 @@ namespace EDR
 {
 namespace
 {
-void print_settings(const Engine::Observation::Settings& settings)
+[[maybe_unused]] void print_settings(const Engine::Observation::Settings& settings)
 {
   std::cout << settings;
 }
