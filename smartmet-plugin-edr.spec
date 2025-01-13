@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.1.9
-Release: 2%{?dist}.fmi
+Version: 25.1.13
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Jan 13 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.1.13-1.fmi
+- check that geonames location is available befor using it
+
 
 * Thu Jan  9 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.1.9-2.fmi
 - Repackaged due to GRID-library changes
