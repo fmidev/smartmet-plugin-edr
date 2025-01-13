@@ -112,8 +112,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+
 * Thu Jan  9 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.1.9-2.fmi
 - Repackaged due to GRID-library changes
+
+* Thu Jan  9 2025 Andris Pavēnis <andris.pavenis@fmi.fi>
+- Fix missing size check of boost::algorithm::split result before use
 
 * Thu Jan  9 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.1.9-1.fmi
 - Fix missing size check of boost::algorithm::split result before use
