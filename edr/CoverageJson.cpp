@@ -2591,8 +2591,7 @@ Json::Value format_output_data_vertical_profile(
 
     auto coordinates = get_coordinates(outputData, query_parameters);
     auto axis_names = Json::Value(Json::ValueType::arrayValue);
-    axis_names[0] = Json::Value("t");
-    axis_names[1] = Json::Value("z");
+    axis_names[0] = Json::Value("z");
 
     auto tslon = outdata.at(longitude_index);
     auto tslat = outdata.at(latitude_index);

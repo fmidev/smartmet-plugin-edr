@@ -50,7 +50,6 @@
 				{
 					"axisNames" : 
 					[
-						"t",
 						"z"
 					],
 					"dataType" : "float",
