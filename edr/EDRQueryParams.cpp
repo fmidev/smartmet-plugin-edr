@@ -168,8 +168,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
 
     if (is_data_query(req, itsEDRQuery, emd))
     {
-      if (itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance &&
-          !itsEDRQuery.instance_id.empty())
+      if (!itsEDRQuery.instance_id.empty())
         req.addParameter("origintime", itsEDRQuery.instance_id);
       itsEDRQuery.query_id = EDRQueryId::DataQuery;
     }
