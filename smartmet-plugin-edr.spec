@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 24.11.28
+Version: 25.2.7
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -27,63 +27,63 @@ BuildRequires: fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 24.11.19
+BuildRequires: smartmet-library-spine-devel >= 25.1.17
 BuildRequires: smartmet-library-locus-devel >= 24.9.28
-BuildRequires: smartmet-library-macgyver-devel >= 24.10.28
-BuildRequires: smartmet-library-grid-content-devel >= 24.10.31
-BuildRequires: smartmet-library-grid-files-devel >= 24.10.31
-BuildRequires: smartmet-library-newbase-devel >= 24.11.6
+BuildRequires: smartmet-library-macgyver-devel >= 25.2.5
+BuildRequires: smartmet-library-grid-content-devel >= 25.1.30
+BuildRequires: smartmet-library-grid-files-devel >= 25.1.30
+BuildRequires: smartmet-library-newbase-devel >= 24.12.16
 BuildRequires: smartmet-library-gis-devel >= 24.11.12
-BuildRequires: smartmet-library-timeseries-devel >= 24.11.22
+BuildRequires: smartmet-library-timeseries-devel >= 25.1.17
 BuildRequires: smartmet-engine-avi-devel >= 24.11.8
-BuildRequires: smartmet-engine-geonames-devel >= 24.11.19
+BuildRequires: smartmet-engine-geonames-devel >= 25.2.4
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 24.11.26
+BuildRequires: smartmet-engine-observation-devel >= 25.2.5
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 24.11.13
+BuildRequires: smartmet-engine-querydata-devel >= 25.1.10
 BuildRequires: smartmet-engine-gis-devel >= 24.11.8
-BuildRequires: smartmet-engine-grid-devel >= 24.11.8
+BuildRequires: smartmet-engine-grid-devel >= 25.1.24
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 24.11.26
+#Requires: smartmet-engine-observation >= 25.2.5
 #%endif
 Requires: fmt-libs >= %{smartmet_fmt_min}, fmt-libs < %{smartmet_fmt_max}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 24.11.12
 Requires: smartmet-library-locus >= 24.9.28
-Requires: smartmet-library-macgyver >= 24.10.28
-Requires: smartmet-library-newbase >= 24.11.6
-Requires: smartmet-library-spine >= 24.11.19
-Requires: smartmet-library-timeseries >= 24.11.22
+Requires: smartmet-library-macgyver >= 25.2.5
+Requires: smartmet-library-newbase >= 24.12.16
+Requires: smartmet-library-spine >= 25.1.17
+Requires: smartmet-library-timeseries >= 25.1.17
 Requires: smartmet-library-gis >= 24.11.12
-Requires: smartmet-library-grid-files >= 24.10.31
+Requires: smartmet-library-grid-files >= 25.1.30
 Requires: smartmet-engine-avi >= 24.11.8
-Requires: smartmet-engine-geonames >= 24.11.19
-Requires: smartmet-engine-querydata >= 24.11.13
+Requires: smartmet-engine-geonames >= 25.2.4
+Requires: smartmet-engine-querydata >= 25.1.10
 Requires: smartmet-engine-gis >= 24.11.8
-Requires: smartmet-engine-grid >= 24.11.8
-Requires: smartmet-server >= 24.11.8
+Requires: smartmet-engine-grid >= 25.1.24
+Requires: smartmet-server >= 25.2.4
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
-#TestRequires: smartmet-utils-devel >= 24.9.10
-#TestRequires: smartmet-library-spine-plugin-test >= 24.11.19
-#TestRequires: smartmet-library-newbase-devel >= 24.11.6
+#TestRequires: smartmet-utils-devel >= 24.12.10
+#TestRequires: smartmet-library-spine-plugin-test >= 25.1.17
+#TestRequires: smartmet-library-newbase-devel >= 24.12.16
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 24.8.7
 #TestRequires: smartmet-test-data >= 24.8.12
-#TestRequires: smartmet-engine-grid-test >= 24.11.8
+#TestRequires: smartmet-engine-grid-test >= 25.1.24
 #TestRequires: smartmet-library-gis >= 24.11.12
 #TestRequires: smartmet-engine-avi >= 24.11.8
-#TestRequires: smartmet-engine-geonames >= 24.11.19
+#TestRequires: smartmet-engine-geonames >= 25.2.4
 #TestRequires: smartmet-engine-gis >= 24.11.8
-#TestRequires: smartmet-engine-querydata >= 24.11.13
+#TestRequires: smartmet-engine-querydata >= 25.1.10
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 24.11.26
+#TestRequires: smartmet-engine-observation >= 25.2.5
 %endif
-#TestRequires: smartmet-engine-grid >= 24.11.8
+#TestRequires: smartmet-engine-grid >= 25.1.24
 #TestRequires: gdal310-libs
 #TestRequires: libwebp13
 
@@ -112,6 +112,24 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Feb  7 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.2.7-1.fmi
+- Fixed instance query to return given instance data instead of the latest one; BRAINSTORM-3131
+
+* Fri Jan 24 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.1.24-1.fmi
+- Removed VerticalProfile response extra axis 't'; BRAINSTORM-3117
+
+* Mon Jan 13 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.1.13-1.fmi
+- check that geonames location is available befor using it
+
+* Thu Jan  9 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.1.9-2.fmi
+- Repackaged due to GRID-library changes
+
+* Thu Jan  9 2025 Andris Pavēnis <andris.pavenis@fmi.fi>
+- Fix missing size check of boost::algorithm::split result before use
+
+* Thu Jan  9 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.1.9-1.fmi
+- Fix missing size check of boost::algorithm::split result before use
+
 * Thu Nov 28 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> - 24.11.28-1.fmi
 - Added 'collect' namespace specification; BRAINSTORM-3086
 
