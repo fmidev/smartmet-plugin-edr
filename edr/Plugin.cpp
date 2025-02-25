@@ -155,7 +155,7 @@ bool etag_only(const Spine::HTTP::Request& request,
   {
     if (product_hash != Fmi::bad_hash)
     {
-      response.setHeader("ETag", fmt::format("\"{:x}-timeseries\"", product_hash));
+      response.setHeader("ETag", fmt::format("\"{:x}-edr\"", product_hash));
 
       // If the product is cacheable and etag was requested, respond with etag only
 
@@ -418,14 +418,18 @@ void Plugin::query(const State& state,
     timeheader = Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
                  Fmi::to_string(duration_cast<microseconds>(t3 - t2).count());
 
-    if (etag_only(request, response, product_hash))
-      return;
+    //if (etag_only(request, response, product_hash))
+    //  return;
 
     // If obj is not nullptr it is from cache
     obj = qph.processQuery(state, data, q, queryStreamer, product_hash);
 
     if (obj)
     {
+      product_hash = Fmi::hash_value(*obj);
+      if (etag_only(request, response, product_hash))
+        return;
+
       response.setHeader("X-Duration", timeheader);
       response.setHeader("X-EDR-Cache", "yes");
       response.setContent(obj);
@@ -488,6 +492,10 @@ void Plugin::query(const State& state,
     }
     else
     {
+      product_hash = Fmi::hash_value(*result);
+      if (etag_only(request, response, product_hash))
+        return;
+
       response.setContent(*result);
     }
   }
