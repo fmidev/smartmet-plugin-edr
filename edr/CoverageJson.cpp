@@ -992,6 +992,24 @@ void parse_instance_link(bool instances_exist,
   }
 }
 
+Json::Value parse_license_link()
+{
+  try
+  {
+    auto license_link = Json::Value(Json::ValueType::objectValue);
+    license_link["href"] = Json::Value("https://creativecommons.org/licenses/by/4.0/");
+    license_link["hreflang"] = Json::Value("en");
+    license_link["rel"] = Json::Value("license");
+    license_link["type"] = Json::Value("text/html");
+
+    return license_link;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 EDRProducerMetaData get_producer_metadata(const EDRProducerMetaData &epmd,
                                           const EDRQuery &edr_query)
 {
@@ -1178,10 +1196,12 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
 
     auto links = Json::Value(Json::ValueType::arrayValue);
     auto link_item = Json::Value(Json::ValueType::objectValue);
-    link_item["href"] = Json::Value((edr_query.host + "/collections/" + producer + "/instances"));
+    auto href = edr_query.host + "/collections/" + producer + "/instances";
+    link_item["href"] = Json::Value(href);
     link_item["rel"] = Json::Value("self");
     link_item["type"] = Json::Value("application/json");
     links[0] = link_item;
+    links[1] = parse_license_link();
 
     result["links"] = links;
 
@@ -1255,13 +1275,15 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
 
       instances[instance_index] = instance;
       instance_index++;
-    }
 
-    if (
-        (instance_index == 1) &&
-        (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
-       )
-      return instances[0];
+      if (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
+      {
+        links[0]["href"] = Json::Value(href + "/" + instance_id);
+        instances[0]["links"] = links;
+
+        return instances[0];
+      }
+    }
 
     result["instances"] = instances;
 
@@ -1395,6 +1417,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       auto links = Json::Value(Json::ValueType::arrayValue);
       links[0] = collection_link;
       parse_instance_link(instances_exist, edr_query, producer, links);
+
+      if (! edr_query.collection_id.empty())
+        links.append(parse_license_link());
 
       value["links"] = links;
       // Extent (mandatory)
@@ -2910,6 +2935,7 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &em
       link["title"] = Json::Value("Collections metadata in JSON");
       auto links = Json::Value(Json::ValueType::arrayValue);
       links[0] = link;
+      links[1] = parse_license_link();
       result["links"] = links;
       result["collections"] = edr_metadata;
     }

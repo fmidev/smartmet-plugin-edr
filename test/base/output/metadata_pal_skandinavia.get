@@ -9,6 +9,12 @@
 			"hreflang" : "en",
 			"rel" : "self",
 			"type" : "application/json"
+		},
+		{
+			"href" : "https://creativecommons.org/licenses/by/4.0/",
+			"hreflang" : "en",
+			"rel" : "license",
+			"type" : "text/html"
 		}
 	],
 	"output_formats" : 
