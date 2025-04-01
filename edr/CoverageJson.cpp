@@ -2683,8 +2683,16 @@ Json::Value format_output_data_vertical_profile(
 
       auto levelArray = Json::Value(Json::ValueType::arrayValue);
       std::size_t levelIdx = 0;
-      for (auto level : levels)
-        levelArray[levelIdx++] = Json::Value(level);
+      if (emd.vertical_extent.level_type == "PressureLevel")
+      {
+        for (auto level = levels.crbegin(); (level != levels.crend()); level++)
+          levelArray[levelIdx++] = Json::Value(*level);
+      }
+      else
+      {
+        for (auto level : levels)
+          levelArray[levelIdx++] = Json::Value(level);
+      }
       domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
       domain["axes"]["z"]["values"] = levelArray;
 
