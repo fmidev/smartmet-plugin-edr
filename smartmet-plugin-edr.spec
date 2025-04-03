@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.4.1
+Version: 25.4.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Apr  3 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.4.3-1.fmi
+- CoverageJson: format_output_data_point(): fix using std::vector values without checking of them presence
+
 * Tue Apr  1 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.4.1-1.fmi
 - Reverted order of z -axis values for pressure level data (BRAINSTORM-3157)
 
