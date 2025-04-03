@@ -2425,6 +2425,9 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
     }
     else
     {
+      level_index = -1;  // Not actually used due to levels_present=false, but silence CodeChecker error
+                         // FIXME: it would be better to use std::optional, but unfortuynaly changes
+                         //        seems tyo escalate
       latitude_index = (query_parameters.size() - 1);
       longitude_index = (query_parameters.size() - 2);
     }
