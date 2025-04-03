@@ -1616,6 +1616,9 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
 
     auto ranges = Json::Value(Json::ValueType::objectValue);
     auto coordinates = get_coordinates(outputData, query_parameters);
+    if (coordinates.empty())
+      return coverage;
+
     std::set<std::string> timesteps;
     for (unsigned int i = 0; i < outputData.size(); i++)
     {
