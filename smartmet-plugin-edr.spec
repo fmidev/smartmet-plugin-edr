@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.4.3
+Version: 25.4.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -30,8 +30,8 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 25.3.24
 BuildRequires: smartmet-library-locus-devel >= 25.2.18
 BuildRequires: smartmet-library-macgyver-devel >= 25.2.18
-BuildRequires: smartmet-library-grid-content-devel >= 25.3.19
-BuildRequires: smartmet-library-grid-files-devel >= 25.3.19
+BuildRequires: smartmet-library-grid-content-devel >= 25.4.8
+BuildRequires: smartmet-library-grid-files-devel >= 25.4.8
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
 BuildRequires: smartmet-library-gis-devel >= 25.2.18
 BuildRequires: smartmet-library-timeseries-devel >= 25.2.18
@@ -42,7 +42,7 @@ BuildRequires: smartmet-engine-observation-devel >= 25.3.21
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 25.2.18
 BuildRequires: smartmet-engine-gis-devel >= 25.2.18
-BuildRequires: smartmet-engine-grid-devel >= 25.3.19
+BuildRequires: smartmet-engine-grid-devel >= 25.4.8
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 25.3.21
@@ -56,12 +56,12 @@ Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-library-spine >= 25.3.24
 Requires: smartmet-library-timeseries >= 25.2.18
 Requires: smartmet-library-gis >= 25.2.18
-Requires: smartmet-library-grid-files >= 25.3.19
+Requires: smartmet-library-grid-files >= 25.4.8
 Requires: smartmet-engine-avi >= 25.2.20
 Requires: smartmet-engine-geonames >= 25.2.18
 Requires: smartmet-engine-querydata >= 25.2.18
 Requires: smartmet-engine-gis >= 25.2.18
-Requires: smartmet-engine-grid >= 25.3.19
+Requires: smartmet-engine-grid >= 25.4.8
 Requires: smartmet-server >= 25.2.18
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -74,7 +74,7 @@ Provides: %{SPECNAME}
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 25.2.18
 #TestRequires: smartmet-test-data >= 24.8.12
-#TestRequires: smartmet-engine-grid-test >= 25.3.19
+#TestRequires: smartmet-engine-grid-test >= 25.4.8
 #TestRequires: smartmet-library-gis >= 25.2.18
 #TestRequires: smartmet-engine-avi >= 25.2.20
 #TestRequires: smartmet-engine-geonames >= 25.2.18
@@ -83,7 +83,7 @@ Provides: %{SPECNAME}
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 25.3.21
 %endif
-#TestRequires: smartmet-engine-grid >= 25.3.19
+#TestRequires: smartmet-engine-grid >= 25.4.8
 #TestRequires: gdal310-libs
 #TestRequires: libwebp13
 
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Apr  8 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.4.8-1.fmi
+- Repackaged due to base library ABI changes
+
 * Thu Apr  3 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.4.3-1.fmi
 - CoverageJson: format_output_data_point(): fix using std::vector values without checking of them presence
 
