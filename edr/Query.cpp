@@ -158,7 +158,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 {
   try
   {
-    format = Spine::optional_string(req.getParameter("format"), "ascii");
+    // BRAINSTORM-3178; table data is json format string, do not use "format" request param
+    format = "ascii";
     // If meta data query, return from here
     if (edrQuery().query_id != EDRQueryId::DataQuery)
     {
