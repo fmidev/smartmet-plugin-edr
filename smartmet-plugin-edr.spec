@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.4.8
+Version: 25.5.2
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -27,7 +27,7 @@ BuildRequires: fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 25.3.24
+BuildRequires: smartmet-library-spine-devel >= 25.4.9
 BuildRequires: smartmet-library-locus-devel >= 25.2.18
 BuildRequires: smartmet-library-macgyver-devel >= 25.2.18
 BuildRequires: smartmet-library-grid-content-devel >= 25.4.8
@@ -53,7 +53,7 @@ Requires: smartmet-library-gis >= 25.2.18
 Requires: smartmet-library-locus >= 25.2.18
 Requires: smartmet-library-macgyver >= 25.2.18
 Requires: smartmet-library-newbase >= 25.3.20
-Requires: smartmet-library-spine >= 25.3.24
+Requires: smartmet-library-spine >= 25.4.9
 Requires: smartmet-library-timeseries >= 25.2.18
 Requires: smartmet-library-gis >= 25.2.18
 Requires: smartmet-library-grid-files >= 25.4.8
@@ -62,14 +62,14 @@ Requires: smartmet-engine-geonames >= 25.2.18
 Requires: smartmet-engine-querydata >= 25.2.18
 Requires: smartmet-engine-gis >= 25.2.18
 Requires: smartmet-engine-grid >= 25.4.8
-Requires: smartmet-server >= 25.2.18
+Requires: smartmet-server >= 25.4.9
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 25.2.18
-#TestRequires: smartmet-library-spine-plugin-test >= 25.3.24
+#TestRequires: smartmet-library-spine-plugin-test >= 25.4.9
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 25.2.18
@@ -112,6 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue May  2 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.5.2-1.fmi
+- Do not use 'format' request parameter to format table data since it's json formatted string and must be handled with ascii formatter
+
 * Tue Apr  8 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.4.8-1.fmi
 - Repackaged due to base library ABI changes
 
