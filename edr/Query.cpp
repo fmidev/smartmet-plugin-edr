@@ -430,11 +430,21 @@ void Query::parse_levels(const Spine::HTTP::Request& theReq)
     }
 
     // Allow also "levels"
+    //
+    // Note: DataFilter class (Observation::Settings) currently only supports integer filters.
+    //       Sounding pressures (and/or altitudes if used) are handled as floored values and
+    //       levels is used instead of pressures or heights
+    //
     opt = Spine::optional_string(theReq.getParameter("levels"), "");
     if (!opt.empty())
     {
       vector<string> parts;
       boost::algorithm::split(parts, opt, boost::algorithm::is_any_of(","));
+
+      levelRange = (!Spine::optional_string(theReq.getParameter("levelrange"), "").empty());
+      if (levelRange && (parts.size() != 2))
+        throw Fmi::Exception(BCP, "Internal error: 2 levels expected for level range query");
+
       for (const string& tmp : parts)
         levels.insert(Fmi::stoi(tmp));
     }

@@ -634,10 +634,16 @@ EDRProducerMetaData get_edr_metadata_obs(
     std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
     auto producers = obsEngine.getValidStationTypes();
 
+    Engine::Observation::Settings settings;
+    /*
+    add_sql_data_filter(req, "sounding_type", dataFilter);
+    add_sql_data_filter(req, "significance", dataFilter);
+    */
+
     for (const auto &prod : producers)
     {
       if (cic.isVisibleCollection(SourceEngine::Observation, prod))
-        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod)));
+        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod, settings)));
     }
 
     const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
@@ -659,6 +665,44 @@ EDRProducerMetaData get_edr_metadata_obs(
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Observation;
 
+      if (obs_md.hasLevelRange)
+      {
+        // e.g. sounding metadata has (pressure) level range
+
+        using Engine::Observation::ObsLevelType;
+        auto levelType = obs_md.levels().front().getLevelType();
+        std::string levelTypeStr, levelDescStr;
+
+        producer_emd.vertical_extent.obs_level_type = levelType;
+
+        if (levelType == ObsLevelType::Pressure)
+        {
+          levelTypeStr = "PressureLevel";
+          levelDescStr = "Pressure level in hPa";
+        }
+        /*
+        else if (levelType == ObsLevelType::Altitude)
+        {
+          levelTypeStr = "Altitude";
+          levelDescStr = "Altitude in meters";
+        }
+        */
+        else
+          throw Fmi::Exception(BCP, ("Unknown observation level type " + std::to_string(levelType)));
+
+        producer_emd.vertical_extent.level_type = levelTypeStr;
+        producer_emd.vertical_extent.vrs =
+            ("Vertical Reference System: " + levelDescStr);
+        for (const auto &level : obs_md.levels())
+          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level.getLevelValue()));
+
+        producer_emd.vertical_extent.is_level_range = true;
+        observation_period = 0;
+
+        producer_emd.stationMetaData.insert(
+            obs_md.stationMetaData.begin(), obs_md.stationMetaData.end());
+      }
+
       producer_emd.spatial_extent.bbox_xmin = obs_md.bbox.xMin;
       producer_emd.spatial_extent.bbox_ymin = obs_md.bbox.yMin;
       producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
@@ -666,18 +710,37 @@ EDRProducerMetaData get_edr_metadata_obs(
       edr_temporal_extent temporal_extent;
       temporal_extent.origin_time = Fmi::SecondClock::universal_time();
       edr_temporal_extent_period temporal_extent_period;
-      auto time_of_day = obs_md.period.last().time_of_day();
-      auto end_date = obs_md.period.last().date();
-      // In order to get rid of fractions of a second in end_time
-      Fmi::DateTime end_time(end_date,
-                             Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
+      auto time_of_day = obs_md.period().last().time_of_day();
+      auto end_date = obs_md.period().last().date();
+      Fmi::DateTime end_time;
+      uint64_t periodLength = 0;
+
+      // No end_time adjustment and using full period length for soundings
+      //
+      // TODO: period is currently handled properly for soundings only
+      if (! producer_emd.vertical_extent.is_level_range)
+      {
+        // In order to get rid of fractions of a second in end_time
+        periodLength = obs_md.period().length().minutes();
+        end_time = Fmi::DateTime(end_date,
+                                 Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
+      }
+      else
+      {
+        if (obs_md.timestep == 60)
+          periodLength = obs_md.period().length().total_hours();
+        else
+          periodLength = obs_md.period().length().total_minutes();
+        end_time = end_date;
+      }
       if (observation_period > 0)
         temporal_extent_period.start_time = (end_time - Fmi::Hours(observation_period));
       else
-        temporal_extent_period.start_time = obs_md.period.begin();
+        temporal_extent_period.start_time = obs_md.period().begin();
+
       temporal_extent_period.end_time = end_time;
       temporal_extent_period.timestep = obs_md.timestep;
-      temporal_extent_period.timesteps = (obs_md.period.length().minutes() / obs_md.timestep);
+      temporal_extent_period.timesteps = (periodLength / obs_md.timestep);
       temporal_extent.time_periods.push_back(temporal_extent_period);
       producer_emd.temporal_extent = temporal_extent;
 

@@ -97,6 +97,7 @@ class Query : public ObsQueryParams, public EDRQueryParams
   Levels levels;
   Pressures pressures;
   Heights heights;
+  bool levelRange;  // Set if querying level/pressure/height range
 
   TS::OptionParsers::ParameterOptions poptions;
   MaxAggregationIntervals maxAggregationIntervals;

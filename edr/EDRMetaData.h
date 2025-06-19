@@ -12,6 +12,7 @@
 #include <set>
 #include <string>
 #ifndef WITHOUT_OBSERVATION
+#include <engines/observation/MetaData.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
 
@@ -86,6 +87,8 @@ struct edr_vertical_extent
   std::string vrs;
   std::string level_type;
   std::vector<std::string> levels;
+  Engine::Observation::ObsLevelType obs_level_type;
+  bool is_level_range = false;
 };
 
 struct EDRMetaData
@@ -93,6 +96,9 @@ struct EDRMetaData
   edr_spatial_extent spatial_extent;
   edr_temporal_extent temporal_extent;
   edr_vertical_extent vertical_extent;
+
+  Engine::Observation::StationMetaData stationMetaData;
+
   std::set<std::string> parameter_names;
   std::map<std::string, edr_parameter> parameters;
   std::map<std::string, int> parameter_precisions;

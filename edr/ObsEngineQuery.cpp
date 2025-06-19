@@ -399,8 +399,25 @@ void ObsEngineQuery::processObsEngineQuery(const State& state,
         outputData.emplace_back(make_pair("_obs_", tsdatavector));
 
         if (!item.is_area || UtilityFunctions::is_flash_or_mobile_producer(producer))
+        {
+          if (! query.levels.empty())
+          {
+            if (query.levelRange)
+            {
+              std::string filter = "ge " + std::to_string(*query.levels.begin()) +
+                                   " AND le " + std::to_string(*query.levels.rbegin());
+              settings.dataFilter.setDataFilter("level", filter);
+            }
+            else
+            {
+              for (const auto &level : query.levels)
+                settings.dataFilter.setDataFilter("level", std::to_string(level));
+            }
+          }
+
           fetchObsEngineValuesForPlaces(
               state, producer, obsParameters, settings, query, outputData);
+        }
         else
           fetchObsEngineValuesForArea(
               state, producer, obsParameters, item.area_name, settings, query, outputData);

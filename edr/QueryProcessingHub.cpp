@@ -602,7 +602,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                           edr_query.query_type,
                                                           masterquery.levels,
                                                           masterquery.coordinateFilter(),
-                                                          masterquery.poptions.parameters());
+                                                          masterquery.poptions.parameters(),
+                                                          producer == SOUNDING_PRODUCER);
       table.set(0, 0, result.toStyledString(state.pretty()));
     }
     else if (masterquery.output_format == GEO_JSON_FORMAT)

@@ -19,7 +19,8 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              EDRQueryType query_type,
                              const std::set<int> &levels,
                              const CoordinateFilter &coordinate_filter,
-                             const std::vector<Spine::Parameter> &query_parameters);
+                             const std::vector<Spine::Parameter> &query_parameters,
+                             bool useDataLevels);
 
 Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &emd);
 Json::Value reportError(int code, const std::string &description);

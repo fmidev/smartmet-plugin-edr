@@ -6,6 +6,7 @@
 #include <macgyver/StringConversion.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
+#include <engines/observation/Keywords.h>
 #include <string>
 #include "UtilityFunctions.h"
 
@@ -263,7 +264,14 @@ EDRQueryParams::EDRQueryParams(const State& state,
     parameter_names += ",longitude,latitude";
     // If producer has levels we need to query them
     if (!emd.vertical_extent.levels.empty())
-      parameter_names += ",level";
+    {
+      // BRAINSTORM-3116 'level' kludge, FIXME !
+      //
+      if (itsEDRQuery.collection_id != SOUNDING_PRODUCER)
+        parameter_names += ",level";
+      else
+        parameter_names += ",edr_observation_level";
+    }
 
     req.addParameter("param", parameter_names);
 
@@ -949,21 +957,51 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
     }
     else
       z = itsCoordinateFilter.getLevels();
+
     // If no level given get all levels
+    using Engine::Observation::ObsLevelType;
+    auto zParameter = "levels";
+
     if (z.empty() && !emd.vertical_extent.levels.empty())
     {
+      // Sounding collection metadata contains level range only, some other vertical observation
+      // collection might list all levels (e.g. mast ?)
+      //
+      // Pressures (and altitudes too if used) must currently be handled as integer values
+      // (level values are floored for sounding) since DataFilter class (Settings) only handles
+      // integer filters currently. Therefore also using request parameter "levels" for
+      // sounding pressures (and altitudes if used) instead of "pressures" (or "heights") since
+      // it's values are parsed/stored as integers.
+
+      range = emd.vertical_extent.is_level_range;
+
       for (const auto& l : emd.vertical_extent.levels)
       {
+        std::string level(l);
         double d_level = Fmi::stod(l);
-        if (d_level < min_level || d_level > max_level)
-          continue;
+        level = std::to_string((int) floor(d_level));
+        if (!range)
+        {
+          if (d_level < min_level || d_level > max_level)
+            continue;
+        }
+        else if (z.empty())
+        {
+          if (d_level < min_level)
+            level = Fmi::to_string(min_level);
+        }
+        else if (d_level > max_level)
+          level = Fmi::to_string(max_level);
+
         if (!z.empty())
           z.append(",");
-        z.append(l);
+        z.append(level);
       }
     }
+
     if (!z.empty())
-      req.addParameter("levels", z);
+      req.addParameter(zParameter, z);
+    req.addParameter("levelrange", range ? "1" : "");
 
     // EDR parameter-name
     auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");

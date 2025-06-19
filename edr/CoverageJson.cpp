@@ -3,6 +3,7 @@
 #include <optional>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <engines/observation/Keywords.h>
 
 namespace SmartMet
 {
@@ -537,6 +538,11 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
     {
       auto parameter_name = parse_parameter_name(p.originalName());
       boost::algorithm::to_lower(parameter_name);
+
+      // BRAINSTORM-3116 'level' kludge, FIXME !
+      //
+      if (parameter_name == EDR_OBSERVATION_LEVEL)
+        continue;
 
       if (isGridProducer)
       {
@@ -1554,6 +1560,12 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
     for (unsigned int j = 0; j < outdata.size(); j++)
     {
       auto parameter_name = query_parameters[j].name();
+
+      // BRAINSTORM-3116 'level' kludge, FIXME !
+      //
+      if (parameter_name == EDR_OBSERVATION_LEVEL)
+        continue;
+
       const auto &parameter_precision = emd.getPrecision(parameter_name);
       boost::algorithm::to_lower(parameter_name);
       if (lon_lat_level_param(parameter_name))
@@ -2522,7 +2534,8 @@ Json::Value format_output_data_vertical_profile(
     const std::set<int> &levels,
     const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
-    EDRQueryType query_type)
+    EDRQueryType query_type,
+    bool useDataLevels)
 {
   try
   {
@@ -2533,7 +2546,7 @@ Json::Value format_output_data_vertical_profile(
 
     const auto &longitude_precision = emd.getPrecision("longitude");
     const auto &latitude_precision = emd.getPrecision("latitude");
-    auto level_precision = 0;
+    auto level_precision = (useDataLevels ? emd.getPrecision("level_pressure") : 0);
     unsigned int level_index = (query_parameters.size() - 1);
     unsigned int latitude_index = (query_parameters.size() - 2);
     unsigned int longitude_index = (query_parameters.size() - 3);
@@ -2664,10 +2677,15 @@ Json::Value format_output_data_vertical_profile(
     coverageCollection["referencing"] = referencing;
 
     // Iterate coverages/timesteps
-    auto timeIter = ts_lon->begin();
-    auto timeSteps = (isGridProducer ? ts_lon->size() : (ts_lon->size() / levels.size()));
+    auto timeIter = ts_lon->begin(), tI = timeIter;
+    size_t timeSteps, tS;
 
-    for (std::size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps); tStep++, timeIter++)
+    if (useDataLevels)
+      timeSteps = ts_lon->size();
+    else
+      timeSteps = (isGridProducer ? ts_lon->size() : (ts_lon->size() / levels.size()));
+
+    for (std::size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps); )
     {
       auto ranges = Json::Value(Json::ValueType::objectValue);
       auto domain = Json::Value(Json::ValueType::objectValue);
@@ -2691,16 +2709,17 @@ Json::Value format_output_data_vertical_profile(
       std::size_t levelIdx = 0;
       if (emd.vertical_extent.level_type == "PressureLevel")
       {
-        for (auto level = levels.crbegin(); (level != levels.crend()); level++)
-          levelArray[levelIdx++] = Json::Value(*level);
+        if (! useDataLevels)
+        {
+          for (auto level = levels.crbegin(); (level != levels.crend()); level++)
+            levelArray[levelIdx++] = Json::Value(*level);
+        }
       }
       else
       {
         for (auto level : levels)
           levelArray[levelIdx++] = Json::Value(level);
       }
-      domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
-      domain["axes"]["z"]["values"] = levelArray;
 
       std::string timestep =
           (Fmi::date_time::to_iso_extended_string(timeIter->time.utc_time()) + "Z");
@@ -2713,16 +2732,46 @@ Json::Value format_output_data_vertical_profile(
       {
         const auto &param_name = item.first;
 
+        // BRAINSTORM-3116 'level' kludge, FIXME !
+        //
+        if (param_name == EDR_OBSERVATION_LEVEL)
+          continue;
+
         auto param_range = Json::Value(Json::ValueType::objectValue);
         param_range["type"] = Json::Value("NdArray");
         param_range["dataType"] = parameter_data_type.at(param_name);  // Json::Value("float");
         param_range["axisNames"] = axis_names;
 
-        // Every n'th item value has data for the timestep
         auto valueArray = Json::Value(Json::ValueType::arrayValue);
-        std::size_t itemCnt = (isGridProducer ? item.second.size() : ts_lon->size());
-        for (std::size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt); itemIdx += timeSteps, valIdx++)
-          valueArray[valIdx] = item.second[itemIdx];
+
+        if (useDataLevels)
+        {
+          // Observation (sounding) data is in timestep order and itemIdx runs every row (level)
+          // until time changes
+
+          size_t valIdx = 0, itemIdx = tS = tStep;
+          bool loadLevels = (levelArray.size() == 0);
+
+          for (tI = timeIter; (itemIdx < timeSteps); itemIdx++, valIdx++, tI++)
+          {
+            if ((itemIdx != tS) && (tI->time != timeIter->time))
+              break;
+
+            valueArray[valIdx] = item.second[itemIdx];
+
+            if (loadLevels)
+              levelArray[levelIdx++] = level_values[itemIdx];
+          }
+
+          tS = itemIdx;
+        }
+        else
+        {
+          // Every n'th item value has data for the timestep
+          std::size_t itemCnt = (isGridProducer ? item.second.size() : ts_lon->size());
+          for (std::size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt); itemIdx += timeSteps, valIdx++)
+            valueArray[valIdx] = item.second[itemIdx];
+        }
 
         auto shape = Json::Value(Json::ValueType::arrayValue);
         shape[0] = valueArray.size();
@@ -2732,11 +2781,25 @@ Json::Value format_output_data_vertical_profile(
         ranges[param_name] = param_range;
       }
 
+      domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
+      domain["axes"]["z"]["values"] = levelArray;
+
       Json::Value coverage = Json::Value(Json::ValueType::objectValue);
       coverage["type"] = Json::Value("Coverage");
       coverage["domain"] = domain;
       coverage["ranges"] = ranges;
       coverageCollection["coverages"][coverageIdx++] = coverage;
+
+      if (useDataLevels)
+      {
+        tStep = tS;
+        timeIter = tI;
+      }
+      else
+      {
+        tStep++;
+        timeIter++;
+      }
     }
 
     return coverageCollection;
@@ -2754,7 +2817,8 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              EDRQueryType query_type,
                              const std::set<int> &levels,
                              const CoordinateFilter &coordinate_filter,
-                             const std::vector<Spine::Parameter> &query_parameters)
+                             const std::vector<Spine::Parameter> &query_parameters,
+                             bool useDataLevels)
 {
   try
   {
@@ -2783,7 +2847,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
 
       // More than one level
       return format_output_data_vertical_profile(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type);
+          outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
       //      return format_output_data_position(outputData, emd, query_parameters);
     }
 
@@ -2811,7 +2875,8 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
         return format_output_data_one_point(od, emd, level, query_parameters);
       }
       // More than one level
-      return format_output_data_position(od, emd, query_parameters);
+      return format_output_data_vertical_profile(
+          od, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
     }
 
     if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
@@ -2853,6 +2918,7 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     if (!edr_md || !edr_md->locations)
       return result;
 
+    bool soundingObservations = (edr_md->isObsProducer() && (producer == SOUNDING_PRODUCER));
     auto longitude_precision = edr_md->getPrecision("longitude");
     auto latitude_precision = edr_md->getPrecision("latitude");
 
@@ -2880,16 +2946,38 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       properties["detail"] = Json::Value(detail_string);
       if (!edr_md->temporal_extent.time_periods.empty())
       {
-        auto start_time = loc.start_time;
+        Fmi::DateTime start_time, end_time;
+
+        if (soundingObservations)
+        {
+          try
+          {
+            auto stationId = Fmi::stoi(loc.id);
+            auto it = edr_md->stationMetaData.find(stationId);
+
+            if (it != edr_md->stationMetaData.end())
+            {
+              start_time = it->second.period.begin();
+              end_time = it->second.period.end();
+            }
+          }
+          catch (...) {}
+        }
+        else
+        {
+          start_time = loc.start_time;
+          end_time = loc.end_time;
+        }
+
         if (start_time.is_not_a_date_time())
           start_time = edr_md->temporal_extent.time_periods.front().start_time;
-        auto end_time = loc.end_time;
         if (end_time.is_not_a_date_time())
           end_time = edr_md->temporal_extent.time_periods.back().end_time;
         if (end_time.is_not_a_date_time())
           end_time = edr_md->temporal_extent.time_periods.back().start_time;
         if (end_time > now)
           end_time = now;
+
         properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
                                              Fmi::to_iso_extended_string(end_time) + "Z");
       }
