@@ -123,7 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
-* Tue May  2 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.5.2-1.fmi
+* Fri May  2 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.5.2-1.fmi
 - Do not use 'format' request parameter to format table data since it's json formatted string and must be handled with ascii formatter
 
 * Tue Apr  8 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.4.8-1.fmi
@@ -184,7 +184,7 @@ rm -rf $RPM_BUILD_ROOT
 - Fixed collection 'interval' to report only first and last time of the collection, not the start and end time of each period having different timestep. Also fixed the time format from range to single time value, start and end time are separate array items (BRAINSTORM-3042)
 - Fixed collection interval 'values' to report first time instant as repeating interval start time when timestep changes, not the last time instant of the previous timestep (BRAINSTORM-3042)
 
-* Tue Sep 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.16-1.fmi
+* Mon Sep 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.16-1.fmi
 - Fixed flash observation query result data vs edr query parameters indexing bug caused by special parameter 'data_source' (BRAINSTORM-3029)
 
 * Tue Sep  3 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.3-1.fmi
