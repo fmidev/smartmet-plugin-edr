@@ -943,7 +943,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
     auto z = Spine::optional_string(req.getParameter("z"), "");
     double min_level = std::numeric_limits<double>::min();
     double max_level = std::numeric_limits<double>::max();
-    bool range = false;
+    bool hasZParam = (! z.empty()), range = false;
 
     std::string zLo, zHi;
     if (UtilityFunctions::parseRangeListValue(z, range, zLo, zHi))
@@ -972,26 +972,34 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
       // integer filters currently. Therefore also using request parameter "levels" for
       // sounding pressures (and altitudes if used) instead of "pressures" (or "heights") since
       // it's values are parsed/stored as integers.
+      //
+      // If levels were not given, accept vertical_extent levels without min/max check
+      // (checking level 0 against numeric_limits<double>::min() would reject it)
 
       range = emd.vertical_extent.is_level_range;
 
       for (const auto& l : emd.vertical_extent.levels)
       {
         std::string level(l);
-        double d_level = Fmi::stod(l);
-        level = std::to_string((int) floor(d_level));
-        if (!range)
+
+        if (hasZParam)
         {
-          if (d_level < min_level || d_level > max_level)
-            continue;
+          double d_level = Fmi::stod(l);
+          level = std::to_string((int) floor(d_level));
+
+          if (!range)
+          {
+            if (d_level < min_level || d_level > max_level)
+              continue;
+          }
+          else if (z.empty())
+          {
+            if (d_level < min_level)
+              level = Fmi::to_string(min_level);
+          }
+          else if (d_level > max_level)
+            level = Fmi::to_string(max_level);
         }
-        else if (z.empty())
-        {
-          if (d_level < min_level)
-            level = Fmi::to_string(min_level);
-        }
-        else if (d_level > max_level)
-          level = Fmi::to_string(max_level);
 
         if (!z.empty())
           z.append(",");
