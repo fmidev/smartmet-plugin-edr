@@ -10,20 +10,31 @@ Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+# https://fedoraproject.org/wiki/Changes/Broken_RPATH_will_fail_rpmbuild
+%global __brp_check_rpaths %{nil}
+
 %if 0%{?rhel} && 0%{rhel} < 9
 %define smartmet_boost boost169
 %else
 %define smartmet_boost boost
 %endif
 
-%define smartmet_fmt_min 11.0.0
+%if 0%{?rhel} && 0%{rhel} <= 9
+%define smartmet_fmt_min 11.0.1
 %define smartmet_fmt_max 12.0.0
+%define smartmet_fmt fmt-libs >= %{smartmet_fmt_min}, fmt-libs < %{smartmet_fmt_max}
+%define smartmet_fmt_devel fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
+%else
+%define smartmet_fmt fmt
+%define smartmet_fmt_devel fmt-devel
+%endif
 
 BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: %{smartmet_boost}-devel
-BuildRequires: fmt-devel >= %{smartmet_fmt_min}, fmt-devel < %{smartmet_fmt_max}
+BuildRequires: %{smartmet_fmt_devel}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
@@ -47,7 +58,7 @@ BuildRequires: smartmet-engine-grid-devel >= 25.4.8
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 25.3.21
 #%endif
-Requires: fmt-libs >= %{smartmet_fmt_min}, fmt-libs < %{smartmet_fmt_max}
+Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 25.2.18
 Requires: smartmet-library-locus >= 25.2.18
@@ -112,7 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
-* Tue May  2 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.5.2-1.fmi
+* Fri May  2 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.5.2-1.fmi
 - Do not use 'format' request parameter to format table data since it's json formatted string and must be handled with ascii formatter
 
 * Tue Apr  8 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.4.8-1.fmi
@@ -173,7 +184,7 @@ rm -rf $RPM_BUILD_ROOT
 - Fixed collection 'interval' to report only first and last time of the collection, not the start and end time of each period having different timestep. Also fixed the time format from range to single time value, start and end time are separate array items (BRAINSTORM-3042)
 - Fixed collection interval 'values' to report first time instant as repeating interval start time when timestep changes, not the last time instant of the previous timestep (BRAINSTORM-3042)
 
-* Tue Sep 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.16-1.fmi
+* Mon Sep 16 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.16-1.fmi
 - Fixed flash observation query result data vs edr query parameters indexing bug caused by special parameter 'data_source' (BRAINSTORM-3029)
 
 * Tue Sep  3 2024 Pertti Kinnia <pertti.kinnia@fmi.fi> 24.9.3-1.fmi
