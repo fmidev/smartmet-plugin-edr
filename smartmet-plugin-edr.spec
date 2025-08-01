@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.5.2
+Version: 25.8.1
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -45,11 +45,11 @@ BuildRequires: smartmet-library-grid-content-devel >= 25.4.8
 BuildRequires: smartmet-library-grid-files-devel >= 25.4.8
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
 BuildRequires: smartmet-library-gis-devel >= 25.2.18
-BuildRequires: smartmet-library-timeseries-devel >= 25.2.18
+BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
 BuildRequires: smartmet-engine-avi-devel >= 25.2.20
 BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 25.3.21
+BuildRequires: smartmet-engine-observation-devel >= 25.8.1
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 25.2.18
 BuildRequires: smartmet-engine-gis-devel >= 25.2.18
@@ -65,7 +65,7 @@ Requires: smartmet-library-locus >= 25.2.18
 Requires: smartmet-library-macgyver >= 25.2.18
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-library-spine >= 25.4.9
-Requires: smartmet-library-timeseries >= 25.2.18
+Requires: smartmet-library-timeseries >= 25.8.1
 Requires: smartmet-library-gis >= 25.2.18
 Requires: smartmet-library-grid-files >= 25.4.8
 Requires: smartmet-engine-avi >= 25.2.20
@@ -123,6 +123,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Aug  1 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.8.1-1.fmi
+- Load sounding metadata from database and filter data by levels. Use vertical profile when outputting data (BRAINSTORM-3116)
+- When no level is given in data request, use collection's metadata levels without min/max range check (BRAINSTORM-3223)
+
 * Fri May  2 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.5.2-1.fmi
 - Do not use 'format' request parameter to format table data since it's json formatted string and must be handled with ascii formatter
 
