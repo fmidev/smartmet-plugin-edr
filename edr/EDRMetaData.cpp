@@ -710,8 +710,8 @@ EDRProducerMetaData get_edr_metadata_obs(
       edr_temporal_extent temporal_extent;
       temporal_extent.origin_time = Fmi::SecondClock::universal_time();
       edr_temporal_extent_period temporal_extent_period;
-      auto time_of_day = obs_md.period().last().time_of_day();
-      auto end_date = obs_md.period().last().date();
+      auto time_of_day = obs_md.dbperiod().last().time_of_day();
+      auto end_date = obs_md.dbperiod().last().date();
       Fmi::DateTime end_time;
       uint64_t periodLength = 0;
 
@@ -721,22 +721,22 @@ EDRProducerMetaData get_edr_metadata_obs(
       if (! producer_emd.vertical_extent.is_level_range)
       {
         // In order to get rid of fractions of a second in end_time
-        periodLength = obs_md.period().length().minutes();
+        periodLength = obs_md.dbperiod().length().minutes();
         end_time = Fmi::DateTime(end_date,
                                  Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
       }
       else
       {
         if (obs_md.timestep == 60)
-          periodLength = obs_md.period().length().total_hours();
+          periodLength = obs_md.dbperiod().length().total_hours();
         else
-          periodLength = obs_md.period().length().total_minutes();
+          periodLength = obs_md.dbperiod().length().total_minutes();
         end_time = end_date;
       }
       if (observation_period > 0)
         temporal_extent_period.start_time = (end_time - Fmi::Hours(observation_period));
       else
-        temporal_extent_period.start_time = obs_md.period().begin();
+        temporal_extent_period.start_time = obs_md.dbperiod().begin();
 
       temporal_extent_period.end_time = end_time;
       temporal_extent_period.timestep = obs_md.timestep;
