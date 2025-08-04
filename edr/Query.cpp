@@ -154,7 +154,14 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
     : ObsQueryParams(request),
       EDRQueryParams(state, request, config),
       valueformatter(valueformatter_params(request)),
+      levelRange(false),
+      maxdistanceOptionGiven(false),
+      findnearestvalidpoint(false),
+      debug(false),
+      starttimeOptionGiven(false),
+      endtimeOptionGiven(false),
       timeAggregationRequested(false)
+
 {
   try
   {
