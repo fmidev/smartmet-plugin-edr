@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.8.1
+Version: 25.8.5
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -49,7 +49,7 @@ BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
 BuildRequires: smartmet-engine-avi-devel >= 25.2.20
 BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 25.8.1
+BuildRequires: smartmet-engine-observation-devel >= 25.8.5
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 25.2.18
 BuildRequires: smartmet-engine-gis-devel >= 25.2.18
@@ -123,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Aug  5 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.8.5-1.fmi
+- More observation period fixes (BRAINSTORM-3017, BRAINSTORM-3116)
+
 * Fri Aug  1 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.8.1-1.fmi
 - Load sounding metadata from database and filter data by levels. Use vertical profile when outputting data (BRAINSTORM-3116)
 - When no level is given in data request, use collection's metadata levels without min/max range check (BRAINSTORM-3223)
