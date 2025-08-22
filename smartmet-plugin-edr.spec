@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.8.19
+Version: 25.8.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -123,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Aug 22 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.8.22-1.fmi
+- Repackaged due to smartmet-engine-observation and smatrtmet-engine-avi changes
+
 * Tue Aug 19 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.8.19-1.fmi
 - Repackaged due to ObsEngine ABI changes
 
