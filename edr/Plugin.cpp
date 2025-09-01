@@ -570,12 +570,6 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
 
   try
   {
-    // Check request method (support GET, OPTIONS)
-    if (checkRequest(theRequest, theResponse, false))
-    {
-      return;
-    }
-
     // The request will be modified when parsing the input
     auto request = theRequest;
 
