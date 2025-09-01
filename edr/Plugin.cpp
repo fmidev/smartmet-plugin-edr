@@ -759,6 +759,7 @@ void Plugin::init()
                    const Spine::HTTP::Request& theRequest,
                    Spine::HTTP::Response& theResponse)
             { callRequestHandler(theReactor, theRequest, theResponse); },
+            {},
             true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
