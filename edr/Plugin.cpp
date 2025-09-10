@@ -1238,7 +1238,10 @@ void Plugin::shutdown()
   {
     std::cout << "  -- Shutdown requested (timeseries)\n";
     if (itsMetaDataUpdateTask)
+    {
       itsMetaDataUpdateTask->cancel();
+      itsMetaDataUpdateTask->wait();
+    }
   }
   catch (...)
   {
