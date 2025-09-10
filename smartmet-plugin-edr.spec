@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.9.1
-Release: 2%{?dist}.fmi
+Version: 25.9.10
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -123,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Sep 10 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.9.10-1.fmi
+- Plugin::shutdown(): Ensure that metadata background update task is shut down
+
 * Mon Sep  1 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.9.1-2.fmi
 - Update according to smartmet-library-spine ABI changes
 
