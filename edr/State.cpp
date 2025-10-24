@@ -46,7 +46,7 @@ const Engine::Grid::Engine* State::getGridEngine() const
 {
   try
   {
-    return itsPlugin.getEngines().gridEngine;
+    return itsPlugin.getEngines().gridEngine.get();
   }
   catch (...)
   {
@@ -83,7 +83,7 @@ Engine::Observation::Engine* State::getObsEngine() const
 {
   try
   {
-    return itsPlugin.getEngines().obsEngine;
+    return itsPlugin.getEngines().obsEngine.get();
   }
   catch (...)
   {
@@ -103,7 +103,7 @@ const Engine::Avi::Engine* State::getAviEngine() const
 {
   try
   {
-    return itsPlugin.getEngines().aviEngine;
+    return itsPlugin.getEngines().aviEngine.get();
   }
   catch (...)
   {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 namespace SmartMet
 {
 // Engines
@@ -42,15 +44,15 @@ namespace EDR
 
 struct Engines
 {
-  Engine::Querydata::Engine* qEngine = nullptr;
-  Engine::Geonames::Engine* geoEngine = nullptr;
-  Engine::Gis::Engine* gisEngine = nullptr;
-  Engine::Grid::Engine* gridEngine = nullptr;
+  std::shared_ptr<Engine::Querydata::Engine> qEngine = nullptr;
+  std::shared_ptr<Engine::Geonames::Engine> geoEngine = nullptr;
+  std::shared_ptr<Engine::Gis::Engine> gisEngine = nullptr;
+  std::shared_ptr<Engine::Grid::Engine> gridEngine = nullptr;
 #ifndef WITHOUT_OBSERVATION
-  Engine::Observation::Engine* obsEngine = nullptr;
+  std::shared_ptr<Engine::Observation::Engine> obsEngine = nullptr;
 #endif
 #ifndef WITHOUT_AVI
-  Engine::Avi::Engine* aviEngine = nullptr;
+  std::shared_ptr<Engine::Avi::Engine> aviEngine = nullptr;
 #endif
 };
 

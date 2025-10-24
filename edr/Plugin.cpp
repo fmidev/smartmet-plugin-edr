@@ -523,7 +523,7 @@ void Plugin::grouplocations(Spine::HTTP::Request& request) const
     std::string wkt_multipoint = "MULTIPOINT(";
     parse_lonlats(lonlats, request, wkt_multipoint);
     parse_latlons(latlons, request, wkt_multipoint);
-    parse_places(places, request, wkt_multipoint, itsEngines.geoEngine);
+    parse_places(places, request, wkt_multipoint, itsEngines.geoEngine.get());
 
     std::vector<int> fmisids;
     std::vector<int> lpnns;
@@ -689,35 +689,22 @@ void Plugin::init()
     itsTimeSeriesCache->resize(itsConfig.maxTimeSeriesCacheSize());
 
     /* GeoEngine */
-    auto* engine = itsReactor->getSingleton("Geonames", nullptr);
-    if (!engine)
-      throw Fmi::Exception(BCP, "Geonames engine unavailable");
-    itsEngines.geoEngine = reinterpret_cast<Engine::Geonames::Engine*>(engine);
+    itsEngines.geoEngine = itsReactor->getEngine<Engine::Geonames::Engine>("Geonames", nullptr);
 
     /* GisEngine */
-    engine = itsReactor->getSingleton("Gis", nullptr);
-    if (!engine)
-      throw Fmi::Exception(BCP, "Gis engine unavailable");
-    itsEngines.gisEngine = reinterpret_cast<Engine::Gis::Engine*>(engine);
+    itsEngines.gisEngine = itsReactor->getEngine<Engine::Gis::Engine>("Gis", nullptr);
 
     // Read the geometries from PostGIS database
     itsEngines.gisEngine->populateGeometryStorage(itsConfig.getPostGISIdentifiers(),
                                                   itsGeometryStorage);
 
     /* QEngine */
-    engine = itsReactor->getSingleton("Querydata", nullptr);
-    if (!engine)
-      throw Fmi::Exception(BCP, "Querydata engine unavailable");
-    itsEngines.qEngine = reinterpret_cast<Engine::Querydata::Engine*>(engine);
+    itsEngines.qEngine = itsReactor->getEngine<Engine::Querydata::Engine>("Querydata", nullptr);
 
     /* GridEngine */
     if (!itsConfig.gridEngineDisabled())
     {
-      engine = itsReactor->getSingleton("grid", nullptr);
-      if (!engine)
-        throw Fmi::Exception(BCP, "The 'grid-engine' unavailable!");
-
-      itsEngines.gridEngine = reinterpret_cast<Engine::Grid::Engine*>(engine);
+      itsEngines.gridEngine = itsReactor->getEngine<Engine::Grid::Engine>("grid", nullptr);
       itsEngines.gridEngine->setDem(itsEngines.geoEngine->dem());
       itsEngines.gridEngine->setLandCover(itsEngines.geoEngine->landCover());
     }
@@ -726,10 +713,7 @@ void Plugin::init()
     if (!itsConfig.obsEngineDisabled())
     {
       /* ObsEngine */
-      engine = itsReactor->getSingleton("Observation", nullptr);
-      if (!engine)
-        throw Fmi::Exception(BCP, "Observation engine unavailable");
-      itsEngines.obsEngine = reinterpret_cast<Engine::Observation::Engine*>(engine);
+      itsEngines.obsEngine = itsReactor->getEngine<Engine::Observation::Engine>("Observation", nullptr);
 
       // fetch obsebgine station types (producers)
       itsObsEngineStationTypes = itsEngines.obsEngine->getValidStationTypes();
@@ -740,10 +724,7 @@ void Plugin::init()
     if (!itsConfig.aviEngineDisabled())
     {
       /* AviEngine */
-      engine = itsReactor->getSingleton("Avi", nullptr);
-      if (!engine)
-        throw Fmi::Exception(BCP, "Avi engine unavailable");
-      itsEngines.aviEngine = reinterpret_cast<Engine::Avi::Engine*>(engine);
+      itsEngines.aviEngine = itsReactor->getEngine<Engine::Avi::Engine>("Avi", nullptr);
     }
 #endif
 
