@@ -1104,7 +1104,8 @@ void parse_vertical_extent(const EDRMetaData &emd, Json::Value &extent)
         vertical_interval_values[i] = emd.vertical_extent.levels.at(i);
       vertical_interval[0] = emd.vertical_extent.levels.front();
       vertical_interval[1] = emd.vertical_extent.levels.back();
-      vertical["interval"] = vertical_interval;
+      vertical["interval"] = Json::Value(Json::ValueType::arrayValue);
+      vertical["interval"][0] = vertical_interval;
       vertical["values"] = vertical_interval_values;
       vertical["vrs"] = emd.vertical_extent.vrs;
       extent["vertical"] = vertical;
@@ -1247,7 +1248,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       bbox[1] = Json::Value(emd.spatial_extent.bbox_ymin);
       bbox[2] = Json::Value(emd.spatial_extent.bbox_xmax);
       bbox[3] = Json::Value(emd.spatial_extent.bbox_ymax);
-      spatial["bbox"] = bbox;
+      spatial["bbox"] = Json::Value(Json::ValueType::arrayValue);
+      spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
       spatial["crs"] = Json::Value("CRS:84");
@@ -1438,7 +1440,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       bbox[1] = Json::Value(collection_emd.spatial_extent.bbox_ymin);
       bbox[2] = Json::Value(collection_emd.spatial_extent.bbox_xmax);
       bbox[3] = Json::Value(collection_emd.spatial_extent.bbox_ymax);
-      spatial["bbox"] = bbox;
+      spatial["bbox"] = Json::Value(Json::ValueType::arrayValue);
+      spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
       spatial["crs"] = Json::Value("CRS:84");

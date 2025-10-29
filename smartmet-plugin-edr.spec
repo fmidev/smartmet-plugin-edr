@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.10.27
+Version: 25.10.29
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -40,13 +40,13 @@ BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 25.10.27
 BuildRequires: smartmet-library-locus-devel >= 25.9.29
-BuildRequires: smartmet-library-macgyver-devel >= 25.9.30
+BuildRequires: smartmet-library-macgyver-devel >= 25.10.15
 BuildRequires: smartmet-library-grid-content-devel >= 25.10.15
 BuildRequires: smartmet-library-grid-files-devel >= 25.10.15
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
 BuildRequires: smartmet-library-gis-devel >= 25.9.15
 BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
-BuildRequires: smartmet-engine-avi-devel >= 25.9.30
+BuildRequires: smartmet-engine-avi-devel >= 25.10.15
 BuildRequires: smartmet-engine-geonames-devel >= 25.9.29
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 25.10.27
@@ -62,18 +62,18 @@ Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 25.9.15
 Requires: smartmet-library-locus >= 25.9.29
-Requires: smartmet-library-macgyver >= 25.9.30
+Requires: smartmet-library-macgyver >= 25.10.15
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-library-spine >= 25.10.27
 Requires: smartmet-library-timeseries >= 25.8.1
 Requires: smartmet-library-gis >= 25.9.15
 Requires: smartmet-library-grid-files >= 25.10.15
-Requires: smartmet-engine-avi >= 25.9.30
+Requires: smartmet-engine-avi >= 25.10.15
 Requires: smartmet-engine-geonames >= 25.9.29
 Requires: smartmet-engine-querydata >= 25.9.17
 Requires: smartmet-engine-gis >= 25.9.29
 Requires: smartmet-engine-grid >= 25.10.15
-Requires: smartmet-server >= 25.9.9
+Requires: smartmet-server >= 25.10.27
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -87,7 +87,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-test-data >= 25.8.13
 #TestRequires: smartmet-engine-grid-test >= 25.10.15
 #TestRequires: smartmet-library-gis >= 25.9.15
-#TestRequires: smartmet-engine-avi >= 25.9.30
+#TestRequires: smartmet-engine-avi >= 25.10.15
 #TestRequires: smartmet-engine-geonames >= 25.9.29
 #TestRequires: smartmet-engine-gis >= 25.9.29
 #TestRequires: smartmet-engine-querydata >= 25.9.17
@@ -123,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Oct 29 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.10.29-1.fmi
+- Changed spatial extent bbox and vertical extent interval to array (BRAINSTORM-3268)
+
 * Mon Oct 27 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.10.27-1.fmi
 - Update due to smartmet-library-spine ABI changes
 
