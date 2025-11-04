@@ -20,7 +20,9 @@ namespace EDR
 {
 void AviCollection::setName(const std::string &theName)
 {
-  auto name = trim_copy(to_upper_copy(theName));
+  // BRAINSTORM-3274; Using lower case for collection names
+  //
+  auto name = trim_copy(to_lower_copy(theName));
 
   if (name.empty())
     throw std::runtime_error("collection name expected");

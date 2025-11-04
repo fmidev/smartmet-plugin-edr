@@ -293,7 +293,9 @@ EDRQueryParams::EDRQueryParams(const State& state,
 bool EDRQueryParams::isAviProducer(const EDRProducerMetaData& avi_metadata,
                                    const std::string& producer) const
 {
-  auto producer_name = Fmi::trim_copy(boost::algorithm::to_upper_copy(producer));
+  // BRAINSTORM-3274; Using lower case for collection names
+  //
+  auto producer_name = Fmi::trim_copy(boost::algorithm::to_lower_copy(producer));
 
   return (avi_metadata.find(producer_name) != avi_metadata.end());
 }
@@ -390,7 +392,9 @@ std::string EDRQueryParams::parseResourceParts2AndBeyond(
 {
   try
   {
-    itsEDRQuery.collection_id = resource_parts.at(2);
+    // BRAINSTORM-3274; Using lower case for collection names
+    //
+    itsEDRQuery.collection_id = boost::algorithm::to_lower_copy(resource_parts.at(2));
 
     if (!state.isValidCollection(itsEDRQuery.collection_id))
       throw EDRException(("Collection '" + itsEDRQuery.collection_id + "' not found"));
@@ -736,24 +740,17 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
   try
   {
     // EDR datetime
+    //
+    // BRAINSTORM-3272; Removed nonstd "&datetime=null" handling but behaving about
+    //                  like it if time is not available otherwise
+    //
+    //                  Note: if time is not available otherwise, currently using first
+    //                  metadata timeinstant instead of all the data or timeinstant for
+    //                  current time etc
+    //
+    //                  TODO: adjust default datetime value/handling
+    //
     auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
-
-    if (datetime == "null")
-    {
-      if (emd.temporal_extent.time_periods.empty())
-      {
-        datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
-      }
-      else
-      {
-        if (emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
-          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
-        else
-          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
-      }
-    }
 
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
@@ -762,6 +759,23 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
     if (datetime.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
       datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
 #endif
+
+    if (datetime.empty())
+    {
+      if (emd.temporal_extent.time_periods.empty())
+      {
+        datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
+      }
+      else
+      {
+//      if (emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
+          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
+                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
+//      else
+//        datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
+//                    "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
+      }
+    }
 
     if (datetime.empty())
       throw EDRException("Missing datetime option");

@@ -245,12 +245,17 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
-      if (!cic.isVisibleCollection(SourceEngine::Querydata, qmd.producer))
+      // BRAINSTORM-3274; Using lower case for collection names. Querydata producers
+      //                  having upper case letters must have lowercase aliases
+      //
+      auto qmdproducer = boost::algorithm::to_lower_copy(qmd.producer);
+
+      if (!cic.isVisibleCollection(SourceEngine::Querydata, qmdproducer))
         continue;
 
       if (qmd.times.begin() == qmd.times.end())
       {
-        report_missing_data(qmd.producer);
+        report_missing_data(qmdproducer);
         continue;
       }
 
@@ -292,19 +297,19 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;
       producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmd.producer);
-      producer_emd.data_queries = get_supported_data_queries(qmd.producer, sdq);
-      producer_emd.output_formats = get_supported_output_formats(qmd.producer, sofs);
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmdproducer);
+      producer_emd.data_queries = get_supported_data_queries(qmdproducer, sdq);
+      producer_emd.output_formats = get_supported_output_formats(qmdproducer, sofs);
 
       auto producer_key =
-          (spl.find(qmd.producer) != spl.end() ? qmd.producer : DEFAULT_PRODUCER_KEY);
+          (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
         producer_emd.locations = &spl.at(producer_key);
-      epmd[qmd.producer].push_back(producer_emd);
+      epmd[qmdproducer].push_back(producer_emd);
       // Update latest data update time
-      if (latest_update_times.find(qmd.producer) == latest_update_times.end() ||
-          latest_update_times.at(qmd.producer) < qmd.originTime)
-        latest_update_times[qmd.producer] = qmd.originTime;
+      if (latest_update_times.find(qmdproducer) == latest_update_times.end() ||
+          latest_update_times.at(qmdproducer) < qmd.originTime)
+        latest_update_times[qmdproducer] = qmd.originTime;
     }
     for (auto &item : epmd)
     {
@@ -972,7 +977,12 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsParameters.push_back("messagetime");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
-    queryOptions.itsMessageTypes.push_back(message_type);
+
+    // BRAINSTORM-3274; Using lower case for collection names which are used as
+    //                  the message type too; aviengine expects upper case types
+    //
+    queryOptions.itsMessageTypes.push_back(boost::algorithm::to_upper_copy(message_type));
+
     queryOptions.itsMessageFormat = TAC_FORMAT;
 
     auto now = Fmi::SecondClock::universal_time();
