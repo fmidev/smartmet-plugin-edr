@@ -17,7 +17,7 @@ bool AviEngineQuery::isAviProducer(const std::string &producer) const
 {
   try
   {
-    auto producer_name = trim_copy(to_upper_copy(producer));
+    auto producer_name = trim_copy(to_lower_copy(producer));
     auto avi_meta_data = itsPlugin.getAviMetaData();
     return (avi_meta_data.find(producer_name) != avi_meta_data.end());
   }
@@ -184,7 +184,6 @@ void checkAviEngineQuery(const Query &query,
 
     if (edrQuery.query_type == EDRQueryType::Locations)
       checkAviEngineLocationQuery(query, edrMetaData, locationCheck, queryOptions);
-
     else if (edrQuery.query_type == EDRQueryType::Position ||
              edrQuery.query_type == EDRQueryType::Radius)
       checkAviEnginePositionQuery(query, edrQuery, queryOptions);
@@ -204,7 +203,7 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
 {
   try
   {
-    const auto producer = trim_copy(to_upper_copy(prod));
+    const auto producer = trim_copy(to_lower_copy(prod));
     const auto &edrProducerMetaData = state.getAviMetaData();
     const auto edrMetaData = edrProducerMetaData.find(producer);
     if (edrMetaData == edrProducerMetaData.end())
@@ -226,7 +225,7 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
     queryOptions.itsParameters.push_back("latitude");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
-    queryOptions.itsMessageTypes.push_back(producer);
+    queryOptions.itsMessageTypes.push_back(to_upper_copy(producer));
     auto message_format =
         (query.output_format == COVERAGE_JSON_FORMAT || query.output_format == GEO_JSON_FORMAT
              ? TAC_FORMAT

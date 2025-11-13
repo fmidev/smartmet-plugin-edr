@@ -305,7 +305,7 @@ Json::Value get_data_queries(const std::string &host,
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
     //    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
-    query_info_crs_details_0["crs"] = Json::Value("CRS:84");
+    query_info_crs_details_0["crs"] = Json::Value("OGC:CRS84");
     query_info_crs_details_0["wkt"] = Json::Value(
         "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS "
         "84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT["
@@ -341,7 +341,7 @@ Json::Value get_data_queries(const std::string &host,
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
     //    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
-    query_info_crs_details_0["crs"] = Json::Value("CRS:84");
+    query_info_crs_details_0["crs"] = Json::Value("OGC:CRS84");
     query_info_crs_details_0["wkt"] = Json::Value(
         "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS "
         "84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT["
@@ -1252,7 +1252,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
-      spatial["crs"] = Json::Value("CRS:84");
+      spatial["crs"] = Json::Value("OGC:CRS84");
       extent["spatial"] = spatial;
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
@@ -1271,7 +1271,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
       //	  crs[0] = Json::Value("EPSG:4326");
-      crs[0] = Json::Value("CRS:84");
+      crs[0] = Json::Value("OGC:CRS84");
       instance["crs"] = crs;
 
       // Parameter names (mandatory)
@@ -1444,7 +1444,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
-      spatial["crs"] = Json::Value("CRS:84");
+      spatial["crs"] = Json::Value("OGC:CRS84");
       extent["spatial"] = spatial;
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
@@ -1463,7 +1463,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
       //	  crs[0] = Json::Value("EPSG:4326");
-      crs[0] = Json::Value("CRS:84");
+      crs[0] = Json::Value("OGC:CRS84");
       value["crs"] = crs;
 
       // Parameter names (mandatory)
@@ -2937,10 +2937,15 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       feature["type"] = Json::Value("Feature");
       feature["id"] = Json::Value(loc.id);
       auto geometry = Json::Value(Json::ValueType::objectValue);
-      geometry["type"] = Json::Value("Point");
-      auto coordinates = Json::Value(Json::ValueType::arrayValue);
-      coordinates[0] = Json::Value(loc.longitude, longitude_precision);
-      coordinates[1] = Json::Value(loc.latitude, latitude_precision);
+
+      if ((! (edr_md->isAviProducer())) || (! edr_md->getGeometry(loc.id, geometry)))
+      {
+        geometry["type"] = Json::Value("Point");
+        auto coordinates = Json::Value(Json::ValueType::arrayValue);
+        coordinates[0] = Json::Value(loc.longitude, longitude_precision);
+        coordinates[1] = Json::Value(loc.latitude, latitude_precision);
+        geometry["coordinates"] = coordinates;
+      }
       auto properties = Json::Value(Json::ValueType::objectValue);
       properties["name"] = Json::Value(loc.name);
       auto detail_string = ("Id is " + loc.type);
@@ -2984,7 +2989,6 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
         properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
                                              Fmi::to_iso_extended_string(end_time) + "Z");
       }
-      geometry["coordinates"] = coordinates;
       feature["geometry"] = geometry;
       feature["properties"] = properties;
       features[features.size()] = feature;

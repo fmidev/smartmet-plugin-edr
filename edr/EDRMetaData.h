@@ -15,6 +15,7 @@
 #include <engines/observation/MetaData.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
+#include "Json.h"
 
 namespace SmartMet
 {
@@ -44,14 +45,17 @@ struct edr_parameter
 struct edr_spatial_extent
 {
   edr_spatial_extent()
-      : bbox_xmin(0.0), bbox_ymin(0.0), bbox_xmax(0.0), bbox_ymax(0.0), crs("EPSG:4326")
+      : bbox_xmin(0.0), bbox_ymin(0.0), bbox_xmax(0.0), bbox_ymax(0.0), crs("EPSG:4326"),
+        geometryIds({})
   {
   }
+
   double bbox_xmin;
   double bbox_ymin;
   double bbox_xmax;
   double bbox_ymax;
   std::string crs;
+  std::map<std::string, std::optional<int>> geometryIds;
 };
 
 struct edr_temporal_extent_period
@@ -119,6 +123,9 @@ struct EDRMetaData
   bool sourceHasInstances() const {
       return !(data_queries.empty() || isObsProducer() || isAviProducer());
   }
+
+  const Engine::Avi::Engine *aviEngine = nullptr;
+  bool getGeometry(const std::string &item, Json::Value &geometry) const;
 };
 
 using EDRProducerMetaData =

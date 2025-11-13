@@ -959,9 +959,13 @@ edr_temporal_extent get_temporal_extent(const std::set<Fmi::LocalDateTime> &time
   }
 }
 
+void setAviQueryLocationOptions(const AviCollection &aviCollection,
+                                const AviMetaData &amd,
+                                SmartMet::Engine::Avi::QueryOptions &queryOptions);
+
 edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
                                          const std::string &message_type,
-                                         int period_length)
+                                         const AviCollection &aviCollection)
 {
   try
   {
@@ -972,7 +976,12 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsDistinctMessages = true;
     queryOptions.itsFilterMETARs = true;
     queryOptions.itsExcludeSPECIs = false;
-    queryOptions.itsLocationOptions.itsCountries.push_back("FI");
+
+    AviMetaData amd(aviCollection.getBBox(),
+                    aviCollection.getName(),
+                    aviCollection.getMessageTypes(),
+                    aviCollection.getLocationCheck());
+    setAviQueryLocationOptions(aviCollection, amd, queryOptions);
 
     queryOptions.itsParameters.push_back("messagetime");
 
@@ -985,10 +994,9 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
     queryOptions.itsMessageFormat = TAC_FORMAT;
 
+    // From config file avi.period_length (30 days default)
     auto now = Fmi::SecondClock::universal_time();
-    auto start_of_period =
-        (now -
-         Fmi::Hours(period_length * 24));  // from config file avi.period_length (30 days default)
+    auto start_of_period = (now - Fmi::Hours(aviCollection.getPeriodLength() * 24));
     std::string startTime = Fmi::date_time::to_iso_string(start_of_period);
     std::string endTime = Fmi::date_time::to_iso_string(now);
     queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
@@ -1071,6 +1079,7 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
                     const std::string &icaoColumnName,
                     const std::string &latColumnName,
                     const std::string &lonColumnName,
+                    const std::string &firIdColumnName,
                     AviMetaData &amd)
 {
   try
@@ -1081,6 +1090,9 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
     double minY = 0;
     double maxX = 0;
     double maxY = 0;
+
+    const SmartMet::Engine::Avi::FIRQueryData *firAreas =
+        (firIdColumnName.empty() ? nullptr : amd.getFIRAreas());
 
     for (auto stationId : stationData.itsStationIds)
     {
@@ -1098,10 +1110,39 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
 
       auto lat = std::get<double>(latitude);
       auto lon = std::get<double>(longitude);
+      std::optional<int> firAreaId;
 
       if (useDataBBox)
       {
-        if (first)
+        if (firAreas)
+        {
+          auto const &firId = *(columns.at(firIdColumnName).cbegin());
+
+          auto fId = std::get<int>(firId);
+          auto firArea = firAreas->find(fId);
+
+          if (firArea != firAreas->end())
+          {
+            if (first)
+            {
+              minY = firArea->second.second.getYMin();
+              maxY = firArea->second.second.getYMax();
+              minX = firArea->second.second.getXMin();
+              maxX = firArea->second.second.getXMax();
+              first = false;
+            }
+            else
+            {
+              minY = std::min(minY, firArea->second.second.getYMin());
+              maxY = std::max(maxY, firArea->second.second.getYMax());
+              minX = std::min(minX, firArea->second.second.getXMin());
+              maxX = std::max(maxX, firArea->second.second.getXMax());
+            }
+
+            firAreaId = fId;
+          }
+        }
+        else if (first)
         {
           minY = maxY = lat;
           minX = maxX = lon;
@@ -1117,8 +1158,7 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
         }
       }
 
-      amd.addStation(
-          AviStation(stationId, icao, std::get<double>(latitude), std::get<double>(longitude)));
+      amd.addStation(AviStation(stationId, icao, lat, lon, firAreaId));
     }
 
     if (!amd.getStations().empty() && useDataBBox)
@@ -1151,16 +1191,27 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
       std::string icaoColumnName("icao");
       std::string latColumnName("latitude");
       std::string lonColumnName("longitude");
+      std::string firIdColumnName;
 
       queryOptions.itsParameters.push_back(icaoColumnName);
       queryOptions.itsParameters.push_back(latColumnName);
       queryOptions.itsParameters.push_back(lonColumnName);
 
+      if (aviCollection.getName() == "sigmet")
+      {
+        firIdColumnName = "firid";
+        queryOptions.itsParameters.push_back(firIdColumnName);
+
+        amd.setFIRAreas(aviEngine.queryFIRAreas());
+      }
+
       setAviQueryLocationOptions(aviCollection, amd, queryOptions);
 
       auto stationData = aviEngine.queryStations(queryOptions);
 
-      setAviStations(stationData, aviCollection, icaoColumnName, latColumnName, lonColumnName, amd);
+      setAviStations(
+          stationData, aviCollection, icaoColumnName, latColumnName, lonColumnName, firIdColumnName,
+          amd);
       if (!amd.getStations().empty())
         aviMetaData.push_back(amd);
     }
@@ -1196,12 +1247,15 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
     {
       EDRMetaData edrMetaData;
       edrMetaData.metadata_source = SourceEngine::Avi;
+      edrMetaData.aviEngine = &aviEngine;
+
       auto const &bbox = *(amd.getBBox());
 
       edrMetaData.spatial_extent.bbox_xmin = *bbox.getMinX();
       edrMetaData.spatial_extent.bbox_ymin = *bbox.getMinY();
       edrMetaData.spatial_extent.bbox_xmax = *bbox.getMaxX();
       edrMetaData.spatial_extent.bbox_ymax = *bbox.getMaxY();
+      edrMetaData.spatial_extent.geometryIds = amd.getGeometryIds();
 
       /*
       edrMetaData.title = amd.getTitle();
@@ -1217,7 +1271,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       const AviCollection &avi_collection = get_avi_collection(producer, aviCollections);
 
       edrMetaData.temporal_extent =
-          getAviTemporalExtent(aviEngine, producer, avi_collection.getPeriodLength());
+          getAviTemporalExtent(aviEngine, producer, avi_collection);
 
       for (const auto &p : amd.getParameters())
       {
@@ -1253,9 +1307,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
 }
 
 SupportedLocations get_supported_locations(const AviMetaData &amd,
-                                           const AviCollections &aviCollections,
-                                           SupportedProducerLocations &spl,
-                                           const CollectionInfoContainer &cic)
+                                           const AviCollections &aviCollections)
 
 {
   try
@@ -1297,7 +1349,7 @@ void load_locations_avi(const Engine::Avi::Engine &aviEngine,
 
     for (const auto &amd : aviMetaData)
     {
-      SupportedLocations sls = get_supported_locations(amd, aviCollections, spl, cic);
+      SupportedLocations sls = get_supported_locations(amd, aviCollections);
 
       spl[amd.getProducer()] = sls;
     }
@@ -1325,6 +1377,24 @@ int EDRMetaData::getPrecision(const std::string &parameter_name) const
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+bool EDRMetaData::getGeometry(const std::string &item, Json::Value &geometry) const
+{
+  auto geom = spatial_extent.geometryIds.find(item);
+
+  if ((geom == spatial_extent.geometryIds.end()) || (! geom->second))
+    return false;
+
+  auto engineGeometries = aviEngine->queryFIRAreas();
+  auto engineGeom = engineGeometries.find(*(geom->second));
+
+  if (engineGeom == engineGeometries.end())
+    return false;
+
+  geometry = Json::Value(engineGeom->second.first, true);
+
+  return true;
 }
 
 EngineMetaData::EngineMetaData()
