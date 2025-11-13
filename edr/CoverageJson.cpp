@@ -110,42 +110,40 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
     }
     else
     {
-      const auto &first_temporal_extent_period = temporal_extent.time_periods.at(0);
-      // If timestep is 0, time_periods member contains just start_time, meaning there is only
-      // separate timesteps
-      if (first_temporal_extent_period.timestep == 0)
+      // BRAINSTORM-3289, fix for timestep 0
+      //
+      // Several time periods, time periods may or may not have same time step length.
+      // Nonperiodic data has time step 0
+      auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
+      auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
+      auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
+      for (unsigned int i = 0; i < temporal_extent.time_periods.size(); i++)
       {
-        auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
-        for (const auto &period : temporal_extent.time_periods)
-          temporal_interval_array[temporal_interval_array.size()] =
-              Json::Value(Fmi::to_iso_extended_string(period.start_time) + "Z");
-        temporal["interval"] = temporal_interval_array;
-      }
-      else
-      {
-        // Several time periods, time periods may or may not have same time step length
-        auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
-        auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
-        auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
-        for (unsigned int i = 0; i < temporal_extent.time_periods.size(); i++)
-        {
-          const auto &temporal_extent_period = temporal_extent.time_periods.at(i);
+        const auto &temporal_extent_period = temporal_extent.time_periods.at(i);
+
+        if (temporal_extent_period.timestep == 0)
+          temporal_interval_values[i] =
+              Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z");
+        else
           temporal_interval_values[i] =
               Json::Value("R" + Fmi::to_string(temporal_extent_period.timesteps) + "/" +
                           Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z/PT" +
                           Fmi::to_string(temporal_extent_period.timestep) + "M");
-        }
-        auto sz = temporal_extent.time_periods.size();
-        const auto &first_temporal_extent_period = temporal_extent.time_periods.at(0);
-        temporal_interval_array[0] =
-            Json::Value(Fmi::to_iso_extended_string(first_temporal_extent_period.start_time) + "Z");
-        const auto &last_temporal_extent_period = temporal_extent.time_periods.at(sz - 1);
+      }
+      auto sz = temporal_extent.time_periods.size();
+      const auto &first_temporal_extent_period = temporal_extent.time_periods.at(0);
+      temporal_interval_array[0] =
+          Json::Value(Fmi::to_iso_extended_string(first_temporal_extent_period.start_time) + "Z");
+      const auto &last_temporal_extent_period = temporal_extent.time_periods.at(sz - 1);
+      if (last_temporal_extent_period.timestep == 0)
+        temporal_interval_array[1] =
+            Json::Value(Fmi::to_iso_extended_string(last_temporal_extent_period.start_time) + "Z");
+      else
         temporal_interval_array[1] =
             Json::Value(Fmi::to_iso_extended_string(last_temporal_extent_period.end_time) + "Z");
-        temporal_interval[0] = temporal_interval_array;
-        temporal["interval"] = temporal_interval;
-        temporal["values"] = temporal_interval_values;
-      }
+      temporal_interval[0] = temporal_interval_array;
+      temporal["interval"] = temporal_interval;
+      temporal["values"] = temporal_interval_values;
     }
   }
 
