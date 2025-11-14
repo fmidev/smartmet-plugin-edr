@@ -247,8 +247,9 @@ EDRQueryParams::EDRQueryParams(const State& state,
       throw EDRException("No matching parameter names given!");
     }
 
-    // If f-option is misssing, default output format is CoverageJSON
-    output_format = Spine::optional_string(req.getParameter("f"), COVERAGE_JSON_FORMAT);
+    // If f-option is misssing, default output format is CoverageJSON or IWXXM for avi
+    auto default_format = (emd.isAviProducer() ? IWXXM_FORMAT : COVERAGE_JSON_FORMAT);
+    output_format = Spine::optional_string(req.getParameter("f"), default_format);
 
     const auto& supportedOutputFormats =
         config.getSupportedOutputFormats(itsEDRQuery.collection_id);
@@ -281,6 +282,8 @@ EDRQueryParams::EDRQueryParams(const State& state,
 #ifndef WITHOUT_AVI
     parseICAOCodesAndAviProducer(emd);
 #endif
+
+    validateRequestParametersWithMetaData(emd);
   }
   catch (...)
   {
@@ -644,9 +647,9 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
       UtilityFunctions::parseRangeListValue(z, zIsRange, zLo, zHi);
     }
 
-    auto crs = Spine::optional_string(req.getParameter("crs"), "EPSG:4326");
-    if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84" && crs != "CRS84" && crs != "CRS:84")
-      throw EDRException("Invalid crs: " + crs + ". Only EPSG:4326 is supported");
+    auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
+    if (!crs.empty() && crs != "OGC:CRS84" && crs != "CRS:84")
+      throw EDRException("Invalid crs: " + crs + ". Only OGC:CRS84 is supported");
     crs = "EPSG:4326";
 
     /*
@@ -1066,6 +1069,26 @@ void EDRQueryParams::parseICAOCodesAndAviProducer(const EDRMetaData& emd)
   }
 }
 
+void EDRQueryParams::validateRequestParameterNamesWithMetaData(const EDRMetaData &emd) const
+{
+}
+void EDRQueryParams::validateRequestDateTimeWithMetaData(const EDRMetaData &emd) const
+{
+}
+void EDRQueryParams::validateRequestLevelsWithMetaData(const EDRMetaData &emd) const
+{
+}
+void EDRQueryParams::validateRequestCoordinatesWithMetaData(const EDRMetaData &emd) const
+{
+}
+
+void EDRQueryParams::validateRequestParametersWithMetaData(const EDRMetaData &emd) const
+{
+  validateRequestParameterNamesWithMetaData(emd);
+  validateRequestDateTimeWithMetaData(emd);
+  validateRequestLevelsWithMetaData(emd);
+  validateRequestCoordinatesWithMetaData(emd);
+}
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet
