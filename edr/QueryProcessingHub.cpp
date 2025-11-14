@@ -544,7 +544,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       std::string producerName = (producerMissing ? "" : masterquery.timeproducers.front().front());
       if (itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
       {
-        itsAviEngineQuery.processAviEngineQuery(state, q, producerName, outputData);
+        itsAviEngineQuery.processAviEngineQuery(
+           thePlugin.itsConfig, state, q, producerName, outputData);
         process_qengine_query = false;
       }
       else

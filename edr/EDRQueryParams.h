@@ -63,6 +63,12 @@ class EDRQueryParams
 
   void parseICAOCodesAndAviProducer(const EDRMetaData& emd);
 
+  void validateRequestParametersWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestParameterNamesWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestDateTimeWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestLevelsWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestCoordinatesWithMetaData(const EDRMetaData &emd) const;
+
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;
 };

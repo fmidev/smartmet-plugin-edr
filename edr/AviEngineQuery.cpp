@@ -196,7 +196,8 @@ void checkAviEngineQuery(const Query &query,
   }
 }
 
-void AviEngineQuery::processAviEngineQuery(const State &state,
+void AviEngineQuery::processAviEngineQuery(const Config &config,
+                                           const State &state,
                                            const Query &query,
                                            const std::string &prod,
                                            TS::OutputData &outputData) const
@@ -279,7 +280,9 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
 
     // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
     //
-    queryOptions.itsExcludeSPECIs = true;
+    // BRAINSTORM-3284: now configurable, defaults to true
+    //
+    queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
 
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 

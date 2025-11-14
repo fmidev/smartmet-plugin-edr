@@ -73,6 +73,9 @@ class Config : private boost::noncopyable
   const libconfig::Config &config() const { return itsConfig; }
   Engine::Gis::PostGISIdentifierVector getPostGISIdentifiers() const;
 
+  std::string defaultAviFormat() const { return itsDefaultAviFormat; }
+  bool        excludeAviSPECI()  const { return itsExcludeAviSPECI; }
+
   bool aviEngineDisabled() const { return itsAviEngineDisabled; }
   bool obsEngineDisabled() const { return itsObsEngineDisabled; }
   bool gridEngineDisabled() const { return itsGridEngineDisabled; }
@@ -108,6 +111,9 @@ class Config : private boost::noncopyable
   unsigned int itsExpirationTime = 60;  // seconds
   std::vector<std::string> itsParameterAliasFiles;
   std::vector<uint> itsDefaultGridGeometries;
+
+  std::string itsDefaultAviFormat = "CoverageJSON";
+  bool        itsExcludeAviSPECI  = true;
 
   Spine::TableFormatterOptions itsFormatterOptions;
   Precisions itsPrecisions;

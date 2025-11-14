@@ -248,7 +248,8 @@ EDRQueryParams::EDRQueryParams(const State& state,
     }
 
     // If f-option is misssing, default output format is CoverageJSON or IWXXM for avi
-    auto default_format = (emd.isAviProducer() ? IWXXM_FORMAT : COVERAGE_JSON_FORMAT);
+    auto default_format =
+        (emd.isAviProducer() ? config.defaultAviFormat() : COVERAGE_JSON_FORMAT);
     output_format = Spine::optional_string(req.getParameter("f"), default_format);
 
     const auto& supportedOutputFormats =

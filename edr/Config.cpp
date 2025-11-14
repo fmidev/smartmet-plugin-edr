@@ -768,6 +768,33 @@ void Config::parse_config_avi_collections()
     if (itsConfig.exists("avi.period_length"))
       itsConfig.lookupValue("avi.period_length", period_length);
 
+    // BRAINSTORM-3287
+    //
+    string avi_default_format;
+    if (itsConfig.exists("avi.default_format"))
+    {
+      itsConfig.lookupValue("avi.default_format", avi_default_format);
+
+      if (
+          (avi_default_format != COVERAGE_JSON_FORMAT) && (avi_default_format != GEO_JSON_FORMAT) &&
+          (avi_default_format != TAC_FORMAT) && (avi_default_format != IWXXM_FORMAT)
+         )
+        throw Fmi::Exception(BCP,
+                             "Configuration file error. avi.default_format must be "
+                             "CoverageJSON, GeoJSON, TAC or IWXXM");
+
+      itsDefaultAviFormat = avi_default_format;
+    }
+
+    // BRAINSTORM-3284
+    //
+    bool avi_exclude_speci;
+    if (itsConfig.exists("avi.exclude_speci"))
+    {
+      itsConfig.lookupValue("avi.exclude_speci", avi_exclude_speci);
+      itsExcludeAviSPECI = avi_exclude_speci;
+    }
+
     std::string rootPath = "avi.collections";
 
     if (!itsConfig.exists(rootPath))
