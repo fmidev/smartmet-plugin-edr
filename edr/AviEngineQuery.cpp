@@ -284,6 +284,9 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     //
     queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
 
+    if ((! queryOptions.itsExcludeSPECIs) && (producer == "metar"))
+      queryOptions.itsMessageTypes.push_back("SPECI");
+
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 
     storeAviData(state, aviData, outputData);
