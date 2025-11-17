@@ -4,6 +4,7 @@
 #include <engines/avi/Engine.h>
 #endif
 #include "EDRQuery.h"
+#include "Config.h"
 
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
@@ -964,6 +965,7 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
                                 SmartMet::Engine::Avi::QueryOptions &queryOptions);
 
 edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
+                                         const Config &config,
                                          const std::string &message_type,
                                          const AviCollection &aviCollection)
 {
@@ -974,8 +976,6 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     SmartMet::Engine::Avi::QueryOptions queryOptions;
 
     queryOptions.itsDistinctMessages = true;
-    queryOptions.itsFilterMETARs = true;
-    queryOptions.itsExcludeSPECIs = false;
 
     AviMetaData amd(aviCollection.getBBox(),
                     aviCollection.getName(),
@@ -1009,7 +1009,13 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
     queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
     // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
-    queryOptions.itsExcludeSPECIs = true;
+    //
+    // BRAINSTORM-3284: now configurable, defaults to true
+    //
+    queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
+
+    if ((! queryOptions.itsExcludeSPECIs) && (queryOptions.itsMessageTypes.front() == "METAR"))
+      queryOptions.itsMessageTypes.push_back("SPECI");
 
     auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
 
@@ -1225,7 +1231,7 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
 }
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
-                                         const AviCollections &aviCollections,
+                                         const Config &config,
                                          const std::string &default_language,
                                          const ParameterInfo *pinfo,
                                          const CollectionInfoContainer &cic,
@@ -1241,6 +1247,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
   {
     EDRProducerMetaData edrProducerMetaData;
 
+    auto aviCollections = config.getAviCollections();
     auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
 
     for (const auto &amd : aviMetaData)
@@ -1271,7 +1278,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       const AviCollection &avi_collection = get_avi_collection(producer, aviCollections);
 
       edrMetaData.temporal_extent =
-          getAviTemporalExtent(aviEngine, producer, avi_collection);
+          getAviTemporalExtent(aviEngine, config, producer, avi_collection);
 
       for (const auto &p : amd.getParameters())
       {

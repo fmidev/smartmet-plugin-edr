@@ -865,7 +865,7 @@ void Plugin::updateMetaData(bool initial_phase)
     if (!itsConfig.aviEngineDisabled())
     {
       auto avi_engine_metadata = get_edr_metadata_avi(*itsEngines.aviEngine,
-                                                      itsConfig.getAviCollections(),
+                                                      itsConfig,
                                                       default_language,
                                                       parameter_info,
                                                       collection_info_container,

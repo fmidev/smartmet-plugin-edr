@@ -160,8 +160,9 @@ EDRProducerMetaData get_edr_metadata_obs(
     unsigned int observation_period);
 #endif
 #ifndef WITHOUT_AVI
+class Config;
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
-                                         const AviCollections& aviCollections,
+                                         const Config &config,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
                                          const CollectionInfoContainer& cic,
