@@ -439,9 +439,12 @@ void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData
       for (const auto& output : outputData)
       {
         const auto& outdata = output.second;
-        const auto& tsdata = outdata.at(0);
-        const auto& tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
-        messages += parseIWXXMAndTACMessages(tsg_data, masterquery);
+        if (! outdata.empty())
+        {
+          const auto& tsdata = outdata.at(0);
+          const auto& tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
+          messages += parseIWXXMAndTACMessages(tsg_data, masterquery);
+        }
       }
       if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
       {
