@@ -131,6 +131,126 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
   }
 }
 
+std::string utcDateTime(const Fmi::DateTime &datetime)
+{
+  if (datetime.is_not_a_date_time())
+    return "not_a_datetime";
+
+  return Fmi::to_iso_string(datetime) + "Z";
+}
+
+std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime = "")
+{
+  Fmi::DateTime now;
+
+  if (datetime.empty())
+    now = Fmi::SecondClock::universal_time();
+  else
+    now = Fmi::DateTime::from_iso_string(datetime);
+
+  // No time periods (never, should not be called if so)
+  //
+  if (emd.temporal_extent.time_periods.empty())
+    return utcDateTime(now);
+
+  // Note: single time instansts are always used
+
+  auto const &time_periods = (emd.temporal_extent.single_time_periods.empty()
+                              ? emd.temporal_extent.time_periods
+                              : emd.temporal_extent.single_time_periods);
+
+  // Before (or match) 1'st time period start ?
+  //
+  if (now <= time_periods.front().start_time)
+    return utcDateTime(time_periods.front().start_time);
+
+  // After (or match) last time period (start or) end ?
+  //
+  if (now >= time_periods.back().start_time)
+  {
+    if (time_periods.back().end_time.is_not_a_date_time())
+      return utcDateTime(time_periods.back().start_time);
+
+    if (now >= time_periods.back().end_time)
+     return utcDateTime(time_periods.back().end_time);
+  }
+
+  // Search for time period(s) within or between which current time is
+
+  const edr_temporal_extent_period *tp1 = nullptr, *tp2 = nullptr;
+
+  for (const auto &tp : time_periods)
+  {
+    auto const &t1 = tp.start_time;
+    auto const &t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
+
+    // After period's end ?
+    //
+    if (t2 < now)
+    {
+      tp1 = &tp;
+      continue;
+    }
+
+    // Match start or end ?
+    //
+    if ((t1 == now) || (t2 == now))
+      return utcDateTime(now);
+
+    // Before period's end
+    //
+    tp2 = &tp;
+
+    break;
+  }
+
+  // No time period(s) found (never) ?
+  //
+  if ((! tp1) && (! tp2))
+    return utcDateTime(now);
+
+  if (! tp1)
+    tp1 = tp2;
+  else if (! tp2)
+    tp2 = tp1;
+
+  // Between 2 time periods ?
+  //
+  if (tp1 != tp2)
+  {
+    auto const &t1 = (tp1->end_time.is_not_a_date_time() ? tp1->start_time : tp1->end_time);
+    auto const &t2 = tp2->start_time;
+
+    auto td1 = now - t1;
+    auto td2 = t2 - now;
+
+    return utcDateTime((td1 > td2) ? t2 : t1);
+  }
+
+  // Within time period
+  //
+  // No period end or time step ?
+  //
+  if (tp1->end_time.is_not_a_date_time() || (tp1->timestep <= 0))
+    return utcDateTime(tp1->start_time);
+
+  // Nearest timestep
+
+  auto diffminutes = (now - tp1->start_time).total_minutes();
+  auto stepminutes = (diffminutes / tp1->timestep) * tp1->timestep;
+  auto t = tp1->start_time + Fmi::date_time::Minutes(stepminutes);
+
+  if ((2 * (diffminutes - stepminutes)) >= tp1->timestep)
+  {
+    auto t2 = t + Fmi::date_time::Minutes(tp1->timestep);
+
+    if (t2 <= tp1->end_time)
+      t = t2;
+  }
+
+  return utcDateTime(t);
+}
+
 }  // anonymous namespace
 
 EDRQueryParams::EDRQueryParams(const State& state,
@@ -745,39 +865,38 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
   {
     // EDR datetime
     //
-    // BRAINSTORM-3272; Removed nonstd "&datetime=null" handling but behaving about
-    //                  like it if time is not available otherwise
+    // BRAINSTORM-3272; Removed nonstd "&datetime=null" handling and allowing missing
+    //                  datetime option; if missing and is not set by coordinatefilter,
+    //                  using nearest metadata time instant to current time by default.
     //
-    //                  Note: if time is not available otherwise, currently using first
-    //                  metadata timeinstant instead of all the data or timeinstant for
-    //                  current time etc
-    //
-    //                  TODO: adjust default datetime value/handling
+    //                  For avi sigmet collection the default time is not set from
+    //                  metadata, using current time by default to get latest valid
+    //                  sigmets. The same might be better for metar and taf collections
+    //                  too should new messages have arrived since latest metadata update
     //
     auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
 
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
 
-#ifndef WITHOUT_AVI
-    if (datetime.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
-      datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
-#endif
-
     if (datetime.empty())
     {
-      if (emd.temporal_extent.time_periods.empty())
+      // BRAINSTORM-3296
+      //
+      // Use "now" as default time for avi sigmet -collection
+      //
+      if (
+          emd.temporal_extent.time_periods.empty() ||
+          (emd.isAviProducer() && (itsEDRQuery.collection_id == SIGMET))
+         )
       {
-        datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
+        datetime = utcDateTime(Fmi::SecondClock::universal_time());
       }
       else
       {
-//      if (emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
-          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
-//      else
-//        datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-//                    "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
+        // Using neareast metadata time instant to current time
+
+        datetime = nearestTimeNow(emd);
       }
     }
 

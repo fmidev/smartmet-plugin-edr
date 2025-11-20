@@ -784,20 +784,45 @@ EDRProducerMetaData get_edr_metadata_obs(
 #endif
 
 #ifndef WITHOUT_AVI
-std::vector<TimePeriod> get_time_periods(const std::set<Fmi::LocalDateTime> &timesteps)
+std::vector<TimePeriod> get_time_periods(
+    const std::set<Fmi::LocalDateTime> &timesteps,
+    std::vector<edr_temporal_extent_period> &single_time_periods)
 {
   try
   {
     std::vector<TimePeriod> time_periods;
+    edr_temporal_extent_period temporal_extent_period;
 
     auto it_previous = timesteps.begin();
     auto it = timesteps.begin();
-    it++;
     while (it != timesteps.end())
     {
-      time_periods.emplace_back(it_previous->utc_time(), it->utc_time());
+      // (BRAINSTORM-3296)
+      //
+      // If there should have been only one timestep it would have been lost here but the
+      // case is now separately handled and this method is not called. Handle the case anyway
+      //
+      auto it2 = ((++it == timesteps.end()) ? it_previous : it);
+
+      time_periods.emplace_back(it_previous->utc_time(), it2->utc_time());
+
+      // BRAINSTORM-3296
+      //
+      // Store all time instants for getting default 'datetime' query param value
+      // (i.e. nearest time to "now") for avi collections since avi period merging
+      // seems not to work (?) and/or since if merging "fails", timesteps are stored as
+      // varying length periods of subsequent time instants without having timestep if
+      // the number of time instants is over maximum limit.
+      //
+      // As the result stored time periods and their timesteps are currently not usable for
+      // searching the nearest timeinstant for "now"; instead of studying/changing the current
+      // time period merge -processing etc, simply storing the time instants as single time
+      // periods having just start time
+      //
+      temporal_extent_period.start_time = it_previous->utc_time();
+      single_time_periods.emplace_back(temporal_extent_period);
+
       it_previous++;
-      it++;
     }
 
     return time_periods;
@@ -932,12 +957,32 @@ edr_temporal_extent get_temporal_extent(const std::set<Fmi::LocalDateTime> &time
     edr_temporal_extent ret;
 
     if (timesteps.size() < 2)
+    {
+      // BRAINSTORM-3296
+      //
+      // Store single timestep too, eralier it was lost. Since response output code checks
+      // for 1 period case and expects both period start and end time to exist, set both to
+      // time_periods but single_time_periods can have just the start (it's used only for
+      // getting nearest time instant to 'now' as the default request 'datetime' value)
+      //
+      if (! timesteps.empty())
+      {
+        edr_temporal_extent_period temporal_extent_period;
+        temporal_extent_period.start_time = timesteps.begin()->utc_time();
+
+        ret.single_time_periods.emplace_back(temporal_extent_period);
+
+        temporal_extent_period.end_time = timesteps.begin()->utc_time();
+        ret.time_periods.emplace_back(temporal_extent_period);
+      }
+
       return ret;
+    }
 
     ret.origin_time = Fmi::SecondClock::universal_time();
 
     // Insert time periods into vector
-    std::vector<TimePeriod> time_periods = get_time_periods(timesteps);
+    std::vector<TimePeriod> time_periods = get_time_periods(timesteps, ret.single_time_periods);
 
     // Iterate vector and find out periods with even timesteps
     std::vector<edr_temporal_extent_period> merged_time_periods =
@@ -1203,7 +1248,7 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
       queryOptions.itsParameters.push_back(latColumnName);
       queryOptions.itsParameters.push_back(lonColumnName);
 
-      if (aviCollection.getName() == "sigmet")
+      if (aviCollection.getName() == SIGMET)
       {
         firIdColumnName = "firid";
         queryOptions.itsParameters.push_back(firIdColumnName);
@@ -1218,6 +1263,7 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
       setAviStations(
           stationData, aviCollection, icaoColumnName, latColumnName, lonColumnName, firIdColumnName,
           amd);
+
       if (!amd.getStations().empty())
         aviMetaData.push_back(amd);
     }

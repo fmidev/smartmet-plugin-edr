@@ -72,9 +72,18 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
       // data)
       if (temporal_extent_period.timestep == 0)
       {
+        // BRAINSTORM-3298
+        //
+        // Period can have the same start and end time; do not output interval R0/...
+        //
+        // Note: fixed period PT60M; time step is not available and period can contain
+        //       varying steps
+        //
         auto hours =
             ((temporal_extent_period.end_time - temporal_extent_period.start_time).total_seconds() /
              3600);
+        if (hours == 0)
+          hours = 1;
         auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
         auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
         auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);

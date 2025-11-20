@@ -24,6 +24,9 @@ namespace Plugin
 namespace EDR
 {
 
+static const std::string METAR("metar");
+static const std::string SIGMET("sigmet");
+
 // Parameter info from querydata-, observation-, grid-engine
 struct edr_parameter
 {
@@ -82,6 +85,7 @@ struct edr_temporal_extent
   Fmi::DateTime origin_time;
   std::string trs;
   std::vector<edr_temporal_extent_period> time_periods;
+  std::vector<edr_temporal_extent_period> single_time_periods;
   std::set<int> time_steps;
 };
 
