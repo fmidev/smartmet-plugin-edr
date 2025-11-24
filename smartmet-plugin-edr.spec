@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.10.29
+Version: 25.11.24
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -123,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Nov 24 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.11.24-1.fmi
+- Updated conformance specification (BRAINSTORM-3161)
+
 * Wed Oct 29 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.10.29-1.fmi
 - Changed spatial extent bbox and vertical extent interval to array (BRAINSTORM-3268)
 
