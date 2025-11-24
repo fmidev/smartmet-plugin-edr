@@ -38,18 +38,18 @@ BuildRequires: %{smartmet_fmt_devel}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 25.10.27
+BuildRequires: smartmet-library-spine-devel >= 25.11.19
 BuildRequires: smartmet-library-locus-devel >= 25.9.29
-BuildRequires: smartmet-library-macgyver-devel >= 25.10.15
-BuildRequires: smartmet-library-grid-content-devel >= 25.10.15
+BuildRequires: smartmet-library-macgyver-devel >= 25.11.20
+BuildRequires: smartmet-library-grid-content-devel >= 25.11.4
 BuildRequires: smartmet-library-grid-files-devel >= 25.10.15
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
 BuildRequires: smartmet-library-gis-devel >= 25.9.15
 BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
-BuildRequires: smartmet-engine-avi-devel >= 25.10.15
-BuildRequires: smartmet-engine-geonames-devel >= 25.9.29
+BuildRequires: smartmet-engine-avi-devel >= 25.11.5
+BuildRequires: smartmet-engine-geonames-devel >= 25.11.3
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 25.10.27
+BuildRequires: smartmet-engine-observation-devel >= 25.11.4
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
 BuildRequires: smartmet-engine-gis-devel >= 25.9.29
@@ -62,14 +62,14 @@ Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 25.9.15
 Requires: smartmet-library-locus >= 25.9.29
-Requires: smartmet-library-macgyver >= 25.10.15
+Requires: smartmet-library-macgyver >= 25.11.20
 Requires: smartmet-library-newbase >= 25.3.20
-Requires: smartmet-library-spine >= 25.10.27
+Requires: smartmet-library-spine >= 25.11.19
 Requires: smartmet-library-timeseries >= 25.8.1
 Requires: smartmet-library-gis >= 25.9.15
 Requires: smartmet-library-grid-files >= 25.10.15
-Requires: smartmet-engine-avi >= 25.10.15
-Requires: smartmet-engine-geonames >= 25.9.29
+Requires: smartmet-engine-avi >= 25.11.5
+Requires: smartmet-engine-geonames >= 25.11.3
 Requires: smartmet-engine-querydata >= 25.9.17
 Requires: smartmet-engine-gis >= 25.9.29
 Requires: smartmet-engine-grid >= 25.10.15
@@ -80,19 +80,19 @@ Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 25.10.10
-#TestRequires: smartmet-library-spine-plugin-test >= 25.10.27
+#TestRequires: smartmet-library-spine-plugin-test >= 25.11.19
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 25.6.18
 #TestRequires: smartmet-test-data >= 25.8.13
 #TestRequires: smartmet-engine-grid-test >= 25.10.15
 #TestRequires: smartmet-library-gis >= 25.9.15
-#TestRequires: smartmet-engine-avi >= 25.10.15
-#TestRequires: smartmet-engine-geonames >= 25.9.29
+#TestRequires: smartmet-engine-avi >= 25.11.5
+#TestRequires: smartmet-engine-geonames >= 25.11.3
 #TestRequires: smartmet-engine-gis >= 25.9.29
 #TestRequires: smartmet-engine-querydata >= 25.9.17
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 25.10.27
+#TestRequires: smartmet-engine-observation >= 25.11.4
 %endif
 #TestRequires: smartmet-engine-grid >= 25.10.15
 #TestRequires: gdal310-libs
