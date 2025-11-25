@@ -1095,10 +1095,20 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
   try
   {
     if (!aviCollection.getCountries().empty())
+    {
       queryOptions.itsLocationOptions.itsCountries.insert(
           queryOptions.itsLocationOptions.itsCountries.begin(),
           aviCollection.getCountries().begin(),
           aviCollection.getCountries().end());
+
+      // BRAINSTORM-3302; icao filtering (e.g. ILxx) is now made by aviengine
+      //
+      if (!aviCollection.getIcaoFilters().empty())
+        queryOptions.itsLocationOptions.itsIcaoFilters.insert(
+          queryOptions.itsLocationOptions.itsIcaoFilters.begin(),
+          aviCollection.getIcaoFilters().begin(),
+          aviCollection.getIcaoFilters().end());
+    }
     else if (!aviCollection.getIcaos().empty())
       queryOptions.itsLocationOptions.itsIcaos.insert(
           queryOptions.itsLocationOptions.itsIcaos.begin(),

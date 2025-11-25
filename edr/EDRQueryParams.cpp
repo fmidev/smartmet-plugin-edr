@@ -164,6 +164,8 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
   if (now <= time_periods.front().start_time)
     return utcDateTime(time_periods.front().start_time);
 
+  const edr_temporal_extent_period *tp1 = nullptr, *tp2 = nullptr;
+
   // After (or match) last time period (start or) end ?
   //
   if (now >= time_periods.back().start_time)
@@ -173,46 +175,48 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
 
     if (now >= time_periods.back().end_time)
      return utcDateTime(time_periods.back().end_time);
+
+    tp1 = tp2 = &time_periods.back();
   }
-
-  // Search for time period(s) within or between which current time is
-
-  const edr_temporal_extent_period *tp1 = nullptr, *tp2 = nullptr;
-
-  for (const auto &tp : time_periods)
+  else
   {
-    auto const &t1 = tp.start_time;
-    auto const &t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
+    // Search for time period(s) within or between which current time is
 
-    // After period's end ?
-    //
-    if (t2 < now)
+    for (const auto &tp : time_periods)
     {
-      tp1 = &tp;
-      continue;
+      auto const &t1 = tp.start_time;
+      auto const &t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
+
+      // After period's end ?
+      //
+      if (t2 < now)
+      {
+        tp1 = &tp;
+        continue;
+      }
+
+      // Match start or end ?
+      //
+      if ((t1 == now) || (t2 == now))
+        return utcDateTime(now);
+
+      // Before period's end
+      //
+      tp2 = &tp;
+
+      break;
     }
 
-    // Match start or end ?
+    // No time period(s) found (never) ?
     //
-    if ((t1 == now) || (t2 == now))
+    if ((! tp1) && (! tp2))
       return utcDateTime(now);
 
-    // Before period's end
-    //
-    tp2 = &tp;
-
-    break;
+    if (! tp1)
+      tp1 = tp2;
+    else if (! tp2)
+      tp2 = tp1;
   }
-
-  // No time period(s) found (never) ?
-  //
-  if ((! tp1) && (! tp2))
-    return utcDateTime(now);
-
-  if (! tp1)
-    tp1 = tp2;
-  else if (! tp2)
-    tp2 = tp1;
 
   // Between 2 time periods ?
   //
@@ -227,12 +231,22 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
     return utcDateTime((td1 > td2) ? t2 : t1);
   }
 
-  // Within time period
+  // Within time period or after last time instant
   //
-  // No period end or time step ?
+  // No period end time ?
   //
-  if (tp1->end_time.is_not_a_date_time() || (tp1->timestep <= 0))
+  if (tp1->end_time.is_not_a_date_time())
     return utcDateTime(tp1->start_time);
+
+  // No time step ?
+  //
+  if (tp1->timestep <= 0)
+  {
+    auto td1 = now - tp1->start_time;
+    auto td2 = tp1->end_time - now;
+
+    return utcDateTime((td1 > td2) ? tp1->end_time : tp1->start_time);
+  }
 
   // Nearest timestep
 
@@ -334,7 +348,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
     }
     else if (itsEDRQuery.query_type == EDRQueryType::Locations)
     {
-      parseLocations(emd);
+      parseLocations(emd, coords);
     }
     else if (itsEDRQuery.query_type == EDRQueryType::Cube)
     {
@@ -790,7 +804,7 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
   }
 }
 
-void EDRQueryParams::parseLocations(const EDRMetaData& emd)
+void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string &coords)
 {
   try
   {
@@ -799,6 +813,33 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd)
                          itsEDRQuery.collection_id + "'");
 
     auto location_id = itsEDRQuery.location_id;
+
+    if (location_id == "all")
+    {
+      // BRAINSTORM-3288
+      //
+      // Convert location "all" query to area query using a small buffer (1 km)
+      //
+      itsEDRQuery.query_type = EDRQueryType::Area;
+
+      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin) + " ");
+      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin) + ",");
+      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax) + " ");
+      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax) + ",");
+
+      coords = "POLYGON((" + xmin + ymin + xmax + ymin + xmax + ymax + xmin + ymax + xmin + ymin;
+      coords.pop_back();
+      coords += "))";
+
+      parseCoords(coords);
+
+      auto wkt = req.getParameter("wkt");
+
+      if (wkt)
+        req.setParameter("wkt", *wkt + ":1");
+
+      return;
+    }
 
     if (emd.locations->find(location_id) == emd.locations->end())
     {
@@ -869,11 +910,6 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
     //                  datetime option; if missing and is not set by coordinatefilter,
     //                  using nearest metadata time instant to current time by default.
     //
-    //                  For avi sigmet collection the default time is not set from
-    //                  metadata, using current time by default to get latest valid
-    //                  sigmets. The same might be better for metar and taf collections
-    //                  too should new messages have arrived since latest metadata update
-    //
     auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
 
     if (datetime.empty())
@@ -881,14 +917,7 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
 
     if (datetime.empty())
     {
-      // BRAINSTORM-3296
-      //
-      // Use "now" as default time for avi sigmet -collection
-      //
-      if (
-          emd.temporal_extent.time_periods.empty() ||
-          (emd.isAviProducer() && (itsEDRQuery.collection_id == SIGMET))
-         )
+      if (emd.temporal_extent.time_periods.empty())
       {
         datetime = utcDateTime(Fmi::SecondClock::universal_time());
       }

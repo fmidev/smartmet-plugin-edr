@@ -88,8 +88,8 @@ void AviCollection::addIcaoFilter(const std::string &theIcaoFilter)
   auto icaoFilter = trim_copy(to_upper_copy(theIcaoFilter));
   auto length = theIcaoFilter.length();
 
-  if ((length == 0) || (length > 4))
-    throw std::runtime_error("1-4 letter icao code filter expected");
+  if ((length == 0) || (length > 4) || strpbrk(theIcaoFilter.c_str(),"%_"))
+    throw std::runtime_error("1-4 letter icao code filter expected, no wildcards");
 
   for (auto const &filter : itsIcaoFilters)
   {

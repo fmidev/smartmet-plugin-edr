@@ -207,10 +207,13 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     const auto producer = trim_copy(to_lower_copy(prod));
     const auto &edrProducerMetaData = state.getAviMetaData();
     const auto edrMetaData = edrProducerMetaData.find(producer);
-    if (edrMetaData == edrProducerMetaData.end())
+    const auto &aviCollection = get_avi_collection(producer, config.getAviCollections());
+
+    if ((edrMetaData == edrProducerMetaData.end()) || aviCollection.getName().empty())
       throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, nullptr);
 
     SmartMet::Engine::Avi::QueryOptions queryOptions;
+queryOptions.itsDebug = true;
     bool locationCheck = false;
 
     checkAviEngineQuery(query, edrMetaData->second, locationCheck, queryOptions);
@@ -286,6 +289,33 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
 
     if ((! queryOptions.itsExcludeSPECIs) && (producer == METAR))
       queryOptions.itsMessageTypes.push_back("SPECI");
+
+    // BRAINSTORM-3300
+    //
+    // Do not check/filter if messages were created after the given messagetime and
+    // do not apply message query time restrictions (used for TAFs)
+    //
+    queryOptions.itsTimeOptions.itsMessageTimeChecks = false;
+
+    // BRAINSTORM-3288
+    //
+    // Set additional query filters
+    //
+    // Note: currently aviengine applies the filters in 'countries=...' station query
+    //       (collection metadata) and area (wkt=POLYGON(...)) message query only,
+    //       including stations by country codes and excluding by icao codes
+    //
+    if (! aviCollection.getCountries().empty())
+      queryOptions.itsLocationOptions.itsCountryFilters.insert(
+        queryOptions.itsLocationOptions.itsCountryFilters.begin(),
+        aviCollection.getCountries().begin(),
+        aviCollection.getCountries().end());
+
+    if (! aviCollection.getIcaoFilters().empty())
+      queryOptions.itsLocationOptions.itsIcaoFilters.insert(
+        queryOptions.itsLocationOptions.itsIcaoFilters.begin(),
+        aviCollection.getIcaoFilters().begin(),
+        aviCollection.getIcaoFilters().end());
 
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 
