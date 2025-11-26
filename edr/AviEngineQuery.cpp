@@ -213,7 +213,6 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
       throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, nullptr);
 
     SmartMet::Engine::Avi::QueryOptions queryOptions;
-queryOptions.itsDebug = true;
     bool locationCheck = false;
 
     checkAviEngineQuery(query, edrMetaData->second, locationCheck, queryOptions);
