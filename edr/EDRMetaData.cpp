@@ -1138,6 +1138,7 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
 void setAviStations(const Engine::Avi::StationQueryData &stationData,
                     const AviCollection &aviCollection,
                     const std::string &icaoColumnName,
+                    const std::string &nameColumnName,
                     const std::string &latColumnName,
                     const std::string &lonColumnName,
                     const std::string &firIdColumnName,
@@ -1159,6 +1160,7 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
     {
       auto const &columns = stationData.itsValues.at(stationId);
       auto const &icaoCode = *(columns.at(icaoColumnName).cbegin());
+      auto const &stationName = *(columns.at(nameColumnName).cbegin());
       auto const &latitude = *(columns.at(latColumnName).cbegin());
       auto const &longitude = *(columns.at(lonColumnName).cbegin());
 
@@ -1169,6 +1171,7 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
       if (aviCollection.filter(icao))
         continue;
 
+      auto name = std::get<std::string>(stationName);
       auto lat = std::get<double>(latitude);
       auto lon = std::get<double>(longitude);
       std::optional<int> firAreaId;
@@ -1219,7 +1222,7 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
         }
       }
 
-      amd.addStation(AviStation(stationId, icao, lat, lon, firAreaId));
+      amd.addStation(AviStation(stationId, icao, name, lat, lon, firAreaId));
     }
 
     if (!amd.getStations().empty() && useDataBBox)
@@ -1250,11 +1253,13 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
                       aviCollection.getLocationCheck());
       SmartMet::Engine::Avi::QueryOptions queryOptions;
       std::string icaoColumnName("icao");
+      std::string nameColumnName("name");
       std::string latColumnName("latitude");
       std::string lonColumnName("longitude");
       std::string firIdColumnName;
 
       queryOptions.itsParameters.push_back(icaoColumnName);
+      queryOptions.itsParameters.push_back(nameColumnName);
       queryOptions.itsParameters.push_back(latColumnName);
       queryOptions.itsParameters.push_back(lonColumnName);
 
@@ -1271,8 +1276,8 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
       auto stationData = aviEngine.queryStations(queryOptions);
 
       setAviStations(
-          stationData, aviCollection, icaoColumnName, latColumnName, lonColumnName, firIdColumnName,
-          amd);
+          stationData, aviCollection, icaoColumnName, nameColumnName, latColumnName, lonColumnName,
+          firIdColumnName, amd);
 
       if (!amd.getStations().empty())
         aviMetaData.push_back(amd);
@@ -1385,7 +1390,7 @@ SupportedLocations get_supported_locations(const AviMetaData &amd,
       li.id = station.getIcao();
       li.longitude = station.getLongitude();
       li.latitude = station.getLatitude();
-      li.name = ("ICAO: " + station.getIcao() + "; stationId: " + Fmi::to_string(station.getId()));
+      li.name = station.getName();
       li.type = "ICAO";
       li.keyword = amd.getProducer();
 

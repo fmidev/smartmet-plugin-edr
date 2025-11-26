@@ -49,10 +49,11 @@ class AviBBox
 class AviStation
 {
  public:
-  AviStation(long theId, std::string theIcao, double theLatitude, double theLongitude,
-             std::optional<int> firId)
+  AviStation(long theId, std::string theIcao, std::string theName,
+             double theLatitude, double theLongitude, std::optional<int> firId)
       : itsId(theId),
         itsIcao(std::move(theIcao)),
+        itsName(std::move(theName)),
         itsLatitude(theLatitude),
         itsLongitude(theLongitude),
         itsFIRId(firId)
@@ -62,6 +63,7 @@ class AviStation
 
   long getId() const { return itsId; }
   const std::string &getIcao() const { return itsIcao; }
+  const std::string &getName() const { return itsName; }
   double getLatitude() const { return itsLatitude; }
   double getLongitude() const { return itsLongitude; }
   std::optional<int> getFIRId() const { return itsFIRId; }
@@ -69,6 +71,7 @@ class AviStation
  private:
   long itsId;
   std::string itsIcao;
+  std::string itsName;
   double itsLatitude;
   double itsLongitude;
   std::optional<int> itsFIRId;
