@@ -1103,11 +1103,11 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
 
       // BRAINSTORM-3302; icao filtering (e.g. ILxx) is now made by aviengine
       //
-      if (!aviCollection.getIcaoFilters().empty())
-        queryOptions.itsLocationOptions.itsIcaoFilters.insert(
-          queryOptions.itsLocationOptions.itsIcaoFilters.begin(),
-          aviCollection.getIcaoFilters().begin(),
-          aviCollection.getIcaoFilters().end());
+      if (!aviCollection.getExcludeIcaoFilters().empty())
+        queryOptions.itsLocationOptions.itsExcludeIcaoFilters.insert(
+          queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
+          aviCollection.getExcludeIcaoFilters().begin(),
+          aviCollection.getExcludeIcaoFilters().end());
     }
     else if (!aviCollection.getIcaos().empty())
       queryOptions.itsLocationOptions.itsIcaos.insert(

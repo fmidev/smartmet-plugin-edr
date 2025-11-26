@@ -83,7 +83,7 @@ void AviCollection::addIcao(const std::string &theIcao)
     throw std::runtime_error("value is duplicate");
 }
 
-void AviCollection::addIcaoFilter(const std::string &theIcaoFilter)
+void AviCollection::addIcaoFilter(const std::string &theIcaoFilter, bool include)
 {
   auto icaoFilter = trim_copy(to_upper_copy(theIcaoFilter));
   auto length = theIcaoFilter.length();
@@ -91,7 +91,9 @@ void AviCollection::addIcaoFilter(const std::string &theIcaoFilter)
   if ((length == 0) || (length > 4) || strpbrk(theIcaoFilter.c_str(),"%_"))
     throw std::runtime_error("1-4 letter icao code filter expected, no wildcards");
 
-  for (auto const &filter : itsIcaoFilters)
+  auto &icaoFilters = (include ? itsIncludeIcaoFilters : itsExcludeIcaoFilters);
+
+  for (auto const &filter : icaoFilters)
   {
     auto length2 = filter.length();
 
@@ -101,7 +103,7 @@ void AviCollection::addIcaoFilter(const std::string &theIcaoFilter)
       throw std::runtime_error("value is duplicate");
   }
 
-  itsIcaoFilters.insert(icaoFilter);
+  icaoFilters.insert(icaoFilter);
 }
 
 bool AviCollection::filter(const std::string &theIcao) const
@@ -118,7 +120,7 @@ bool AviCollection::filter(const std::string &theIcao) const
     return true;
   }
 
-  for (auto const &filter : itsIcaoFilters)
+  for (auto const &filter : itsExcludeIcaoFilters)
   {
     auto length2 = filter.length();
 

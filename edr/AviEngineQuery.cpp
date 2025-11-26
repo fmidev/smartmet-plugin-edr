@@ -300,21 +300,27 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     //
     // Set additional query filters
     //
-    // Note: currently aviengine applies the filters in 'countries=...' station query
-    //       (collection metadata) and area (wkt=POLYGON(...)) message query only,
-    //       including stations by country codes and excluding by icao codes
+    // Note: currently aviengine applies the filters in 'countries=...' (collection metadata)
+    //       and non route wkt (e.g. wkt=POLYGON(...)) station queries only, including stations
+    //       by country codes and includíng/excluding by icao codes
     //
     if (! aviCollection.getCountries().empty())
-      queryOptions.itsLocationOptions.itsCountryFilters.insert(
-        queryOptions.itsLocationOptions.itsCountryFilters.begin(),
+      queryOptions.itsLocationOptions.itsIncludeCountryFilters.insert(
+        queryOptions.itsLocationOptions.itsIncludeCountryFilters.begin(),
         aviCollection.getCountries().begin(),
         aviCollection.getCountries().end());
 
-    if (! aviCollection.getIcaoFilters().empty())
-      queryOptions.itsLocationOptions.itsIcaoFilters.insert(
-        queryOptions.itsLocationOptions.itsIcaoFilters.begin(),
-        aviCollection.getIcaoFilters().begin(),
-        aviCollection.getIcaoFilters().end());
+    if (! aviCollection.getIcaos().empty())
+      queryOptions.itsLocationOptions.itsIncludeIcaoFilters.insert(
+        queryOptions.itsLocationOptions.itsIncludeIcaoFilters.begin(),
+        aviCollection.getIcaos().begin(),
+        aviCollection.getIcaos().end());
+
+    if (! aviCollection.getExcludeIcaoFilters().empty())
+      queryOptions.itsLocationOptions.itsExcludeIcaoFilters.insert(
+        queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
+        aviCollection.getExcludeIcaoFilters().begin(),
+        aviCollection.getExcludeIcaoFilters().end());
 
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 

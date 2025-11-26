@@ -712,11 +712,13 @@ void Config::parse_config_avi_collection_icaos(AviCollection &aviCollection,
 // ----------------------------------------------------------------------
 
 void Config::parse_config_avi_collection_icaofilters(AviCollection &aviCollection,
-                                                     const std::string &path)
+                                                     const std::string &path,
+                                                     const std::string &name,
+                                                     bool include)
 {
   try
   {
-    std::string filtersPath = path + ".icaofilters";
+    std::string filtersPath = path + "." + name;
     if (!itsConfig.exists(filtersPath))
       return;
 
@@ -733,7 +735,7 @@ void Config::parse_config_avi_collection_icaofilters(AviCollection &aviCollectio
 
       try
       {
-        aviCollection.addIcaoFilter(std::string((const char *)filterSetting[j]));
+        aviCollection.addIcaoFilter(std::string((const char *)filterSetting[j]), include);
       }
       catch (const std::exception &e)
       {
@@ -837,7 +839,8 @@ void Config::parse_config_avi_collections()
       parse_config_avi_collection_countries(aviCollection, path);
       parse_config_avi_collection_bbox(aviCollection, path);
       parse_config_avi_collection_icaos(aviCollection, path);
-      parse_config_avi_collection_icaofilters(aviCollection, path);
+      parse_config_avi_collection_icaofilters(aviCollection, path, "includeicaofilters", true);
+      parse_config_avi_collection_icaofilters(aviCollection, path, "excludeicaofilters", false);
 
       /* Plugin checks given location against metadata anyway, no need to check by avi
       /

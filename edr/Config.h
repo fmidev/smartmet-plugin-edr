@@ -157,7 +157,9 @@ class Config : private boost::noncopyable
   void parse_config_avi_collection_bbox(AviCollection &aviCollection, const std::string &path);
   void parse_config_avi_collection_icaos(AviCollection &aviCollection, const std::string &path);
   void parse_config_avi_collection_icaofilters(AviCollection &aviCollection,
-                                               const std::string &path);
+                                               const std::string &path,
+                                               const std::string &name,
+                                               bool include);
   void parse_config_grid_geometries();
   void parse_config_parameter_aliases(const std::string &configfile);
   void parse_config_api_settings();
