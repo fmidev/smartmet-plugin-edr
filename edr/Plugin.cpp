@@ -393,6 +393,8 @@ void Plugin::query(const State& state,
     std::string mime;
     if (q.output_format == IWXXM_FORMAT)
       mime = "text/xml";
+    else if (q.output_format == IWXXMZIP_FORMAT)
+      mime = "application/zip";
     else if (q.output_format == TAC_FORMAT)
       mime = "text/plain";
     else

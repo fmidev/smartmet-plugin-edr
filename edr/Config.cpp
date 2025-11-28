@@ -779,11 +779,12 @@ void Config::parse_config_avi_collections()
 
       if (
           (avi_default_format != COVERAGE_JSON_FORMAT) && (avi_default_format != GEO_JSON_FORMAT) &&
-          (avi_default_format != TAC_FORMAT) && (avi_default_format != IWXXM_FORMAT)
+          (avi_default_format != TAC_FORMAT) && (avi_default_format != IWXXM_FORMAT) &&
+          (avi_default_format != IWXXMZIP_FORMAT)
          )
         throw Fmi::Exception(BCP,
                              "Configuration file error. avi.default_format must be "
-                             "CoverageJSON, GeoJSON, TAC or IWXXM");
+                             "CoverageJSON, GeoJSON, TAC, IWXXM or IWXXMZIP");
 
       itsDefaultAviFormat = avi_default_format;
     }

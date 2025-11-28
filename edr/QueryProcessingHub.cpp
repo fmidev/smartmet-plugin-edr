@@ -446,7 +446,9 @@ void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData
           messages += parseIWXXMAndTACMessages(tsg_data, masterquery);
         }
       }
-      if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
+      if (!messages.empty() &&
+          ((masterquery.output_format == IWXXM_FORMAT) ||
+           (masterquery.output_format == IWXXMZIP_FORMAT)))
       {
         messages.insert(
           0, "<collect:meteorologicalInformation xmlns:collect=\"https://schemas.wmo.int/collect/1.2\">\n");
@@ -595,7 +597,9 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
     setPrecisions(emd, masterquery);
 
-    if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT)
+    if (masterquery.output_format == TAC_FORMAT ||
+        masterquery.output_format == IWXXM_FORMAT ||
+        masterquery.output_format == IWXXMZIP_FORMAT)
     {
       processIWXXMAndTACData(outputData, masterquery, table);
     }
