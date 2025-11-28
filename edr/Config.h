@@ -112,7 +112,7 @@ class Config : private boost::noncopyable
   std::vector<std::string> itsParameterAliasFiles;
   std::vector<uint> itsDefaultGridGeometries;
 
-  std::string itsDefaultAviFormat = "CoverageJSON";
+  std::string itsDefaultAviFormat = IWXXMZIP_FORMAT;
   bool        itsExcludeAviSPECI  = true;
 
   Spine::TableFormatterOptions itsFormatterOptions;
