@@ -29,6 +29,7 @@ bool AviEngineQuery::isAviProducer(const std::string &producer) const
 
 void storeAviData(const State &state,
                   SmartMet::Engine::Avi::StationQueryData &aviData,
+                  bool fetchIcao,
                   TS::OutputData &outputData)
 {
   try
@@ -41,9 +42,13 @@ void storeAviData(const State &state,
     {
       // station id and icao code are automatically returned by aviengine.
       // messagetime is used when storing other column values
+      //
+      // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
 
-      if ((column.itsName == "stationid") || (column.itsName == "icao") ||
-          (column.itsName == "messagetime"))
+      if (
+          (column.itsName == "stationid") || (column.itsName == "messagetime") ||
+          ((column.itsName == "icao") && (! fetchIcao))
+         )
         continue;
 
       TS::TimeSeriesGroupPtr messageData(new TS::TimeSeriesGroup());
@@ -221,6 +226,12 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     // messagetime is needed for output.
     //
     // station id and icao code are automatically returned by aviengine
+    //
+    // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
+    //
+    bool fetchIcao = (query.output_format == IWXXMZIP_FORMAT);
+    if (fetchIcao)
+      queryOptions.itsParameters.push_back("icao");
 
     queryOptions.itsParameters.push_back("messagetime");
     queryOptions.itsParameters.push_back("message");
@@ -324,7 +335,7 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
 
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 
-    storeAviData(state, aviData, outputData);
+    storeAviData(state, aviData, fetchIcao, outputData);
   }
   catch (...)
   {

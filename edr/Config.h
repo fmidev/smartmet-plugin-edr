@@ -74,6 +74,7 @@ class Config : private boost::noncopyable
   Engine::Gis::PostGISIdentifierVector getPostGISIdentifiers() const;
 
   std::string defaultAviFormat() const { return itsDefaultAviFormat; }
+  std::string aviTmpPath() const { return itsAviTmpPath; }
   bool        excludeAviSPECI()  const { return itsExcludeAviSPECI; }
 
   bool aviEngineDisabled() const { return itsAviEngineDisabled; }
@@ -113,6 +114,7 @@ class Config : private boost::noncopyable
   std::vector<uint> itsDefaultGridGeometries;
 
   std::string itsDefaultAviFormat = IWXXMZIP_FORMAT;
+  std::string itsAviTmpPath = "/var/tmp";
   bool        itsExcludeAviSPECI  = true;
 
   Spine::TableFormatterOptions itsFormatterOptions;

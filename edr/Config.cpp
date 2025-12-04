@@ -772,31 +772,31 @@ void Config::parse_config_avi_collections()
 
     // BRAINSTORM-3287
     //
-    string avi_default_format;
     if (itsConfig.exists("avi.default_format"))
     {
-      itsConfig.lookupValue("avi.default_format", avi_default_format);
+      itsConfig.lookupValue("avi.default_format", itsDefaultAviFormat);
 
       if (
-          (avi_default_format != COVERAGE_JSON_FORMAT) && (avi_default_format != GEO_JSON_FORMAT) &&
-          (avi_default_format != TAC_FORMAT) && (avi_default_format != IWXXM_FORMAT) &&
-          (avi_default_format != IWXXMZIP_FORMAT)
+          (itsDefaultAviFormat != COVERAGE_JSON_FORMAT) &&
+          (itsDefaultAviFormat != GEO_JSON_FORMAT) &&
+          (itsDefaultAviFormat != TAC_FORMAT) &&
+          (itsDefaultAviFormat != IWXXM_FORMAT) &&
+          (itsDefaultAviFormat != IWXXMZIP_FORMAT)
          )
         throw Fmi::Exception(BCP,
                              "Configuration file error. avi.default_format must be "
                              "CoverageJSON, GeoJSON, TAC, IWXXM or IWXXMZIP");
-
-      itsDefaultAviFormat = avi_default_format;
     }
 
     // BRAINSTORM-3284
     //
-    bool avi_exclude_speci;
     if (itsConfig.exists("avi.exclude_speci"))
-    {
-      itsConfig.lookupValue("avi.exclude_speci", avi_exclude_speci);
-      itsExcludeAviSPECI = avi_exclude_speci;
-    }
+      itsConfig.lookupValue("avi.exclude_speci", itsExcludeAviSPECI);
+
+    //BRAINSTORM-3305
+    //
+    if (itsConfig.exists("avi.tmppath"))
+      itsConfig.lookupValue("avi.tmppath", itsAviTmpPath);
 
     std::string rootPath = "avi.collections";
 

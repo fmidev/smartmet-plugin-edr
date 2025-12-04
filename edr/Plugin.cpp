@@ -498,6 +498,10 @@ void Plugin::query(const State& state,
       if (etag_only(request, response, product_hash))
         return;
 
+      if (q.output_format == IWXXMZIP_FORMAT)
+        response.setHeader("Content-Disposition",
+                           (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
+
       response.setContent(*result);
     }
   }
