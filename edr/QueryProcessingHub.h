@@ -49,7 +49,7 @@ class QueryProcessingHub
   void processIWXXMAndTACData(const Config &config,
                               const TS::OutputData& outputData,
                               const Query& masterquery,
-                              Spine::Table& table) const;
+                              Spine::Table& table);
   std::string getMsgZipFileName(const std::vector<std::string> &icaoCodes,
                                 const Fmi::LocalDateTime &ldt,
                                 std::vector<std::string>::const_iterator *icaoIterator) const;

@@ -499,8 +499,17 @@ void Plugin::query(const State& state,
         return;
 
       if (q.output_format == IWXXMZIP_FORMAT)
-        response.setHeader("Content-Disposition",
-                           (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
+      {
+        if (qph.getZipFileName().empty())
+        {
+          response.setHeader("Content-Type", "application/json; charset=utf-8");
+          response.setStatus(204);
+        }
+        else
+          response.setHeader(
+            "Content-Disposition",
+            (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
+      }
 
       response.setContent(*result);
     }

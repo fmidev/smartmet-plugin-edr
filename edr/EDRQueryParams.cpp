@@ -364,7 +364,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
       throw EDRException("Missing coords option!");
 
     // EDR datetime
-    parseDateTime(state, emd);
+    parseDateTime(state, itsEDRQuery.collection_id, emd);
 
     // EDR parameter names and z
     bool noReqParams = false;
@@ -901,7 +901,8 @@ void EDRQueryParams::parseCube()
   }
 }
 
-void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
+void EDRQueryParams::parseDateTime(
+  const State& state, const std::string &producer, const EDRMetaData& emd)
 {
   try
   {
@@ -924,9 +925,13 @@ void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
       }
       else
       {
-        // Using neareast metadata time instant to current time
+        // Using current time for avi collections and neareast metadata time instant
+        // to current time for others
 
-        datetime = nearestTimeNow(emd);
+        if (emd.isAviProducer())
+          datetime = Fmi::SecondClock::universal_time().to_iso_string();
+        else
+          datetime = nearestTimeNow(emd);
       }
     }
 

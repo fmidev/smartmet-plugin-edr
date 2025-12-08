@@ -46,7 +46,7 @@ class EDRQueryParams
   std::string parseTrajectoryAndCorridor(const std::string& coords);
   void parseLocations(const EDRMetaData& emd, std::string &coords);
   void parseCube();
-  void parseDateTime(const State& state, const EDRMetaData& emd);
+  void parseDateTime(const State& state, const std::string &producer, const EDRMetaData& emd);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,
