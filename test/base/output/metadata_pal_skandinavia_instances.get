@@ -20,7 +20,7 @@
 			"title" : "Origintime: 2008-08-05T06:31:00Z Starttime: 2008-08-05T03:00:00Z Endtime: 2008-08-09T06:00:00Z Timestep: 60",
 			"crs" : 
 			[
-				"CRS:84"
+				"OGC:CRS84"
 			],
 			"data_queries" : 
 			{
@@ -45,7 +45,7 @@
 							"crs_details" : 
 							[
 								{
-									"crs" : "CRS:84",
+									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
@@ -76,7 +76,7 @@
 							"crs_details" : 
 							[
 								{
-									"crs" : "CRS:84",
+									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
@@ -110,7 +110,7 @@
 							"crs_details" : 
 							[
 								{
-									"crs" : "CRS:84",
+									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
@@ -140,7 +140,7 @@
 							"crs_details" : 
 							[
 								{
-									"crs" : "CRS:84",
+									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
@@ -170,7 +170,7 @@
 							"crs_details" : 
 							[
 								{
-									"crs" : "CRS:84",
+									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
@@ -205,7 +205,7 @@
 							"crs_details" : 
 							[
 								{
-									"crs" : "CRS:84",
+									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
@@ -242,7 +242,7 @@
 				],
 				"spatial" : 
 				{
-					"crs" : "CRS:84",
+					"crs" : "OGC:CRS84",
 					"bbox" : 
 					[
 						[
