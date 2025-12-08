@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.11.24
+Version: 25.12.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -40,61 +40,61 @@ BuildRequires: zlib-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 25.11.19
 BuildRequires: smartmet-library-locus-devel >= 25.9.29
-BuildRequires: smartmet-library-macgyver-devel >= 25.11.20
-BuildRequires: smartmet-library-grid-content-devel >= 25.11.4
-BuildRequires: smartmet-library-grid-files-devel >= 25.10.15
+BuildRequires: smartmet-library-macgyver-devel >= 25.12.2
+BuildRequires: smartmet-library-grid-content-devel >= 25.11.27
+BuildRequires: smartmet-library-grid-files-devel >= 25.11.27
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
-BuildRequires: smartmet-library-gis-devel >= 25.9.15
+BuildRequires: smartmet-library-gis-devel >= 25.12.2
 BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
-BuildRequires: smartmet-engine-avi-devel >= 25.11.5
-BuildRequires: smartmet-engine-geonames-devel >= 25.11.3
+BuildRequires: smartmet-engine-avi-devel >= 25.12.8
+BuildRequires: smartmet-engine-geonames-devel >= 25.12.2
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 25.11.4
+BuildRequires: smartmet-engine-observation-devel >= 25.12.2
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
 BuildRequires: smartmet-engine-gis-devel >= 25.9.29
-BuildRequires: smartmet-engine-grid-devel >= 25.10.15
+BuildRequires: smartmet-engine-grid-devel >= 25.11.27
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 25.8.22
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 25.9.15
+Requires: smartmet-library-gis >= 25.12.2
 Requires: smartmet-library-locus >= 25.9.29
-Requires: smartmet-library-macgyver >= 25.11.20
+Requires: smartmet-library-macgyver >= 25.12.2
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-library-spine >= 25.11.19
 Requires: smartmet-library-timeseries >= 25.8.1
-Requires: smartmet-library-gis >= 25.9.15
-Requires: smartmet-library-grid-files >= 25.10.15
-Requires: smartmet-engine-avi >= 25.11.5
-Requires: smartmet-engine-geonames >= 25.11.3
+Requires: smartmet-library-gis >= 25.12.2
+Requires: smartmet-library-grid-files >= 25.11.27
+Requires: smartmet-engine-avi >= 25.12.8
+Requires: smartmet-engine-geonames >= 25.12.2
 Requires: smartmet-engine-querydata >= 25.9.17
 Requires: smartmet-engine-gis >= 25.9.29
-Requires: smartmet-engine-grid >= 25.10.15
-Requires: smartmet-server >= 25.10.27
+Requires: smartmet-engine-grid >= 25.11.27
+Requires: smartmet-server >= 25.12.2
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Provides: %{SPECNAME}
-#TestRequires: smartmet-utils-devel >= 25.10.10
+#TestRequires: smartmet-utils-devel >= 25.11.27
 #TestRequires: smartmet-library-spine-plugin-test >= 25.11.19
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 25.6.18
 #TestRequires: smartmet-test-data >= 25.8.13
-#TestRequires: smartmet-engine-grid-test >= 25.10.15
-#TestRequires: smartmet-library-gis >= 25.9.15
-#TestRequires: smartmet-engine-avi >= 25.11.5
-#TestRequires: smartmet-engine-geonames >= 25.11.3
+#TestRequires: smartmet-engine-grid-test >= 25.11.27
+#TestRequires: smartmet-library-gis >= 25.12.2
+#TestRequires: smartmet-engine-avi >= 25.12.8
+#TestRequires: smartmet-engine-geonames >= 25.12.2
 #TestRequires: smartmet-engine-gis >= 25.9.29
 #TestRequires: smartmet-engine-querydata >= 25.9.17
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 25.11.4
+#TestRequires: smartmet-engine-observation >= 25.12.2
 %endif
-#TestRequires: smartmet-engine-grid >= 25.10.15
+#TestRequires: smartmet-engine-grid >= 25.11.27
 #TestRequires: gdal310-libs
 #TestRequires: libwebp13
 
@@ -123,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Dec  8 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.8-1.fmi
+- New release version; changes needed by edr SWIM requirements (BRAINSTORM-3256) and MetOcean profile (PAK-6090)
+
 * Mon Nov 24 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.11.24-1.fmi
 - Updated conformance specification (BRAINSTORM-3161)
 
