@@ -484,7 +484,7 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
 void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
                                                 const TS::OutputData& outputData,
                                                 const Query& masterquery,
-                                                Spine::Table& table) const
+                                                Spine::Table& table)
 {
   try
   {
@@ -516,7 +516,11 @@ void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
       {
         try
         {
-          messages = zipWriter->createZip();
+          if (! zipWriter->empty())
+            messages = zipWriter->createZip();
+          else
+            // ==> 204
+            zipFileName.clear();
         }
         catch (const std::exception &ex)
         {
