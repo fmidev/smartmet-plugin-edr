@@ -37,6 +37,7 @@ BuildRequires: %{smartmet_boost}-devel
 BuildRequires: %{smartmet_fmt_devel}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
+BuildRequires: libzip-devel >= 1.11.4
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 25.11.19
 BuildRequires: smartmet-library-locus-devel >= 25.9.29
@@ -78,6 +79,7 @@ Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
+Requires: libzip >= 1.11.4
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 25.11.27
 #TestRequires: smartmet-library-spine-plugin-test >= 25.11.19
