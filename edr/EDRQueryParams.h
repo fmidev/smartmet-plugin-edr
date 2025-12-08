@@ -44,9 +44,9 @@ class EDRQueryParams
   void parseCoords(const std::string& coordinates);
   std::string parsePosition(const std::string& coords);
   std::string parseTrajectoryAndCorridor(const std::string& coords);
-  void parseLocations(const EDRMetaData& emd);
+  void parseLocations(const EDRMetaData& emd, std::string &coords);
   void parseCube();
-  void parseDateTime(const State& state, const EDRMetaData& emd);
+  void parseDateTime(const State& state, const std::string &producer, const EDRMetaData& emd);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,
@@ -62,6 +62,12 @@ class EDRQueryParams
                            const std::string& z) const;
 
   void parseICAOCodesAndAviProducer(const EDRMetaData& emd);
+
+  void validateRequestParametersWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestParameterNamesWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestDateTimeWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestLevelsWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestCoordinatesWithMetaData(const EDRMetaData &emd) const;
 
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;

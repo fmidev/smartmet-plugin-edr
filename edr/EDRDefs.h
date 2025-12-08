@@ -48,6 +48,7 @@ enum class SourceEngine
 #define AVI_ENGINE "avi_engine"
 
 #define IWXXM_FORMAT "IWXXM"
+#define IWXXMZIP_FORMAT "IWXXMZIP"
 #define TAC_FORMAT "TAC"
 #define COVERAGE_JSON_FORMAT "CoverageJSON"
 #define GEO_JSON_FORMAT "GeoJSON"

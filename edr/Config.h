@@ -73,6 +73,10 @@ class Config : private boost::noncopyable
   const libconfig::Config &config() const { return itsConfig; }
   Engine::Gis::PostGISIdentifierVector getPostGISIdentifiers() const;
 
+  std::string defaultAviFormat() const { return itsDefaultAviFormat; }
+  std::string aviTmpPath() const { return itsAviTmpPath; }
+  bool        excludeAviSPECI()  const { return itsExcludeAviSPECI; }
+
   bool aviEngineDisabled() const { return itsAviEngineDisabled; }
   bool obsEngineDisabled() const { return itsObsEngineDisabled; }
   bool gridEngineDisabled() const { return itsGridEngineDisabled; }
@@ -108,6 +112,10 @@ class Config : private boost::noncopyable
   unsigned int itsExpirationTime = 60;  // seconds
   std::vector<std::string> itsParameterAliasFiles;
   std::vector<uint> itsDefaultGridGeometries;
+
+  std::string itsDefaultAviFormat = IWXXMZIP_FORMAT;
+  std::string itsAviTmpPath = "/var/tmp";
+  bool        itsExcludeAviSPECI  = true;
 
   Spine::TableFormatterOptions itsFormatterOptions;
   Precisions itsPrecisions;
@@ -151,7 +159,9 @@ class Config : private boost::noncopyable
   void parse_config_avi_collection_bbox(AviCollection &aviCollection, const std::string &path);
   void parse_config_avi_collection_icaos(AviCollection &aviCollection, const std::string &path);
   void parse_config_avi_collection_icaofilters(AviCollection &aviCollection,
-                                               const std::string &path);
+                                               const std::string &path,
+                                               const std::string &name,
+                                               bool include);
   void parse_config_grid_geometries();
   void parse_config_parameter_aliases(const std::string &configfile);
   void parse_config_api_settings();

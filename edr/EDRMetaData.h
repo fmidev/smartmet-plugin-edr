@@ -15,6 +15,7 @@
 #include <engines/observation/MetaData.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
+#include "Json.h"
 
 namespace SmartMet
 {
@@ -22,6 +23,9 @@ namespace Plugin
 {
 namespace EDR
 {
+
+static const std::string METAR("metar");
+static const std::string SIGMET("sigmet");
 
 // Parameter info from querydata-, observation-, grid-engine
 struct edr_parameter
@@ -44,14 +48,17 @@ struct edr_parameter
 struct edr_spatial_extent
 {
   edr_spatial_extent()
-      : bbox_xmin(0.0), bbox_ymin(0.0), bbox_xmax(0.0), bbox_ymax(0.0), crs("EPSG:4326")
+      : bbox_xmin(0.0), bbox_ymin(0.0), bbox_xmax(0.0), bbox_ymax(0.0), crs("EPSG:4326"),
+        geometryIds({})
   {
   }
+
   double bbox_xmin;
   double bbox_ymin;
   double bbox_xmax;
   double bbox_ymax;
   std::string crs;
+  std::map<std::string, std::optional<int>> geometryIds;
 };
 
 struct edr_temporal_extent_period
@@ -78,6 +85,7 @@ struct edr_temporal_extent
   Fmi::DateTime origin_time;
   std::string trs;
   std::vector<edr_temporal_extent_period> time_periods;
+  std::vector<edr_temporal_extent_period> single_time_periods;
   std::set<int> time_steps;
 };
 
@@ -119,6 +127,9 @@ struct EDRMetaData
   bool sourceHasInstances() const {
       return !(data_queries.empty() || isObsProducer() || isAviProducer());
   }
+
+  const Engine::Avi::Engine *aviEngine = nullptr;
+  bool getGeometry(const std::string &item, Json::Value &geometry) const;
 };
 
 using EDRProducerMetaData =
@@ -153,8 +164,9 @@ EDRProducerMetaData get_edr_metadata_obs(
     unsigned int observation_period);
 #endif
 #ifndef WITHOUT_AVI
+class Config;
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
-                                         const AviCollections& aviCollections,
+                                         const Config &config,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
                                          const CollectionInfoContainer& cic,

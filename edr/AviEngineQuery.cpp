@@ -17,7 +17,7 @@ bool AviEngineQuery::isAviProducer(const std::string &producer) const
 {
   try
   {
-    auto producer_name = trim_copy(to_upper_copy(producer));
+    auto producer_name = trim_copy(to_lower_copy(producer));
     auto avi_meta_data = itsPlugin.getAviMetaData();
     return (avi_meta_data.find(producer_name) != avi_meta_data.end());
   }
@@ -29,6 +29,7 @@ bool AviEngineQuery::isAviProducer(const std::string &producer) const
 
 void storeAviData(const State &state,
                   SmartMet::Engine::Avi::StationQueryData &aviData,
+                  bool fetchIcao,
                   TS::OutputData &outputData)
 {
   try
@@ -41,9 +42,13 @@ void storeAviData(const State &state,
     {
       // station id and icao code are automatically returned by aviengine.
       // messagetime is used when storing other column values
+      //
+      // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
 
-      if ((column.itsName == "stationid") || (column.itsName == "icao") ||
-          (column.itsName == "messagetime"))
+      if (
+          (column.itsName == "stationid") || (column.itsName == "messagetime") ||
+          ((column.itsName == "icao") && (! fetchIcao))
+         )
         continue;
 
       TS::TimeSeriesGroupPtr messageData(new TS::TimeSeriesGroup());
@@ -184,7 +189,6 @@ void checkAviEngineQuery(const Query &query,
 
     if (edrQuery.query_type == EDRQueryType::Locations)
       checkAviEngineLocationQuery(query, edrMetaData, locationCheck, queryOptions);
-
     else if (edrQuery.query_type == EDRQueryType::Position ||
              edrQuery.query_type == EDRQueryType::Radius)
       checkAviEnginePositionQuery(query, edrQuery, queryOptions);
@@ -197,17 +201,20 @@ void checkAviEngineQuery(const Query &query,
   }
 }
 
-void AviEngineQuery::processAviEngineQuery(const State &state,
+void AviEngineQuery::processAviEngineQuery(const Config &config,
+                                           const State &state,
                                            const Query &query,
                                            const std::string &prod,
                                            TS::OutputData &outputData) const
 {
   try
   {
-    const auto producer = trim_copy(to_upper_copy(prod));
+    const auto producer = trim_copy(to_lower_copy(prod));
     const auto &edrProducerMetaData = state.getAviMetaData();
     const auto edrMetaData = edrProducerMetaData.find(producer);
-    if (edrMetaData == edrProducerMetaData.end())
+    const auto &aviCollection = get_avi_collection(producer, config.getAviCollections());
+
+    if ((edrMetaData == edrProducerMetaData.end()) || aviCollection.getName().empty())
       throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, nullptr);
 
     SmartMet::Engine::Avi::QueryOptions queryOptions;
@@ -219,6 +226,12 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
     // messagetime is needed for output.
     //
     // station id and icao code are automatically returned by aviengine
+    //
+    // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
+    //
+    bool fetchIcao = (query.output_format == IWXXMZIP_FORMAT);
+    if (fetchIcao)
+      queryOptions.itsParameters.push_back("icao");
 
     queryOptions.itsParameters.push_back("messagetime");
     queryOptions.itsParameters.push_back("message");
@@ -226,7 +239,7 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
     queryOptions.itsParameters.push_back("latitude");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
-    queryOptions.itsMessageTypes.push_back(producer);
+    queryOptions.itsMessageTypes.push_back(to_upper_copy(producer));
     auto message_format =
         (query.output_format == COVERAGE_JSON_FORMAT || query.output_format == GEO_JSON_FORMAT
              ? TAC_FORMAT
@@ -280,11 +293,49 @@ void AviEngineQuery::processAviEngineQuery(const State &state,
 
     // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
     //
-    queryOptions.itsExcludeSPECIs = true;
+    // BRAINSTORM-3284: now configurable, defaults to true
+    //
+    queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
+
+    if ((! queryOptions.itsExcludeSPECIs) && (producer == METAR))
+      queryOptions.itsMessageTypes.push_back("SPECI");
+
+    // BRAINSTORM-3300
+    //
+    // Do not check/filter if messages were created after the given messagetime and
+    // do not apply message query time restrictions (used for TAFs)
+    //
+    queryOptions.itsTimeOptions.itsMessageTimeChecks = false;
+
+    // BRAINSTORM-3288
+    //
+    // Set additional query filters
+    //
+    // Note: currently aviengine applies the filters in 'countries=...' (collection metadata)
+    //       and non route wkt (e.g. wkt=POLYGON(...)) station queries only, including stations
+    //       by country codes and includíng/excluding by icao codes
+    //
+    if (! aviCollection.getCountries().empty())
+      queryOptions.itsLocationOptions.itsIncludeCountryFilters.insert(
+        queryOptions.itsLocationOptions.itsIncludeCountryFilters.begin(),
+        aviCollection.getCountries().begin(),
+        aviCollection.getCountries().end());
+
+    if (! aviCollection.getIcaos().empty())
+      queryOptions.itsLocationOptions.itsIncludeIcaoFilters.insert(
+        queryOptions.itsLocationOptions.itsIncludeIcaoFilters.begin(),
+        aviCollection.getIcaos().begin(),
+        aviCollection.getIcaos().end());
+
+    if (! aviCollection.getExcludeIcaoFilters().empty())
+      queryOptions.itsLocationOptions.itsExcludeIcaoFilters.insert(
+        queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
+        aviCollection.getExcludeIcaoFilters().begin(),
+        aviCollection.getExcludeIcaoFilters().end());
 
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 
-    storeAviData(state, aviData, outputData);
+    storeAviData(state, aviData, fetchIcao, outputData);
   }
   catch (...)
   {

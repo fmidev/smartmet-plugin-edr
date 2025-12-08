@@ -4,6 +4,7 @@
 #include <engines/avi/Engine.h>
 #endif
 #include "EDRQuery.h"
+#include "Config.h"
 
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
@@ -245,12 +246,17 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
-      if (!cic.isVisibleCollection(SourceEngine::Querydata, qmd.producer))
+      // BRAINSTORM-3274; Using lower case for collection names. Querydata producers
+      //                  having upper case letters must have lowercase aliases
+      //
+      auto qmdproducer = boost::algorithm::to_lower_copy(qmd.producer);
+
+      if (!cic.isVisibleCollection(SourceEngine::Querydata, qmdproducer))
         continue;
 
       if (qmd.times.begin() == qmd.times.end())
       {
-        report_missing_data(qmd.producer);
+        report_missing_data(qmdproducer);
         continue;
       }
 
@@ -292,19 +298,19 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;
       producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmd.producer);
-      producer_emd.data_queries = get_supported_data_queries(qmd.producer, sdq);
-      producer_emd.output_formats = get_supported_output_formats(qmd.producer, sofs);
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmdproducer);
+      producer_emd.data_queries = get_supported_data_queries(qmdproducer, sdq);
+      producer_emd.output_formats = get_supported_output_formats(qmdproducer, sofs);
 
       auto producer_key =
-          (spl.find(qmd.producer) != spl.end() ? qmd.producer : DEFAULT_PRODUCER_KEY);
+          (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
         producer_emd.locations = &spl.at(producer_key);
-      epmd[qmd.producer].push_back(producer_emd);
+      epmd[qmdproducer].push_back(producer_emd);
       // Update latest data update time
-      if (latest_update_times.find(qmd.producer) == latest_update_times.end() ||
-          latest_update_times.at(qmd.producer) < qmd.originTime)
-        latest_update_times[qmd.producer] = qmd.originTime;
+      if (latest_update_times.find(qmdproducer) == latest_update_times.end() ||
+          latest_update_times.at(qmdproducer) < qmd.originTime)
+        latest_update_times[qmdproducer] = qmd.originTime;
     }
     for (auto &item : epmd)
     {
@@ -778,20 +784,45 @@ EDRProducerMetaData get_edr_metadata_obs(
 #endif
 
 #ifndef WITHOUT_AVI
-std::vector<TimePeriod> get_time_periods(const std::set<Fmi::LocalDateTime> &timesteps)
+std::vector<TimePeriod> get_time_periods(
+    const std::set<Fmi::LocalDateTime> &timesteps,
+    std::vector<edr_temporal_extent_period> &single_time_periods)
 {
   try
   {
     std::vector<TimePeriod> time_periods;
+    edr_temporal_extent_period temporal_extent_period;
 
     auto it_previous = timesteps.begin();
     auto it = timesteps.begin();
-    it++;
     while (it != timesteps.end())
     {
-      time_periods.emplace_back(it_previous->utc_time(), it->utc_time());
+      // (BRAINSTORM-3296)
+      //
+      // If there should have been only one timestep it would have been lost here but the
+      // case is now separately handled and this method is not called. Handle the case anyway
+      //
+      auto it2 = ((++it == timesteps.end()) ? it_previous : it);
+
+      time_periods.emplace_back(it_previous->utc_time(), it2->utc_time());
+
+      // BRAINSTORM-3296
+      //
+      // Store all time instants for getting default 'datetime' query param value
+      // (i.e. nearest time to "now") for avi collections since avi period merging
+      // seems not to work (?) and/or since if merging "fails", timesteps are stored as
+      // varying length periods of subsequent time instants without having timestep if
+      // the number of time instants is over maximum limit.
+      //
+      // As the result stored time periods and their timesteps are currently not usable for
+      // searching the nearest timeinstant for "now"; instead of studying/changing the current
+      // time period merge -processing etc, simply storing the time instants as single time
+      // periods having just start time
+      //
+      temporal_extent_period.start_time = it_previous->utc_time();
+      single_time_periods.emplace_back(temporal_extent_period);
+
       it_previous++;
-      it++;
     }
 
     return time_periods;
@@ -926,12 +957,32 @@ edr_temporal_extent get_temporal_extent(const std::set<Fmi::LocalDateTime> &time
     edr_temporal_extent ret;
 
     if (timesteps.size() < 2)
+    {
+      // BRAINSTORM-3296
+      //
+      // Store single timestep too, eralier it was lost. Since response output code checks
+      // for 1 period case and expects both period start and end time to exist, set both to
+      // time_periods but single_time_periods can have just the start (it's used only for
+      // getting nearest time instant to 'now' as the default request 'datetime' value)
+      //
+      if (! timesteps.empty())
+      {
+        edr_temporal_extent_period temporal_extent_period;
+        temporal_extent_period.start_time = timesteps.begin()->utc_time();
+
+        ret.single_time_periods.emplace_back(temporal_extent_period);
+
+        temporal_extent_period.end_time = timesteps.begin()->utc_time();
+        ret.time_periods.emplace_back(temporal_extent_period);
+      }
+
       return ret;
+    }
 
     ret.origin_time = Fmi::SecondClock::universal_time();
 
     // Insert time periods into vector
-    std::vector<TimePeriod> time_periods = get_time_periods(timesteps);
+    std::vector<TimePeriod> time_periods = get_time_periods(timesteps, ret.single_time_periods);
 
     // Iterate vector and find out periods with even timesteps
     std::vector<edr_temporal_extent_period> merged_time_periods =
@@ -954,9 +1005,14 @@ edr_temporal_extent get_temporal_extent(const std::set<Fmi::LocalDateTime> &time
   }
 }
 
+void setAviQueryLocationOptions(const AviCollection &aviCollection,
+                                const AviMetaData &amd,
+                                SmartMet::Engine::Avi::QueryOptions &queryOptions);
+
 edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
+                                         const Config &config,
                                          const std::string &message_type,
-                                         int period_length)
+                                         const AviCollection &aviCollection)
 {
   try
   {
@@ -965,20 +1021,27 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     SmartMet::Engine::Avi::QueryOptions queryOptions;
 
     queryOptions.itsDistinctMessages = true;
-    queryOptions.itsFilterMETARs = true;
-    queryOptions.itsExcludeSPECIs = false;
-    queryOptions.itsLocationOptions.itsCountries.push_back("FI");
+
+    AviMetaData amd(aviCollection.getBBox(),
+                    aviCollection.getName(),
+                    aviCollection.getMessageTypes(),
+                    aviCollection.getLocationCheck());
+    setAviQueryLocationOptions(aviCollection, amd, queryOptions);
 
     queryOptions.itsParameters.push_back("messagetime");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
-    queryOptions.itsMessageTypes.push_back(message_type);
+
+    // BRAINSTORM-3274; Using lower case for collection names which are used as
+    //                  the message type too; aviengine expects upper case types
+    //
+    queryOptions.itsMessageTypes.push_back(boost::algorithm::to_upper_copy(message_type));
+
     queryOptions.itsMessageFormat = TAC_FORMAT;
 
+    // From config file avi.period_length (30 days default)
     auto now = Fmi::SecondClock::universal_time();
-    auto start_of_period =
-        (now -
-         Fmi::Hours(period_length * 24));  // from config file avi.period_length (30 days default)
+    auto start_of_period = (now - Fmi::Hours(aviCollection.getPeriodLength() * 24));
     std::string startTime = Fmi::date_time::to_iso_string(start_of_period);
     std::string endTime = Fmi::date_time::to_iso_string(now);
     queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
@@ -991,7 +1054,13 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
     queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
     // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
-    queryOptions.itsExcludeSPECIs = true;
+    //
+    // BRAINSTORM-3284: now configurable, defaults to true
+    //
+    queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
+
+    if ((! queryOptions.itsExcludeSPECIs) && (queryOptions.itsMessageTypes.front() == "METAR"))
+      queryOptions.itsMessageTypes.push_back("SPECI");
 
     auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
 
@@ -1026,10 +1095,20 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
   try
   {
     if (!aviCollection.getCountries().empty())
+    {
       queryOptions.itsLocationOptions.itsCountries.insert(
           queryOptions.itsLocationOptions.itsCountries.begin(),
           aviCollection.getCountries().begin(),
           aviCollection.getCountries().end());
+
+      // BRAINSTORM-3302; icao filtering (e.g. ILxx) is now made by aviengine
+      //
+      if (!aviCollection.getExcludeIcaoFilters().empty())
+        queryOptions.itsLocationOptions.itsExcludeIcaoFilters.insert(
+          queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
+          aviCollection.getExcludeIcaoFilters().begin(),
+          aviCollection.getExcludeIcaoFilters().end());
+    }
     else if (!aviCollection.getIcaos().empty())
       queryOptions.itsLocationOptions.itsIcaos.insert(
           queryOptions.itsLocationOptions.itsIcaos.begin(),
@@ -1059,8 +1138,10 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
 void setAviStations(const Engine::Avi::StationQueryData &stationData,
                     const AviCollection &aviCollection,
                     const std::string &icaoColumnName,
+                    const std::string &nameColumnName,
                     const std::string &latColumnName,
                     const std::string &lonColumnName,
+                    const std::string &firIdColumnName,
                     AviMetaData &amd)
 {
   try
@@ -1072,10 +1153,14 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
     double maxX = 0;
     double maxY = 0;
 
+    const SmartMet::Engine::Avi::FIRQueryData *firAreas =
+        (firIdColumnName.empty() ? nullptr : amd.getFIRAreas());
+
     for (auto stationId : stationData.itsStationIds)
     {
       auto const &columns = stationData.itsValues.at(stationId);
       auto const &icaoCode = *(columns.at(icaoColumnName).cbegin());
+      auto const &stationName = *(columns.at(nameColumnName).cbegin());
       auto const &latitude = *(columns.at(latColumnName).cbegin());
       auto const &longitude = *(columns.at(lonColumnName).cbegin());
 
@@ -1086,12 +1171,42 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
       if (aviCollection.filter(icao))
         continue;
 
+      auto name = std::get<std::string>(stationName);
       auto lat = std::get<double>(latitude);
       auto lon = std::get<double>(longitude);
+      std::optional<int> firAreaId;
 
       if (useDataBBox)
       {
-        if (first)
+        if (firAreas)
+        {
+          auto const &firId = *(columns.at(firIdColumnName).cbegin());
+
+          auto fId = std::get<int>(firId);
+          auto firArea = firAreas->find(fId);
+
+          if (firArea != firAreas->end())
+          {
+            if (first)
+            {
+              minY = firArea->second.second.getYMin();
+              maxY = firArea->second.second.getYMax();
+              minX = firArea->second.second.getXMin();
+              maxX = firArea->second.second.getXMax();
+              first = false;
+            }
+            else
+            {
+              minY = std::min(minY, firArea->second.second.getYMin());
+              maxY = std::max(maxY, firArea->second.second.getYMax());
+              minX = std::min(minX, firArea->second.second.getXMin());
+              maxX = std::max(maxX, firArea->second.second.getXMax());
+            }
+
+            firAreaId = fId;
+          }
+        }
+        else if (first)
         {
           minY = maxY = lat;
           minX = maxX = lon;
@@ -1107,8 +1222,7 @@ void setAviStations(const Engine::Avi::StationQueryData &stationData,
         }
       }
 
-      amd.addStation(
-          AviStation(stationId, icao, std::get<double>(latitude), std::get<double>(longitude)));
+      amd.addStation(AviStation(stationId, icao, name, lat, lon, firAreaId));
     }
 
     if (!amd.getStations().empty() && useDataBBox)
@@ -1139,18 +1253,32 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
                       aviCollection.getLocationCheck());
       SmartMet::Engine::Avi::QueryOptions queryOptions;
       std::string icaoColumnName("icao");
+      std::string nameColumnName("name");
       std::string latColumnName("latitude");
       std::string lonColumnName("longitude");
+      std::string firIdColumnName;
 
       queryOptions.itsParameters.push_back(icaoColumnName);
+      queryOptions.itsParameters.push_back(nameColumnName);
       queryOptions.itsParameters.push_back(latColumnName);
       queryOptions.itsParameters.push_back(lonColumnName);
+
+      if (aviCollection.getName() == SIGMET)
+      {
+        firIdColumnName = "firid";
+        queryOptions.itsParameters.push_back(firIdColumnName);
+
+        amd.setFIRAreas(aviEngine.queryFIRAreas());
+      }
 
       setAviQueryLocationOptions(aviCollection, amd, queryOptions);
 
       auto stationData = aviEngine.queryStations(queryOptions);
 
-      setAviStations(stationData, aviCollection, icaoColumnName, latColumnName, lonColumnName, amd);
+      setAviStations(
+          stationData, aviCollection, icaoColumnName, nameColumnName, latColumnName, lonColumnName,
+          firIdColumnName, amd);
+
       if (!amd.getStations().empty())
         aviMetaData.push_back(amd);
     }
@@ -1164,7 +1292,7 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
 }
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
-                                         const AviCollections &aviCollections,
+                                         const Config &config,
                                          const std::string &default_language,
                                          const ParameterInfo *pinfo,
                                          const CollectionInfoContainer &cic,
@@ -1180,18 +1308,22 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
   {
     EDRProducerMetaData edrProducerMetaData;
 
+    auto aviCollections = config.getAviCollections();
     auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
 
     for (const auto &amd : aviMetaData)
     {
       EDRMetaData edrMetaData;
       edrMetaData.metadata_source = SourceEngine::Avi;
+      edrMetaData.aviEngine = &aviEngine;
+
       auto const &bbox = *(amd.getBBox());
 
       edrMetaData.spatial_extent.bbox_xmin = *bbox.getMinX();
       edrMetaData.spatial_extent.bbox_ymin = *bbox.getMinY();
       edrMetaData.spatial_extent.bbox_xmax = *bbox.getMaxX();
       edrMetaData.spatial_extent.bbox_ymax = *bbox.getMaxY();
+      edrMetaData.spatial_extent.geometryIds = amd.getGeometryIds();
 
       /*
       edrMetaData.title = amd.getTitle();
@@ -1207,7 +1339,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       const AviCollection &avi_collection = get_avi_collection(producer, aviCollections);
 
       edrMetaData.temporal_extent =
-          getAviTemporalExtent(aviEngine, producer, avi_collection.getPeriodLength());
+          getAviTemporalExtent(aviEngine, config, producer, avi_collection);
 
       for (const auto &p : amd.getParameters())
       {
@@ -1243,9 +1375,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
 }
 
 SupportedLocations get_supported_locations(const AviMetaData &amd,
-                                           const AviCollections &aviCollections,
-                                           SupportedProducerLocations &spl,
-                                           const CollectionInfoContainer &cic)
+                                           const AviCollections &aviCollections)
 
 {
   try
@@ -1260,7 +1390,7 @@ SupportedLocations get_supported_locations(const AviMetaData &amd,
       li.id = station.getIcao();
       li.longitude = station.getLongitude();
       li.latitude = station.getLatitude();
-      li.name = ("ICAO: " + station.getIcao() + "; stationId: " + Fmi::to_string(station.getId()));
+      li.name = station.getName();
       li.type = "ICAO";
       li.keyword = amd.getProducer();
 
@@ -1287,7 +1417,7 @@ void load_locations_avi(const Engine::Avi::Engine &aviEngine,
 
     for (const auto &amd : aviMetaData)
     {
-      SupportedLocations sls = get_supported_locations(amd, aviCollections, spl, cic);
+      SupportedLocations sls = get_supported_locations(amd, aviCollections);
 
       spl[amd.getProducer()] = sls;
     }
@@ -1315,6 +1445,24 @@ int EDRMetaData::getPrecision(const std::string &parameter_name) const
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+bool EDRMetaData::getGeometry(const std::string &item, Json::Value &geometry) const
+{
+  auto geom = spatial_extent.geometryIds.find(item);
+
+  if ((geom == spatial_extent.geometryIds.end()) || (! geom->second))
+    return false;
+
+  auto engineGeometries = aviEngine->queryFIRAreas();
+  auto engineGeom = engineGeometries.find(*(geom->second));
+
+  if (engineGeom == engineGeometries.end())
+    return false;
+
+  geometry = Json::Value(engineGeom->second.first, true);
+
+  return true;
 }
 
 EngineMetaData::EngineMetaData()

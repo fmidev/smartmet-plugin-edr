@@ -27,7 +27,7 @@ LIBS += $(PREFIX_LDFLAGS) \
 	-lboost_thread \
 	-lboost_iostreams \
 	$(REQUIRED_LIBS) \
-	-lbz2 -lz
+	-lbz2 -lz -lzip
 
 # What to install
 

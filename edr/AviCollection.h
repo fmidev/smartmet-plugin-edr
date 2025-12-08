@@ -26,7 +26,8 @@ class AviCollection
   const std::set<std::string> &getCountries() const { return itsCountries; }
   const std::optional<AviBBox> &getBBox() const { return itsBBox; }
   const std::set<std::string> &getIcaos() const { return itsIcaos; }
-  const std::set<std::string> &getIcaoFilters() const { return itsIcaoFilters; }
+  const std::set<std::string> &getIncludeIcaoFilters() const { return itsIncludeIcaoFilters; }
+  const std::set<std::string> &getExcludeIcaoFilters() const { return itsExcludeIcaoFilters; }
   bool getLocationCheck() const { return itsLocationCheck; }
   int getPeriodLength() const { return itsPeriodLength; }
 
@@ -34,7 +35,7 @@ class AviCollection
   void addMessageType(const std::string &theMessageType);
   void addCountry(const std::string &theCountry);
   void addIcao(const std::string &theIcao);
-  void addIcaoFilter(const std::string &theIcaoFilter);
+  void addIcaoFilter(const std::string &theIcaoFilter, bool include);
   void setBBox(const AviBBox &theBBox);
   void setLocationCheck(bool theLocationCheck) { itsLocationCheck = theLocationCheck; }
   void setPeriodLength(int thePeriodLength) { itsPeriodLength = thePeriodLength; }
@@ -47,7 +48,8 @@ class AviCollection
   std::set<std::string> itsCountries;
   std::optional<AviBBox> itsBBox;
   std::set<std::string> itsIcaos;
-  std::set<std::string> itsIcaoFilters;
+  std::set<std::string> itsIncludeIcaoFilters;
+  std::set<std::string> itsExcludeIcaoFilters;
   bool itsLocationCheck = false;
   int itsPeriodLength = 30;  // 30 days by default
 };                           // class AviCollection

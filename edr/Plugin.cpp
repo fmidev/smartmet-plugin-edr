@@ -393,6 +393,8 @@ void Plugin::query(const State& state,
     std::string mime;
     if (q.output_format == IWXXM_FORMAT)
       mime = "text/xml";
+    else if (q.output_format == IWXXMZIP_FORMAT)
+      mime = "application/zip";
     else if (q.output_format == TAC_FORMAT)
       mime = "text/plain";
     else
@@ -495,6 +497,19 @@ void Plugin::query(const State& state,
       product_hash = Fmi::hash_value(*result);
       if (etag_only(request, response, product_hash))
         return;
+
+      if (q.output_format == IWXXMZIP_FORMAT)
+      {
+        if (qph.getZipFileName().empty())
+        {
+          response.setHeader("Content-Type", "application/json; charset=utf-8");
+          response.setStatus(204);
+        }
+        else
+          response.setHeader(
+            "Content-Disposition",
+            (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
+      }
 
       response.setContent(*result);
     }
@@ -865,7 +880,7 @@ void Plugin::updateMetaData(bool initial_phase)
     if (!itsConfig.aviEngineDisabled())
     {
       auto avi_engine_metadata = get_edr_metadata_avi(*itsEngines.aviEngine,
-                                                      itsConfig.getAviCollections(),
+                                                      itsConfig,
                                                       default_language,
                                                       parameter_info,
                                                       collection_info_container,

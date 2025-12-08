@@ -131,6 +131,140 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
   }
 }
 
+std::string utcDateTime(const Fmi::DateTime &datetime)
+{
+  if (datetime.is_not_a_date_time())
+    return "not_a_datetime";
+
+  return Fmi::to_iso_string(datetime) + "Z";
+}
+
+std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime = "")
+{
+  Fmi::DateTime now;
+
+  if (datetime.empty())
+    now = Fmi::SecondClock::universal_time();
+  else
+    now = Fmi::DateTime::from_iso_string(datetime);
+
+  // No time periods (never, should not be called if so)
+  //
+  if (emd.temporal_extent.time_periods.empty())
+    return utcDateTime(now);
+
+  // Note: single time instansts are always used
+
+  auto const &time_periods = (emd.temporal_extent.single_time_periods.empty()
+                              ? emd.temporal_extent.time_periods
+                              : emd.temporal_extent.single_time_periods);
+
+  // Before (or match) 1'st time period start ?
+  //
+  if (now <= time_periods.front().start_time)
+    return utcDateTime(time_periods.front().start_time);
+
+  const edr_temporal_extent_period *tp1 = nullptr, *tp2 = nullptr;
+
+  // After (or match) last time period (start or) end ?
+  //
+  if (now >= time_periods.back().start_time)
+  {
+    if (time_periods.back().end_time.is_not_a_date_time())
+      return utcDateTime(time_periods.back().start_time);
+
+    if (now >= time_periods.back().end_time)
+     return utcDateTime(time_periods.back().end_time);
+
+    tp1 = tp2 = &time_periods.back();
+  }
+  else
+  {
+    // Search for time period(s) within or between which current time is
+
+    for (const auto &tp : time_periods)
+    {
+      auto const &t1 = tp.start_time;
+      auto const &t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
+
+      // After period's end ?
+      //
+      if (t2 < now)
+      {
+        tp1 = &tp;
+        continue;
+      }
+
+      // Match start or end ?
+      //
+      if ((t1 == now) || (t2 == now))
+        return utcDateTime(now);
+
+      // Before period's end
+      //
+      tp2 = &tp;
+
+      break;
+    }
+
+    // No time period(s) found (never) ?
+    //
+    if ((! tp1) && (! tp2))
+      return utcDateTime(now);
+
+    if (! tp1)
+      tp1 = tp2;
+    else if (! tp2)
+      tp2 = tp1;
+  }
+
+  // Between 2 time periods ?
+  //
+  if (tp1 != tp2)
+  {
+    auto const &t1 = (tp1->end_time.is_not_a_date_time() ? tp1->start_time : tp1->end_time);
+    auto const &t2 = tp2->start_time;
+
+    auto td1 = now - t1;
+    auto td2 = t2 - now;
+
+    return utcDateTime((td1 > td2) ? t2 : t1);
+  }
+
+  // Within time period or after last time instant
+  //
+  // No period end time ?
+  //
+  if (tp1->end_time.is_not_a_date_time())
+    return utcDateTime(tp1->start_time);
+
+  // No time step ?
+  //
+  if (tp1->timestep <= 0)
+  {
+    auto td1 = now - tp1->start_time;
+    auto td2 = tp1->end_time - now;
+
+    return utcDateTime((td1 > td2) ? tp1->end_time : tp1->start_time);
+  }
+
+  // Nearest timestep
+
+  auto diffminutes = (now - tp1->start_time).total_minutes();
+  auto stepminutes = (diffminutes / tp1->timestep) * tp1->timestep;
+  auto t = tp1->start_time + Fmi::date_time::Minutes(stepminutes);
+
+  if ((2 * (diffminutes - stepminutes)) >= tp1->timestep)
+  {
+    auto t2 = t + Fmi::date_time::Minutes(tp1->timestep);
+
+    if (t2 <= tp1->end_time)
+      t = t2;
+  }
+
+  return utcDateTime(t);
+}
+
 }  // anonymous namespace
 
 EDRQueryParams::EDRQueryParams(const State& state,
@@ -214,7 +348,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
     }
     else if (itsEDRQuery.query_type == EDRQueryType::Locations)
     {
-      parseLocations(emd);
+      parseLocations(emd, coords);
     }
     else if (itsEDRQuery.query_type == EDRQueryType::Cube)
     {
@@ -230,7 +364,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
       throw EDRException("Missing coords option!");
 
     // EDR datetime
-    parseDateTime(state, emd);
+    parseDateTime(state, itsEDRQuery.collection_id, emd);
 
     // EDR parameter names and z
     bool noReqParams = false;
@@ -247,8 +381,11 @@ EDRQueryParams::EDRQueryParams(const State& state,
       throw EDRException("No matching parameter names given!");
     }
 
-    // If f-option is misssing, default output format is CoverageJSON
-    output_format = Spine::optional_string(req.getParameter("f"), COVERAGE_JSON_FORMAT);
+    // If f-option is missing, default output format is CoverageJSON or IWXXM for METAR/TAF
+    // and IWXXMZIP for SIGMET
+    auto default_format =
+        (emd.isAviProducer() ? config.defaultAviFormat() : COVERAGE_JSON_FORMAT);
+    output_format = Spine::optional_string(req.getParameter("f"), default_format);
 
     const auto& supportedOutputFormats =
         config.getSupportedOutputFormats(itsEDRQuery.collection_id);
@@ -281,6 +418,8 @@ EDRQueryParams::EDRQueryParams(const State& state,
 #ifndef WITHOUT_AVI
     parseICAOCodesAndAviProducer(emd);
 #endif
+
+    validateRequestParametersWithMetaData(emd);
   }
   catch (...)
   {
@@ -293,7 +432,9 @@ EDRQueryParams::EDRQueryParams(const State& state,
 bool EDRQueryParams::isAviProducer(const EDRProducerMetaData& avi_metadata,
                                    const std::string& producer) const
 {
-  auto producer_name = Fmi::trim_copy(boost::algorithm::to_upper_copy(producer));
+  // BRAINSTORM-3274; Using lower case for collection names
+  //
+  auto producer_name = Fmi::trim_copy(boost::algorithm::to_lower_copy(producer));
 
   return (avi_metadata.find(producer_name) != avi_metadata.end());
 }
@@ -390,7 +531,9 @@ std::string EDRQueryParams::parseResourceParts2AndBeyond(
 {
   try
   {
-    itsEDRQuery.collection_id = resource_parts.at(2);
+    // BRAINSTORM-3274; Using lower case for collection names
+    //
+    itsEDRQuery.collection_id = boost::algorithm::to_lower_copy(resource_parts.at(2));
 
     if (!state.isValidCollection(itsEDRQuery.collection_id))
       throw EDRException(("Collection '" + itsEDRQuery.collection_id + "' not found"));
@@ -640,9 +783,9 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
       UtilityFunctions::parseRangeListValue(z, zIsRange, zLo, zHi);
     }
 
-    auto crs = Spine::optional_string(req.getParameter("crs"), "EPSG:4326");
-    if (!crs.empty() && crs != "EPSG:4326" && crs != "WGS84" && crs != "CRS84" && crs != "CRS:84")
-      throw EDRException("Invalid crs: " + crs + ". Only EPSG:4326 is supported");
+    auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
+    if (!crs.empty() && crs != "OGC:CRS84" && crs != "CRS:84")
+      throw EDRException("Invalid crs: " + crs + ". Only OGC:CRS84 is supported");
     crs = "EPSG:4326";
 
     /*
@@ -662,7 +805,7 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
   }
 }
 
-void EDRQueryParams::parseLocations(const EDRMetaData& emd)
+void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string &coords)
 {
   try
   {
@@ -671,6 +814,33 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd)
                          itsEDRQuery.collection_id + "'");
 
     auto location_id = itsEDRQuery.location_id;
+
+    if (location_id == "all")
+    {
+      // BRAINSTORM-3288
+      //
+      // Convert location "all" query to area query using a small buffer (1 km)
+      //
+      itsEDRQuery.query_type = EDRQueryType::Area;
+
+      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin) + " ");
+      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin) + ",");
+      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax) + " ");
+      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax) + ",");
+
+      coords = "POLYGON((" + xmin + ymin + xmax + ymin + xmax + ymax + xmin + ymax + xmin + ymin;
+      coords.pop_back();
+      coords += "))";
+
+      parseCoords(coords);
+
+      auto wkt = req.getParameter("wkt");
+
+      if (wkt)
+        req.setParameter("wkt", *wkt + ":1");
+
+      return;
+    }
 
     if (emd.locations->find(location_id) == emd.locations->end())
     {
@@ -731,37 +901,39 @@ void EDRQueryParams::parseCube()
   }
 }
 
-void EDRQueryParams::parseDateTime(const State& state, const EDRMetaData& emd)
+void EDRQueryParams::parseDateTime(
+  const State& state, const std::string &producer, const EDRMetaData& emd)
 {
   try
   {
     // EDR datetime
+    //
+    // BRAINSTORM-3272; Removed nonstd "&datetime=null" handling and allowing missing
+    //                  datetime option; if missing and is not set by coordinatefilter,
+    //                  using nearest metadata time instant to current time by default.
+    //
     auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
-
-    if (datetime == "null")
-    {
-      if (emd.temporal_extent.time_periods.empty())
-      {
-        datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
-      }
-      else
-      {
-        if (emd.temporal_extent.time_periods.back().end_time.is_not_a_date_time())
-          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().start_time));
-        else
-          datetime = (Fmi::to_iso_string(emd.temporal_extent.time_periods.front().start_time) +
-                      "/" + Fmi::to_iso_string(emd.temporal_extent.time_periods.back().end_time));
-      }
-    }
 
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
 
-#ifndef WITHOUT_AVI
-    if (datetime.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
-      datetime = Fmi::to_iso_string(Fmi::SecondClock::universal_time());
-#endif
+    if (datetime.empty())
+    {
+      if (emd.temporal_extent.time_periods.empty())
+      {
+        datetime = utcDateTime(Fmi::SecondClock::universal_time());
+      }
+      else
+      {
+        // Using current time for avi collections and neareast metadata time instant
+        // to current time for others
+
+        if (emd.isAviProducer())
+          datetime = Fmi::SecondClock::universal_time().to_iso_string();
+        else
+          datetime = nearestTimeNow(emd);
+      }
+    }
 
     if (datetime.empty())
       throw EDRException("Missing datetime option");
@@ -1052,6 +1224,26 @@ void EDRQueryParams::parseICAOCodesAndAviProducer(const EDRMetaData& emd)
   }
 }
 
+void EDRQueryParams::validateRequestParameterNamesWithMetaData(const EDRMetaData &emd) const
+{
+}
+void EDRQueryParams::validateRequestDateTimeWithMetaData(const EDRMetaData &emd) const
+{
+}
+void EDRQueryParams::validateRequestLevelsWithMetaData(const EDRMetaData &emd) const
+{
+}
+void EDRQueryParams::validateRequestCoordinatesWithMetaData(const EDRMetaData &emd) const
+{
+}
+
+void EDRQueryParams::validateRequestParametersWithMetaData(const EDRMetaData &emd) const
+{
+  validateRequestParameterNamesWithMetaData(emd);
+  validateRequestDateTimeWithMetaData(emd);
+  validateRequestLevelsWithMetaData(emd);
+  validateRequestCoordinatesWithMetaData(emd);
+}
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

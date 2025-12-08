@@ -399,12 +399,51 @@ void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquer
   }
 }
 
-std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsg_data,
-                                                         const Query& masterquery) const
+std::string QueryProcessingHub::getMsgZipFileName(
+    const std::vector<std::string> &icaoCodes,
+    const Fmi::LocalDateTime &ldt,
+    std::vector<std::string>::const_iterator *icaoIterator) const
+{
+  // <icaocode>_<messagetimedate>_<messagetimetime>.xml
+  //
+  std::string msgZipFileName((*icaoIterator != icaoCodes.cend()) ? **icaoIterator : "????");
+
+  if (*icaoIterator != icaoCodes.cend())
+    (*icaoIterator)++;
+
+  auto datetime = ldt.utc_time().to_iso_string();
+  std::replace(datetime.begin(), datetime.end(), 'T', '_');
+
+  return msgZipFileName + "_" + datetime + ".xml";
+}
+
+std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsgicao_data,
+                                                         const TS::TimeSeriesGroupPtr& tsg_data,
+                                                         const Query& masterquery,
+                                                         ZipWriter *zipWriter) const
 {
   try
   {
+    std::vector<std::string> icaoCodes;
     std::string messages;
+
+    // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
+    //
+    if (&tsgicao_data != &tsg_data)
+    {
+      for (const auto& llts_data : *tsgicao_data)
+      {
+        for (const auto& timed_value : llts_data.timeseries)
+        {
+          if (const auto* ptr = std::get_if<std::string>(&timed_value.value))
+            icaoCodes.emplace_back(*ptr);
+          else
+            throw Fmi::Exception(BCP, std::string("Internal error, icao code data missing"));
+        }
+      }
+    }
+
+    auto icaoIterator = icaoCodes.cbegin();
 
     for (const auto& llts_data : *tsg_data)
     {
@@ -413,9 +452,24 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
         if (!messages.empty() && masterquery.output_format == TAC_FORMAT)
           messages += "\n";
         if (const auto* ptr = std::get_if<std::string>(&timed_value.value))
-          messages += *ptr;
-        // FIXME: should we have else branch here?
-        //        (earlier it would cause SIGSEGV due to missing check for nullptr)
+        {
+          if (masterquery.output_format == IWXXMZIP_FORMAT)
+            zipWriter->addFile(getMsgZipFileName(icaoCodes, timed_value.time, &icaoIterator), *ptr);
+          else
+            messages += *ptr;
+        }
+        else
+        {
+          // Never (?)
+          //
+          if ((masterquery.output_format == IWXXMZIP_FORMAT) && (icaoIterator != icaoCodes.cend()))
+            icaoIterator++;
+
+          // Old comment when adding else branch for IWXXMZIP_FORMAT:
+          //
+          // FIXME: should we have else branch here?
+          //        (earlier it would cause SIGSEGV due to missing check for nullptr)
+        }
       }
     }
 
@@ -427,23 +481,57 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
   }
 }
 
-void QueryProcessingHub::processIWXXMAndTACData(const TS::OutputData& outputData,
+void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
+                                                const TS::OutputData& outputData,
                                                 const Query& masterquery,
-                                                Spine::Table& table) const
+                                                Spine::Table& table)
 {
   try
   {
     if (!outputData.empty())
     {
+      // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
+      //
+      auto zipWriter = ((masterquery.output_format == IWXXMZIP_FORMAT)
+                        ? std::make_unique<ZipWriter>(config.aviTmpPath())
+                        : nullptr);
+      uint messageIdx = ((masterquery.output_format == IWXXMZIP_FORMAT) ? 1 : 0);
+
       std::string messages;
+
       for (const auto& output : outputData)
       {
         const auto& outdata = output.second;
-        const auto& tsdata = outdata.at(0);
-        const auto& tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
-        messages += parseIWXXMAndTACMessages(tsg_data, masterquery);
+        if (! outdata.empty())
+        {
+          const auto& tsicaodata = outdata.at(0);
+          const auto& tsgicao_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsicaodata));
+          const auto& tsdata = outdata.at(messageIdx);
+          const auto& tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
+          messages += parseIWXXMAndTACMessages(tsgicao_data, tsg_data, masterquery, zipWriter.get());
+        }
       }
-      if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
+
+      if (masterquery.output_format == IWXXMZIP_FORMAT)
+      {
+        try
+        {
+          if (! zipWriter->empty())
+            messages = zipWriter->createZip();
+          else
+            // ==> 204
+            zipFileName.clear();
+        }
+        catch (const std::exception &ex)
+        {
+          throw Fmi::Exception(BCP, std::string("Failed to create zip: ") + ex.what());
+        }
+        catch (...)
+        {
+          throw Fmi::Exception(BCP, "Failed to create zip");
+        }
+      }
+      else if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
       {
         messages.insert(
           0, "<collect:meteorologicalInformation xmlns:collect=\"https://schemas.wmo.int/collect/1.2\">\n");
@@ -544,7 +632,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       std::string producerName = (producerMissing ? "" : masterquery.timeproducers.front().front());
       if (itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
       {
-        itsAviEngineQuery.processAviEngineQuery(state, q, producerName, outputData);
+        itsAviEngineQuery.processAviEngineQuery(
+           thePlugin.itsConfig, state, q, producerName, outputData);
         process_qengine_query = false;
       }
       else
@@ -591,9 +680,19 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
     setPrecisions(emd, masterquery);
 
-    if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT)
+    if (masterquery.output_format == TAC_FORMAT ||
+        masterquery.output_format == IWXXM_FORMAT ||
+        masterquery.output_format == IWXXMZIP_FORMAT)
     {
-      processIWXXMAndTACData(outputData, masterquery, table);
+      if (masterquery.output_format == IWXXMZIP_FORMAT)
+      {
+        auto datetime = Fmi::SecondClock::universal_time().to_iso_string();
+        std::replace(datetime.begin(), datetime.end(), 'T', '_');
+
+        zipFileName = producer + "_" + datetime + ".zip";
+      }
+
+      processIWXXMAndTACData(thePlugin.itsConfig, outputData, masterquery, table);
     }
     else if (masterquery.output_format == COVERAGE_JSON_FORMAT)
     {

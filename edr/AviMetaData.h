@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include <engines/avi/Engine.h>
+
 namespace SmartMet
 {
 namespace Plugin
@@ -47,25 +49,32 @@ class AviBBox
 class AviStation
 {
  public:
-  AviStation(long theId, std::string theIcao, double theLatitude, double theLongitude)
+  AviStation(long theId, std::string theIcao, std::string theName,
+             double theLatitude, double theLongitude, std::optional<int> firId)
       : itsId(theId),
         itsIcao(std::move(theIcao)),
+        itsName(std::move(theName)),
         itsLatitude(theLatitude),
-        itsLongitude(theLongitude)
+        itsLongitude(theLongitude),
+        itsFIRId(firId)
   {
   }
   AviStation() = delete;
 
   long getId() const { return itsId; }
   const std::string &getIcao() const { return itsIcao; }
+  const std::string &getName() const { return itsName; }
   double getLatitude() const { return itsLatitude; }
   double getLongitude() const { return itsLongitude; }
+  std::optional<int> getFIRId() const { return itsFIRId; }
 
  private:
   long itsId;
   std::string itsIcao;
+  std::string itsName;
   double itsLatitude;
   double itsLongitude;
+  std::optional<int> itsFIRId;
 };
 
 class AviParameter
@@ -101,6 +110,7 @@ class AviMetaData
   AviMetaData() = delete;
 
   const std::optional<AviBBox> &getBBox() const { return itsBBox; }
+  std::map<std::string, std::optional<int>> getGeometryIds() const;
   const std::string &getProducer() const { return itsProducer; }
   const std::vector<AviStation> &getStations() const { return itsStations; }
   const std::vector<AviParameter> &getParameters() const { return itsParameters; }
@@ -108,6 +118,8 @@ class AviMetaData
   bool getLocationCheck() const { return itsLocationCheck; }
 
   void setBBox(const AviBBox &theBBox) { itsBBox = theBBox; }
+  const Engine::Avi::FIRQueryData *getFIRAreas() const { return itsFIRAreas; };
+  void setFIRAreas(const SmartMet::Engine::Avi::FIRQueryData &firAreas) { itsFIRAreas = &firAreas; }
   void addStation(const AviStation &theStation) { itsStations.push_back(theStation); }
 
  private:
@@ -117,6 +129,8 @@ class AviMetaData
   std::vector<AviParameter> itsParameters;
   std::set<std::string> itsMessageTypes;
   bool itsLocationCheck;
+
+  const Engine::Avi::FIRQueryData *itsFIRAreas = nullptr;
 };
 
 }  // namespace EDR

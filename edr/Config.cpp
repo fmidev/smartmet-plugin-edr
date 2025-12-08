@@ -712,11 +712,13 @@ void Config::parse_config_avi_collection_icaos(AviCollection &aviCollection,
 // ----------------------------------------------------------------------
 
 void Config::parse_config_avi_collection_icaofilters(AviCollection &aviCollection,
-                                                     const std::string &path)
+                                                     const std::string &path,
+                                                     const std::string &name,
+                                                     bool include)
 {
   try
   {
-    std::string filtersPath = path + ".icaofilters";
+    std::string filtersPath = path + "." + name;
     if (!itsConfig.exists(filtersPath))
       return;
 
@@ -733,7 +735,7 @@ void Config::parse_config_avi_collection_icaofilters(AviCollection &aviCollectio
 
       try
       {
-        aviCollection.addIcaoFilter(std::string((const char *)filterSetting[j]));
+        aviCollection.addIcaoFilter(std::string((const char *)filterSetting[j]), include);
       }
       catch (const std::exception &e)
       {
@@ -767,6 +769,34 @@ void Config::parse_config_avi_collections()
     int period_length = 30;
     if (itsConfig.exists("avi.period_length"))
       itsConfig.lookupValue("avi.period_length", period_length);
+
+    // BRAINSTORM-3287
+    //
+    if (itsConfig.exists("avi.default_format"))
+    {
+      itsConfig.lookupValue("avi.default_format", itsDefaultAviFormat);
+
+      if (
+          (itsDefaultAviFormat != COVERAGE_JSON_FORMAT) &&
+          (itsDefaultAviFormat != GEO_JSON_FORMAT) &&
+          (itsDefaultAviFormat != TAC_FORMAT) &&
+          (itsDefaultAviFormat != IWXXM_FORMAT) &&
+          (itsDefaultAviFormat != IWXXMZIP_FORMAT)
+         )
+        throw Fmi::Exception(BCP,
+                             "Configuration file error. avi.default_format must be "
+                             "CoverageJSON, GeoJSON, TAC, IWXXM or IWXXMZIP");
+    }
+
+    // BRAINSTORM-3284
+    //
+    if (itsConfig.exists("avi.exclude_speci"))
+      itsConfig.lookupValue("avi.exclude_speci", itsExcludeAviSPECI);
+
+    //BRAINSTORM-3305
+    //
+    if (itsConfig.exists("avi.tmppath"))
+      itsConfig.lookupValue("avi.tmppath", itsAviTmpPath);
 
     std::string rootPath = "avi.collections";
 
@@ -810,7 +840,8 @@ void Config::parse_config_avi_collections()
       parse_config_avi_collection_countries(aviCollection, path);
       parse_config_avi_collection_bbox(aviCollection, path);
       parse_config_avi_collection_icaos(aviCollection, path);
-      parse_config_avi_collection_icaofilters(aviCollection, path);
+      parse_config_avi_collection_icaofilters(aviCollection, path, "includeicaofilters", true);
+      parse_config_avi_collection_icaofilters(aviCollection, path, "excludeicaofilters", false);
 
       /* Plugin checks given location against metadata anyway, no need to check by avi
       /

@@ -22,7 +22,8 @@ class AviEngineQuery
   explicit AviEngineQuery(const Plugin &thePlugin);
 
 #ifndef WITHOUT_AVI
-  void processAviEngineQuery(const State &state,
+  void processAviEngineQuery(const Config &config,
+                             const State &state,
                              const Query &query,
                              const std::string &producer,
                              TS::OutputData &outputData) const;

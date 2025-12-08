@@ -12,6 +12,7 @@
 #include "ObsEngineQuery.h"
 #include "Plugin.h"
 #include "QEngineQuery.h"
+#include "ZipWriter.h"
 #include <spine/HTTP.h>
 
 namespace SmartMet
@@ -36,6 +37,8 @@ class QueryProcessingHub
                          const Spine::HTTP::Request& request,
                          Query masterquery) const;
 
+  const std::string &getZipFileName() const { return zipFileName; }
+
  private:
   Json::Value processMetaDataQuery(const State& state, const EDRQuery& edr_query) const;
   std::shared_ptr<std::string> processMetaDataQuery(const State& state,
@@ -43,16 +46,24 @@ class QueryProcessingHub
                                                       Spine::Table& table) const;
 
   void setPrecisions(EDRMetaData& emd, const Query& masterquery) const;
-  void processIWXXMAndTACData(const TS::OutputData& outputData,
+  void processIWXXMAndTACData(const Config &config,
+                              const TS::OutputData& outputData,
                               const Query& masterquery,
-                              Spine::Table& table) const;
-  std::string parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsg_data,
-                                       const Query& masterquery) const;
+                              Spine::Table& table);
+  std::string getMsgZipFileName(const std::vector<std::string> &icaoCodes,
+                                const Fmi::LocalDateTime &ldt,
+                                std::vector<std::string>::const_iterator *icaoIterator) const;
+  std::string parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsgicao_data,
+                                       const TS::TimeSeriesGroupPtr& tsg_data,
+                                       const Query& masterquery,
+                                       ZipWriter *zipWriter) const;
 
   QEngineQuery itsQEngineQuery;
   ObsEngineQuery itsObsEngineQuery;
   AviEngineQuery itsAviEngineQuery;
   GridEngineQuery itsGridEngineQuery;
+
+  std::string zipFileName;
 };
 
 }  // namespace EDR

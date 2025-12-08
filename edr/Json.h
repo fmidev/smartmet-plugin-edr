@@ -49,7 +49,8 @@ class DataValue
 {
  public:
   DataValue() : data(NullValue()) {}
-  DataValue(const std::string &value) : data(value) {}
+  DataValue(const std::string &value, bool _isStringObject = false)
+      : data(value), isStringObject(_isStringObject) {}
   DataValue(bool value) : data(value) {}
   DataValue(std::size_t value) : data(value) {}
   DataValue(int value) : data(std::size_t(value)) {}
@@ -63,8 +64,11 @@ class DataValue
     return data;
   }
 
+  bool isStringObjectValue() const { return isStringObject; }
+
  private:
   std::variant<NullValue, std::string, double, std::size_t, bool> data;
+  bool isStringObject = false;
 };
 
 using ArrayIndex = std::size_t;
@@ -74,7 +78,7 @@ class Value
  public:
   Value();
   Value(ValueType valueType);
-  Value(const std::string &value);
+  Value(const std::string &value, bool isStringObject = false);
   Value(const char *value);
   Value(bool value);
   Value(int value);

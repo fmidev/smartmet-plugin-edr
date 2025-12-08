@@ -75,7 +75,7 @@ ValueType get_value_type(const DataValue &dv)
   return ValueType::nullValue;
 }
 
-std::string json_encode(const std::string &input)
+std::string json_encode(const std::string &input, bool isStringObject = false)
 {
   std::string output;
   output.reserve(input.size());
@@ -85,7 +85,7 @@ std::string json_encode(const std::string &input)
     switch (c)
     {
       case '"':
-        output += "\\\"";
+        output += (isStringObject ? "\"" : "\\\"");
         break;
       case '\\':
         output += "\\\\";
@@ -128,7 +128,10 @@ std::string data_value_to_string(const DataValue &dv, int precision)
   if (vt == ValueType::stringValue)
   {
     auto str = *(std::get_if<std::string>(&data));
-    ret = "\"" + json_encode(str) + "\"";
+    if (dv.isStringObjectValue())
+      ret = json_encode(str, true);
+    else
+      ret = "\"" + json_encode(str) + "\"";
   }
   else if (vt == ValueType::intValue)
   {
@@ -172,8 +175,8 @@ Value::Value(ValueType type)
 {
 }
 
-Value::Value(const std::string &value)
-    : data_value(value),
+Value::Value(const std::string &value, bool _isStringObject)
+    : data_value(value, _isStringObject),
       valueType(ValueType::stringValue),
       beginIter(data_value_vector.begin()),
       endIter(data_value_vector.end())
