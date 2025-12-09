@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.12.8
+Version: 25.12.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -37,7 +37,7 @@ BuildRequires: %{smartmet_boost}-devel
 BuildRequires: %{smartmet_fmt_devel}
 BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
-BuildRequires: libzip-devel >= 1.11.4
+BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 25.11.19
 BuildRequires: smartmet-library-locus-devel >= 25.9.29
@@ -79,7 +79,7 @@ Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
-Requires: libzip >= 1.11.4
+Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 25.11.27
 #TestRequires: smartmet-library-spine-plugin-test >= 25.11.19
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Dec  9 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.9-1.fmi
+- Repackaged with older (not specified) libzip dependency since using packages from rhel-8-for-x86_64-appstream-rpms (has libzip-1.5.1-2) instead of remi-modular
+
 * Mon Dec  8 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.8-1.fmi
 - New release version; changes needed by edr SWIM requirements (BRAINSTORM-3256) and MetOcean profile (PAK-6090)
 
