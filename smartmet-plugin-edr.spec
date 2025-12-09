@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 25.12.9
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -46,7 +46,7 @@ BuildRequires: smartmet-library-grid-content-devel >= 25.11.27
 BuildRequires: smartmet-library-grid-files-devel >= 25.11.27
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
 BuildRequires: smartmet-library-gis-devel >= 25.12.2
-BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
+BuildRequires: smartmet-library-timeseries-devel >= 25.12.9
 BuildRequires: smartmet-engine-avi-devel >= 25.12.8
 BuildRequires: smartmet-engine-geonames-devel >= 25.12.2
 %if %{with observation}
@@ -66,7 +66,7 @@ Requires: smartmet-library-locus >= 25.9.29
 Requires: smartmet-library-macgyver >= 25.12.2
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-library-spine >= 25.11.19
-Requires: smartmet-library-timeseries >= 25.8.1
+Requires: smartmet-library-timeseries >= 25.12.9
 Requires: smartmet-library-gis >= 25.12.2
 Requires: smartmet-library-grid-files >= 25.11.27
 Requires: smartmet-engine-avi >= 25.12.8
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Dec  9 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> 25.12.9-2.fmi
+- Repackaged due to TimeSeries library API changes
+
 * Tue Dec  9 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.9-1.fmi
 - Repackaged with older (not specified) libzip dependency since using packages from rhel-8-for-x86_64-appstream-rpms (has libzip-1.5.1-2) instead of remi-modular
 
