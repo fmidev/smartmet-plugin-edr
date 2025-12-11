@@ -238,7 +238,7 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     queryOptions.itsParameters.push_back("longitude");
     queryOptions.itsParameters.push_back("latitude");
 
-    queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
+    queryOptions.itsValidity = SmartMet::Engine::Avi::Validity::Accepted;
     queryOptions.itsMessageTypes.push_back(to_upper_copy(producer));
     auto message_format =
         (query.output_format == COVERAGE_JSON_FORMAT || query.output_format == GEO_JSON_FORMAT
