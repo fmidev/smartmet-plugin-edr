@@ -969,6 +969,15 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
   try
   {
     Json::Value empty_result;
+
+    if (outputData.empty())
+      return empty_result;
+
+    const auto &outdata_first = outputData.at(0).second;
+
+    if (outdata_first.empty())
+      return empty_result;
+
     empty_result["type"] = Json::Value("FeatureCollection");
     auto features_array = Json::Value(Json::ValueType::arrayValue);
     auto empty_feature = Json::Value(Json::ValueType::objectValue);
@@ -984,14 +993,6 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
 
     features_array[0] = empty_feature;
     empty_result["features"] = features_array;
-
-    if (outputData.empty())
-      return empty_result;
-
-    const auto &outdata_first = outputData.at(0).second;
-
-    if (outdata_first.empty())
-      return empty_result;
 
     const auto &tsdata_first = outdata_first.at(0);
 

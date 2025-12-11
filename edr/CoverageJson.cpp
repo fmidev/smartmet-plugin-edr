@@ -110,6 +110,8 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
       //
       // Several time periods, time periods may or may not have same time step length.
       // Nonperiodic data has time step 0
+      //
+      // Do not use repeating interval for single timesteps
       auto temporal_interval = Json::Value(Json::ValueType::arrayValue);
       auto temporal_interval_values = Json::Value(Json::ValueType::arrayValue);
       auto temporal_interval_array = Json::Value(Json::ValueType::arrayValue);
@@ -117,7 +119,7 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
       {
         const auto &temporal_extent_period = temporal_extent.time_periods.at(i);
 
-        if (temporal_extent_period.timestep == 0)
+        if ((temporal_extent_period.timestep == 0) || (temporal_extent_period.timesteps == 1))
           temporal_interval_values[i] =
               Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z");
         else
