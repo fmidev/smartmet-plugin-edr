@@ -93,6 +93,7 @@ class Value
   std::string toStyledString(bool pretty) const;
   void append(const Value &value);
   std::size_t size() const { return data_value_vector.size(); }
+  bool isNull() const { return (valueType == ValueType::nullValue); }
 
   using ValueVectorType = std::vector<Value>;
   using const_iterator = ValueVectorType::const_iterator;
