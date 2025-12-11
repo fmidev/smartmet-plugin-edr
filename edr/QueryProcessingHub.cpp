@@ -703,7 +703,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                           masterquery.coordinateFilter(),
                                                           masterquery.poptions.parameters(),
                                                           producer == SOUNDING_PRODUCER);
-      table.set(0, 0, result.toStyledString(state.pretty()));
+      table.set(0, 0, (result.isNull() ? "" : result.toStyledString(state.pretty())));
     }
     else if (masterquery.output_format == GEO_JSON_FORMAT)
     {
@@ -713,7 +713,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      masterquery.levels,
                                                      masterquery.coordinateFilter(),
                                                      masterquery.poptions.parameters());
-      table.set(0, 0, result.toStyledString(state.pretty()));
+      table.set(0, 0, (result.isNull() ? "" : result.toStyledString(state.pretty())));
     }
 
     return {};

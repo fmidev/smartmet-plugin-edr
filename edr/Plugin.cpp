@@ -510,6 +510,11 @@ void Plugin::query(const State& state,
             "Content-Disposition",
             (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
       }
+      else if (*result == (q.valueformatter.missing() + "\n"))
+      {
+        result->clear();
+        response.setStatus(204);
+      }
 
       response.setContent(*result);
     }
