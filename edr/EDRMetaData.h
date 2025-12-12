@@ -112,6 +112,7 @@ struct EDRMetaData
   std::map<std::string, int> parameter_precisions;
   std::set<std::string> data_queries;    // Supported data_queries, defined in config file
   std::set<std::string> output_formats;  // Supported output_formats, defined in config file
+  std::string default_output_format;     // Default output format, defined in config file
   const SupportedLocations* locations = nullptr;    // Supported locations, default keyword synop_fi
                                                     // can be overwritten in configuration file
   const ParameterInfo* parameter_info = nullptr;    // Info about parameters from config file
@@ -141,6 +142,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine& qEngine
                                         const CollectionInfoContainer& cic,
                                         const SupportedDataQueries& sdq,
                                         const SupportedOutputFormats& sofs,
+                                        const DefaultOutputFormats &defs,
                                         const SupportedProducerLocations& spl);
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
                                           const std::string& default_language,
@@ -148,6 +150,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
                                           const CollectionInfoContainer& cic,
                                           const SupportedDataQueries& sdq,
                                           const SupportedOutputFormats& sofs,
+                                          const DefaultOutputFormats &defs,
                                           const SupportedProducerLocations& spl);
 #ifndef WITHOUT_OBSERVATION
 EDRProducerMetaData get_edr_metadata_obs(
@@ -159,6 +162,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     const CollectionInfoContainer& cic,
     const SupportedDataQueries& sdq,
     const SupportedOutputFormats& sofs,
+    const DefaultOutputFormats &defs,
     const SupportedProducerLocations& spl,
     const ProducerParameters& prodParams,
     unsigned int observation_period);
@@ -172,6 +176,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
                                          const CollectionInfoContainer& cic,
                                          const SupportedDataQueries& sdq,
                                          const SupportedOutputFormats& sofs,
+                                         const DefaultOutputFormats &defs,
                                          const SupportedProducerLocations& spl);
 
 void load_locations_avi(const Engine::Avi::Engine& aviEngine,

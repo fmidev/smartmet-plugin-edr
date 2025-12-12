@@ -116,6 +116,22 @@ const std::set<std::string> &get_supported_output_formats(const std::string &pro
   }
 }
 
+const std::string &get_default_output_format(const std::string &producer,
+                                             const DefaultOutputFormats &defs)
+{
+  try
+  {
+    if (defs.find(producer) != defs.end())
+      return defs.at(producer);
+
+    return defs.at(DEFAULT_OUTPUT_FORMAT);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 // Remove duplicate collection on secondary engine's metadata
 void remove_duplicate_collection(const std::string &collection_name,
                                  const std::string &secondary_engine,
@@ -230,6 +246,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
                                         const CollectionInfoContainer &cic,
                                         const SupportedDataQueries &sdq,
                                         const SupportedOutputFormats &sofs,
+                                        const DefaultOutputFormats &defs,
                                         const SupportedProducerLocations &spl)
 {
   try
@@ -301,6 +318,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmdproducer);
       producer_emd.data_queries = get_supported_data_queries(qmdproducer, sdq);
       producer_emd.output_formats = get_supported_output_formats(qmdproducer, sofs);
+      producer_emd.default_output_format = get_default_output_format(qmdproducer, defs);
 
       auto producer_key =
           (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
@@ -332,6 +350,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
                                           const CollectionInfoContainer &cic,
                                           const SupportedDataQueries &sdq,
                                           const SupportedOutputFormats &sofs,
+                                          const DefaultOutputFormats &defs,
                                           const SupportedProducerLocations &spl)
 {
   try
@@ -441,6 +460,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
       producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
+      producer_emd.default_output_format = get_default_output_format(gmd.producerName, defs);
       auto producer_key =
           (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
@@ -630,6 +650,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     const CollectionInfoContainer &cic,
     const SupportedDataQueries &sdq,
     const SupportedOutputFormats &sofs,
+    const DefaultOutputFormats &defs,
     const SupportedProducerLocations &spl,
     const ProducerParameters &prodParam,
     unsigned int observation_period)
@@ -767,6 +788,7 @@ EDRProducerMetaData get_edr_metadata_obs(
       producer_emd.collection_info = &cic.getInfo(SourceEngine::Observation, producer);
       producer_emd.data_queries = get_supported_data_queries(producer, sdq);
       producer_emd.output_formats = get_supported_output_formats(producer, sofs);
+      producer_emd.default_output_format = get_default_output_format(producer, defs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
         producer_emd.locations = &spl.at(producer_key);
@@ -1030,7 +1052,7 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
     queryOptions.itsParameters.push_back("messagetime");
 
-    queryOptions.itsValidity = SmartMet::Engine::Avi::Accepted;
+    queryOptions.itsValidity = SmartMet::Engine::Avi::Validity::Accepted;
 
     // BRAINSTORM-3274; Using lower case for collection names which are used as
     //                  the message type too; aviengine expects upper case types
@@ -1298,6 +1320,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const CollectionInfoContainer &cic,
                                          const SupportedDataQueries &sdq,
                                          const SupportedOutputFormats &sofs,
+                                         const DefaultOutputFormats &defs,
                                          const SupportedProducerLocations &spl)
 {
   using Fmi::DateTime;
@@ -1356,6 +1379,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       edrMetaData.collection_info = &cic.getInfo(SourceEngine::Avi, producer);
       edrMetaData.data_queries = get_supported_data_queries(producer, sdq);
       edrMetaData.output_formats = get_supported_output_formats(producer, sofs);
+      edrMetaData.default_output_format = get_default_output_format(producer, defs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
         edrMetaData.locations = &spl.at(producer_key);

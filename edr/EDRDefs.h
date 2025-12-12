@@ -27,7 +27,9 @@ class AviCollection;
 
 using Precisions = std::map<std::string, Precision>;
 using SupportedOutputFormats =
-    std::map<std::string, std::set<std::string>>;  // producer -> output format
+    std::map<std::string, std::set<std::string>>;  // producer -> output formats
+using DefaultOutputFormats =
+    std::map<std::string, std::string>;            // producer -> default output format
 using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
 using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // producer -> keywords
 using AviCollections = std::list<AviCollection>;

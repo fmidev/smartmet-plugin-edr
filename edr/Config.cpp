@@ -376,6 +376,27 @@ void Config::parse_config_output_formats()
             itsSupportedOutputFormats[producer].insert(overrides[j]);
         }
       }
+
+      if (itsConfig.exists("output_formats.default_output_format"))
+      {
+        std::string defaultFormat;
+        itsConfig.lookupValue("output_formats.default_output_format",defaultFormat);
+        itsDefaultOutputFormats[DEFAULT_OUTPUT_FORMAT] = defaultFormat;
+      }
+
+      if (itsConfig.exists("output_formats.output_format_override"))
+      {
+        const libconfig::Setting &overriddenDefaultFormats =
+            itsConfig.lookup("output_formats.output_format_override");
+
+        for (int i = 0; i < overriddenDefaultFormats.getLength(); i++)
+        {
+          std::string producer = overriddenDefaultFormats[i].getName();
+          std::string defaultFormat;
+          itsConfig.lookupValue("output_formats.output_format_override." + producer,defaultFormat);
+          itsDefaultOutputFormats[producer] = defaultFormat;
+        }
+      }
     }
 
     if (itsSupportedOutputFormats.find(DEFAULT_OUTPUT_FORMATS) == itsSupportedOutputFormats.end())
@@ -383,6 +404,9 @@ void Config::parse_config_output_formats()
       itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(COVERAGE_JSON_FORMAT);
       itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(GEO_JSON_FORMAT);
     }
+
+    if (itsDefaultOutputFormats.find(DEFAULT_OUTPUT_FORMAT) == itsDefaultOutputFormats.end())
+      itsDefaultOutputFormats[DEFAULT_OUTPUT_FORMAT] = COVERAGE_JSON_FORMAT;
   }
   catch (const libconfig::SettingNotFoundException &e)
   {
@@ -769,24 +793,6 @@ void Config::parse_config_avi_collections()
     int period_length = 30;
     if (itsConfig.exists("avi.period_length"))
       itsConfig.lookupValue("avi.period_length", period_length);
-
-    // BRAINSTORM-3287
-    //
-    if (itsConfig.exists("avi.default_format"))
-    {
-      itsConfig.lookupValue("avi.default_format", itsDefaultAviFormat);
-
-      if (
-          (itsDefaultAviFormat != COVERAGE_JSON_FORMAT) &&
-          (itsDefaultAviFormat != GEO_JSON_FORMAT) &&
-          (itsDefaultAviFormat != TAC_FORMAT) &&
-          (itsDefaultAviFormat != IWXXM_FORMAT) &&
-          (itsDefaultAviFormat != IWXXMZIP_FORMAT)
-         )
-        throw Fmi::Exception(BCP,
-                             "Configuration file error. avi.default_format must be "
-                             "CoverageJSON, GeoJSON, TAC, IWXXM or IWXXMZIP");
-    }
 
     // BRAINSTORM-3284
     //

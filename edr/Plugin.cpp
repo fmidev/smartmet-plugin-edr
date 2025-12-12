@@ -830,6 +830,7 @@ void Plugin::updateMetaData(bool initial_phase)
     const auto* parameter_info = &itsConfigParameterInfo;
     const auto& data_queries = itsConfig.allSupportedDataQueries();
     const auto& output_formats = itsConfig.allSupportedOutputFormats();
+    const auto& default_formats = itsConfig.allDefaultOutputFormats();
     const auto& collection_info_container = itsConfig.getCollectionInfo();
     auto observation_period = itsConfig.getObservationPeriod();
 
@@ -839,6 +840,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                 collection_info_container,
                                                 data_queries,
                                                 output_formats,
+                                                default_formats,
                                                 itsSupportedLocations);
     engine_meta_data->addMetaData(SourceEngine::Querydata, qengine_metadata);
     if (!itsConfig.gridEngineDisabled())
@@ -849,6 +851,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                         collection_info_container,
                                                         data_queries,
                                                         output_formats,
+                                                        default_formats,
                                                         itsSupportedLocations);
 
       engine_meta_data->addMetaData(SourceEngine::Grid, grid_engine_metadata);
@@ -874,6 +877,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                       collection_info_container,
                                                       data_queries,
                                                       output_formats,
+                                                      default_formats,
                                                       itsSupportedLocations,
                                                       itsConfig.getProducerParameters(),
                                                       observation_period);
@@ -891,6 +895,7 @@ void Plugin::updateMetaData(bool initial_phase)
                                                       collection_info_container,
                                                       data_queries,
                                                       output_formats,
+                                                      default_formats,
                                                       itsSupportedLocations);
       engine_meta_data->addMetaData(SourceEngine::Avi, avi_engine_metadata);
     }

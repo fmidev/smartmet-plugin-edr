@@ -19,6 +19,7 @@ namespace EDR
 {
 #define DEFAULT_DATA_QUERIES "default_data_queries"
 #define DEFAULT_OUTPUT_FORMATS "default_output_formats"
+#define DEFAULT_OUTPUT_FORMAT "default_output_format"
 #define DEFAULT_LOCATIONS_KEYWORD "synop_fi"
 #define DEFAULT_PRODUCER_KEY "default"
 

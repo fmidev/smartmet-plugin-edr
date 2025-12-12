@@ -44,6 +44,10 @@ class Config : private boost::noncopyable
   {
     return itsSupportedOutputFormats;
   }
+  const DefaultOutputFormats &allDefaultOutputFormats() const
+  {
+    return itsDefaultOutputFormats;
+  }
   unsigned int getObservationPeriod() const { return itsObservationPeriod; }
   const SupportedDataQueries &allSupportedDataQueries() const { return itsSupportedDataQueries; }
   const std::set<std::string> &getSupportedOutputFormats(const std::string &producer) const;
@@ -73,7 +77,6 @@ class Config : private boost::noncopyable
   const libconfig::Config &config() const { return itsConfig; }
   Engine::Gis::PostGISIdentifierVector getPostGISIdentifiers() const;
 
-  std::string defaultAviFormat() const { return itsDefaultAviFormat; }
   std::string aviTmpPath() const { return itsAviTmpPath; }
   bool        excludeAviSPECI()  const { return itsExcludeAviSPECI; }
 
@@ -113,7 +116,6 @@ class Config : private boost::noncopyable
   std::vector<std::string> itsParameterAliasFiles;
   std::vector<uint> itsDefaultGridGeometries;
 
-  std::string itsDefaultAviFormat = IWXXMZIP_FORMAT;
   std::string itsAviTmpPath = "/var/tmp";
   bool        itsExcludeAviSPECI  = true;
 
@@ -134,7 +136,8 @@ class Config : private boost::noncopyable
   unsigned long long itsMaxTimeSeriesCacheSize = 10000;
   SmartMet::TimeSeries::RequestLimits itsRequestLimits;
 
-  SupportedOutputFormats itsSupportedOutputFormats;  // producer->output format
+  SupportedOutputFormats itsSupportedOutputFormats;  // producer->output formats
+  DefaultOutputFormats itsDefaultOutputFormats;      // producer->default output format
   SupportedDataQueries itsSupportedDataQueries;      // producer->queries
   ProducerKeywords itsProducerKeywords;              // producer->keywords
 

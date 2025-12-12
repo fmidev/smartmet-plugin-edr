@@ -158,6 +158,7 @@ Json::Value get_data_queries(const std::string &host,
                              const std::string &producer,
                              const std::set<std::string> &data_query_set,
                              const std::set<std::string> &output_format_set,
+                             const std::string &default_output_format,
                              bool levels_exist,
                              bool instances_exist,
                              const std::string &instance_id = "")
@@ -296,7 +297,7 @@ Json::Value get_data_queries(const std::string &host,
     for (const auto &f : output_format_set)
       query_info_output_formats[i++] = Json::Value(f);
     query_info_variables["output_formats"] = query_info_output_formats;
-    query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
+    query_info_variables["default_output_format"] = Json::Value(default_output_format);
 
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
@@ -332,7 +333,7 @@ Json::Value get_data_queries(const std::string &host,
     unsigned int i = 0;
     for (const auto &f : output_format_set)
       query_info_output_formats[i++] = Json::Value(f);
-    query_info_variables["default_output_format"] = Json::Value("CoverageJSON");
+    query_info_variables["default_output_format"] = Json::Value(default_output_format);
 
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
@@ -1261,6 +1262,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd, const 
                                                   producer,
                                                   emd.data_queries,
                                                   emd.output_formats,
+                                                  emd.default_output_format,
                                                   !emd.vertical_extent.levels.empty(),
                                                   false,
                                                   instance_id);
@@ -1453,6 +1455,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                producer,
                                                collection_emd.data_queries,
                                                collection_emd.output_formats,
+                                               collection_emd.default_output_format,
                                                !collection_emd.vertical_extent.levels.empty(),
                                                instances_exist);
 
