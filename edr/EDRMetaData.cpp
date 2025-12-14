@@ -868,38 +868,70 @@ bool parse_merged_time_periods(const std::vector<TimePeriod> &time_periods,
 {
   try
   {
-    if (first_period_length != tp_current.length() || i == time_periods.size() - 1)
+    // BRAINSTORM-3310
+    //
+    // If multiple_periods -check below is omitted, merging what can be merged unless max number
+    // of periods is reached. Otherwise giving up on first single period having varying length
+    // (original logic)
+    //
+    // Note: last period has the same start and end time which is the same as the end time of
+    //       the previous (second last) period; use the same length to merge to second last
+    //       period and increase it's timesteps by 1
+    //
+    bool lastPeriod = (i == (time_periods.size() - 1));
+    auto timesteps = lastPeriod
+                     ? ((tp.getEndTime() - tp.getStartTime()).total_seconds() / first_period_length)
+                     : 0;
+    bool sameLength = (lastPeriod && (timesteps > 1))
+                      ? true
+                      : (first_period_length == tp_current.length());
+
+    if (
+        (! sameLength) &&
+        (/*(! multiple_periods) ||*/ (merged_time_periods.size() >= MAX_TIME_PERIODS))
+       )
     {
-      if (multiple_periods)
-      {
-        if (i == time_periods.size() - 1)
-          tp.setEndTime(tp_current.getEndTime());
-        edr_temporal_extent_period etep;
-        etep.start_time = tp.getStartTime();
-        etep.end_time = tp.getEndTime();
-        etep.timestep = first_period_length / 60;  // seconds to minutes
-        etep.timesteps = ((etep.end_time - etep.start_time).total_seconds() / first_period_length);
-        merged_time_periods.push_back(etep);
-        multiple_periods = false;
-      }
-      else
-      {
-        merged_time_periods.clear();
-        return true;
-      }
-      i++;
-      if (i < time_periods.size() - 1)
-      {
-        tp = time_periods.at(i);
-        first_period_length = tp.length();
-      }
+      merged_time_periods.clear();
+      return true;
     }
-    else
+
+    if ((multiple_periods = sameLength))
     {
       tp.setEndTime(tp_current.getEndTime());
-      multiple_periods = true;
+
+      if (! lastPeriod)
+        return false;
     }
-    return false;
+
+    uint pushCount = (multiple_periods ? 1 : (lastPeriod ? 2 : 1));
+
+    for (uint pc = 0; (pc < pushCount); pc++)
+    {
+      edr_temporal_extent_period etep;
+      etep.start_time = tp.getStartTime();
+      etep.end_time = tp.getEndTime();
+      etep.timestep = first_period_length / 60;  // seconds to minutes
+
+      if (first_period_length > 0)
+      {
+        // If last period is merged, include it in timesteps
+        //
+        // e.g. input hours 00-01,01-02,02-02 ==> R3, not (2-0)/3600 (==> R2)
+        //
+        etep.timesteps =
+          ((etep.end_time - etep.start_time).total_seconds() / first_period_length) +
+          (multiple_periods ? 1 : 0);
+      }
+      else
+        etep.timesteps = 1;
+
+      merged_time_periods.push_back(etep);
+
+      tp = time_periods.at(i);
+      first_period_length = tp.length();
+    }
+
+    return ((multiple_periods = false));
   }
   catch (...)
   {
@@ -1045,8 +1077,6 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
     SmartMet::Engine::Avi::QueryOptions queryOptions;
 
-    queryOptions.itsDistinctMessages = true;
-
     AviMetaData amd(aviCollection.getBBox(),
                     aviCollection.getName(),
                     aviCollection.getMessageTypes(),
@@ -1072,7 +1102,13 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
     queryOptions.itsTimeOptions.itsEndTime = "timestamptz '" + endTime + "Z'";
     queryOptions.itsTimeOptions.itsTimeFormat = "iso";
-    queryOptions.itsDistinctMessages = true;
+    //
+    // Do not query distinct, it pulls in message field in aviengine to use it for sorting
+    //
+    // More rows (from different message routes) are returned but less data is fetched from
+    // database and sorting is made by icao code and message id, message is not used
+    //
+    queryOptions.itsDistinctMessages = false;
     queryOptions.itsMaxMessageStations = -1;
     queryOptions.itsMaxMessageRows = -1;
     queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
