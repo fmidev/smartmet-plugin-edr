@@ -93,7 +93,15 @@ class Value
   std::string toStyledString(bool pretty) const;
   void append(const Value &value);
   std::size_t size() const { return data_value_vector.size(); }
-  bool isNull() const { return (valueType == ValueType::nullValue); }
+  bool isNullOrEmpty() const {
+    // We count on just-constructed Json::Value() with no contents (even empty)
+    // if data query did not return anything (key_map is assumed to be empty too)
+    //
+    return (
+            (valueType == ValueType::nullValue) && data_value_vector.empty() &&
+            values.empty() && children.empty()
+           );
+  }
 
   using ValueVectorType = std::vector<Value>;
   using const_iterator = ValueVectorType::const_iterator;
