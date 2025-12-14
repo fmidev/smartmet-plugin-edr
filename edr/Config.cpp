@@ -342,10 +342,20 @@ void Config::parse_config_data_queries()
   }
 }
 
+const std::set<std::string> &allSupportedFormats()
+{
+  static std::set<std::string> supportedFormats = {
+    "CoverageJSON", "GeoJSON", "IWXXM", "IWXXMZIP", "TAC"
+  };
+  return supportedFormats;
+}
+
 void Config::parse_config_output_formats()
 {
   try
   {
+    auto supportedFormats = allSupportedFormats();
+
     if (itsConfig.exists("output_formats"))
     {
       if (itsConfig.exists("output_formats.default"))
@@ -355,7 +365,13 @@ void Config::parse_config_output_formats()
           throw Fmi::Exception(BCP,
                                "Configured value of 'output_formats.default' must be an array");
         for (int i = 0; i < defaultOutputFormats.getLength(); i++)
-          itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(defaultOutputFormats[i]);
+        {
+          std::string format = defaultOutputFormats[i];
+          if (supportedFormats.find(format) == supportedFormats.end())
+            throw Fmi::Exception(BCP, "Default output format '" + format + "' is not supported");
+
+          itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(format);
+        }
       }
 
       if (itsConfig.exists("output_formats.override"))
@@ -373,7 +389,13 @@ void Config::parse_config_output_formats()
                                  "Configured overridden output_formats for "
                                  "producer must be an array");
           for (int j = 0; j < overrides.getLength(); j++)
-            itsSupportedOutputFormats[producer].insert(overrides[j]);
+          {
+            std::string format = overrides[j];
+            if (supportedFormats.find(format) == supportedFormats.end())
+              throw Fmi::Exception(BCP, "Override output format '" + format + "' is not supported");
+
+            itsSupportedOutputFormats[producer].insert(format);
+          }
         }
       }
 
@@ -1019,6 +1041,95 @@ void Config::parse_config_collection_info()
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Parse license
+ */
+// ----------------------------------------------------------------------
+
+License Config::parse_config_license(const std::string &path, const std::string &setting)
+{
+  try
+  {
+    License license;
+    std::string licenseName = path + "." + setting;
+
+    if (itsConfig.exists(licenseName))
+    {
+      const libconfig::Setting &setting = itsConfig.lookup(licenseName);
+      if (! setting.isGroup())
+        throw Fmi::Exception(BCP,
+                             "Configured value of '" + licenseName + "' must be an object");
+
+      std::string fieldName, fieldValue;
+
+      for (int i = 0; (i < setting.getLength()); i++)
+      {
+        fieldName = setting[i].getName();
+        itsConfig.lookupValue(licenseName + "." + fieldName, fieldValue);
+
+        license.insert(make_pair(fieldName, fieldValue));
+      }
+    }
+
+    return license;
+  }
+  catch (const libconfig::SettingNotFoundException &e)
+  {
+    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+void Config::parse_config_licenses()
+{
+  static const License defaultLicense = {
+    { "href",     "https://creativecommons.org/licenses/by/4.0/" },
+    { "hreflang", "en" },
+    { "rel",      "license" },
+    { "type",     "text/html" }
+  };
+
+  try
+  {
+    if (itsConfig.exists("license"))
+    {
+      if (itsConfig.exists("license.default"))
+        itsProducerLicenses[DEFAULT_LICENSE] = parse_config_license("license", "default");
+
+      if (itsConfig.exists("license.override"))
+      {
+        const libconfig::Setting &overriddenLicenses = itsConfig.lookup("license.override");
+
+        if (! overriddenLicenses.isGroup())
+          throw Fmi::Exception(BCP, "Configured value of 'license.override' must be an object");
+
+        for (int i = 0; (i < overriddenLicenses.getLength()); i++)
+        {
+          std::string producer = overriddenLicenses[i].getName();
+          itsProducerLicenses[producer] = parse_config_license("license.override", producer);
+        }
+      }
+    }
+
+    if (itsProducerLicenses.find(DEFAULT_LICENSE) == itsProducerLicenses.end())
+    {
+      itsProducerLicenses[DEFAULT_LICENSE] = defaultLicense;
+    }
+  }
+  catch (const libconfig::SettingNotFoundException &e)
+  {
+    throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting path", e.getPath());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Constructor
  */
 // ----------------------------------------------------------------------
@@ -1109,6 +1220,8 @@ Config::Config(const string &configfile)
 
     itsConfig.lookupValue("cache.timeseries_size", itsMaxTimeSeriesCacheSize);
     itsFormatterOptions = Spine::TableFormatterOptions(itsConfig);
+
+    parse_config_licenses();
 
     parse_config_precisions();
 

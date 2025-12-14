@@ -241,6 +241,7 @@ bool extract_temporal_extent_periods(
 }
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
+                                        const ProducerLicenses &licenses,
                                         const std::string &default_language,
                                         const ParameterInfo *pinfo,
                                         const CollectionInfoContainer &cic,
@@ -345,6 +346,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 }
 
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
+                                          const ProducerLicenses &licenses,
                                           const std::string &default_language,
                                           const ParameterInfo *pinfo,
                                           const CollectionInfoContainer &cic,
@@ -643,6 +645,7 @@ void process_parameters(const std::string &producer,
 
 EDRProducerMetaData get_edr_metadata_obs(
     Engine::Observation::Engine &obsEngine,
+    const ProducerLicenses &licenses,
     const std::string &default_language,
     const ParameterInfo *pinfo,
     const std::map<std::string, const Engine::Observation::ObservableProperty *>
@@ -1315,6 +1318,7 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const Config &config,
+                                         const ProducerLicenses &licenses,
                                          const std::string &default_language,
                                          const ParameterInfo *pinfo,
                                          const CollectionInfoContainer &cic,

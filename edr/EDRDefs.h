@@ -34,6 +34,8 @@ using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // p
 using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // producer -> keywords
 using AviCollections = std::list<AviCollection>;
 using APISettings = std::map<std::string, std::string>;
+using License = std::map<std::string, std::string>;
+using ProducerLicenses = std::map<std::string, License>;  // producer -> license
 
 enum class SourceEngine
 {

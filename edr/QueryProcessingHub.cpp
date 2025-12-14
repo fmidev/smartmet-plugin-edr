@@ -342,8 +342,9 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state,
   {
     // Atomic copy of metadata
     auto metadata = state.getPlugin().itsMetaData.load();
+    auto licenses = state.getPlugin().itsConfig.allProducerLicenses();
 
-    return CoverageJson::parseEDRMetaData(edr_query, *metadata);
+    return CoverageJson::parseEDRMetaData(edr_query, *metadata, licenses);
   }
   catch (...)
   {
@@ -703,7 +704,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                           masterquery.coordinateFilter(),
                                                           masterquery.poptions.parameters(),
                                                           producer == SOUNDING_PRODUCER);
-      table.set(0, 0, (result.isNull() ? "" : result.toStyledString(state.pretty())));
+      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }
     else if (masterquery.output_format == GEO_JSON_FORMAT)
     {
@@ -713,7 +714,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      masterquery.levels,
                                                      masterquery.coordinateFilter(),
                                                      masterquery.poptions.parameters());
-      table.set(0, 0, (result.isNull() ? "" : result.toStyledString(state.pretty())));
+      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }
 
     return {};

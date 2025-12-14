@@ -137,6 +137,7 @@ using EDRProducerMetaData =
     std::map<std::string, std::vector<EDRMetaData>>;  // producer-> meta data
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine& qEngine,
+                                        const ProducerLicenses &licenses,
                                         const std::string& default_language,
                                         const ParameterInfo* pinfo,
                                         const CollectionInfoContainer& cic,
@@ -145,6 +146,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine& qEngine
                                         const DefaultOutputFormats &defs,
                                         const SupportedProducerLocations& spl);
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
+                                          const ProducerLicenses &licenses,
                                           const std::string& default_language,
                                           const ParameterInfo* pinfo,
                                           const CollectionInfoContainer& cic,
@@ -155,6 +157,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
 #ifndef WITHOUT_OBSERVATION
 EDRProducerMetaData get_edr_metadata_obs(
     Engine::Observation::Engine& obsEngine,
+    const ProducerLicenses &licenses,
     const std::string& default_language,
     const ParameterInfo* pinfo,
     const std::map<std::string, const SmartMet::Engine::Observation::ObservableProperty*>&
@@ -171,6 +174,7 @@ EDRProducerMetaData get_edr_metadata_obs(
 class Config;
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
                                          const Config &config,
+                                         const ProducerLicenses &licenses,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
                                          const CollectionInfoContainer& cic,

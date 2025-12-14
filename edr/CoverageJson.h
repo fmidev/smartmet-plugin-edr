@@ -22,7 +22,8 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              const std::vector<Spine::Parameter> &query_parameters,
                              bool useDataLevels);
 
-Json::Value parseEDRMetaData(const EDRQuery &edr_query, const EngineMetaData &emd);
+Json::Value parseEDRMetaData(
+  const EDRQuery &edr_query, const EngineMetaData &emd, const ProducerLicenses &licenses);
 Json::Value reportError(int code, const std::string &description);
 
 }  // namespace CoverageJson

@@ -44,10 +44,8 @@ class Config : private boost::noncopyable
   {
     return itsSupportedOutputFormats;
   }
-  const DefaultOutputFormats &allDefaultOutputFormats() const
-  {
-    return itsDefaultOutputFormats;
-  }
+  const DefaultOutputFormats &allDefaultOutputFormats() const { return itsDefaultOutputFormats; }
+  const ProducerLicenses &allProducerLicenses() const { return itsProducerLicenses; }
   unsigned int getObservationPeriod() const { return itsObservationPeriod; }
   const SupportedDataQueries &allSupportedDataQueries() const { return itsSupportedDataQueries; }
   const std::set<std::string> &getSupportedOutputFormats(const std::string &producer) const;
@@ -140,6 +138,7 @@ class Config : private boost::noncopyable
   DefaultOutputFormats itsDefaultOutputFormats;      // producer->default output format
   SupportedDataQueries itsSupportedDataQueries;      // producer->queries
   ProducerKeywords itsProducerKeywords;              // producer->keywords
+  ProducerLicenses itsProducerLicenses;              // producer->license
 
   bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
@@ -171,6 +170,8 @@ class Config : private boost::noncopyable
   void parse_config_collection_info();
   void process_collection_info(SourceEngine source_engine);
   void parse_visible_collections(const SourceEngine &source_engine);
+  License parse_config_license(const std::string &path, const std::string &setting);
+  void parse_config_licenses();
 
 };  // class Config
 

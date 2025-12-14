@@ -826,6 +826,7 @@ void Plugin::updateMetaData(bool initial_phase)
   {
     std::shared_ptr<EngineMetaData> engine_meta_data(std::make_shared<EngineMetaData>());
 
+    const auto& producer_licenses = itsConfig.allProducerLicenses();
     const auto& default_language = itsConfig.defaultLanguage();
     const auto* parameter_info = &itsConfigParameterInfo;
     const auto& data_queries = itsConfig.allSupportedDataQueries();
@@ -835,6 +836,7 @@ void Plugin::updateMetaData(bool initial_phase)
     auto observation_period = itsConfig.getObservationPeriod();
 
     auto qengine_metadata = get_edr_metadata_qd(*itsEngines.qEngine,
+                                                producer_licenses,
                                                 default_language,
                                                 parameter_info,
                                                 collection_info_container,
@@ -846,6 +848,7 @@ void Plugin::updateMetaData(bool initial_phase)
     if (!itsConfig.gridEngineDisabled())
     {
       auto grid_engine_metadata = get_edr_metadata_grid(*itsEngines.gridEngine,
+                                                        producer_licenses,
                                                         default_language,
                                                         parameter_info,
                                                         collection_info_container,
@@ -871,6 +874,7 @@ void Plugin::updateMetaData(bool initial_phase)
       }
 
       auto obs_engine_metadata = get_edr_metadata_obs(*itsEngines.obsEngine,
+                                                      producer_licenses,
                                                       default_language,
                                                       parameter_info,
                                                       itsObservablePropertiesMap,
@@ -890,6 +894,7 @@ void Plugin::updateMetaData(bool initial_phase)
     {
       auto avi_engine_metadata = get_edr_metadata_avi(*itsEngines.aviEngine,
                                                       itsConfig,
+                                                      producer_licenses,
                                                       default_language,
                                                       parameter_info,
                                                       collection_info_container,
