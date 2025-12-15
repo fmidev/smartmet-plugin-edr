@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.12.14
+Version: 25.12.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -50,7 +50,7 @@ BuildRequires: smartmet-library-timeseries-devel >= 25.12.9
 BuildRequires: smartmet-engine-avi-devel >= 25.12.10
 BuildRequires: smartmet-engine-geonames-devel >= 25.12.2
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 25.12.2
+BuildRequires: smartmet-engine-observation-devel >= 25.12.15
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
 BuildRequires: smartmet-engine-gis-devel >= 25.9.29
@@ -94,7 +94,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 25.9.29
 #TestRequires: smartmet-engine-querydata >= 25.9.17
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 25.12.2
+#TestRequires: smartmet-engine-observation >= 25.12.15
 %endif
 #TestRequires: smartmet-engine-grid >= 25.11.27
 #TestRequires: gdal310-libs
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Dec 15 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.15-1.fmi
+- Do not check/filter in avi collection metadata query if messages were created before the given query / message time and do not limit query with publication time window for TAFs (BRAINSTORM-3321, BRAINSTORM-3300)
+
 * Sun Dec 14 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.14-1.fmi
 - Various changes and fixes; e.g. added default output format and license configuration (BRAINSTORM-3315, BRAINSTORM-3312), returning http 204 on empty query result (BRAINSTORM-3317) and changes/fixes to merging and output of temporal extent period repeating interval (BRAINSTORM-3310, BRAINSTORM-3314)
 
