@@ -1123,6 +1123,13 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     if ((! queryOptions.itsExcludeSPECIs) && (queryOptions.itsMessageTypes.front() == "METAR"))
       queryOptions.itsMessageTypes.push_back("SPECI");
 
+    // BRAINSTORM-3300
+    //
+    // Do not check/filter if messages were created after the given messagetime and
+    // do not apply message query time restrictions (used for TAFs)
+    //
+    queryOptions.itsTimeOptions.itsMessageTimeChecks = false;
+
     auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
 
     std::set<Fmi::LocalDateTime> timesteps;
