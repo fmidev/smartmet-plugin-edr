@@ -89,6 +89,8 @@ struct edr_temporal_extent
   std::set<int> time_steps;
 };
 
+typedef std::map<std::string, edr_temporal_extent> StationTemporalExtentMetaData;
+
 struct edr_vertical_extent
 {
   edr_vertical_extent() : vrs("Vertical Reference System") {}
@@ -106,6 +108,7 @@ struct EDRMetaData
   edr_vertical_extent vertical_extent;
 
   Engine::Observation::StationMetaData stationMetaData;
+  StationTemporalExtentMetaData stationTemporalExtentMetaData;
 
   std::set<std::string> parameter_names;
   std::map<std::string, edr_parameter> parameters;

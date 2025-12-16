@@ -2986,6 +2986,20 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
           }
           catch (...) {}
         }
+        else if (edr_md->isAviProducer())
+        {
+          // BRAINSTORM-3320
+          //
+          // Station's temporal extent, varies e.g. for taf collection
+          //
+          auto it = edr_md->stationTemporalExtentMetaData.find(loc.id);
+
+          if (it != edr_md->stationTemporalExtentMetaData.end())
+          {
+            start_time = it->second.time_periods.front().start_time;
+            end_time = it->second.time_periods.back().end_time;
+          }
+        }
         else
         {
           start_time = loc.start_time;

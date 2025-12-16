@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.12.15
+Version: 25.12.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Dec 16 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.16-1.fmi
+- Store avi collection station temporal extents too since they vary e.g. for taf -collection (BRAINSTORM-3320)
+
 * Mon Dec 15 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.15-1.fmi
 - Do not check/filter in avi collection metadata query if messages were created before the given query / message time and do not limit query with publication time window for TAFs (BRAINSTORM-3321, BRAINSTORM-3300)
 

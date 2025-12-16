@@ -1066,15 +1066,14 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
                                 const AviMetaData &amd,
                                 SmartMet::Engine::Avi::QueryOptions &queryOptions);
 
-edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
-                                         const Config &config,
-                                         const std::string &message_type,
-                                         const AviCollection &aviCollection)
+void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
+                          const Config &config,
+                          const std::string &message_type,
+                          const AviCollection &aviCollection,
+                          EDRMetaData &edrMetaData)
 {
   try
   {
-    edr_temporal_extent ret;
-
     SmartMet::Engine::Avi::QueryOptions queryOptions;
 
     AviMetaData amd(aviCollection.getBBox(),
@@ -1083,6 +1082,7 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
                     aviCollection.getLocationCheck());
     setAviQueryLocationOptions(aviCollection, amd, queryOptions);
 
+    queryOptions.itsParameters.push_back("icao");
     queryOptions.itsParameters.push_back("messagetime");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Validity::Accepted;
@@ -1132,23 +1132,37 @@ edr_temporal_extent getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
 
     auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
 
-    std::set<Fmi::LocalDateTime> timesteps;
+    // BRAINSTORM-3320
+    //
+    // Storing station's temporal extent too, varies e.g. for taf collection
+    //
+    std::set<Fmi::LocalDateTime> timesteps, stationTimesteps;
     for (auto stationId : aviData.itsStationIds)
     {
+      auto icaoIter = aviData.itsValues[stationId]["icao"].cbegin();
+      auto icao = std::get<std::string>(*icaoIter);
       auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
+      auto endIter = aviData.itsValues[stationId]["messagetime"].cend();
 
-      while (timeIter != aviData.itsValues[stationId]["messagetime"].end())
+      while (timeIter != endIter)
       {
         Fmi::LocalDateTime timestep = std::get<Fmi::LocalDateTime>(*timeIter);
 
         timesteps.insert(timestep);
+        stationTimesteps.insert(timestep);
+
         timeIter++;
       }
+
+      auto temporal_extent = get_temporal_extent(stationTimesteps);
+      edrMetaData.stationTemporalExtentMetaData.insert(make_pair(icao, temporal_extent));
+
+      stationTimesteps.clear();
     }
 
-    ret = get_temporal_extent(timesteps);
+    edrMetaData.temporal_extent = get_temporal_extent(timesteps);
 
-    return ret;
+    return;
   }
   catch (...)
   {
@@ -1408,8 +1422,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
 
       const AviCollection &avi_collection = get_avi_collection(producer, aviCollections);
 
-      edrMetaData.temporal_extent =
-          getAviTemporalExtent(aviEngine, config, producer, avi_collection);
+      getAviTemporalExtent(aviEngine, config, producer, avi_collection, edrMetaData);
 
       for (const auto &p : amd.getParameters())
       {
