@@ -3022,6 +3022,32 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       feature["properties"] = properties;
       features[features.size()] = feature;
     }
+
+    if (edr_md->isAviProducer() && (edr_md->locations->size() > 0))
+    {
+      auto all = Json::Value(Json::ValueType::objectValue);
+      all["id"] = "all";
+      all["type"] = "Feature";
+
+      auto bbox = Json::Value(Json::ValueType::arrayValue);
+      bbox[0] = Json::Value(edr_md->spatial_extent.bbox_xmin);
+      bbox[1] = Json::Value(edr_md->spatial_extent.bbox_ymin);
+      bbox[2] = Json::Value(edr_md->spatial_extent.bbox_xmax);
+      bbox[3] = Json::Value(edr_md->spatial_extent.bbox_ymax);
+      all["bbox"] = bbox;
+
+      auto properties = Json::Value(Json::ValueType::objectValue);
+      auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
+      auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
+      properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
+                                           Fmi::to_iso_extended_string(end_time) + "Z");
+      properties["detail"] = "Id is special location";
+      properties["name"] = "Special logical selector representing all collection locations";
+      all["properties"] = properties;
+
+      features[features.size()] = all;
+    }
+
     result["features"] = features;
 
     return result;
