@@ -127,6 +127,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Thu Dec 18 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.18-1.fmi
 - Changes to SIGMET query logic (BRAINSTORM-3325)
+- Added special location 'all' to returned avi collection metadata (BRAINSTORM-3326)
 
 * Tue Dec 16 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.16-1.fmi
 - Store avi collection station temporal extents too since they vary e.g. for taf -collection (BRAINSTORM-3320)
