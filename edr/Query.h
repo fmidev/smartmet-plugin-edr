@@ -109,6 +109,7 @@ class Query : public ObsQueryParams, public EDRQueryParams
   bool debug = false;
   bool starttimeOptionGiven;
   bool endtimeOptionGiven;
+  bool useCurrentTime = false;
   bool timeAggregationRequested;
   std::string forecastSource;
   T::AttributeList attributeList;

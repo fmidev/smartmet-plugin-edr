@@ -305,7 +305,20 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     // Do not check/filter if messages were created after the given messagetime and
     // do not apply message query time restrictions (used for TAFs)
     //
+    // itsUseCurrentTime is set when fetching latest messages; itsObservationTime was set
+    // whether the user provided the time or not (in which case the current time was used) and
+    // SIGMETs are fetched differently depending on if the time is given by the user or not
+    //
+    // When fetching SIGMETs with time range message validity is not taken ínto account
+    //
     queryOptions.itsTimeOptions.itsMessageTimeChecks = false;
+    queryOptions.itsTimeOptions.itsUseCurrentTime = query.useCurrentTime;
+
+    if ((producer == SIGMET) && hasStartTime && hasEndTime)
+    {
+      queryOptions.itsTimeOptions.itsQueryValidRangeMessages = false;
+      queryOptions.itsTimeOptions.itsClosedTimeRange = true;
+    }
 
     // BRAINSTORM-3288
     //

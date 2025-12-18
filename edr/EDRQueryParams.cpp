@@ -926,7 +926,10 @@ void EDRQueryParams::parseDateTime(
         // to current time for others
 
         if (emd.isAviProducer())
+        {
           datetime = Fmi::SecondClock::universal_time().to_iso_string();
+          req.addParameter("usecurrenttime", "1");
+        }
         else
           datetime = nearestTimeNow(emd);
       }

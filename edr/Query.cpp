@@ -160,6 +160,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       debug(false),
       starttimeOptionGiven(false),
       endtimeOptionGiven(false),
+      useCurrentTime(false),
       timeAggregationRequested(false)
 
 {
@@ -249,6 +250,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
     starttimeOptionGiven = (!!req.getParameter("starttime") || !!req.getParameter("now"));
     std::string endtime = Spine::optional_string(req.getParameter("endtime"), "");
     endtimeOptionGiven = (endtime != "now");
+    useCurrentTime = (!!req.getParameter("usecurrenttime"));
 
     debug = Spine::optional_bool(req.getParameter("debug"), false);
 
