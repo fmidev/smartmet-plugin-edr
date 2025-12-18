@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.12.16
+Version: 25.12.18
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -47,7 +47,7 @@ BuildRequires: smartmet-library-grid-files-devel >= 25.11.27
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
 BuildRequires: smartmet-library-gis-devel >= 25.12.2
 BuildRequires: smartmet-library-timeseries-devel >= 25.12.9
-BuildRequires: smartmet-engine-avi-devel >= 25.12.10
+BuildRequires: smartmet-engine-avi-devel >= 25.12.18
 BuildRequires: smartmet-engine-geonames-devel >= 25.12.2
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 25.12.15
@@ -69,7 +69,7 @@ Requires: smartmet-library-spine >= 25.12.12
 Requires: smartmet-library-timeseries >= 25.12.9
 Requires: smartmet-library-gis >= 25.12.2
 Requires: smartmet-library-grid-files >= 25.11.27
-Requires: smartmet-engine-avi >= 25.12.10
+Requires: smartmet-engine-avi >= 25.12.18
 Requires: smartmet-engine-geonames >= 25.12.2
 Requires: smartmet-engine-querydata >= 25.9.17
 Requires: smartmet-engine-gis >= 25.9.29
@@ -89,7 +89,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-test-data >= 25.8.13
 #TestRequires: smartmet-engine-grid-test >= 25.11.27
 #TestRequires: smartmet-library-gis >= 25.12.2
-#TestRequires: smartmet-engine-avi >= 25.12.10
+#TestRequires: smartmet-engine-avi >= 25.12.18
 #TestRequires: smartmet-engine-geonames >= 25.12.2
 #TestRequires: smartmet-engine-gis >= 25.9.29
 #TestRequires: smartmet-engine-querydata >= 25.9.17
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Dec 18 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.18-1.fmi
+- Changes to SIGMET query logic (BRAINSTORM-3325)
+
 * Tue Dec 16 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.16-1.fmi
 - Store avi collection station temporal extents too since they vary e.g. for taf -collection (BRAINSTORM-3320)
 
