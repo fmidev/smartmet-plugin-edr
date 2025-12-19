@@ -816,25 +816,25 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string &coords)
     {
       // BRAINSTORM-3288
       //
-      // Convert location "all" query to area query using a small buffer (1 km)
+      // Convert location "all" query to area query using a small buffer (0.1 degrees)
+      //
+      // Note: removed initial buffering by adding ":1" to the end of the wkt due to crashes in
+      //       gis -engine since it resulted to 1000 degrees instead of meters. The purpose was
+      //       only to pass on the buffering to avi engine query by later extracting the buffering
+      //       value from the wkt and passing it on to avi -engine as maxdistance
       //
       itsEDRQuery.query_type = EDRQueryType::Area;
 
-      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin) + " ");
-      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin) + ",");
-      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax) + " ");
-      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax) + ",");
+      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin - 0.1) + " ");
+      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin - 0.1) + ",");
+      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax + 0.1) + " ");
+      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax + 0.1) + ",");
 
       coords = "POLYGON((" + xmin + ymin + xmax + ymin + xmax + ymax + xmin + ymax + xmin + ymin;
       coords.pop_back();
       coords += "))";
 
       parseCoords(coords);
-
-      auto wkt = req.getParameter("wkt");
-
-      if (wkt)
-        req.setParameter("wkt", *wkt + ":1");
 
       return;
     }

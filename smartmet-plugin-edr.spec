@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.12.18
+Version: 25.12.19
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Dec 19 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.19-1.fmi
+- Changed initial area buffering used by locations/all query which added ":1" to the end of the wkt due to crashes in gis -engine since it resulted to buffering value of 1000 degrees instead of meters. Now using the bbox by offsetting the corners by 0.1 degrees (BRAINSTORM-3328)
+
 * Thu Dec 18 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.18-1.fmi
 - Changes to SIGMET query logic (BRAINSTORM-3325)
 - Added special location 'all' to returned avi collection metadata (BRAINSTORM-3326)
