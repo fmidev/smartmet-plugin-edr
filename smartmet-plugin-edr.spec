@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 25.12.19
+Version: 25.12.29
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -42,38 +42,38 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 25.12.12
 BuildRequires: smartmet-library-locus-devel >= 25.9.29
 BuildRequires: smartmet-library-macgyver-devel >= 25.12.2
-BuildRequires: smartmet-library-grid-content-devel >= 25.11.27
-BuildRequires: smartmet-library-grid-files-devel >= 25.11.27
+BuildRequires: smartmet-library-grid-content-devel >= 25.12.29
+BuildRequires: smartmet-library-grid-files-devel >= 25.12.29
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
-BuildRequires: smartmet-library-gis-devel >= 25.12.2
-BuildRequires: smartmet-library-timeseries-devel >= 25.12.9
+BuildRequires: smartmet-library-gis-devel >= 25.12.29
+BuildRequires: smartmet-library-timeseries-devel >= 25.12.29
 BuildRequires: smartmet-engine-avi-devel >= 25.12.18
 BuildRequires: smartmet-engine-geonames-devel >= 25.12.2
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 25.12.15
+BuildRequires: smartmet-engine-observation-devel >= 25.12.29
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
+BuildRequires: smartmet-engine-querydata-devel >= 25.12.29
 BuildRequires: smartmet-engine-gis-devel >= 25.9.29
-BuildRequires: smartmet-engine-grid-devel >= 25.11.27
+BuildRequires: smartmet-engine-grid-devel >= 25.12.29
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 25.8.22
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 25.12.2
+Requires: smartmet-library-gis >= 25.12.2999
 Requires: smartmet-library-locus >= 25.9.29
 Requires: smartmet-library-macgyver >= 25.12.2
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-library-spine >= 25.12.12
-Requires: smartmet-library-timeseries >= 25.12.9
-Requires: smartmet-library-gis >= 25.12.2
-Requires: smartmet-library-grid-files >= 25.11.27
+Requires: smartmet-library-timeseries >= 25.12.29
+Requires: smartmet-library-gis >= 25.12.2999
+Requires: smartmet-library-grid-files >= 25.12.29
 Requires: smartmet-engine-avi >= 25.12.18
 Requires: smartmet-engine-geonames >= 25.12.2
-Requires: smartmet-engine-querydata >= 25.9.17
+Requires: smartmet-engine-querydata >= 25.12.29
 Requires: smartmet-engine-gis >= 25.9.29
-Requires: smartmet-engine-grid >= 25.11.27
+Requires: smartmet-engine-grid >= 25.12.29
 Requires: smartmet-server >= 25.12.2
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -87,16 +87,16 @@ Provides: %{SPECNAME}
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 25.6.18
 #TestRequires: smartmet-test-data >= 25.8.13
-#TestRequires: smartmet-engine-grid-test >= 25.11.27
-#TestRequires: smartmet-library-gis >= 25.12.2
+#TestRequires: smartmet-engine-grid-test >= 25.12.29
+#TestRequires: smartmet-library-gis >= 25.12.2999
 #TestRequires: smartmet-engine-avi >= 25.12.18
 #TestRequires: smartmet-engine-geonames >= 25.12.2
 #TestRequires: smartmet-engine-gis >= 25.9.29
-#TestRequires: smartmet-engine-querydata >= 25.9.17
+#TestRequires: smartmet-engine-querydata >= 25.12.29
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 25.12.15
+#TestRequires: smartmet-engine-observation >= 25.12.29
 %endif
-#TestRequires: smartmet-engine-grid >= 25.11.27
+#TestRequires: smartmet-engine-grid >= 25.12.29
 #TestRequires: gdal310-libs
 #TestRequires: libwebp13
 
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Dec 29 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> 25.12.29-1.fmi
+- Repackaged due to API changes
+
 * Fri Dec 19 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> 25.12.19-1.fmi
 - Changed initial area buffering used by locations/all query which added ":1" to the end of the wkt due to crashes in gis -engine since it resulted to buffering value of 1000 degrees instead of meters. Now using the bbox by offsetting the corners by 0.1 degrees (BRAINSTORM-3328)
 
