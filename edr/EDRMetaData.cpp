@@ -523,7 +523,7 @@ std::vector<edr_temporal_extent_period> get_merged_time_periods(
     bool multiple_periods = false;
     for (unsigned int i = 1; i < time_periods.size(); i++)
     {
-      const auto tp_current = time_periods.at(i);
+      const auto &tp_current = time_periods.at(i);
       bool break_here = parse_merged_time_periods(time_periods,
                                                   tp_current,
                                                   tp,
@@ -1394,8 +1394,8 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
   {
     EDRProducerMetaData edrProducerMetaData;
 
-    auto aviCollections = config.getAviCollections();
-    auto aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
+    const auto &aviCollections = config.getAviCollections();
+    const auto &aviMetaData = getAviEngineMetadata(aviEngine, aviCollections, cic);
 
     for (const auto &amd : aviMetaData)
     {

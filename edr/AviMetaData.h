@@ -100,11 +100,11 @@ class AviParameter
 class AviMetaData
 {
  public:
-  AviMetaData(std::optional<AviBBox> theBBox,
+  AviMetaData(const std::optional<AviBBox> &theBBox,
               std::string theProducer,
               std::set<std::string> theMessageTypes,
               bool theLocationCheck)
-      : itsBBox(std::move(theBBox)),
+      : itsBBox(theBBox),
         itsProducer(std::move(theProducer)),
         itsMessageTypes(std::move(theMessageTypes)),
         itsLocationCheck(theLocationCheck)

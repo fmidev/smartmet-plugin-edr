@@ -517,7 +517,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(
       else if (!obsParameters[i].duplicate)
       {
         // add data fields fetched from observation
-        auto result = *observation_result;
+        const auto& result = *observation_result;
 
         // BRAINSTORM-3029; to keep returned result data vs query_parameters indexing intact,
         // store empty parameter results too.

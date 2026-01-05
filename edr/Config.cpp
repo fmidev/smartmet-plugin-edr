@@ -353,7 +353,7 @@ void Config::parse_config_output_formats()
 {
   try
   {
-    auto supportedFormats = allSupportedFormats();
+    const auto &supportedFormats = allSupportedFormats();
 
     if (itsConfig.exists("output_formats"))
     {

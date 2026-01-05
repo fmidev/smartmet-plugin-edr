@@ -31,7 +31,7 @@ std::map<std::string, std::optional<int>> AviMetaData::getGeometryIds() const
 {
   std::map<std::string, std::optional<int>> geometryIds;
 
-  for (auto station : itsStations)
+  for (const auto& station : itsStations)
     geometryIds.insert(make_pair(station.getIcao(), station.getFIRId()));
 
   return geometryIds;

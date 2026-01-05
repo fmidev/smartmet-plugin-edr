@@ -699,8 +699,8 @@ void Query::parse_attr(const Spine::HTTP::Request& theReq)
         splitString(part, ':', list);
         if (list.size() == 2)
         {
-          std::string name = list[0];
-          std::string value = list[1];
+          const std::string& name = list[0];
+          const std::string& value = list[1];
 
           attributeList.addAttribute(name, value);
         }

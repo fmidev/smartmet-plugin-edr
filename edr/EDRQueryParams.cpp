@@ -558,7 +558,7 @@ std::string EDRQueryParams::parseEDRQuery(const State& state,
     // drop off 'extra' uri parts (if any) from the start, leaving an array starting
     // from fixed 'edr' to satisfy parsing of the rest of the uri
 
-    std::string baseUrl = config.defaultUrl();
+    const std::string& baseUrl = config.defaultUrl();
 
     auto pos = resource.find(baseUrl);
     if (pos == std::string::npos)
@@ -876,10 +876,10 @@ void EDRQueryParams::parseCube()
     auto parts = UtilityFunctions::parseBBoxAndZ(bbox, z, zIsRange, zLo, zHi);
     size_t idx = ((parts.size() == 4) ? 2 : 3);
 
-    auto lower_left_x = parts[0];
-    auto lower_left_y = parts[1];
-    auto upper_right_x = parts[idx++];
-    auto upper_right_y = parts[idx++];
+    const auto& lower_left_x = parts[0];
+    const auto& lower_left_y = parts[1];
+    const auto& upper_right_x = parts[idx++];
+    const auto& upper_right_y = parts[idx++];
     auto wkt = ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
                 upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x +
                 " " + lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
@@ -1210,7 +1210,7 @@ void EDRQueryParams::parseICAOCodesAndAviProducer(const EDRMetaData& emd)
     auto icao_ids = req.getParameter("icao");
     if (icao_ids)
     {
-      const std::string icaoreq = *icao_ids;
+      const std::string& icaoreq = *icao_ids;
       std::vector<std::string> parts;
       boost::algorithm::split(parts, icaoreq, boost::algorithm::is_any_of(","));
       icaos.insert(this->icaos.begin(), parts.begin(), parts.end());
