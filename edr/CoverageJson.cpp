@@ -1542,9 +1542,8 @@ void add_values(const TS::TimeSeriesPtr &ts,
   try
   {
     unsigned int values_index = 0;
-    for (unsigned int k = 0; k < ts->size(); k++)
+    for (const auto &timed_value : *ts)
     {
-      const auto &timed_value = ts->at(k);
       add_value(timed_value,
                 values,
                 json_param_object["dataType"],
