@@ -1246,7 +1246,7 @@ Config::Config(const string &configfile)
       parse_config_grid_geometries();
       parse_config_parameter_aliases(configfile);
     }
-    catch (const libconfig::SettingNotFoundException &e)
+    catch (const libconfig::SettingNotFoundException & /* e */)
     {
       // throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting
       // path", e.getPath());
