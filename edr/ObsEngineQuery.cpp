@@ -974,6 +974,7 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
     //
 
     std::vector<TS::TimeSeriesGroupPtr> tsg_vector;
+    tsg_vector.reserve(obsParameters.size());
     for (unsigned int i = 0; i < obsParameters.size(); i++)
       tsg_vector.emplace_back(std::make_shared<TS::TimeSeriesGroup>());
 

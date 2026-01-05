@@ -391,6 +391,7 @@ std::vector<TS::LonLat> get_coordinates(TS::TimeSeriesVectorPtr &tsv,
       throw Fmi::Exception(
           BCP, "Something wrong: latitude_vector.size() != longitude_vector.size()!", nullptr);
 
+    ret.reserve(longitude_vector.size());
     for (unsigned int i = 0; i < longitude_vector.size(); i++)
       ret.emplace_back(longitude_vector.at(i), latitude_vector.at(i));
 

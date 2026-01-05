@@ -24,6 +24,8 @@ std::vector<std::string> get_parameters(const libconfig::Config& config,
     if (!producer_parameters.isArray())
       throw Fmi::Exception(BCP,
                            "Configured value of " + producer_parameter_name + " must be an array!");
+
+    ret.reserve(producer_parameters.getLength());
     for (int j = 0; j < producer_parameters.getLength(); j++)
       ret.push_back(producer_parameters[j]);
 
