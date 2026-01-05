@@ -471,7 +471,8 @@ bool parse_merged_time_periods(const std::vector<TimePeriod> &time_periods,
       return true;
     }
 
-    if ((multiple_periods = sameLength))
+    multiple_periods = sameLength;
+    if (multiple_periods)
     {
       tp.setEndTime(tp_current.getEndTime());
 
