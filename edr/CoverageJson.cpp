@@ -1,9 +1,9 @@
 #include "CoverageJson.h"
 #include "UtilityFunctions.h"
-#include <optional>
+#include <engines/observation/Keywords.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
-#include <engines/observation/Keywords.h>
+#include <optional>
 
 namespace SmartMet
 {
@@ -609,19 +609,19 @@ void add_value(const TS::TimedValue &tv,
   {
     const auto &val = tv.value;
 
-    if (const double* ptr = std::get_if<double>(&val))
+    if (const double *ptr = std::get_if<double>(&val))
     {
       if (values_index == 0)
         data_type = Json::Value("float");
       values_array[values_index] = Json::Value(*ptr, precision);
     }
-    else if (const int* ptr = std::get_if<int>(&val))
+    else if (const int *ptr = std::get_if<int>(&val))
     {
       if (values_index == 0)
         data_type = Json::Value("int");
       values_array[values_index] = Json::Value(*ptr);
     }
-    else if (const std::string* ptr = std::get_if<std::string>(&val))
+    else if (const std::string *ptr = std::get_if<std::string>(&val))
     {
       if (values_index == 0)
         data_type = Json::Value("string");
@@ -1120,8 +1120,7 @@ void parse_vertical_extent(const EDRMetaData &emd, Json::Value &extent)
   }
 }
 
-void add_timestep_dimension(
-    const edr_temporal_extent &temporal_extent, Json::Value &collection)
+void add_timestep_dimension(const edr_temporal_extent &temporal_extent, Json::Value &collection)
 {
   try
   {
@@ -1180,8 +1179,9 @@ clang-format on
 */
 
 // Metadata of specified producers' specified  collections' instance/instances
-Json::Value parse_edr_metadata_instances(
-  const EDRProducerMetaData &epmd, const EDRQuery &edr_query, const ProducerLicenses &licenses)
+Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
+                                         const EDRQuery &edr_query,
+                                         const ProducerLicenses &licenses)
 {
   try
   {
@@ -1213,7 +1213,7 @@ Json::Value parse_edr_metadata_instances(
     link_item["type"] = Json::Value("application/json");
     links[0] = link_item;
     auto license = parse_license_link(licenses, edr_query.collection_id);
-    if (! license.isNullOrEmpty())
+    if (!license.isNullOrEmpty())
       links[1] = license;
 
     result["links"] = links;
@@ -1368,8 +1368,9 @@ void add_parameter_names_into_keywords(const EDRMetaData &collection_emd, Json::
   }
 }
 
-Json::Value parse_edr_metadata_collections(
-  const EDRProducerMetaData &epmd, const EDRQuery &edr_query, const ProducerLicenses &licenses)
+Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
+                                           const EDRQuery &edr_query,
+                                           const ProducerLicenses &licenses)
 {
   try
   {
@@ -1433,10 +1434,10 @@ Json::Value parse_edr_metadata_collections(
       links[0] = collection_link;
       parse_instance_link(instances_exist, edr_query, producer, links);
 
-      if (! edr_query.collection_id.empty())
+      if (!edr_query.collection_id.empty())
       {
         auto license = parse_license_link(licenses, producer);
-        if (! license.isNullOrEmpty())
+        if (!license.isNullOrEmpty())
           links.append(license);
       }
 
@@ -1506,8 +1507,9 @@ Json::Value parse_edr_metadata_collections(
   }
 }
 
-Json::Value parse_edr_metadata(
-  const EDRProducerMetaData &epmd, const EDRQuery &edr_query, const ProducerLicenses &licenses)
+Json::Value parse_edr_metadata(const EDRProducerMetaData &epmd,
+                               const EDRQuery &edr_query,
+                               const ProducerLicenses &licenses)
 {
   try
   {
@@ -2284,11 +2286,11 @@ double get_level(const TS::TimeSeriesGroupPtr &tsg_level,
     {
       const auto &llts_level = tsg_level->at(tsg_index);
       const auto &level_value = llts_level.timeseries.at(llts_index);
-      if (const auto* ptr = std::get_if<double>(&level_value.value))
+      if (const auto *ptr = std::get_if<double>(&level_value.value))
       {
         level = *ptr;
       }
-      else if (const auto* ptr = std::get_if<int>(&level_value.value))
+      else if (const auto *ptr = std::get_if<int>(&level_value.value))
       {
         level = *ptr;
       }
@@ -2455,9 +2457,10 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
     }
     else
     {
-      level_index = -1;  // Not actually used due to levels_present=false, but silence CodeChecker error
-                         // FIXME: it would be better to use std::optional, but unfortuynaly changes
-                         //        seems tyo escalate
+      level_index =
+          -1;  // Not actually used due to levels_present=false, but silence CodeChecker error
+               // FIXME: it would be better to use std::optional, but unfortuynaly changes
+               //        seems tyo escalate
       latitude_index = (query_parameters.size() - 1);
       longitude_index = (query_parameters.size() - 2);
     }
@@ -2703,7 +2706,7 @@ Json::Value format_output_data_vertical_profile(
     else
       timeSteps = (isGridProducer ? ts_lon->size() : (ts_lon->size() / levels.size()));
 
-    for (std::size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps); )
+    for (std::size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps);)
     {
       auto ranges = Json::Value(Json::ValueType::objectValue);
       auto domain = Json::Value(Json::ValueType::objectValue);
@@ -2727,7 +2730,7 @@ Json::Value format_output_data_vertical_profile(
       std::size_t levelIdx = 0;
       if (emd.vertical_extent.level_type == "PressureLevel")
       {
-        if (! useDataLevels)
+        if (!useDataLevels)
         {
           for (auto level = levels.crbegin(); (level != levels.crend()); level++)
             levelArray[levelIdx++] = Json::Value(*level);
@@ -2787,7 +2790,8 @@ Json::Value format_output_data_vertical_profile(
         {
           // Every n'th item value has data for the timestep
           std::size_t itemCnt = (isGridProducer ? item.second.size() : ts_lon->size());
-          for (std::size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt); itemIdx += timeSteps, valIdx++)
+          for (std::size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt);
+               itemIdx += timeSteps, valIdx++)
             valueArray[valIdx] = item.second[itemIdx];
         }
 
@@ -2821,89 +2825,6 @@ Json::Value format_output_data_vertical_profile(
     }
 
     return coverageCollection;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-}  // namespace
-
-Json::Value formatOutputData(const TS::OutputData &outputData,
-                             const EDRMetaData &emd,
-                             EDRQueryType query_type,
-                             const std::set<int> &levels,
-                             const CoordinateFilter &coordinate_filter,
-                             const std::vector<Spine::Parameter> &query_parameters,
-                             bool useDataLevels)
-{
-  try
-  {
-    Json::Value empty_result;
-
-    if (outputData.empty())
-      return empty_result;
-
-    const auto &outdata_first = outputData.at(0).second;
-
-    if (outdata_first.empty())
-      return empty_result;
-
-    const auto &tsdata_first = outdata_first.at(0);
-
-    if (std::get_if<TS::TimeSeriesPtr>(&tsdata_first))
-    {
-      // Zero or one levels
-      if (levels.size() <= 1)
-      {
-        std::optional<int> level;
-        if (levels.size() == 1)
-          level = *(levels.begin());
-        return format_output_data_one_point(outputData, emd, level, query_parameters);
-      }
-
-      // More than one level
-      return format_output_data_vertical_profile(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
-      //      return format_output_data_position(outputData, emd, query_parameters);
-    }
-
-    if (const auto* ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
-    {
-      if (outdata_first.size() > 1)
-        std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
-                     "nothing -> report error! "
-                  << std::endl;
-      std::vector<TS::TimeSeriesData> tsd;
-      TS::TimeSeriesVectorPtr tsv = *ptr;
-      for (const auto &ts : *tsv)
-      {
-        TS::TimeSeriesPtr tsp(new TS::TimeSeries(ts));
-        tsd.emplace_back(tsp);
-      }
-      TS::OutputData od;
-      od.push_back(std::make_pair("_obs_", tsd));
-      // Zero or one levels
-      if (levels.size() <= 1)
-      {
-        std::optional<int> level;
-        if (levels.size() == 1)
-          level = *(levels.begin());
-        return format_output_data_one_point(od, emd, level, query_parameters);
-      }
-      // More than one level
-      return format_output_data_vertical_profile(
-          od, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
-    }
-
-    if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
-    {
-      return format_output_data_coverage_collection(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type);
-    }
-
-    return empty_result;
   }
   catch (...)
   {
@@ -2953,7 +2874,7 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       feature["id"] = Json::Value(loc.id);
       auto geometry = Json::Value(Json::ValueType::objectValue);
 
-      if ((! (edr_md->isAviProducer())) || (! edr_md->getGeometry(loc.id, geometry)))
+      if ((!(edr_md->isAviProducer())) || (!edr_md->getGeometry(loc.id, geometry)))
       {
         geometry["type"] = Json::Value("Point");
         auto coordinates = Json::Value(Json::ValueType::arrayValue);
@@ -2984,7 +2905,9 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
               end_time = it->second.period.end();
             }
           }
-          catch (...) {}
+          catch (...)
+          {
+          }
         }
         else if (edr_md->isAviProducer())
         {
@@ -3058,6 +2981,89 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
   }
 }
 
+}  // namespace
+
+Json::Value formatOutputData(const TS::OutputData &outputData,
+                             const EDRMetaData &emd,
+                             EDRQueryType query_type,
+                             const std::set<int> &levels,
+                             const CoordinateFilter &coordinate_filter,
+                             const std::vector<Spine::Parameter> &query_parameters,
+                             bool useDataLevels)
+{
+  try
+  {
+    Json::Value empty_result;
+
+    if (outputData.empty())
+      return empty_result;
+
+    const auto &outdata_first = outputData.at(0).second;
+
+    if (outdata_first.empty())
+      return empty_result;
+
+    const auto &tsdata_first = outdata_first.at(0);
+
+    if (std::get_if<TS::TimeSeriesPtr>(&tsdata_first))
+    {
+      // Zero or one levels
+      if (levels.size() <= 1)
+      {
+        std::optional<int> level;
+        if (levels.size() == 1)
+          level = *(levels.begin());
+        return format_output_data_one_point(outputData, emd, level, query_parameters);
+      }
+
+      // More than one level
+      return format_output_data_vertical_profile(
+          outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
+      //      return format_output_data_position(outputData, emd, query_parameters);
+    }
+
+    if (const auto *ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
+    {
+      if (outdata_first.size() > 1)
+        std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
+                     "nothing -> report error! "
+                  << std::endl;
+      std::vector<TS::TimeSeriesData> tsd;
+      TS::TimeSeriesVectorPtr tsv = *ptr;
+      for (const auto &ts : *tsv)
+      {
+        TS::TimeSeriesPtr tsp(new TS::TimeSeries(ts));
+        tsd.emplace_back(tsp);
+      }
+      TS::OutputData od;
+      od.push_back(std::make_pair("_obs_", tsd));
+      // Zero or one levels
+      if (levels.size() <= 1)
+      {
+        std::optional<int> level;
+        if (levels.size() == 1)
+          level = *(levels.begin());
+        return format_output_data_one_point(od, emd, level, query_parameters);
+      }
+      // More than one level
+      return format_output_data_vertical_profile(
+          od, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
+    }
+
+    if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
+    {
+      return format_output_data_coverage_collection(
+          outputData, emd, levels, coordinate_filter, query_parameters, query_type);
+    }
+
+    return empty_result;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 Json::Value reportError(int code, const std::string &description)
 {
   auto ret = Json::Value(Json::ValueType::objectValue);
@@ -3068,8 +3074,9 @@ Json::Value reportError(int code, const std::string &description)
   return ret;
 }
 
-Json::Value parseEDRMetaData(
-  const EDRQuery &edr_query, const EngineMetaData &emd, const ProducerLicenses &licenses)
+Json::Value parseEDRMetaData(const EDRQuery &edr_query,
+                             const EngineMetaData &emd,
+                             const ProducerLicenses &licenses)
 {
   try
   {
@@ -3101,7 +3108,7 @@ Json::Value parseEDRMetaData(
       auto links = Json::Value(Json::ValueType::arrayValue);
       links[0] = link;
       auto license = parse_license_link(licenses, DEFAULT_LICENSE);
-      if (! license.isNullOrEmpty())
+      if (!license.isNullOrEmpty())
         links[1] = license;
       result["links"] = links;
       result["collections"] = edr_metadata;

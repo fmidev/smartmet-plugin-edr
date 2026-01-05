@@ -7,7 +7,10 @@ namespace Plugin
 {
 namespace EDR
 {
-static CollectionInfo EMPTY_COLLECTION_INFO;
+namespace
+{
+const CollectionInfo EMPTY_COLLECTION_INFO;
+}  // namespace
 
 CollectionInfoContainer::CollectionInfoContainer() {}
 

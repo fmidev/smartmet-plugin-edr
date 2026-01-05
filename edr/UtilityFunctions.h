@@ -41,13 +41,14 @@ bool is_flash_producer(const std::string& producer);
 bool is_icebuoy_or_copernicus_producer(const std::string& producer);
 bool is_flash_or_mobile_producer(const std::string& producer);
 EDR::Json::Value json_value(const TS::Value& val, int precision);
-double get_double(const TS::Value& val, double default_value = kFloatMissing);
 
-bool parseRangeListValue(std::string &valueStr,
-                         bool &isRange, std::string &loValue, std::string &hiValue);
-std::vector<std::string> parseBBoxAndZ(const std::string &bbox, std::string &z,
-                                       bool &zIsRange, std::string &zLo, std::string &zHi);
-std::vector<std::string> parseBBox(const std::string &bbox, bool parse2d = false);
+bool parseRangeListValue(std::string& valueStr,
+                         bool& isRange,
+                         std::string& loValue,
+                         std::string& hiValue);
+std::vector<std::string> parseBBoxAndZ(
+    const std::string& bbox, std::string& z, bool& zIsRange, std::string& zLo, std::string& zHi);
+std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d = false);
 
 }  // namespace UtilityFunctions
 }  // namespace EDR

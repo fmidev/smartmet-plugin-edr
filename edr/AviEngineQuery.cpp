@@ -10,22 +10,8 @@ namespace Plugin
 namespace EDR
 {
 
-AviEngineQuery::AviEngineQuery(const Plugin &thePlugin) : itsPlugin(thePlugin) {}
-
-#ifndef WITHOUT_AVI
-bool AviEngineQuery::isAviProducer(const std::string &producer) const
+namespace
 {
-  try
-  {
-    auto producer_name = trim_copy(to_lower_copy(producer));
-    auto avi_meta_data = itsPlugin.getAviMetaData();
-    return (avi_meta_data.find(producer_name) != avi_meta_data.end());
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
 
 void storeAviData(const State &state,
                   SmartMet::Engine::Avi::StationQueryData &aviData,
@@ -45,10 +31,8 @@ void storeAviData(const State &state,
       //
       // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
 
-      if (
-          (column.itsName == "stationid") || (column.itsName == "messagetime") ||
-          ((column.itsName == "icao") && (! fetchIcao))
-         )
+      if ((column.itsName == "stationid") || (column.itsName == "messagetime") ||
+          ((column.itsName == "icao") && (!fetchIcao)))
         continue;
 
       TS::TimeSeriesGroupPtr messageData(new TS::TimeSeriesGroup());
@@ -201,6 +185,25 @@ void checkAviEngineQuery(const Query &query,
   }
 }
 
+}  // namespace
+
+AviEngineQuery::AviEngineQuery(const Plugin &thePlugin) : itsPlugin(thePlugin) {}
+
+#ifndef WITHOUT_AVI
+bool AviEngineQuery::isAviProducer(const std::string &producer) const
+{
+  try
+  {
+    auto producer_name = trim_copy(to_lower_copy(producer));
+    auto avi_meta_data = itsPlugin.getAviMetaData();
+    return (avi_meta_data.find(producer_name) != avi_meta_data.end());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void AviEngineQuery::processAviEngineQuery(const Config &config,
                                            const State &state,
                                            const Query &query,
@@ -256,7 +259,7 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     bool hasEndTime = (!query.toptions.endTime.is_special());
 
     if (hasStartTime)
-        startTime = Fmi::date_time::to_iso_string(query.toptions.startTime);
+      startTime = Fmi::date_time::to_iso_string(query.toptions.startTime);
     if (hasEndTime)
       endTime = Fmi::date_time::to_iso_string(query.toptions.endTime);
 
@@ -297,7 +300,7 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     //
     queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
 
-    if ((! queryOptions.itsExcludeSPECIs) && (producer == METAR))
+    if ((!queryOptions.itsExcludeSPECIs) && (producer == METAR))
       queryOptions.itsMessageTypes.push_back("SPECI");
 
     // BRAINSTORM-3300
@@ -328,23 +331,23 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     //       and non route wkt (e.g. wkt=POLYGON(...)) station queries only, including stations
     //       by country codes and includíng/excluding by icao codes
     //
-    if (! aviCollection.getCountries().empty())
+    if (!aviCollection.getCountries().empty())
       queryOptions.itsLocationOptions.itsIncludeCountryFilters.insert(
-        queryOptions.itsLocationOptions.itsIncludeCountryFilters.begin(),
-        aviCollection.getCountries().begin(),
-        aviCollection.getCountries().end());
+          queryOptions.itsLocationOptions.itsIncludeCountryFilters.begin(),
+          aviCollection.getCountries().begin(),
+          aviCollection.getCountries().end());
 
-    if (! aviCollection.getIcaos().empty())
+    if (!aviCollection.getIcaos().empty())
       queryOptions.itsLocationOptions.itsIncludeIcaoFilters.insert(
-        queryOptions.itsLocationOptions.itsIncludeIcaoFilters.begin(),
-        aviCollection.getIcaos().begin(),
-        aviCollection.getIcaos().end());
+          queryOptions.itsLocationOptions.itsIncludeIcaoFilters.begin(),
+          aviCollection.getIcaos().begin(),
+          aviCollection.getIcaos().end());
 
-    if (! aviCollection.getExcludeIcaoFilters().empty())
+    if (!aviCollection.getExcludeIcaoFilters().empty())
       queryOptions.itsLocationOptions.itsExcludeIcaoFilters.insert(
-        queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
-        aviCollection.getExcludeIcaoFilters().begin(),
-        aviCollection.getExcludeIcaoFilters().end());
+          queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
+          aviCollection.getExcludeIcaoFilters().begin(),
+          aviCollection.getExcludeIcaoFilters().end());
 
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 

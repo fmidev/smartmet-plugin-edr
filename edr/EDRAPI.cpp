@@ -8,7 +8,10 @@ namespace Plugin
 {
 namespace EDR
 {
-static std::string EMPTY_STRING;
+namespace
+{
+const std::string EMPTY_STRING;
+}  // namespace
 
 bool EDRAPI::isEDRAPIQuery(const std::string& url) const
 {

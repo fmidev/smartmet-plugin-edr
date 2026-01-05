@@ -13,18 +13,79 @@ namespace EDR
 {
 namespace UtilityFunctions
 {
-bool is_special_parameter(const std::string& paramname)
+
+namespace
+{
+
+double get_double(const TS::Value& val, double default_value)
 {
   try
   {
-    if (paramname == ORIGINTIME_PARAM || paramname == LEVEL_PARAM)
-      return false;
+    double ret = default_value;
 
-    return (TS::is_time_parameter(paramname) || TS::is_location_parameter(paramname));
+    if (const auto* ptr = std::get_if<int>(&val))
+      ret = *ptr;
+    else if (const auto* ptr = std::get_if<double>(&val))
+      ret = *ptr;
+    else if (const auto* ptr = std::get_if<std::string>(&val))
+    {
+      std::string value = *ptr;
+
+      try
+      {
+        ret = Fmi::stod(value);
+      }
+      catch (...)
+      {
+        ret = default_value;
+      }
+    }
+
+    return ret;
   }
   catch (...)
   {
-    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+int get_int(const TS::Value& val, int default_value = kFloatMissing)
+{
+  try
+  {
+    int ret = default_value;
+
+    if (const auto* ptr = std::get_if<int>(&val))
+      ret = *ptr;
+    else if (const auto* ptr = std::get_if<double>(&val))
+      ret = *ptr;
+
+    return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+std::string get_string(const TS::Value& val, const std::string& default_value = "")
+{
+  try
+  {
+    std::string ret = default_value;
+
+    if (const auto* ptr = std::get_if<int>(&val))
+      ret = Fmi::to_string(*ptr);
+    else if (const auto* ptr = std::get_if<double>(&val))
+      ret = Fmi::to_string(*ptr);
+    else if (const auto* ptr = std::get_if<std::string>(&val))
+      ret = *ptr;
+
+    return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -42,6 +103,23 @@ TS::Value get_location_parameter_value(const Spine::LocationPtr& loc,
 
     return TS::location_parameter(
         loc, paramname, query.valueformatter, query.timezone, precision, query.crs);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+}  // namespace
+
+bool is_special_parameter(const std::string& paramname)
+{
+  try
+  {
+    if (paramname == ORIGINTIME_PARAM || paramname == LEVEL_PARAM)
+      return false;
+
+    return (TS::is_time_parameter(paramname) || TS::is_location_parameter(paramname));
   }
   catch (...)
   {
@@ -191,78 +269,6 @@ bool is_flash_or_mobile_producer(const std::string& producer)
   }
 }
 
-double get_double(const TS::Value& val, double default_value)
-{
-  try
-  {
-    double ret = default_value;
-
-    if (const auto* ptr = std::get_if<int>(&val))
-      ret = *ptr;
-    else if (const auto* ptr = std::get_if<double>(&val))
-      ret = *ptr;
-    else if (const auto* ptr = std::get_if<std::string>(&val))
-    {
-      std::string value = *ptr;
-
-      try
-      {
-        ret = Fmi::stod(value);
-      }
-      catch (...)
-      {
-        ret = default_value;
-      }
-    }
-
-    return ret;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-int get_int(const TS::Value& val, int default_value = kFloatMissing)
-{
-  try
-  {
-    int ret = default_value;
-
-    if (const auto* ptr = std::get_if<int>(&val))
-      ret = *ptr;
-    else if (const auto* ptr = std::get_if<double>(&val))
-      ret = *ptr;
-
-    return ret;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-std::string get_string(const TS::Value& val, const std::string& default_value = "")
-{
-  try
-  {
-    std::string ret = default_value;
-
-    if (const auto* ptr = std::get_if<int>(&val))
-      ret = Fmi::to_string(*ptr);
-    else if (const auto* ptr = std::get_if<double>(&val))
-      ret = Fmi::to_string(*ptr);
-    else if (const auto* ptr = std::get_if<std::string>(&val))
-      ret = *ptr;
-
-    return ret;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
 Json::Value json_value(const TS::Value& val, int precision)
 {
   try
@@ -370,10 +376,8 @@ bool parseRangeListValue(std::string& valueStr,
       loValue = boost::algorithm::trim_copy(parts[0]);
       hiValue = boost::algorithm::trim_copy(parts[1]);
 
-      if (
-          loValue.empty() || hiValue.empty() || (repeat > maxRepeat) ||
-          ((repeat == 0) && (Fmi::stod(loValue) > Fmi::stod(hiValue)))
-         )
+      if (loValue.empty() || hiValue.empty() || (repeat > maxRepeat) ||
+          ((repeat == 0) && (Fmi::stod(loValue) > Fmi::stod(hiValue))))
         throw Fmi::Exception(BCP, "");
 
       if (repeat > 0)
@@ -419,10 +423,9 @@ bool parseRangeListValue(std::string& valueStr,
     if (onlyRange)
       throw Fmi::Exception(BCP, "Invalid z parameter, numeric min/max range expected");
     else
-      throw Fmi::Exception(
-          BCP,
-          "Invalid z parameter, numeric value, list of values, repeating interval "
-          "or min/max range expected");
+      throw Fmi::Exception(BCP,
+                           "Invalid z parameter, numeric value, list of values, repeating interval "
+                           "or min/max range expected");
   }
 }
 
@@ -432,11 +435,8 @@ bool parseRangeListValue(std::string& valueStr,
 //
 // If bbox is 3d and z is empty, zIsRange is set to true and bbox lo/hi is set to zLo/zHi.
 //
-std::vector<std::string> parseBBoxAndZ(const std::string& bbox,
-                                       std::string& z,
-                                       bool& zIsRange,
-                                       std::string& zLo,
-                                       std::string& zHi)
+std::vector<std::string> parseBBoxAndZ(
+    const std::string& bbox, std::string& z, bool& zIsRange, std::string& zLo, std::string& zHi)
 {
   bool hasZ = parseRangeListValue(z, zIsRange, zLo, zHi);
 

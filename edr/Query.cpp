@@ -21,10 +21,10 @@ namespace Plugin
 {
 namespace EDR
 {
-const char* default_timezone = "localtime";
-
 namespace
 {
+
+const char* default_timezone = "localtime";
 
 void parse_ids(const std::optional<std::string>& string_param, std::vector<int>& id_vector)
 {
@@ -107,8 +107,8 @@ void set_agg_interval_ahead(TS::DataFunction& func, unsigned int interval)
 }
 
 [[maybe_unused]] void add_sql_data_filter(const Spine::HTTP::Request& req,
-                         const std::string& param_name,
-                         TS::DataFilter& dataFilter)
+                                          const std::string& param_name,
+                                          TS::DataFilter& dataFilter)
 {
   try
   {

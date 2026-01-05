@@ -49,28 +49,6 @@ void check_setting_isarray(const libconfig::Setting &setting, const std::string 
     throw Fmi::Exception(BCP, "Configuration file error. " + name + " must be an array");
 }
 
-}  // namespace
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Add default precisions if none were configured
- */
-// ----------------------------------------------------------------------
-
-void Config::add_default_precisions()
-{
-  try
-  {
-    Precision prec;
-    itsPrecisions.insert(Precisions::value_type("double", prec));
-    itsDefaultPrecision = "double";
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse a parameter function setting
@@ -112,6 +90,55 @@ TS::FunctionId get_function_id(const string &configName)
       return TS::FunctionId::Percentage;
 
     return TS::FunctionId::NullFunction;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+const std::set<std::string> &allSupportedFormats()
+{
+  static std::set<std::string> supportedFormats = {
+      "CoverageJSON", "GeoJSON", "IWXXM", "IWXXMZIP", "TAC"};
+  return supportedFormats;
+}
+
+string parse_config_key(const char *str1 = nullptr,
+                        const char *str2 = nullptr,
+                        const char *str3 = nullptr)
+{
+  try
+  {
+    string string1(str1 ? str1 : "");
+    string string2(str2 ? str2 : "");
+    string string3(str3 ? str3 : "");
+
+    string retval(string1 + string2 + string3);
+
+    return retval;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add default precisions if none were configured
+ */
+// ----------------------------------------------------------------------
+
+void Config::add_default_precisions()
+{
+  try
+  {
+    Precision prec;
+    itsPrecisions.insert(Precisions::value_type("double", prec));
+    itsDefaultPrecision = "double";
   }
   catch (...)
   {
@@ -222,26 +249,6 @@ void Config::parse_config_precisions()
   }
 }
 
-string parse_config_key(const char *str1 = nullptr,
-                        const char *str2 = nullptr,
-                        const char *str3 = nullptr)
-{
-  try
-  {
-    string string1(str1 ? str1 : "");
-    string string2(str2 ? str2 : "");
-    string string3(str3 ? str3 : "");
-
-    string retval(string1 + string2 + string3);
-
-    return retval;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse locations settings
@@ -342,14 +349,6 @@ void Config::parse_config_data_queries()
   }
 }
 
-const std::set<std::string> &allSupportedFormats()
-{
-  static std::set<std::string> supportedFormats = {
-    "CoverageJSON", "GeoJSON", "IWXXM", "IWXXMZIP", "TAC"
-  };
-  return supportedFormats;
-}
-
 void Config::parse_config_output_formats()
 {
   try
@@ -402,7 +401,7 @@ void Config::parse_config_output_formats()
       if (itsConfig.exists("output_formats.default_output_format"))
       {
         std::string defaultFormat;
-        itsConfig.lookupValue("output_formats.default_output_format",defaultFormat);
+        itsConfig.lookupValue("output_formats.default_output_format", defaultFormat);
         itsDefaultOutputFormats[DEFAULT_OUTPUT_FORMAT] = defaultFormat;
       }
 
@@ -415,7 +414,7 @@ void Config::parse_config_output_formats()
         {
           std::string producer = overriddenDefaultFormats[i].getName();
           std::string defaultFormat;
-          itsConfig.lookupValue("output_formats.output_format_override." + producer,defaultFormat);
+          itsConfig.lookupValue("output_formats.output_format_override." + producer, defaultFormat);
           itsDefaultOutputFormats[producer] = defaultFormat;
         }
       }
@@ -821,7 +820,7 @@ void Config::parse_config_avi_collections()
     if (itsConfig.exists("avi.exclude_speci"))
       itsConfig.lookupValue("avi.exclude_speci", itsExcludeAviSPECI);
 
-    //BRAINSTORM-3305
+    // BRAINSTORM-3305
     //
     if (itsConfig.exists("avi.tmppath"))
       itsConfig.lookupValue("avi.tmppath", itsAviTmpPath);
@@ -1055,9 +1054,8 @@ License Config::parse_config_license(const std::string &path, const std::string 
     if (itsConfig.exists(licenseName))
     {
       const libconfig::Setting &setting = itsConfig.lookup(licenseName);
-      if (! setting.isGroup())
-        throw Fmi::Exception(BCP,
-                             "Configured value of '" + licenseName + "' must be an object");
+      if (!setting.isGroup())
+        throw Fmi::Exception(BCP, "Configured value of '" + licenseName + "' must be an object");
 
       std::string fieldName, fieldValue;
 
@@ -1084,12 +1082,10 @@ License Config::parse_config_license(const std::string &path, const std::string 
 
 void Config::parse_config_licenses()
 {
-  static const License defaultLicense = {
-    { "href",     "https://creativecommons.org/licenses/by/4.0/" },
-    { "hreflang", "en" },
-    { "rel",      "license" },
-    { "type",     "text/html" }
-  };
+  static const License defaultLicense = {{"href", "https://creativecommons.org/licenses/by/4.0/"},
+                                         {"hreflang", "en"},
+                                         {"rel", "license"},
+                                         {"type", "text/html"}};
 
   try
   {
@@ -1102,7 +1098,7 @@ void Config::parse_config_licenses()
       {
         const libconfig::Setting &overriddenLicenses = itsConfig.lookup("license.override");
 
-        if (! overriddenLicenses.isGroup())
+        if (!overriddenLicenses.isGroup())
           throw Fmi::Exception(BCP, "Configured value of 'license.override' must be an object");
 
         for (int i = 0; (i < overriddenLicenses.getLength()); i++)

@@ -10,6 +10,8 @@ namespace Plugin
 namespace EDR
 {
 
+namespace
+{
 std::vector<std::string> get_parameters(const libconfig::Config& config,
                                         const std::string& producer)
 {
@@ -61,6 +63,8 @@ void parse_parameters(const std::string& producer,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+}  // namespace
 
 void ProducerParameters::init(const libconfig::Config& config)
 {

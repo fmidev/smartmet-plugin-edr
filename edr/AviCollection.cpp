@@ -88,7 +88,7 @@ void AviCollection::addIcaoFilter(const std::string &theIcaoFilter, bool include
   auto icaoFilter = trim_copy(to_upper_copy(theIcaoFilter));
   auto length = theIcaoFilter.length();
 
-  if ((length == 0) || (length > 4) || strpbrk(theIcaoFilter.c_str(),"%_"))
+  if ((length == 0) || (length > 4) || strpbrk(theIcaoFilter.c_str(), "%_"))
     throw std::runtime_error("1-4 letter icao code filter expected, no wildcards");
 
   auto &icaoFilters = (include ? itsIncludeIcaoFilters : itsExcludeIcaoFilters);
@@ -132,7 +132,10 @@ bool AviCollection::filter(const std::string &theIcao) const
   return false;
 }
 
-static AviCollection empty_avi_collection;
+namespace
+{
+const AviCollection empty_avi_collection;
+}  // namespace
 
 const AviCollection &get_avi_collection(const std::string &producer,
                                         const AviCollections &aviCollections)

@@ -9,8 +9,12 @@ namespace Plugin
 {
 namespace EDR
 {
+
+namespace
+{
+
 /// @brief Earth's quatratic mean radius for WGS-84
-static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
+const double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
 double deg_to_rad(const double& degrees)
 {
@@ -124,6 +128,42 @@ std::pair<double, double> midpoint(const std::pair<double, double>& from,
   }
 }
 
+/** @brief Computes the arc, in radian, between two WGS-84 positions.
+ *
+ * The result is equal to <code>Distance(from,to)/EARTH_RADIUS_IN_METERS</code>
+ *    <code>= 2*asin(sqrt(h(d/EARTH_RADIUS_IN_METERS )))</code>
+ *
+ * where:<ul>
+ *    <li>d is the distance in meters between 'from' and 'to' positions.</li>
+ *    <li>h is the haversine function: <code>h(x)=sin²(x/2)</code></li>
+ * </ul>
+ *
+ * The haversine formula gives:
+ *    <code>h(d/R) = h(from.lat-to.lat)+h(from.lon-to.lon)+cos(from.lat)*cos(to.lat)</code>
+ *
+ * @sa http://en.wikipedia.org/wiki/Law_of_haversines
+ */
+double arc_in_radians(const std::pair<double, double>& from, const std::pair<double, double>& to)
+{
+  try
+  {
+    double latitudeArc = deg_to_rad(from.second - to.second);
+    double longitudeArc = deg_to_rad(from.first - to.first);
+    double latitudeH = sin(latitudeArc * 0.5);
+    latitudeH *= latitudeH;
+    double lontitudeH = sin(longitudeArc * 0.5);
+    lontitudeH *= lontitudeH;
+    double tmp = cos(deg_to_rad(from.second)) * cos(deg_to_rad(to.second));
+    return 2.0 * asin(sqrt(latitudeH + tmp * lontitudeH));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+}  // namespace
+
 /**
  * Returns the destination point from this point having travelled the given distance (in km) on the
  * given initial bearing (bearing may vary before destination is reached)
@@ -155,40 +195,6 @@ std::pair<double, double> destination_point(const std::pair<double, double>& fro
     lon2 = fmod(lon2 + 3 * pi, 2 * pi) - pi;  // normalise to -180..+180º
 
     return {rad_to_deg(lon2), rad_to_deg(lat2)};
-  }
-  catch (...)
-  {
-    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
-  }
-}
-
-/** @brief Computes the arc, in radian, between two WGS-84 positions.
- *
- * The result is equal to <code>Distance(from,to)/EARTH_RADIUS_IN_METERS</code>
- *    <code>= 2*asin(sqrt(h(d/EARTH_RADIUS_IN_METERS )))</code>
- *
- * where:<ul>
- *    <li>d is the distance in meters between 'from' and 'to' positions.</li>
- *    <li>h is the haversine function: <code>h(x)=sin²(x/2)</code></li>
- * </ul>
- *
- * The haversine formula gives:
- *    <code>h(d/R) = h(from.lat-to.lat)+h(from.lon-to.lon)+cos(from.lat)*cos(to.lat)</code>
- *
- * @sa http://en.wikipedia.org/wiki/Law_of_haversines
- */
-double arc_in_radians(const std::pair<double, double>& from, const std::pair<double, double>& to)
-{
-  try
-  {
-    double latitudeArc = deg_to_rad(from.second - to.second);
-    double longitudeArc = deg_to_rad(from.first - to.first);
-    double latitudeH = sin(latitudeArc * 0.5);
-    latitudeH *= latitudeH;
-    double lontitudeH = sin(longitudeArc * 0.5);
-    lontitudeH *= lontitudeH;
-    double tmp = cos(deg_to_rad(from.second)) * cos(deg_to_rad(to.second));
-    return 2.0 * asin(sqrt(latitudeH + tmp * lontitudeH));
   }
   catch (...)
   {

@@ -12,6 +12,10 @@ namespace EDR
 {
 namespace PostProcessing
 {
+
+namespace
+{
+
 // ----------------------------------------------------------------------
 /*!
  * \brief
@@ -95,6 +99,78 @@ void update_latest_timestep(Query& query, const TS::TimeSeriesGroup& tsg)
   }
 }
 
+void add_data_to_table(const TS::OptionParsers::ParameterList& paramlist,
+                       TS::TableFeeder& tf,
+                       const TS::OutputData& outputData,
+                       const std::string& location_name,
+                       int& startRow)
+{
+  try
+  {
+    unsigned int numberOfParameters = paramlist.size();
+    // iterate different locations
+    for (const auto& output : outputData)
+    {
+      const auto& locationName = output.first;
+      if (locationName != location_name)
+        continue;
+
+      startRow = tf.getCurrentRow();
+
+      const std::vector<TS::TimeSeriesData>& outdata = output.second;
+
+      // iterate columns (parameters)
+      for (unsigned int j = 0; j < outdata.size(); j++)
+      {
+        const TS::TimeSeriesData& tsdata = outdata[j];
+        tf.setCurrentRow(startRow);
+        tf.setCurrentColumn(j);
+
+        const auto& paramName = paramlist[j % numberOfParameters].name();
+        if (paramName == LATLON_PARAM || paramName == NEARLATLON_PARAM)
+        {
+          tf << TS::LonLatFormat::LATLON;
+        }
+        else if (paramName == LONLAT_PARAM || paramName == NEARLONLAT_PARAM)
+        {
+          tf << TS::LonLatFormat::LONLAT;
+        }
+
+        if (const auto* ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
+        {
+          TS::TimeSeriesPtr ts = *ptr;
+          tf << *ts;
+        }
+        else if (const auto* ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata))
+        {
+          TS::TimeSeriesVectorPtr tsv = *ptr;
+          for (unsigned int k = 0; k < tsv->size(); k++)
+          {
+            tf.setCurrentColumn(k);
+            tf.setCurrentRow(startRow);
+            tf << tsv->at(k);
+          }
+          startRow = tf.getCurrentRow();
+        }
+        else if (const auto* ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+        {
+          TS::TimeSeriesGroupPtr tsg = *ptr;
+          tf << *tsg;
+        }
+
+        // Reset formatting to the default value
+        tf << TS::LonLatFormat::LONLAT;
+      }
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief
@@ -166,76 +242,6 @@ void store_data(std::vector<TS::TimeSeriesData>& aggregatedData,
     // insert data to the end
     std::vector<TS::TimeSeriesData>& odata = (--outputData.end())->second;
     odata.push_back(tsdata);
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-void add_data_to_table(const TS::OptionParsers::ParameterList& paramlist,
-                       TS::TableFeeder& tf,
-                       const TS::OutputData& outputData,
-                       const std::string& location_name,
-                       int& startRow)
-{
-  try
-  {
-    unsigned int numberOfParameters = paramlist.size();
-    // iterate different locations
-    for (const auto& output : outputData)
-    {
-      const auto& locationName = output.first;
-      if (locationName != location_name)
-        continue;
-
-      startRow = tf.getCurrentRow();
-
-      const std::vector<TS::TimeSeriesData>& outdata = output.second;
-
-      // iterate columns (parameters)
-      for (unsigned int j = 0; j < outdata.size(); j++)
-      {
-        const TS::TimeSeriesData& tsdata = outdata[j];
-        tf.setCurrentRow(startRow);
-        tf.setCurrentColumn(j);
-
-        const auto& paramName = paramlist[j % numberOfParameters].name();
-        if (paramName == LATLON_PARAM || paramName == NEARLATLON_PARAM)
-        {
-          tf << TS::LonLatFormat::LATLON;
-        }
-        else if (paramName == LONLAT_PARAM || paramName == NEARLONLAT_PARAM)
-        {
-          tf << TS::LonLatFormat::LONLAT;
-        }
-
-        if (const auto* ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
-        {
-          TS::TimeSeriesPtr ts = *ptr;
-          tf << *ts;
-        }
-        else if (const auto* ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata))
-        {
-          TS::TimeSeriesVectorPtr tsv = *ptr;
-          for (unsigned int k = 0; k < tsv->size(); k++)
-          {
-            tf.setCurrentColumn(k);
-            tf.setCurrentRow(startRow);
-            tf << tsv->at(k);
-          }
-          startRow = tf.getCurrentRow();
-        }
-        else if (const auto* ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
-        {
-          TS::TimeSeriesGroupPtr tsg = *ptr;
-          tf << *tsg;
-        }
-
-        // Reset formatting to the default value
-        tf << TS::LonLatFormat::LONLAT;
-      }
-    }
   }
   catch (...)
   {

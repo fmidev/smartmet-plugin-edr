@@ -348,6 +348,29 @@ void resolve_time_settings(const std::string& producer,
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
+
+void fill_missing_location_params(TS::TimeSeries& ts)
+{
+  TS::Value missing_value = TS::None();
+  TS::Value actual_value = missing_value;
+  bool missing_values_exists = false;
+  for (const auto& item : ts)
+  {
+    if (item.value == missing_value)
+      missing_values_exists = true;
+    else
+      actual_value = item.value;
+    if (actual_value != missing_value && missing_values_exists)
+      break;
+  }
+  if (actual_value != missing_value && missing_values_exists)
+  {
+    for (auto& item : ts)
+      if (item.value == missing_value)
+        item.value = actual_value;
+  }
+}
+
 }  // namespace
 
 ObsEngineQuery::ObsEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {}
@@ -400,17 +423,17 @@ void ObsEngineQuery::processObsEngineQuery(const State& state,
 
         if (!item.is_area || UtilityFunctions::is_flash_or_mobile_producer(producer))
         {
-          if (! query.levels.empty())
+          if (!query.levels.empty())
           {
             if (query.levelRange)
             {
-              std::string filter = "ge " + std::to_string(*query.levels.begin()) +
-                                   " AND le " + std::to_string(*query.levels.rbegin());
+              std::string filter = "ge " + std::to_string(*query.levels.begin()) + " AND le " +
+                                   std::to_string(*query.levels.rbegin());
               settings.dataFilter.setDataFilter("level", filter);
             }
             else
             {
-              for (const auto &level : query.levels)
+              for (const auto& level : query.levels)
                 settings.dataFilter.setDataFilter("level", std::to_string(level));
             }
           }
@@ -427,28 +450,6 @@ void ObsEngineQuery::processObsEngineQuery(const State& state,
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-void fill_missing_location_params(TS::TimeSeries& ts)
-{
-  TS::Value missing_value = TS::None();
-  TS::Value actual_value = missing_value;
-  bool missing_values_exists = false;
-  for (const auto& item : ts)
-  {
-    if (item.value == missing_value)
-      missing_values_exists = true;
-    else
-      actual_value = item.value;
-    if (actual_value != missing_value && missing_values_exists)
-      break;
-  }
-  if (actual_value != missing_value && missing_values_exists)
-  {
-    for (auto& item : ts)
-      if (item.value == missing_value)
-        item.value = actual_value;
   }
 }
 
@@ -481,12 +482,13 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(
       {
         // add data for location field
         TS::Value value;
-        if (loc) value  = TS::location_parameter(loc,
-                                                 obsParam.param.name(),
-                                                 query.valueformatter,
-                                                 query.timezone,
-                                                 query.precisions[i],
-                                                 query.crs);
+        if (loc)
+          value = TS::location_parameter(loc,
+                                         obsParam.param.name(),
+                                         query.valueformatter,
+                                         query.timezone,
+                                         query.precisions[i],
+                                         query.crs);
         auto timeseries = generate_timeseries(state, timestep_vector, value);
         ret->emplace_back(timeseries);
         parameterResultIndexes.insert(std::make_pair(paramname, ret->size() - 1));
@@ -695,8 +697,8 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
         agg_times = tlist.get();
       }
 
-      auto aggregated_observation_result =
-          doAggregationForPlaces(state, obsParameters, observation_result, *agg_times, parameterResultIndexes);
+      auto aggregated_observation_result = doAggregationForPlaces(
+          state, obsParameters, observation_result, *agg_times, parameterResultIndexes);
 
       if (aggregated_observation_result->empty())
       {
@@ -710,12 +712,10 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       std::cout << *aggregated_observation_result << std::endl;
 #endif
 
-      aggregated_observation_result = TS::erase_redundant_timesteps(aggregated_observation_result, *agg_times);
+      aggregated_observation_result =
+          TS::erase_redundant_timesteps(aggregated_observation_result, *agg_times);
 
-      PostProcessing::store_data(
-          aggregated_observation_result,
-          query,
-          outputData);
+      PostProcessing::store_data(aggregated_observation_result, query, outputData);
     }
   }
   catch (...)

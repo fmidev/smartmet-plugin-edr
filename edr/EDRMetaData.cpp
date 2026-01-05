@@ -3,8 +3,8 @@
 #include "AviCollection.h"
 #include <engines/avi/Engine.h>
 #endif
-#include "EDRQuery.h"
 #include "Config.h"
+#include "EDRQuery.h"
 
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
@@ -28,8 +28,12 @@ namespace EDR
 {
 #define MAX_TIME_PERIODS 300
 #define DEFAULT_PRECISION -1
-static EDRProducerMetaData EMPTY_PRODUCER_METADATA;
-static Fmi::DateTime NOT_A_DATE_TIME;
+
+namespace
+{
+const EDRProducerMetaData EMPTY_PRODUCER_METADATA;
+const Fmi::DateTime NOT_A_DATE_TIME;
+
 class TimePeriod
 {
  public:
@@ -49,8 +53,7 @@ class TimePeriod
   Fmi::DateTime period_start = Fmi::DateTime::NOT_A_DATE_TIME;
   Fmi::DateTime period_end = Fmi::DateTime::NOT_A_DATE_TIME;
 };
-namespace
-{
+
 std::set<std::string> get_collection_names(const EDRProducerMetaData &md)
 {
   std::set<std::string> collection_names;
@@ -73,7 +76,7 @@ void report_duplicate_collection(const std::string &collection,
 void report_missing_data(const std::string &collection)
 {
   std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Ignored collection '" +
-                collection + "' with no timesteps"+ ANSI_FG_DEFAULT)
+                collection + "' with no timesteps" + ANSI_FG_DEFAULT)
             << std::endl;
 }
 
@@ -151,21 +154,8 @@ void remove_duplicate_collection(const std::string &collection_name,
   }
 }
 
-}  // namespace
-
-const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
-                                                 const std::string &producer)
-{
-  if (pmd.find(producer) != pmd.end())
-  {
-    // Latest update time is same for all metadata instances of the same producer
-    return pmd.at(producer).front().latest_data_update_time;
-  }
-  return NOT_A_DATE_TIME;
-}
-
-bool extract_temporal_extent_periods(
-    const std::list<Fmi::DateTime> &times, edr_temporal_extent &temporal_extent)
+bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
+                                     edr_temporal_extent &temporal_extent)
 {
   try
   {
@@ -177,7 +167,7 @@ bool extract_temporal_extent_periods(
     auto it = begin_iter, first_it = begin_iter, last_it = begin_iter;
     int laststep = 0, step = 0, timesteps = 0;
 
-    for ( ; ; it++)
+    for (;; it++)
     {
       if ((it != begin_iter) && (it != end_iter))
       {
@@ -237,255 +227,6 @@ bool extract_temporal_extent_periods(
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
     return false;
-  }
-}
-
-EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
-                                        const ProducerLicenses &licenses,
-                                        const std::string &default_language,
-                                        const ParameterInfo *pinfo,
-                                        const CollectionInfoContainer &cic,
-                                        const SupportedDataQueries &sdq,
-                                        const SupportedOutputFormats &sofs,
-                                        const DefaultOutputFormats &defs,
-                                        const SupportedProducerLocations &spl)
-{
-  try
-  {
-    Engine::Querydata::MetaQueryOptions opts;
-    auto qd_meta_data = qEngine.getEngineMetadata(opts);
-
-    EDRProducerMetaData epmd;
-
-    if (qd_meta_data.empty())
-      return epmd;
-
-    std::map<std::string, Fmi::DateTime> latest_update_times;
-    // Iterate QEngine metadata and add items into collection
-    for (const auto &qmd : qd_meta_data)
-    {
-      // BRAINSTORM-3274; Using lower case for collection names. Querydata producers
-      //                  having upper case letters must have lowercase aliases
-      //
-      auto qmdproducer = boost::algorithm::to_lower_copy(qmd.producer);
-
-      if (!cic.isVisibleCollection(SourceEngine::Querydata, qmdproducer))
-        continue;
-
-      if (qmd.times.begin() == qmd.times.end())
-      {
-        report_missing_data(qmdproducer);
-        continue;
-      }
-
-      EDRMetaData producer_emd;
-      producer_emd.metadata_source = SourceEngine::Querydata;
-
-      if (qmd.levels.size() > 1)
-      {
-        producer_emd.vertical_extent.vrs =
-            ("Vertical Reference System: " + qmd.levels.front().type);
-        producer_emd.vertical_extent.level_type = qmd.levels.front().type;
-        for (const auto &item : qmd.levels)
-          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
-      }
-
-      const auto &rangeLon = qmd.wgs84Envelope.getRangeLon();
-      const auto &rangeLat = qmd.wgs84Envelope.getRangeLat();
-      producer_emd.spatial_extent.bbox_xmin = rangeLon.getMin();
-      producer_emd.spatial_extent.bbox_ymin = rangeLat.getMin();
-      producer_emd.spatial_extent.bbox_xmax = rangeLon.getMax();
-      producer_emd.spatial_extent.bbox_ymax = rangeLat.getMax();
-
-      edr_temporal_extent temporal_extent;
-      temporal_extent.origin_time = qmd.originTime;
-
-      if (!extract_temporal_extent_periods(qmd.times, temporal_extent))
-        continue;
-
-      producer_emd.temporal_extent = temporal_extent;
-
-      for (const auto &p : qmd.parameters)
-      {
-        auto parameter_name = p.name;
-        boost::algorithm::to_lower(parameter_name);
-        producer_emd.parameter_names.insert(parameter_name);
-        producer_emd.parameters.insert(
-            std::make_pair(parameter_name, edr_parameter(p.name, p.description)));
-      }
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-      producer_emd.language = default_language;
-      producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmdproducer);
-      producer_emd.data_queries = get_supported_data_queries(qmdproducer, sdq);
-      producer_emd.output_formats = get_supported_output_formats(qmdproducer, sofs);
-      producer_emd.default_output_format = get_default_output_format(qmdproducer, defs);
-
-      auto producer_key =
-          (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
-      if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = &spl.at(producer_key);
-      epmd[qmdproducer].push_back(producer_emd);
-      // Update latest data update time
-      if (latest_update_times.find(qmdproducer) == latest_update_times.end() ||
-          latest_update_times.at(qmdproducer) < qmd.originTime)
-        latest_update_times[qmdproducer] = qmd.originTime;
-    }
-    for (auto &item : epmd)
-    {
-      for (auto &producer_meta_data : item.second)
-        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
-    }
-
-    return epmd;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
-                                          const ProducerLicenses &licenses,
-                                          const std::string &default_language,
-                                          const ParameterInfo *pinfo,
-                                          const CollectionInfoContainer &cic,
-                                          const SupportedDataQueries &sdq,
-                                          const SupportedOutputFormats &sofs,
-                                          const DefaultOutputFormats &defs,
-                                          const SupportedProducerLocations &spl)
-{
-  try
-  {
-    EDRProducerMetaData epmd;
-
-    auto grid_meta_data = gEngine.getEngineMetadata("");
-
-    std::map<std::string, Fmi::DateTime> latest_update_times;
-    // Iterate Grid metadata and add items into collection
-    for (auto &gmd : grid_meta_data)
-    {
-      std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." +
-                                Fmi::to_string(gmd.levelId));
-
-      if (!cic.isVisibleCollection(SourceEngine::Grid, producerId))
-        continue;
-
-      if (gmd.times.begin() == gmd.times.end())
-      {
-        report_missing_data(producerId);
-        continue;
-      }
-
-      EDRMetaData producer_emd;
-      producer_emd.metadata_source = SourceEngine::Grid;
-
-      if (gmd.levels.size() > 1)
-      {
-        producer_emd.vertical_extent.vrs =
-            (Fmi::to_string(gmd.levelId) + ";" + gmd.levelName + ";" + gmd.levelDescription);
-
-        /*
-          1;GROUND;Ground or water surface;
-          2;PRESSURE;Pressure level;
-          3;HYBRID;Hybrid level;
-          4;ALTITUDE;Altitude;
-          5;TOP;Top of atmosphere;
-          6;HEIGHT;Height above ground in meters;
-          7;MEANSEA;Mean sea level;
-          8;ENTATM;Entire atmosphere;
-          9;GROUND_DEPTH;Layer between two depths below land surface;
-          10;DEPTH;Depth below some surface;
-          11;PRESSURE_DELTA;Level at specified pressure difference from ground
-          to level; 12;MAXTHETAE;Level where maximum equivalent potential
-          temperature is found; 13;HEIGHT_LAYER;Layer between two metric heights
-          above ground; 14;DEPTH_LAYER;Layer between two depths below land
-          surface; 15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
-          16;MAXWIND;Maximum wind level;
-        */
-        producer_emd.vertical_extent.level_type = gmd.levelName;
-        for (const auto &level : gmd.levels)
-          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level));
-      }
-
-      producer_emd.spatial_extent.bbox_ymin =
-          std::min(gmd.latlon_bottomLeft.y(), gmd.latlon_bottomRight.y());
-      producer_emd.spatial_extent.bbox_xmax =
-          std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
-      producer_emd.spatial_extent.bbox_ymax =
-          std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
-
-      edr_temporal_extent temporal_extent;
-      try
-      {
-        temporal_extent.origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
-      }
-      catch (...)
-      {
-        report_invalid_analysistime(producerId, gmd.analysisTime);
-        continue;
-      }
-
-      std::list<Fmi::DateTime> times;
-
-      for (auto it = gmd.times.begin(); (it != gmd.times.end()); it++)
-        times.emplace_back(Fmi::DateTime::from_iso_string(*it));
-
-      if (!extract_temporal_extent_periods(times, temporal_extent))
-        continue;
-
-      producer_emd.temporal_extent = temporal_extent;
-
-      for (const auto &p : gmd.parameters)
-      {
-        auto parameter_name = p.parameterName;
-        boost::algorithm::to_lower(parameter_name);
-        producer_emd.parameter_names.insert(parameter_name);
-        producer_emd.parameters.insert(std::make_pair(
-            parameter_name,
-            edr_parameter(
-                parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
-      }
-
-      producer_emd.collection_info_engine.title =
-          ("Producer: " + gmd.producerName + "; Geometry id: " + Fmi::to_string(gmd.geometryId) +
-           "; Level id: " + Fmi::to_string(gmd.levelId));
-      producer_emd.collection_info_engine.description = gmd.producerDescription;
-      producer_emd.collection_info_engine.keywords.insert(gmd.producerName);
-
-      boost::algorithm::to_lower(producerId);
-
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-      producer_emd.language = default_language;
-      producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Grid, gmd.producerName);
-
-      producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
-      producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
-      producer_emd.default_output_format = get_default_output_format(gmd.producerName, defs);
-      auto producer_key =
-          (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
-      if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = &spl.at(producer_key);
-
-      epmd[producerId].push_back(producer_emd);
-      // Update latest data update time
-      auto origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
-      if (latest_update_times.find(producerId) == latest_update_times.end() ||
-          latest_update_times.at(producerId) < origin_time)
-        latest_update_times[producerId] = origin_time;
-    }
-    for (auto &item : epmd)
-    {
-      for (auto &producer_meta_data : item.second)
-        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
-    }
-
-    return epmd;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -643,171 +384,6 @@ void process_parameters(const std::string &producer,
   }
 }
 
-EDRProducerMetaData get_edr_metadata_obs(
-    Engine::Observation::Engine &obsEngine,
-    const ProducerLicenses &licenses,
-    const std::string &default_language,
-    const ParameterInfo *pinfo,
-    const std::map<std::string, const Engine::Observation::ObservableProperty *>
-        &observable_properties,
-    const CollectionInfoContainer &cic,
-    const SupportedDataQueries &sdq,
-    const SupportedOutputFormats &sofs,
-    const DefaultOutputFormats &defs,
-    const SupportedProducerLocations &spl,
-    const ProducerParameters &prodParam,
-    unsigned int observation_period)
-
-{
-  try
-  {
-    std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
-    auto producers = obsEngine.getValidStationTypes();
-
-    Engine::Observation::Settings settings;
-    /*
-    add_sql_data_filter(req, "sounding_type", dataFilter);
-    add_sql_data_filter(req, "significance", dataFilter);
-    */
-
-    for (const auto &prod : producers)
-    {
-      if (cic.isVisibleCollection(SourceEngine::Observation, prod))
-        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod, settings)));
-    }
-
-    const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
-
-    EDRProducerMetaData epmd;
-
-    // Iterate Observation engine metadata and add item into collection
-    for (const auto &item : observation_meta_data)
-    {
-      const auto &producer = item.first;
-      const auto &obs_md = item.second;
-      auto params = obs_md.parameters;
-      auto measurand_params = get_producer_parameters(producer, prodParam, producer_measurand_info);
-      // If valid parameters defined in config use only them
-      if (!measurand_params.empty())
-        params.clear();
-      params.insert(measurand_params.begin(), measurand_params.end());
-
-      EDRMetaData producer_emd;
-      producer_emd.metadata_source = SourceEngine::Observation;
-
-      if (obs_md.hasLevelRange)
-      {
-        // e.g. sounding metadata has (pressure) level range
-
-        using Engine::Observation::ObsLevelType;
-        auto levelType = obs_md.levels().front().getLevelType();
-        std::string levelTypeStr, levelDescStr;
-
-        producer_emd.vertical_extent.obs_level_type = levelType;
-
-        if (levelType == ObsLevelType::Pressure)
-        {
-          levelTypeStr = "PressureLevel";
-          levelDescStr = "Pressure level in hPa";
-        }
-        /*
-        else if (levelType == ObsLevelType::Altitude)
-        {
-          levelTypeStr = "Altitude";
-          levelDescStr = "Altitude in meters";
-        }
-        */
-        else
-          throw Fmi::Exception(BCP, ("Unknown observation level type " + std::to_string(levelType)));
-
-        producer_emd.vertical_extent.level_type = levelTypeStr;
-        producer_emd.vertical_extent.vrs =
-            ("Vertical Reference System: " + levelDescStr);
-        for (const auto &level : obs_md.levels())
-          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level.getLevelValue()));
-
-        producer_emd.vertical_extent.is_level_range = true;
-        observation_period = 0;
-
-        producer_emd.stationMetaData.insert(
-            obs_md.stationMetaData.begin(), obs_md.stationMetaData.end());
-      }
-
-      producer_emd.spatial_extent.bbox_xmin = obs_md.bbox.xMin;
-      producer_emd.spatial_extent.bbox_ymin = obs_md.bbox.yMin;
-      producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
-      producer_emd.spatial_extent.bbox_ymax = obs_md.bbox.yMax;
-      edr_temporal_extent temporal_extent;
-      temporal_extent.origin_time = Fmi::SecondClock::universal_time();
-      edr_temporal_extent_period temporal_extent_period;
-      auto time_of_day = obs_md.period.last().time_of_day();
-      auto end_date = obs_md.period.last().date();
-      Fmi::DateTime end_time;
-      uint64_t periodLength = 0;
-
-      // No end_time adjustment and using full period length for soundings
-      //
-      // TODO: period is currently handled properly for soundings only
-      if (! producer_emd.vertical_extent.is_level_range)
-      {
-        // In order to get rid of fractions of a second in end_time
-        end_time = Fmi::DateTime(end_date,
-                                 Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
-      }
-      else
-      {
-        end_time = obs_md.dbperiod().end();
-      }
-
-      if (observation_period > 0)
-      {
-        temporal_extent_period.start_time = (end_time - Fmi::Hours(observation_period));
-
-        Fmi::TimePeriod tp(temporal_extent_period.start_time, end_time);
-        periodLength = tp.length().total_minutes();
-      }
-      else
-      {
-        temporal_extent_period.start_time = obs_md.dbperiod().begin();
-        periodLength = obs_md.dbperiod().length().total_minutes();
-      }
-
-      temporal_extent_period.end_time = end_time;
-      temporal_extent_period.timestep = obs_md.timestep;
-      temporal_extent_period.timesteps = (periodLength / obs_md.timestep);
-      temporal_extent.time_periods.push_back(temporal_extent_period);
-      producer_emd.temporal_extent = temporal_extent;
-
-      process_parameters(producer,
-                         params,
-                         observable_properties,
-                         producer_measurand_info,
-                         default_language,
-                         producer_emd);
-
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-      producer_emd.language = default_language;
-      producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Observation, producer);
-      producer_emd.data_queries = get_supported_data_queries(producer, sdq);
-      producer_emd.output_formats = get_supported_output_formats(producer, sofs);
-      producer_emd.default_output_format = get_default_output_format(producer, defs);
-      auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
-      if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = &spl.at(producer_key);
-
-      epmd[producer].push_back(producer_emd);
-    }
-
-    return epmd;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-#endif
-
 #ifndef WITHOUT_AVI
 std::vector<TimePeriod> get_time_periods(
     const std::set<Fmi::LocalDateTime> &timesteps,
@@ -879,17 +455,14 @@ bool parse_merged_time_periods(const std::vector<TimePeriod> &time_periods,
     //       period and increase it's timesteps by 1
     //
     bool lastPeriod = (i == (time_periods.size() - 1));
-    auto timesteps = lastPeriod
-                     ? ((tp.getEndTime() - tp.getStartTime()).total_seconds() / first_period_length)
-                     : 0;
-    bool sameLength = (lastPeriod && (timesteps > 1))
-                      ? true
-                      : (first_period_length == tp_current.length());
+    auto timesteps =
+        lastPeriod ? ((tp.getEndTime() - tp.getStartTime()).total_seconds() / first_period_length)
+                   : 0;
+    bool sameLength =
+        (lastPeriod && (timesteps > 1)) ? true : (first_period_length == tp_current.length());
 
-    if (
-        (! sameLength) &&
-        (/*(! multiple_periods) ||*/ (merged_time_periods.size() >= MAX_TIME_PERIODS))
-       )
+    if ((!sameLength) &&
+        (/*(! multiple_periods) ||*/ (merged_time_periods.size() >= MAX_TIME_PERIODS)))
     {
       merged_time_periods.clear();
       return true;
@@ -899,7 +472,7 @@ bool parse_merged_time_periods(const std::vector<TimePeriod> &time_periods,
     {
       tp.setEndTime(tp_current.getEndTime());
 
-      if (! lastPeriod)
+      if (!lastPeriod)
         return false;
     }
 
@@ -918,9 +491,8 @@ bool parse_merged_time_periods(const std::vector<TimePeriod> &time_periods,
         //
         // e.g. input hours 00-01,01-02,02-02 ==> R3, not (2-0)/3600 (==> R2)
         //
-        etep.timesteps =
-          ((etep.end_time - etep.start_time).total_seconds() / first_period_length) +
-          (multiple_periods ? 1 : 0);
+        etep.timesteps = ((etep.end_time - etep.start_time).total_seconds() / first_period_length) +
+                         (multiple_periods ? 1 : 0);
       }
       else
         etep.timesteps = 1;
@@ -1022,7 +594,7 @@ edr_temporal_extent get_temporal_extent(const std::set<Fmi::LocalDateTime> &time
       // time_periods but single_time_periods can have just the start (it's used only for
       // getting nearest time instant to 'now' as the default request 'datetime' value)
       //
-      if (! timesteps.empty())
+      if (!timesteps.empty())
       {
         edr_temporal_extent_period temporal_extent_period;
         temporal_extent_period.start_time = timesteps.begin()->utc_time();
@@ -1120,7 +692,7 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     //
     queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
 
-    if ((! queryOptions.itsExcludeSPECIs) && (queryOptions.itsMessageTypes.front() == "METAR"))
+    if ((!queryOptions.itsExcludeSPECIs) && (queryOptions.itsMessageTypes.front() == "METAR"))
       queryOptions.itsMessageTypes.push_back("SPECI");
 
     // BRAINSTORM-3300
@@ -1187,9 +759,9 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
       //
       if (!aviCollection.getExcludeIcaoFilters().empty())
         queryOptions.itsLocationOptions.itsExcludeIcaoFilters.insert(
-          queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
-          aviCollection.getExcludeIcaoFilters().begin(),
-          aviCollection.getExcludeIcaoFilters().end());
+            queryOptions.itsLocationOptions.itsExcludeIcaoFilters.begin(),
+            aviCollection.getExcludeIcaoFilters().begin(),
+            aviCollection.getExcludeIcaoFilters().end());
     }
     else if (!aviCollection.getIcaos().empty())
       queryOptions.itsLocationOptions.itsIcaos.insert(
@@ -1357,9 +929,14 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
 
       auto stationData = aviEngine.queryStations(queryOptions);
 
-      setAviStations(
-          stationData, aviCollection, icaoColumnName, nameColumnName, latColumnName, lonColumnName,
-          firIdColumnName, amd);
+      setAviStations(stationData,
+                     aviCollection,
+                     icaoColumnName,
+                     nameColumnName,
+                     latColumnName,
+                     lonColumnName,
+                     firIdColumnName,
+                     amd);
 
       if (!amd.getStations().empty())
         aviMetaData.push_back(amd);
@@ -1372,6 +949,432 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+}  // namespace
+
+const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
+                                                 const std::string &producer)
+{
+  if (pmd.find(producer) != pmd.end())
+  {
+    // Latest update time is same for all metadata instances of the same producer
+    return pmd.at(producer).front().latest_data_update_time;
+  }
+  return NOT_A_DATE_TIME;
+}
+
+EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
+                                        const ProducerLicenses &licenses,
+                                        const std::string &default_language,
+                                        const ParameterInfo *pinfo,
+                                        const CollectionInfoContainer &cic,
+                                        const SupportedDataQueries &sdq,
+                                        const SupportedOutputFormats &sofs,
+                                        const DefaultOutputFormats &defs,
+                                        const SupportedProducerLocations &spl)
+{
+  try
+  {
+    Engine::Querydata::MetaQueryOptions opts;
+    auto qd_meta_data = qEngine.getEngineMetadata(opts);
+
+    EDRProducerMetaData epmd;
+
+    if (qd_meta_data.empty())
+      return epmd;
+
+    std::map<std::string, Fmi::DateTime> latest_update_times;
+    // Iterate QEngine metadata and add items into collection
+    for (const auto &qmd : qd_meta_data)
+    {
+      // BRAINSTORM-3274; Using lower case for collection names. Querydata producers
+      //                  having upper case letters must have lowercase aliases
+      //
+      auto qmdproducer = boost::algorithm::to_lower_copy(qmd.producer);
+
+      if (!cic.isVisibleCollection(SourceEngine::Querydata, qmdproducer))
+        continue;
+
+      if (qmd.times.begin() == qmd.times.end())
+      {
+        report_missing_data(qmdproducer);
+        continue;
+      }
+
+      EDRMetaData producer_emd;
+      producer_emd.metadata_source = SourceEngine::Querydata;
+
+      if (qmd.levels.size() > 1)
+      {
+        producer_emd.vertical_extent.vrs =
+            ("Vertical Reference System: " + qmd.levels.front().type);
+        producer_emd.vertical_extent.level_type = qmd.levels.front().type;
+        for (const auto &item : qmd.levels)
+          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
+      }
+
+      const auto &rangeLon = qmd.wgs84Envelope.getRangeLon();
+      const auto &rangeLat = qmd.wgs84Envelope.getRangeLat();
+      producer_emd.spatial_extent.bbox_xmin = rangeLon.getMin();
+      producer_emd.spatial_extent.bbox_ymin = rangeLat.getMin();
+      producer_emd.spatial_extent.bbox_xmax = rangeLon.getMax();
+      producer_emd.spatial_extent.bbox_ymax = rangeLat.getMax();
+
+      edr_temporal_extent temporal_extent;
+      temporal_extent.origin_time = qmd.originTime;
+
+      if (!extract_temporal_extent_periods(qmd.times, temporal_extent))
+        continue;
+
+      producer_emd.temporal_extent = temporal_extent;
+
+      for (const auto &p : qmd.parameters)
+      {
+        auto parameter_name = p.name;
+        boost::algorithm::to_lower(parameter_name);
+        producer_emd.parameter_names.insert(parameter_name);
+        producer_emd.parameters.insert(
+            std::make_pair(parameter_name, edr_parameter(p.name, p.description)));
+      }
+      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+      producer_emd.language = default_language;
+      producer_emd.parameter_info = pinfo;
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmdproducer);
+      producer_emd.data_queries = get_supported_data_queries(qmdproducer, sdq);
+      producer_emd.output_formats = get_supported_output_formats(qmdproducer, sofs);
+      producer_emd.default_output_format = get_default_output_format(qmdproducer, defs);
+
+      auto producer_key = (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+        producer_emd.locations = &spl.at(producer_key);
+      epmd[qmdproducer].push_back(producer_emd);
+      // Update latest data update time
+      if (latest_update_times.find(qmdproducer) == latest_update_times.end() ||
+          latest_update_times.at(qmdproducer) < qmd.originTime)
+        latest_update_times[qmdproducer] = qmd.originTime;
+    }
+    for (auto &item : epmd)
+    {
+      for (auto &producer_meta_data : item.second)
+        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
+    }
+
+    return epmd;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
+                                          const ProducerLicenses &licenses,
+                                          const std::string &default_language,
+                                          const ParameterInfo *pinfo,
+                                          const CollectionInfoContainer &cic,
+                                          const SupportedDataQueries &sdq,
+                                          const SupportedOutputFormats &sofs,
+                                          const DefaultOutputFormats &defs,
+                                          const SupportedProducerLocations &spl)
+{
+  try
+  {
+    EDRProducerMetaData epmd;
+
+    auto grid_meta_data = gEngine.getEngineMetadata("");
+
+    std::map<std::string, Fmi::DateTime> latest_update_times;
+    // Iterate Grid metadata and add items into collection
+    for (auto &gmd : grid_meta_data)
+    {
+      std::string producerId = (gmd.producerName + "." + Fmi::to_string(gmd.geometryId) + "." +
+                                Fmi::to_string(gmd.levelId));
+
+      if (!cic.isVisibleCollection(SourceEngine::Grid, producerId))
+        continue;
+
+      if (gmd.times.begin() == gmd.times.end())
+      {
+        report_missing_data(producerId);
+        continue;
+      }
+
+      EDRMetaData producer_emd;
+      producer_emd.metadata_source = SourceEngine::Grid;
+
+      if (gmd.levels.size() > 1)
+      {
+        producer_emd.vertical_extent.vrs =
+            (Fmi::to_string(gmd.levelId) + ";" + gmd.levelName + ";" + gmd.levelDescription);
+
+        /*
+          1;GROUND;Ground or water surface;
+          2;PRESSURE;Pressure level;
+          3;HYBRID;Hybrid level;
+          4;ALTITUDE;Altitude;
+          5;TOP;Top of atmosphere;
+          6;HEIGHT;Height above ground in meters;
+          7;MEANSEA;Mean sea level;
+          8;ENTATM;Entire atmosphere;
+          9;GROUND_DEPTH;Layer between two depths below land surface;
+          10;DEPTH;Depth below some surface;
+          11;PRESSURE_DELTA;Level at specified pressure difference from ground
+          to level; 12;MAXTHETAE;Level where maximum equivalent potential
+          temperature is found; 13;HEIGHT_LAYER;Layer between two metric heights
+          above ground; 14;DEPTH_LAYER;Layer between two depths below land
+          surface; 15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
+          16;MAXWIND;Maximum wind level;
+        */
+        producer_emd.vertical_extent.level_type = gmd.levelName;
+        for (const auto &level : gmd.levels)
+          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level));
+      }
+
+      producer_emd.spatial_extent.bbox_ymin =
+          std::min(gmd.latlon_bottomLeft.y(), gmd.latlon_bottomRight.y());
+      producer_emd.spatial_extent.bbox_xmax =
+          std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
+      producer_emd.spatial_extent.bbox_ymax =
+          std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
+
+      edr_temporal_extent temporal_extent;
+      try
+      {
+        temporal_extent.origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
+      }
+      catch (...)
+      {
+        report_invalid_analysistime(producerId, gmd.analysisTime);
+        continue;
+      }
+
+      std::list<Fmi::DateTime> times;
+
+      for (auto it = gmd.times.begin(); (it != gmd.times.end()); it++)
+        times.emplace_back(Fmi::DateTime::from_iso_string(*it));
+
+      if (!extract_temporal_extent_periods(times, temporal_extent))
+        continue;
+
+      producer_emd.temporal_extent = temporal_extent;
+
+      for (const auto &p : gmd.parameters)
+      {
+        auto parameter_name = p.parameterName;
+        boost::algorithm::to_lower(parameter_name);
+        producer_emd.parameter_names.insert(parameter_name);
+        producer_emd.parameters.insert(std::make_pair(
+            parameter_name,
+            edr_parameter(
+                parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
+      }
+
+      producer_emd.collection_info_engine.title =
+          ("Producer: " + gmd.producerName + "; Geometry id: " + Fmi::to_string(gmd.geometryId) +
+           "; Level id: " + Fmi::to_string(gmd.levelId));
+      producer_emd.collection_info_engine.description = gmd.producerDescription;
+      producer_emd.collection_info_engine.keywords.insert(gmd.producerName);
+
+      boost::algorithm::to_lower(producerId);
+
+      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+      producer_emd.language = default_language;
+      producer_emd.parameter_info = pinfo;
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Grid, gmd.producerName);
+
+      producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
+      producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
+      producer_emd.default_output_format = get_default_output_format(gmd.producerName, defs);
+      auto producer_key =
+          (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+        producer_emd.locations = &spl.at(producer_key);
+
+      epmd[producerId].push_back(producer_emd);
+      // Update latest data update time
+      auto origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
+      if (latest_update_times.find(producerId) == latest_update_times.end() ||
+          latest_update_times.at(producerId) < origin_time)
+        latest_update_times[producerId] = origin_time;
+    }
+    for (auto &item : epmd)
+    {
+      for (auto &producer_meta_data : item.second)
+        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
+    }
+
+    return epmd;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+EDRProducerMetaData get_edr_metadata_obs(
+    Engine::Observation::Engine &obsEngine,
+    const ProducerLicenses &licenses,
+    const std::string &default_language,
+    const ParameterInfo *pinfo,
+    const std::map<std::string, const Engine::Observation::ObservableProperty *>
+        &observable_properties,
+    const CollectionInfoContainer &cic,
+    const SupportedDataQueries &sdq,
+    const SupportedOutputFormats &sofs,
+    const DefaultOutputFormats &defs,
+    const SupportedProducerLocations &spl,
+    const ProducerParameters &prodParam,
+    unsigned int observation_period)
+
+{
+  try
+  {
+    std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
+    auto producers = obsEngine.getValidStationTypes();
+
+    Engine::Observation::Settings settings;
+    /*
+    add_sql_data_filter(req, "sounding_type", dataFilter);
+    add_sql_data_filter(req, "significance", dataFilter);
+    */
+
+    for (const auto &prod : producers)
+    {
+      if (cic.isVisibleCollection(SourceEngine::Observation, prod))
+        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod, settings)));
+    }
+
+    const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
+
+    EDRProducerMetaData epmd;
+
+    // Iterate Observation engine metadata and add item into collection
+    for (const auto &item : observation_meta_data)
+    {
+      const auto &producer = item.first;
+      const auto &obs_md = item.second;
+      auto params = obs_md.parameters;
+      auto measurand_params = get_producer_parameters(producer, prodParam, producer_measurand_info);
+      // If valid parameters defined in config use only them
+      if (!measurand_params.empty())
+        params.clear();
+      params.insert(measurand_params.begin(), measurand_params.end());
+
+      EDRMetaData producer_emd;
+      producer_emd.metadata_source = SourceEngine::Observation;
+
+      if (obs_md.hasLevelRange)
+      {
+        // e.g. sounding metadata has (pressure) level range
+
+        using Engine::Observation::ObsLevelType;
+        auto levelType = obs_md.levels().front().getLevelType();
+        std::string levelTypeStr, levelDescStr;
+
+        producer_emd.vertical_extent.obs_level_type = levelType;
+
+        if (levelType == ObsLevelType::Pressure)
+        {
+          levelTypeStr = "PressureLevel";
+          levelDescStr = "Pressure level in hPa";
+        }
+        /*
+        else if (levelType == ObsLevelType::Altitude)
+        {
+          levelTypeStr = "Altitude";
+          levelDescStr = "Altitude in meters";
+        }
+        */
+        else
+          throw Fmi::Exception(BCP,
+                               ("Unknown observation level type " + std::to_string(levelType)));
+
+        producer_emd.vertical_extent.level_type = levelTypeStr;
+        producer_emd.vertical_extent.vrs = ("Vertical Reference System: " + levelDescStr);
+        for (const auto &level : obs_md.levels())
+          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level.getLevelValue()));
+
+        producer_emd.vertical_extent.is_level_range = true;
+        observation_period = 0;
+
+        producer_emd.stationMetaData.insert(obs_md.stationMetaData.begin(),
+                                            obs_md.stationMetaData.end());
+      }
+
+      producer_emd.spatial_extent.bbox_xmin = obs_md.bbox.xMin;
+      producer_emd.spatial_extent.bbox_ymin = obs_md.bbox.yMin;
+      producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
+      producer_emd.spatial_extent.bbox_ymax = obs_md.bbox.yMax;
+      edr_temporal_extent temporal_extent;
+      temporal_extent.origin_time = Fmi::SecondClock::universal_time();
+      edr_temporal_extent_period temporal_extent_period;
+      auto time_of_day = obs_md.period.last().time_of_day();
+      auto end_date = obs_md.period.last().date();
+      Fmi::DateTime end_time;
+      uint64_t periodLength = 0;
+
+      // No end_time adjustment and using full period length for soundings
+      //
+      // TODO: period is currently handled properly for soundings only
+      if (!producer_emd.vertical_extent.is_level_range)
+      {
+        // In order to get rid of fractions of a second in end_time
+        end_time = Fmi::DateTime(end_date,
+                                 Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
+      }
+      else
+      {
+        end_time = obs_md.dbperiod().end();
+      }
+
+      if (observation_period > 0)
+      {
+        temporal_extent_period.start_time = (end_time - Fmi::Hours(observation_period));
+
+        Fmi::TimePeriod tp(temporal_extent_period.start_time, end_time);
+        periodLength = tp.length().total_minutes();
+      }
+      else
+      {
+        temporal_extent_period.start_time = obs_md.dbperiod().begin();
+        periodLength = obs_md.dbperiod().length().total_minutes();
+      }
+
+      temporal_extent_period.end_time = end_time;
+      temporal_extent_period.timestep = obs_md.timestep;
+      temporal_extent_period.timesteps = (periodLength / obs_md.timestep);
+      temporal_extent.time_periods.push_back(temporal_extent_period);
+      producer_emd.temporal_extent = temporal_extent;
+
+      process_parameters(producer,
+                         params,
+                         observable_properties,
+                         producer_measurand_info,
+                         default_language,
+                         producer_emd);
+
+      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+      producer_emd.language = default_language;
+      producer_emd.parameter_info = pinfo;
+      producer_emd.collection_info = &cic.getInfo(SourceEngine::Observation, producer);
+      producer_emd.data_queries = get_supported_data_queries(producer, sdq);
+      producer_emd.output_formats = get_supported_output_formats(producer, sofs);
+      producer_emd.default_output_format = get_default_output_format(producer, defs);
+      auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
+      if (spl.find(producer_key) != spl.end())
+        producer_emd.locations = &spl.at(producer_key);
+
+      epmd[producer].push_back(producer_emd);
+    }
+
+    return epmd;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+#endif
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const Config &config,
@@ -1535,7 +1538,7 @@ bool EDRMetaData::getGeometry(const std::string &item, Json::Value &geometry) co
 {
   auto geom = spatial_extent.geometryIds.find(item);
 
-  if ((geom == spatial_extent.geometryIds.end()) || (! geom->second))
+  if ((geom == spatial_extent.geometryIds.end()) || (!geom->second))
     return false;
 
   auto engineGeometries = aviEngine->queryFIRAreas();
