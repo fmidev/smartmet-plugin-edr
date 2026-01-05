@@ -1951,8 +1951,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                 }
                 idx++;
               }
-              if (levelValue < 0)
-                levelValue = 0;
+              levelValue = std::max(levelValue, 0);
 
               TS::TimedValue tsValue(queryTime, levelValue);
               tsForNonGridParam->emplace_back(tsValue);
