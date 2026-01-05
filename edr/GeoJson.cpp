@@ -3,6 +3,7 @@
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
+#include <algorithm>
 #include <optional>
 
 namespace SmartMet
@@ -417,15 +418,11 @@ Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, i
       max_lat = latlon.lat;
       continue;
     }
-    if (latlon.lon < min_lon)
-      min_lon = latlon.lon;
-    if (latlon.lon > max_lon)
-      max_lon = latlon.lon;
+    min_lon = std::min(latlon.lon, min_lon);
+    max_lon = std::max(latlon.lon, max_lon);
 
-    if (latlon.lat < min_lat)
-      min_lat = latlon.lat;
-    if (latlon.lat > max_lat)
-      max_lat = latlon.lat;
+    min_lat = std::min(latlon.lat, min_lat);
+    max_lat = std::max(latlon.lat, max_lat);
   }
 
   Json::Value bbox = Json::Value(Json::ValueType::arrayValue);

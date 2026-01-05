@@ -54,8 +54,7 @@ void set_max_agg_interval_behind(TS::DataFunction& func, unsigned int& max_inter
   {
     if (func.type() == TS::FunctionType::TimeFunction)
     {
-      if (max_interval < func.getAggregationIntervalBehind())
-        max_interval = func.getAggregationIntervalBehind();
+      max_interval = std::max(max_interval, func.getAggregationIntervalBehind());
     }
   }
   catch (...)
@@ -70,8 +69,7 @@ void set_max_agg_interval_ahead(TS::DataFunction& func, unsigned int& max_interv
   {
     if (func.type() == TS::FunctionType::TimeFunction)
     {
-      if (max_interval < func.getAggregationIntervalAhead())
-        max_interval = func.getAggregationIntervalAhead();
+      max_interval = std::max(max_interval, func.getAggregationIntervalAhead());
     }
   }
   catch (...)
