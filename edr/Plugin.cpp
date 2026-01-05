@@ -420,8 +420,8 @@ void Plugin::query(const State& state,
     timeheader = Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
                  Fmi::to_string(duration_cast<microseconds>(t3 - t2).count());
 
-    //if (etag_only(request, response, product_hash))
-    //  return;
+    // if (etag_only(request, response, product_hash))
+    //   return;
 
     // If obj is not nullptr it is from cache
     obj = qph.processQuery(state, data, q, queryStreamer, product_hash);
@@ -507,8 +507,8 @@ void Plugin::query(const State& state,
         }
         else
           response.setHeader(
-            "Content-Disposition",
-            (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
+              "Content-Disposition",
+              (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
       }
       else if (*result == (q.valueformatter.missing() + "\n"))
       {
@@ -733,7 +733,8 @@ void Plugin::init()
     if (!itsConfig.obsEngineDisabled())
     {
       /* ObsEngine */
-      itsEngines.obsEngine = itsReactor->getEngine<Engine::Observation::Engine>("Observation", nullptr);
+      itsEngines.obsEngine =
+          itsReactor->getEngine<Engine::Observation::Engine>("Observation", nullptr);
 
       // fetch obsebgine station types (producers)
       itsObsEngineStationTypes = itsEngines.obsEngine->getValidStationTypes();
@@ -1224,7 +1225,7 @@ bool Plugin::isValidInstance(const std::string& producer, const std::string& ins
   for (const auto& item : metadata->getMetaData())
   {
     const auto& engine_metadata = item.second;
-    EDRProducerMetaData::const_iterator epmd = engine_metadata.find(producer);
+    const auto epmd = engine_metadata.find(producer);
 
     if (epmd != engine_metadata.end())
     {
