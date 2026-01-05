@@ -90,9 +90,6 @@ class GridInterface
                         const Spine::TaggedLocation& tloc,const Spine::LocationPtr& loc,
                         const T::GeometryId_set& geometryIdList,std::vector<std::vector<T::Coordinate>>& polygonPath);
 
-
-  private:
-
       Engine::Grid::Engine* itsGridEngine;
       const Fmi::TimeZones& itsTimezones;
 
