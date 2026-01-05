@@ -1124,7 +1124,8 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
     auto z = Spine::optional_string(req.getParameter("z"), "");
     double min_level = std::numeric_limits<double>::min();
     double max_level = std::numeric_limits<double>::max();
-    bool hasZParam = (!z.empty()), range = false;
+    bool hasZParam = !z.empty();
+    bool range = false;
 
     std::string zLo;
     std::string zHi;
