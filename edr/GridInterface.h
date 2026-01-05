@@ -50,11 +50,11 @@ class GridInterface
 
   private:
 
-      void            exteractCoordinatesAndAggrecationTimes(std::shared_ptr<QueryServer::Query>& gridQuery,
+      void            extractCoordinatesAndAggrecationTimes(std::shared_ptr<QueryServer::Query>& gridQuery,
                         const Fmi::TimeZonePtr& tz,T::Coordinate_vec& coordinates,
                         std::set<Fmi::LocalDateTime>& aggregationTimes);
 
-      void            exteractQueryResult(std::shared_ptr<QueryServer::Query>& gridQuery,const State& state,
+      void            extractQueryResult(std::shared_ptr<QueryServer::Query>& gridQuery,const State& state,
                         Query& masterquery,TS::OutputData& outputData,const QueryServer::QueryStreamer_sptr& queryStreamer,
                         const AreaProducers& areaproducers,const Fmi::TimeZonePtr& tz,const Spine::TaggedLocation& tloc,
                         const Spine::LocationPtr& loc,const std::string& country,int levelId,double level);

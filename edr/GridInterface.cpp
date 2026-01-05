@@ -1286,7 +1286,7 @@ void GridInterface::findLevels(Query& masterquery,
   }
 }
 
-void GridInterface::exteractCoordinatesAndAggrecationTimes(
+void GridInterface::extractCoordinatesAndAggrecationTimes(
     std::shared_ptr<QueryServer::Query>& gridQuery,
     const Fmi::TimeZonePtr& tz,
     T::Coordinate_vec& coordinates,
@@ -1350,18 +1350,18 @@ void GridInterface::exteractCoordinatesAndAggrecationTimes(
   }
 }
 
-void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gridQuery,
-                                        const State& state,
-                                        Query& masterquery,
-                                        TS::OutputData& outputData,
-                                        const QueryServer::QueryStreamer_sptr& /* queryStreamer */,
-                                        const AreaProducers& /* areaproducers */,
-                                        const Fmi::TimeZonePtr& tz,
-                                        const Spine::TaggedLocation& tloc,
-                                        const Spine::LocationPtr& loc,
-                                        const std::string& country,
-                                        int levelId,
-                                        double level)
+void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& gridQuery,
+                                       const State& state,
+                                       Query& masterquery,
+                                       TS::OutputData& outputData,
+                                       const QueryServer::QueryStreamer_sptr& /* queryStreamer */,
+                                       const AreaProducers& /* areaproducers */,
+                                       const Fmi::TimeZonePtr& tz,
+                                       const Spine::TaggedLocation& tloc,
+                                       const Spine::LocationPtr& loc,
+                                       const std::string& country,
+                                       int levelId,
+                                       double level)
 {
   FUNCTION_TRACE
   try
@@ -1377,7 +1377,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
 
     T::Coordinate_vec coordinates;
     std::set<Fmi::LocalDateTime> aggregationTimes;
-    exteractCoordinatesAndAggrecationTimes(gridQuery, tz, coordinates, aggregationTimes);
+    extractCoordinatesAndAggrecationTimes(gridQuery, tz, coordinates, aggregationTimes);
 
     // Going through all parameters
 
@@ -2269,18 +2269,18 @@ void GridInterface::processGridQuery(const State& state,
           insertFileQueries(*gridQuery, queryStreamer);
         }
 
-        exteractQueryResult(gridQuery,
-                            state,
-                            masterquery,
-                            outputData,
-                            queryStreamer,
-                            areaproducers,
-                            tz,
-                            tloc,
-                            loc,
-                            country,
-                            qLevelId,
-                            level);
+        extractQueryResult(gridQuery,
+                           state,
+                           masterquery,
+                           outputData,
+                           queryStreamer,
+                           areaproducers,
+                           tz,
+                           tloc,
+                           loc,
+                           country,
+                           qLevelId,
+                           level);
 
         // Since each level is fetched as a separate parameter (not by setting level id in loop),
         // loop only once
