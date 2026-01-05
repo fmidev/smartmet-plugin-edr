@@ -2895,7 +2895,8 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       properties["detail"] = Json::Value(detail_string);
       if (!edr_md->temporal_extent.time_periods.empty())
       {
-        Fmi::DateTime start_time, end_time;
+        Fmi::DateTime start_time;
+        Fmi::DateTime end_time;
 
         if (soundingObservations)
         {

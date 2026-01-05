@@ -165,7 +165,8 @@ std::string nearestTimeNow(const EDRMetaData& emd, const std::string& datetime =
   if (now <= time_periods.front().start_time)
     return utcDateTime(time_periods.front().start_time);
 
-  const edr_temporal_extent_period *tp1 = nullptr, *tp2 = nullptr;
+  const edr_temporal_extent_period* tp1 = nullptr;
+  const edr_temporal_extent_period* tp2 = nullptr;
 
   // After (or match) last time period (start or) end ?
   //

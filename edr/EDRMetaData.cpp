@@ -1274,7 +1274,8 @@ EDRProducerMetaData get_edr_metadata_obs(
 
         using Engine::Observation::ObsLevelType;
         auto levelType = obs_md.levels().front().getLevelType();
-        std::string levelTypeStr, levelDescStr;
+        std::string levelTypeStr;
+        std::string levelDescStr;
 
         producer_emd.vertical_extent.obs_level_type = levelType;
 
