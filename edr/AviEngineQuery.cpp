@@ -13,7 +13,7 @@ namespace EDR
 namespace
 {
 
-void storeAviData(const State &state,
+void storeAviData(const State & /* state */,
                   SmartMet::Engine::Avi::StationQueryData &aviData,
                   bool fetchIcao,
                   TS::OutputData &outputData)

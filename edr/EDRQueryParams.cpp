@@ -21,8 +21,8 @@ namespace EDR
 namespace
 {
 bool is_data_query(const Spine::HTTP::Request& req,
-                   const EDRQuery& edrQuery,
-                   const EDRMetaData& edrMetaData)
+                   const EDRQuery& /* edrQuery */,
+                   const EDRMetaData& /* edrMetaData */)
 {
   try
   {
@@ -434,7 +434,7 @@ bool EDRQueryParams::isAviProducer(const EDRProducerMetaData& avi_metadata,
   return (avi_metadata.find(producer_name) != avi_metadata.end());
 }
 
-std::string EDRQueryParams::parseLocations(const State& state,
+std::string EDRQueryParams::parseLocations(const State& /* state */,
                                            const std::vector<std::string>& resource_parts)
 {
   try
@@ -897,8 +897,8 @@ void EDRQueryParams::parseCube()
   }
 }
 
-void EDRQueryParams::parseDateTime(const State& state,
-                                   const std::string& producer,
+void EDRQueryParams::parseDateTime(const State& /* state */,
+                                   const std::string& /* producer */,
                                    const EDRMetaData& emd)
 {
   try

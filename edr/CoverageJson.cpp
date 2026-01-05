@@ -1988,7 +1988,7 @@ void set_level_value(const bool &levels_present, const int &level, Json::Value &
   }
 }
 
-void process_values(const std::string &parameter_name,
+void process_values(const std::string & /* parameter_name */,
                     const std::string &output_name,
                     const int &parameter_precision,
                     const int &longitude_precision,
@@ -2552,9 +2552,9 @@ Json::Value format_output_data_vertical_profile(
     const TS::OutputData &outputData,
     const EDRMetaData &emd,
     const std::set<int> &levels,
-    const CoordinateFilter &coordinate_filter,
+    const CoordinateFilter & /* coordinate_filter */,
     const std::vector<Spine::Parameter> &query_parameters,
-    EDRQueryType query_type,
+    EDRQueryType /* query_type */,
     bool useDataLevels)
 {
   try

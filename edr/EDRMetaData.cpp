@@ -964,7 +964,7 @@ const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
 }
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
-                                        const ProducerLicenses &licenses,
+                                        const ProducerLicenses & /* licenses */,
                                         const std::string &default_language,
                                         const ParameterInfo *pinfo,
                                         const CollectionInfoContainer &cic,
@@ -1068,7 +1068,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 }
 
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
-                                          const ProducerLicenses &licenses,
+                                          const ProducerLicenses & /* licenses */,
                                           const std::string &default_language,
                                           const ParameterInfo *pinfo,
                                           const CollectionInfoContainer &cic,
@@ -1213,7 +1213,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
 EDRProducerMetaData get_edr_metadata_obs(
     Engine::Observation::Engine &obsEngine,
-    const ProducerLicenses &licenses,
+    const ProducerLicenses & /* licenses */,
     const std::string &default_language,
     const ParameterInfo *pinfo,
     const std::map<std::string, const Engine::Observation::ObservableProperty *>
@@ -1378,7 +1378,7 @@ EDRProducerMetaData get_edr_metadata_obs(
 
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const Config &config,
-                                         const ProducerLicenses &licenses,
+                                         const ProducerLicenses & /* licenses */,
                                          const std::string &default_language,
                                          const ParameterInfo *pinfo,
                                          const CollectionInfoContainer &cic,
@@ -1462,7 +1462,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
 }
 
 SupportedLocations get_supported_locations(const AviMetaData &amd,
-                                           const AviCollections &aviCollections)
+                                           const AviCollections & /* aviCollections */)
 
 {
   try
