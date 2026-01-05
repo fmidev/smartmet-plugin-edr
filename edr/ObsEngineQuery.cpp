@@ -603,7 +603,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::doAggregationForPlaces(
 
 void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
                                                    const std::string& producer,
-                                                   const ObsParameters& obsParameterss,
+                                                   const ObsParameters& obsParameters,
                                                    Engine::Observation::Settings& settings,
                                                    Query& query,
                                                    TS::OutputData& outputData) const
@@ -611,7 +611,6 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
   try
   {
     TS::TimeSeriesVectorPtr observation_result;
-    ObsParameters obsParameters = obsParameterss;
 
     // Quick query if there is no aggregation
     if (!query.timeAggregationRequested)

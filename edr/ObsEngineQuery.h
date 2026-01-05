@@ -55,7 +55,7 @@ class ObsEngineQuery
  private:
   void fetchObsEngineValuesForPlaces(const State& state,
                                      const std::string& producer,
-                                     const ObsParameters& obsParameterss,
+                                     const ObsParameters& obsParameters,
                                      Engine::Observation::Settings& settings,
                                      Query& query,
                                      TS::OutputData& outputData) const;
