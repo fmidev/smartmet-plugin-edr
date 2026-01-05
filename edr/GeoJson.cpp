@@ -683,11 +683,11 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
       const auto &llts_lon = tsg_lon->at(k);
       const auto &llts_lat = tsg_lat->at(k);
 
-      for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
+      for (unsigned int lev_idx = 0; lev_idx < llts_data.timeseries.size(); lev_idx++)
       {
-        const auto &data_value = llts_data.timeseries.at(l);
-        const auto &lon_value = llts_lon.timeseries.at(l);
-        const auto &lat_value = llts_lat.timeseries.at(l);
+        const auto &data_value = llts_data.timeseries.at(lev_idx);
+        const auto &lon_value = llts_lon.timeseries.at(lev_idx);
+        const auto &lat_value = llts_lat.timeseries.at(lev_idx);
 
         time_coord_value tcv;
         tcv.lon = as_double(lon_value.value);
@@ -698,7 +698,7 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
         if (levels_present)
         {
           const auto &llts_level = tsg_level->at(k);
-          const auto &level_value = llts_level.timeseries.at(l);
+          const auto &level_value = llts_level.timeseries.at(lev_idx);
           if (const auto *ptr = std::get_if<double>(&level_value.value))
           {
             level = *ptr;

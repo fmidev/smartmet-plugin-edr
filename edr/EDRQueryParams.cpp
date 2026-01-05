@@ -1151,13 +1151,13 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
 
       range = emd.vertical_extent.is_level_range;
 
-      for (const auto& l : emd.vertical_extent.levels)
+      for (const auto& value : emd.vertical_extent.levels)
       {
-        std::string level(l);
+        std::string level(value);
 
         if (hasZParam)
         {
-          double d_level = Fmi::stod(l);
+          double d_level = Fmi::stod(value);
           level = std::to_string((int)floor(d_level));
 
           if (!range)

@@ -35,8 +35,8 @@ struct edr_parameter
       : name(std::move(n)), description(std::move(d)), unit(std::move(u))
   {
   }
-  edr_parameter(std::string n, std::string d, std::string u, std::string l)
-      : name(std::move(n)), description(std::move(d)), unit(std::move(u)), label(std::move(l))
+  edr_parameter(std::string n, std::string d, std::string u, std::string lbl)
+      : name(std::move(n)), description(std::move(d)), unit(std::move(u)), label(std::move(lbl))
   {
   }
   std::string name;

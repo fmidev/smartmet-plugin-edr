@@ -2315,18 +2315,18 @@ void add_time_coord_value(const TS::LonLatTimeSeries &llts_data,
 {
   try
   {
-    for (unsigned int l = 0; l < llts_data.timeseries.size(); l++)
+    for (unsigned int lev_idx = 0; lev_idx < llts_data.timeseries.size(); lev_idx++)
     {
-      const auto &data_value = llts_data.timeseries.at(l);
-      const auto &lon_value = llts_lon.timeseries.at(l);
-      const auto &lat_value = llts_lat.timeseries.at(l);
+      const auto &data_value = llts_data.timeseries.at(lev_idx);
+      const auto &lon_value = llts_lon.timeseries.at(lev_idx);
+      const auto &lat_value = llts_lat.timeseries.at(lev_idx);
 
       time_coord_value tcv;
       tcv.lon = as_double(lon_value.value);
       tcv.lat = as_double(lat_value.value);
       tcv.time = (Fmi::date_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
 
-      double level = get_level(tsg_level, levels_present, tsg_index, l);
+      double level = get_level(tsg_level, levels_present, tsg_index, lev_idx);
 
       if (data_value.value != TS::None())
         tcv.value = data_value.value;
