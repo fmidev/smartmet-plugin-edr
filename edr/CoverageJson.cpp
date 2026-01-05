@@ -1124,7 +1124,7 @@ void add_timestep_dimension(const edr_temporal_extent &temporal_extent, Json::Va
 {
   try
   {
-    if (temporal_extent.time_steps.size() > 0)
+    if (!temporal_extent.time_steps.empty())
     {
       auto timesteps = Json::Value(Json::ValueType::arrayValue);
       for (auto ts : temporal_extent.time_steps)
@@ -2945,7 +2945,7 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       features[features.size()] = feature;
     }
 
-    if (edr_md->isAviProducer() && (edr_md->locations->size() > 0))
+    if (edr_md->isAviProducer() && !edr_md->locations->empty())
     {
       auto all = Json::Value(Json::ValueType::objectValue);
       all["id"] = "all";

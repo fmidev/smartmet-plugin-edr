@@ -557,7 +557,7 @@ void Config::parse_config_api_settings()
         std::string template_setting;
         api_item.lookupValue("url", url_setting);
         Fmi::trim(url_setting);
-        if ((url_setting.size() == 0) || (url_setting.front() != '/'))
+        if (url_setting.empty() || (url_setting.front() != '/'))
           url_setting = itsDefaultUrl + "/" + url_setting;
         if (url_setting.size() < 2)
           throw Fmi::Exception(BCP, "url '" + url_setting + "' is not valid");
@@ -1167,7 +1167,7 @@ Config::Config(const string &configfile)
     itsConfig.lookupValue("timeformat", itsDefaultTimeFormat);
     itsConfig.lookupValue("url", itsDefaultUrl);
     Fmi::trim(itsDefaultUrl);
-    if ((itsDefaultUrl.size() > 0) && (itsDefaultUrl.front() != '/'))
+    if (!itsDefaultUrl.empty() && (itsDefaultUrl.front() != '/'))
       itsDefaultUrl = "/" + itsDefaultUrl;
     if (itsDefaultUrl.size() < 2)
       throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");

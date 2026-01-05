@@ -385,7 +385,7 @@ void Plugin::query(const State& state,
 
     bool gridEnabled = false;
     if (strcasecmp(q.forecastSource.c_str(), "grid") == 0 ||
-        (q.forecastSource.length() == 0 &&
+        (q.forecastSource.empty() &&
          strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))
       gridEnabled = true;
 
