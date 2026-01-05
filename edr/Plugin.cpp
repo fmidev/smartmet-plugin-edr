@@ -18,6 +18,7 @@
 #include <spine/ImageFormatter.h>
 #include <spine/TableFormatterFactory.h>
 #include <timeseries/ParameterKeywords.h>
+#include <array>
 
 // #define MYDEBUG ON
 
