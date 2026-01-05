@@ -185,7 +185,7 @@ Spine::TaggedLocationList get_tloc_list(const Query& masterquery,
         if (nearest_loc)
         {
           Spine::TaggedLocationList ret;
-          ret.emplace_back(Spine::TaggedLocation(nearest_loc->name, nearest_loc));
+          ret.emplace_back(nearest_loc->name, nearest_loc);
           return ret;
         }
       }
@@ -237,12 +237,10 @@ void check_in_keyword_locations(Query& masterquery,
 bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams)
 {
   return std::all_of(
-    theParams.begin(),
-    theParams.end(),
-    [](const Spine::Parameter& param)
-    {
-      return TS::is_location_parameter(param.name()) || param.name() == "plaace";
-    });
+      theParams.begin(),
+      theParams.end(),
+      [](const Spine::Parameter& param)
+      { return TS::is_location_parameter(param.name()) || param.name() == "plaace"; });
 }
 
 void fetch_static_location_values(const Query& query,
@@ -277,8 +275,12 @@ void fetch_static_location_values(const Query& query,
         }
         else
         {
-          std::string val = TS::location_parameter(
-            loc, pname, query.valueformatter, query.timezone, query.precisions[column], query.crs);
+          std::string val = TS::location_parameter(loc,
+                                                   pname,
+                                                   query.valueformatter,
+                                                   query.timezone,
+                                                   query.precisions[column],
+                                                   query.crs);
           data.set(column, row++, val);
         }
       }
@@ -299,22 +301,22 @@ void check_timestep(const Query& masterquery, const EDRMetaData& emd, const std:
     {
       if (emd.temporal_extent.time_steps.empty())
       {
-        Fmi::Exception ex(
-            BCP, "timestep option is not applicable to collection '" + producer + "'!");
+        Fmi::Exception ex(BCP,
+                          "timestep option is not applicable to collection '" + producer + "'!");
         ex.disableLogging();
         throw ex;
       }
 
       for (auto ts : emd.temporal_extent.time_steps)
       {
-        if ((unsigned int) ts == *masterquery.toptions.timeStep)
+        if ((unsigned int)ts == *masterquery.toptions.timeStep)
           return;
       }
 
       auto tss = Fmi::to_string(*masterquery.toptions.timeStep);
 
-      Fmi::Exception ex(
-          BCP, "timestep " + tss + " is not applicable to collection '" + producer + "'!");
+      Fmi::Exception ex(BCP,
+                        "timestep " + tss + " is not applicable to collection '" + producer + "'!");
       ex.disableLogging();
       throw ex;
     }
@@ -353,8 +355,8 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state,
 }
 
 std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state,
-                                                                        const Query& masterquery,
-                                                                        Spine::Table& table) const
+                                                                      const Query& masterquery,
+                                                                      Spine::Table& table) const
 {
   try
   {
@@ -401,9 +403,9 @@ void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquer
 }
 
 std::string QueryProcessingHub::getMsgZipFileName(
-    const std::vector<std::string> &icaoCodes,
-    const Fmi::LocalDateTime &ldt,
-    std::vector<std::string>::const_iterator *icaoIterator) const
+    const std::vector<std::string>& icaoCodes,
+    const Fmi::LocalDateTime& ldt,
+    std::vector<std::string>::const_iterator* icaoIterator) const
 {
   // <icaocode>_<messagetimedate>_<messagetimetime>.xml
   //
@@ -421,7 +423,7 @@ std::string QueryProcessingHub::getMsgZipFileName(
 std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsgicao_data,
                                                          const TS::TimeSeriesGroupPtr& tsg_data,
                                                          const Query& masterquery,
-                                                         ZipWriter *zipWriter) const
+                                                         ZipWriter* zipWriter) const
 {
   try
   {
@@ -482,7 +484,7 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
   }
 }
 
-void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
+void QueryProcessingHub::processIWXXMAndTACData(const Config& config,
                                                 const TS::OutputData& outputData,
                                                 const Query& masterquery,
                                                 Spine::Table& table)
@@ -494,8 +496,8 @@ void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
       // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
       //
       auto zipWriter = ((masterquery.output_format == IWXXMZIP_FORMAT)
-                        ? std::make_unique<ZipWriter>(config.aviTmpPath())
-                        : nullptr);
+                            ? std::make_unique<ZipWriter>(config.aviTmpPath())
+                            : nullptr);
       uint messageIdx = ((masterquery.output_format == IWXXMZIP_FORMAT) ? 1 : 0);
 
       std::string messages;
@@ -503,13 +505,14 @@ void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
       for (const auto& output : outputData)
       {
         const auto& outdata = output.second;
-        if (! outdata.empty())
+        if (!outdata.empty())
         {
           const auto& tsicaodata = outdata.at(0);
           const auto& tsgicao_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsicaodata));
           const auto& tsdata = outdata.at(messageIdx);
           const auto& tsg_data = *(std::get_if<TS::TimeSeriesGroupPtr>(&tsdata));
-          messages += parseIWXXMAndTACMessages(tsgicao_data, tsg_data, masterquery, zipWriter.get());
+          messages +=
+              parseIWXXMAndTACMessages(tsgicao_data, tsg_data, masterquery, zipWriter.get());
         }
       }
 
@@ -517,13 +520,13 @@ void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
       {
         try
         {
-          if (! zipWriter->empty())
+          if (!zipWriter->empty())
             messages = zipWriter->createZip();
           else
             // ==> 204
             zipFileName.clear();
         }
-        catch (const std::exception &ex)
+        catch (const std::exception& ex)
         {
           throw Fmi::Exception(BCP, std::string("Failed to create zip: ") + ex.what());
         }
@@ -534,8 +537,9 @@ void QueryProcessingHub::processIWXXMAndTACData(const Config &config,
       }
       else if (!messages.empty() && masterquery.output_format == IWXXM_FORMAT)
       {
-        messages.insert(
-          0, "<collect:meteorologicalInformation xmlns:collect=\"https://schemas.wmo.int/collect/1.2\">\n");
+        messages.insert(0,
+                        "<collect:meteorologicalInformation "
+                        "xmlns:collect=\"https://schemas.wmo.int/collect/1.2\">\n");
         messages.append("\n</collect:meteorologicalInformation>");
       }
       table.set(0, 0, messages);
@@ -634,7 +638,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       if (itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
       {
         itsAviEngineQuery.processAviEngineQuery(
-           thePlugin.itsConfig, state, q, producerName, outputData);
+            thePlugin.itsConfig, state, q, producerName, outputData);
         process_qengine_query = false;
       }
       else
@@ -681,8 +685,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
     setPrecisions(emd, masterquery);
 
-    if (masterquery.output_format == TAC_FORMAT ||
-        masterquery.output_format == IWXXM_FORMAT ||
+    if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT ||
         masterquery.output_format == IWXXMZIP_FORMAT)
     {
       if (masterquery.output_format == IWXXMZIP_FORMAT)

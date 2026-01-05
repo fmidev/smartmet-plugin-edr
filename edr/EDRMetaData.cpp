@@ -654,8 +654,8 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
                     aviCollection.getLocationCheck());
     setAviQueryLocationOptions(aviCollection, amd, queryOptions);
 
-    queryOptions.itsParameters.push_back("icao");
-    queryOptions.itsParameters.push_back("messagetime");
+    queryOptions.itsParameters.emplace_back("icao");
+    queryOptions.itsParameters.emplace_back("messagetime");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Validity::Accepted;
 
@@ -693,7 +693,7 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
 
     if ((!queryOptions.itsExcludeSPECIs) && (queryOptions.itsMessageTypes.front() == "METAR"))
-      queryOptions.itsMessageTypes.push_back("SPECI");
+      queryOptions.itsMessageTypes.emplace_back("SPECI");
 
     // BRAINSTORM-3300
     //
@@ -779,8 +779,7 @@ void setAviQueryLocationOptions(const AviCollection &aviCollection,
       auto south = *bbox.getMinY();
       auto north = *bbox.getMaxY();
 
-      queryOptions.itsLocationOptions.itsBBoxes.push_back(
-          SmartMet::Engine::Avi::BBox(west, east, south, north));
+      queryOptions.itsLocationOptions.itsBBoxes.emplace_back(west, east, south, north);
     }
   }
   catch (...)

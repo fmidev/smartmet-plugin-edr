@@ -21,7 +21,7 @@ void storeAviData(const State & /* state */,
   try
   {
     TS::TimeSeriesVectorPtr messageData(new TS::TimeSeriesVector());
-    outputData.push_back(make_pair("data", std::vector<TS::TimeSeriesData>()));
+    outputData.emplace_back("data", std::vector<TS::TimeSeriesData>());
     std::vector<TS::TimeSeriesData> &odata = (--outputData.end())->second;
 
     for (const auto &column : aviData.itsColumns)
@@ -122,7 +122,7 @@ void checkAviEnginePositionQuery(const Query &query,
     auto lat = point->getY();
 
     // Lets set longitude, latitude and maxdistance
-    queryOptions.itsLocationOptions.itsLonLats.push_back({lon, lat});
+    queryOptions.itsLocationOptions.itsLonLats.emplace_back(lon, lat);
     queryOptions.itsLocationOptions.itsMaxDistance = (radius * 1000);
     queryOptions.itsLocationOptions.itsNumberOfNearestStations = 1;
   }
@@ -234,12 +234,12 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     //
     bool fetchIcao = (query.output_format == IWXXMZIP_FORMAT);
     if (fetchIcao)
-      queryOptions.itsParameters.push_back("icao");
+      queryOptions.itsParameters.emplace_back("icao");
 
-    queryOptions.itsParameters.push_back("messagetime");
-    queryOptions.itsParameters.push_back("message");
-    queryOptions.itsParameters.push_back("longitude");
-    queryOptions.itsParameters.push_back("latitude");
+    queryOptions.itsParameters.emplace_back("messagetime");
+    queryOptions.itsParameters.emplace_back("message");
+    queryOptions.itsParameters.emplace_back("longitude");
+    queryOptions.itsParameters.emplace_back("latitude");
 
     queryOptions.itsValidity = SmartMet::Engine::Avi::Validity::Accepted;
     queryOptions.itsMessageTypes.push_back(to_upper_copy(producer));
@@ -301,7 +301,7 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
 
     if ((!queryOptions.itsExcludeSPECIs) && (producer == METAR))
-      queryOptions.itsMessageTypes.push_back("SPECI");
+      queryOptions.itsMessageTypes.emplace_back("SPECI");
 
     // BRAINSTORM-3300
     //

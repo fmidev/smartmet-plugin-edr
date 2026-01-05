@@ -3034,7 +3034,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
         tsd.emplace_back(tsp);
       }
       TS::OutputData od;
-      od.push_back(std::make_pair("_obs_", tsd));
+      od.emplace_back("_obs_", tsd);
       // Zero or one levels
       if (levels.size() <= 1)
       {

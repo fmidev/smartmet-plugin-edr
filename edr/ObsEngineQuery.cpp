@@ -1058,8 +1058,7 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
       std::vector<TS::TimeSeriesData> aggregatedData;
 
       // store observation data
-      aggregatedData.emplace_back(
-          TS::TimeSeriesData(TS::erase_redundant_timesteps(aggregated_tsg, tlist)));
+      aggregatedData.emplace_back(TS::erase_redundant_timesteps(aggregated_tsg, tlist));
       PostProcessing::store_data(aggregatedData, query, outputData);
     }
   }

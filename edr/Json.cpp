@@ -364,7 +364,7 @@ Value &Value::operator[](ArrayIndex index)
   }
 
   while (data_value_vector.size() <= index)
-    data_value_vector.emplace_back(Value());
+    data_value_vector.emplace_back();
 
   return data_value_vector.at(index);
 }
