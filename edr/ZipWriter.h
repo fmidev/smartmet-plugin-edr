@@ -3,12 +3,13 @@
 #ifndef ZIP_WRITER_HPP
 #define ZIP_WRITER_HPP
 
-#include <zip.h>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
+#include <zip.h>
 
-namespace {
+namespace
+{
 
 const std::string defaultTmpFilePath = "/var/tmp";
 
@@ -17,7 +18,7 @@ class TmpFile
  public:
   TmpFile() = delete;
   TmpFile(const TmpFile &) = delete;
-  TmpFile& operator=(const TmpFile &) = delete;
+  TmpFile &operator=(const TmpFile &) = delete;
 
   TmpFile(const std::string &dir, const std::string &fileNameTemplate)
   {
@@ -37,7 +38,7 @@ class TmpFile
 
   ~TmpFile()
   {
-    if (! tmpFile.empty())
+    if (!tmpFile.empty())
       ::unlink(tmpFile.c_str());
   }
 
@@ -52,18 +53,17 @@ class ZipSource
  public:
   ZipSource() = delete;
   ZipSource(const ZipSource &) = delete;
-  ZipSource& operator=(const ZipSource &) = delete;
+  ZipSource &operator=(const ZipSource &) = delete;
 
-  ZipSource(zip_t *archive, const std::string &content)
-    : zipSource(nullptr)
+  ZipSource(zip_t *archive, const std::string &content) : zipSource(nullptr)
   {
     auto buf = std::make_unique<unsigned char[]>(content.size());
     memcpy(buf.get(), content.data(), content.size());
 
     zipSource = zip_source_buffer(archive, buf.get(), content.size(), 1);
-    if (! zipSource)
-      throw std::runtime_error(
-        "zip_source_buffer failed: " + std::string(zip_error_strerror(zip_get_error(archive))));
+    if (!zipSource)
+      throw std::runtime_error("zip_source_buffer failed: " +
+                               std::string(zip_error_strerror(zip_get_error(archive))));
 
     buf.release();
   }
@@ -84,7 +84,7 @@ class ZipSource
     return ret;
   }
 
-private:
+ private:
   zip_source_t *zipSource;
 };
 
@@ -95,13 +95,12 @@ class ZipArchive
   ZipArchive(const ZipArchive &) = delete;
   ZipArchive &operator=(const ZipArchive &) = delete;
 
-  explicit ZipArchive(const std::string &path)
-    : zipArchive(nullptr)
+  explicit ZipArchive(const std::string &path) : zipArchive(nullptr)
   {
     int err = 0;
 
     zipArchive = zip_open(path.c_str(), ZIP_CREATE | ZIP_TRUNCATE, &err);
-    if (! zipArchive)
+    if (!zipArchive)
     {
       zip_error_t ze;
       zip_error_init_with_code(&ze, err);
@@ -126,23 +125,23 @@ class ZipArchive
     ZipSource zipSource(zipArchive, content);
 
     zip_int64_t idx = zip_file_add(
-      zipArchive, fileName.c_str(), zipSource.get(), ZIP_FL_ENC_UTF_8 | ZIP_FL_OVERWRITE);
+        zipArchive, fileName.c_str(), zipSource.get(), ZIP_FL_ENC_UTF_8 | ZIP_FL_OVERWRITE);
 
     if (idx < 0)
-      throw std::runtime_error(
-        "zip_file_add failed: " + std::string(zip_error_strerror(zip_get_error(zipArchive))));
+      throw std::runtime_error("zip_file_add failed: " +
+                               std::string(zip_error_strerror(zip_get_error(zipArchive))));
 
     zipSource.release();
   }
 
   void close()
   {
-    if (! zipArchive)
+    if (!zipArchive)
       throw std::runtime_error("zip is already closed");
 
     if (zip_close(zipArchive) < 0)
-      throw std::runtime_error(
-        "zip_close failed: " + std::string(zip_error_strerror(zip_get_error(zipArchive))));
+      throw std::runtime_error("zip_close failed: " +
+                               std::string(zip_error_strerror(zip_get_error(zipArchive))));
 
     zipArchive = nullptr;
   }
@@ -151,13 +150,13 @@ class ZipArchive
   zip_t *zipArchive;
 };
 
-} // namespace
+}  // namespace
 
 class ZipWriter
 {
  public:
   explicit ZipWriter(const std::string &tmpDirectory = "")
-    : tmpFileDir(tmpDirectory.empty() ? defaultTmpFilePath : tmpDirectory)
+      : tmpFileDir(tmpDirectory.empty() ? defaultTmpFilePath : tmpDirectory)
   {
     if (tmpFileDir.back() != '/')
       tmpFileDir += "/";
@@ -167,14 +166,14 @@ class ZipWriter
   {
     if (fileName.empty())
       throw std::runtime_error("addFile(): file name must not be empty");
-    else if (content.empty())
+    if (content.empty())
       throw std::runtime_error("addFile(): file content must not be empty");
 
     files.emplace_back(fileName, content);
   }
 
   bool empty() const { return files.empty(); }
-  void clear()       { files.clear(); }
+  void clear() { files.clear(); }
 
   std::string createZip()
   {

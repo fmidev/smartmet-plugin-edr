@@ -98,7 +98,8 @@ TS::Value get_location_parameter_value(const Spine::LocationPtr& loc,
   {
     if (paramname == "longitude")
       return loc->longitude;
-    else if (paramname == "latitude")
+
+    if (paramname == "latitude")
       return loc->latitude;
 
     return TS::location_parameter(
@@ -422,10 +423,10 @@ bool parseRangeListValue(std::string& valueStr,
   {
     if (onlyRange)
       throw Fmi::Exception(BCP, "Invalid z parameter, numeric min/max range expected");
-    else
-      throw Fmi::Exception(BCP,
-                           "Invalid z parameter, numeric value, list of values, repeating interval "
-                           "or min/max range expected");
+
+    throw Fmi::Exception(BCP,
+                         "Invalid z parameter, numeric value, list of values, repeating interval "
+                         "or min/max range expected");
   }
 }
 
