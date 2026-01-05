@@ -210,8 +210,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
 
     if (!parse_grib_loptions(state))
     {
-      loptions.reset(
-          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(req)));
+      loptions = std::make_shared<Engine::Geonames::LocationOptions>(
+          state.getGeoEngine().parseLocations(req));
 
       auto lon_coord = Spine::optional_double(req.getParameter("x"), kFloatMissing);
       auto lat_coord = Spine::optional_double(req.getParameter("y"), kFloatMissing);
@@ -228,8 +228,8 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
         auto tmpReq = req;
         tmpReq.addParameter("lonlat",
                             (Fmi::to_string(lon_coord) + "," + Fmi::to_string(lat_coord)));
-        loptions.reset(
-            new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
+        loptions = std::make_shared<Engine::Geonames::LocationOptions>(
+            state.getGeoEngine().parseLocations(tmpReq));
       }
     }
 
@@ -744,8 +744,8 @@ bool Query::parse_grib_loptions(const State& state)
       std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
       Spine::HTTP::Request tmpReq;
       tmpReq.addParameter("latlon", val);
-      loptions.reset(
-          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
+      loptions = std::make_shared<Engine::Geonames::LocationOptions>(
+          state.getGeoEngine().parseLocations(tmpReq));
       return true;
     }
     else if (v2 != nullptr && lat != nullptr && lon != nullptr)
@@ -758,8 +758,8 @@ bool Query::parse_grib_loptions(const State& state)
       std::string val = std::to_string(latitude) + "," + std::to_string(longitude);
       Spine::HTTP::Request tmpReq;
       tmpReq.addParameter("latlon", val);
-      loptions.reset(
-          new Engine::Geonames::LocationOptions(state.getGeoEngine().parseLocations(tmpReq)));
+      loptions = std::make_shared<Engine::Geonames::LocationOptions>(
+          state.getGeoEngine().parseLocations(tmpReq));
       return true;
     }
 
