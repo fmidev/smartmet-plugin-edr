@@ -1137,7 +1137,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
 
     // If no level given get all levels
     using Engine::Observation::ObsLevelType;
-    auto zParameter = "levels";
+    const auto* zParameter = "levels";
 
     if (z.empty() && !emd.vertical_extent.levels.empty())
     {
