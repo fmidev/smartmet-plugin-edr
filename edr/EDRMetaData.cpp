@@ -1458,7 +1458,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       //
       // TODO: Period length/adjustment and timestep from config
 
-      auto producer = amd.getProducer();
+      const auto &producer = amd.getProducer();
 
       const AviCollection &avi_collection = get_avi_collection(producer, aviCollections);
 
