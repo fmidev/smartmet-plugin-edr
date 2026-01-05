@@ -989,6 +989,9 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
           // qParam.mParameterLevelId = 0;
           qParam.mFlags |= QueryServer::QueryParameter::Flags::MetricLevels;
           break;
+
+        default:
+          break;
       }
 
       if (qParam.mParameterLevel < 0)
@@ -1272,6 +1275,8 @@ void GridInterface::findLevels(Query& masterquery,
 
         for (auto level : masterquery.heights)
           levels.push_back(static_cast<double>(level));
+        break;
+      default:
         break;
     }
   }
@@ -1560,30 +1565,32 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
                   {
                     TS::TimedValue tsValue(queryTime, TS::Value(coordinates[i].y()));
                     ts.emplace_back(tsValue);
+                    break;
                   }
-                  break;
 
                   case 2:  // lon
                   case 3:  // longitude
                   {
                     TS::TimedValue tsValue(queryTime, TS::Value(coordinates[i].x()));
                     ts.emplace_back(tsValue);
+                    break;
                   }
-                  break;
                   case 4:  // latlon
                   {
                     TS::TimedValue tsValue(queryTime,
                                            TS::LonLat(coordinates[i].y(), coordinates[i].x()));
                     ts.emplace_back(tsValue);
+                    break;
                   }
-                  break;
                   case 5:  // lonlat
                   {
                     TS::TimedValue tsValue(queryTime,
                                            TS::LonLat(coordinates[i].x(), coordinates[i].y()));
                     ts.emplace_back(tsValue);
+                    break;
                   }
-                  break;
+                  default:
+                    break;
                 }
               }
               TS::LonLatTimeSeries llSeries(TS::LonLat(0, 0), ts);
