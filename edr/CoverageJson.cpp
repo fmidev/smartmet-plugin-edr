@@ -2718,8 +2718,8 @@ Json::Value format_output_data_vertical_profile(
     // Iterate coverages/timesteps
     auto timeIter = ts_lon->begin();
     auto tI = timeIter;
-    size_t timeSteps;
-    size_t tS;
+    size_t timeSteps = 0;
+    size_t tS = 0;
 
     if (useDataLevels)
       timeSteps = ts_lon->size();
