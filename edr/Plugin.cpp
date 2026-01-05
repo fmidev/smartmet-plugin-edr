@@ -506,9 +506,8 @@ void Plugin::query(const State& state,
           response.setStatus(204);
         }
         else
-          response.setHeader(
-              "Content-Disposition",
-              (std::string("attachement; filename=") + qph.getZipFileName()).c_str());
+          response.setHeader("Content-Disposition",
+                             std::string("attachement; filename=") + qph.getZipFileName());
       }
       else if (*result == (q.valueformatter.missing() + "\n"))
       {
