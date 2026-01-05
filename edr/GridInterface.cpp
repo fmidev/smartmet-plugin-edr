@@ -1235,6 +1235,8 @@ void GridInterface::findLevels(Query& masterquery,
                     for (const auto& lev : tmpLevels)
                       levels.emplace_back(lev);
                     break;
+                  default:
+                    break;
                 }
               }
             }
