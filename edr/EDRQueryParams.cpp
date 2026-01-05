@@ -427,7 +427,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
 }
 
 bool EDRQueryParams::isAviProducer(const EDRProducerMetaData& avi_metadata,
-                                   const std::string& producer) const
+                                   const std::string& producer)
 {
   // BRAINSTORM-3274; Using lower case for collection names
   //
@@ -1002,7 +1002,7 @@ void EDRQueryParams::handleGridParameter(std::string& p,
                                          const std::string& producerId,
                                          const std::string& geometryId,
                                          const std::string& levelId,
-                                         const std::string& z) const
+                                         const std::string& z)
 {
   try
   {

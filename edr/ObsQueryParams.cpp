@@ -99,7 +99,7 @@ ObsQueryParams::ObsQueryParams(const Spine::HTTP::Request& req)
   }
 }
 
-std::set<std::string> ObsQueryParams::getObsProducers(const State& state) const
+std::set<std::string> ObsQueryParams::getObsProducers(const State& state)
 {
   try
   {

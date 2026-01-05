@@ -55,6 +55,7 @@ void check_setting_isarray(const libconfig::Setting &setting, const std::string 
  */
 // ----------------------------------------------------------------------
 
+#if 0
 TS::FunctionId get_function_id(const string &configName)
 {
   try
@@ -96,6 +97,7 @@ TS::FunctionId get_function_id(const string &configName)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 const std::set<std::string> &allSupportedFormats()
 {
@@ -104,6 +106,7 @@ const std::set<std::string> &allSupportedFormats()
   return supportedFormats;
 }
 
+#if 0
 string parse_config_key(const char *str1 = nullptr,
                         const char *str2 = nullptr,
                         const char *str3 = nullptr)
@@ -123,6 +126,7 @@ string parse_config_key(const char *str1 = nullptr,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 }  // namespace
 

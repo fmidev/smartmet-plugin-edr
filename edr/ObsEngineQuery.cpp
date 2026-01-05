@@ -560,7 +560,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::doAggregationForPlaces(
     const ObsParameters& obsParameters,
     const TS::TimeSeriesVectorPtr& observation_result,
     const TS::TimeSeriesGenerator::LocalTimeList& agg_times,
-    std::map<std::string, unsigned int>& parameterResultIndexes) const
+    std::map<std::string, unsigned int>& parameterResultIndexes)
 {
   try
   {
@@ -725,7 +725,7 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
 
 void ObsEngineQuery::handleSpecialParameter(const ObsParameter& obsparam,
                                             const std::string& areaName,
-                                            TS::TimeSeriesGroupPtr& tsg) const
+                                            TS::TimeSeriesGroupPtr& tsg)
 {
   try
   {

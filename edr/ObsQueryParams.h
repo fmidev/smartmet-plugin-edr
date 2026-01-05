@@ -24,7 +24,7 @@ struct ObsQueryParams
   bool latestObservation;
   bool useDataCache;
 #endif
-  std::set<std::string> getObsProducers(const State& state) const;
+  static std::set<std::string> getObsProducers(const State& state);
 };
 
 }  // namespace EDR

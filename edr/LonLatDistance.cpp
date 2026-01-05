@@ -74,6 +74,7 @@ double initial_bearing(const std::pair<double, double>& from, const std::pair<do
  * @param   {LatLon} point: Latitude/longitude of destination point
  * @returns {Number} Final bearing in degrees from North
  */
+#if 0
 double final_bearing(const std::pair<double, double>& from, const std::pair<double, double>& to)
 {
   try
@@ -94,6 +95,7 @@ double final_bearing(const std::pair<double, double>& from, const std::pair<doub
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
+#endif
 
 /**
  * Returns the midpoint between this point and the supplied point.
@@ -102,6 +104,7 @@ double final_bearing(const std::pair<double, double>& from, const std::pair<doub
  * @param   {LatLon} point: Latitude/longitude of destination point
  * @returns {LatLon} Midpoint between this point and the supplied point
  */
+#if 0
 std::pair<double, double> midpoint(const std::pair<double, double>& from,
                                    const std::pair<double, double>& to)
 {
@@ -127,6 +130,7 @@ std::pair<double, double> midpoint(const std::pair<double, double>& from,
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
+#endif
 
 /** @brief Computes the arc, in radian, between two WGS-84 positions.
  *

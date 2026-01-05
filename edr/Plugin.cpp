@@ -1006,8 +1006,9 @@ void Plugin::checkNewDataAndNotify(const std::shared_ptr<EngineMetaData>& new_em
 
     std::map<SourceEngine, std::map<std::string, Fmi::DateTime>>
         times_to_notify;  // engine -> producer -> latest update time
-    const SourceEngine source_engines[] = {
+    const std::array<SourceEngine, 4> source_engines{
         SourceEngine::Querydata, SourceEngine::Grid, SourceEngine::Observation, SourceEngine::Avi};
+
     auto now = Fmi::SecondClock::universal_time();
 
     for (auto source_engine : source_engines)

@@ -31,7 +31,7 @@ class EDRQueryParams
 
  protected:
   Spine::HTTP::Request req;  // this is used by Query
-  bool isAviProducer(const EDRProducerMetaData& avi_metadata, const std::string& producer) const;
+  static bool isAviProducer(const EDRProducerMetaData& avi_metadata, const std::string& producer);
 
  private:
   std::string parseEDRQuery(const State& state, const Config& config, const std::string& resource);
@@ -44,30 +44,30 @@ class EDRQueryParams
   void parseCoords(const std::string& coordinates);
   std::string parsePosition(const std::string& coords);
   std::string parseTrajectoryAndCorridor(const std::string& coords);
-  void parseLocations(const EDRMetaData& emd, std::string &coords);
+  void parseLocations(const EDRMetaData& emd, std::string& coords);
   void parseCube();
-  void parseDateTime(const State& state, const std::string &producer, const EDRMetaData& emd);
+  void parseDateTime(const State& state, const std::string& producer, const EDRMetaData& emd);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,
-                                      bool &noReqParams);
+                                      bool& noReqParams);
   std::string cleanParameterNames(const std::string& parameter_names,
                                   const EDRMetaData& emd,
                                   bool grid_producer,
                                   const std::string& z) const;
-  void handleGridParameter(std::string& p,
-                           const std::string& producerId,
-                           const std::string& geometryId,
-                           const std::string& levelId,
-                           const std::string& z) const;
+  static void handleGridParameter(std::string& p,
+                                  const std::string& producerId,
+                                  const std::string& geometryId,
+                                  const std::string& levelId,
+                                  const std::string& z);
 
   void parseICAOCodesAndAviProducer(const EDRMetaData& emd);
 
-  void validateRequestParametersWithMetaData(const EDRMetaData &emd) const;
-  void validateRequestParameterNamesWithMetaData(const EDRMetaData &emd) const;
-  void validateRequestDateTimeWithMetaData(const EDRMetaData &emd) const;
-  void validateRequestLevelsWithMetaData(const EDRMetaData &emd) const;
-  void validateRequestCoordinatesWithMetaData(const EDRMetaData &emd) const;
+  void validateRequestParametersWithMetaData(const EDRMetaData& emd) const;
+  void validateRequestParameterNamesWithMetaData(const EDRMetaData& emd) const;
+  void validateRequestDateTimeWithMetaData(const EDRMetaData& emd) const;
+  void validateRequestLevelsWithMetaData(const EDRMetaData& emd) const;
+  void validateRequestCoordinatesWithMetaData(const EDRMetaData& emd) const;
 
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;

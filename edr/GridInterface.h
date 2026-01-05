@@ -50,7 +50,7 @@ class GridInterface
 
   private:
 
-      void            extractCoordinatesAndAggrecationTimes(std::shared_ptr<QueryServer::Query>& gridQuery,
+      static void     extractCoordinatesAndAggrecationTimes(std::shared_ptr<QueryServer::Query>& gridQuery,
                         const Fmi::TimeZonePtr& tz,T::Coordinate_vec& coordinates,
                         std::set<Fmi::LocalDateTime>& aggregationTimes);
 
@@ -66,15 +66,15 @@ class GridInterface
       void            findLevels(Query& masterquery,const AreaProducers& areaproducers,uint mode,int& levelId,std::vector<double>& levels);
 
       static void     insertFileQueries(QueryServer::Query& query,const QueryServer::QueryStreamer_sptr& queryStreamer);
-      bool            isBuildInParameter(const char *parameter);
+      static bool     isBuildInParameter(const char *parameter);
 
       void            prepareProducer(QueryServer::Query& gridQuery,const Query& masterquery,int origLevelId,
                         const AreaProducers& areaproducers,int& levelId,int& geometryId);
 
-      void            prepareGeneration(QueryServer::Query& gridQuery,const Query& masterquery,
+      static void     prepareGeneration(QueryServer::Query& gridQuery,const Query& masterquery,
                         bool& sameParamAnalysisTime);
 
-      void            prepareLocation(QueryServer::Query& gridQuery,const Query& masterquery,
+      static void     prepareLocation(QueryServer::Query& gridQuery,const Query& masterquery,
                         const Spine::LocationPtr& loc,const T::GeometryId_set& geometryIdList,
                         std::vector<std::vector<T::Coordinate>>& polygonPath,uchar& locationType);
 

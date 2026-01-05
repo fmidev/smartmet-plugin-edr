@@ -337,8 +337,7 @@ QueryProcessingHub::QueryProcessingHub(const Plugin& thePlugin)
 {
 }
 
-Json::Value QueryProcessingHub::processMetaDataQuery(const State& state,
-                                                     const EDRQuery& edr_query) const
+Json::Value QueryProcessingHub::processMetaDataQuery(const State& state, const EDRQuery& edr_query)
 {
   try
   {
@@ -380,7 +379,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const Stat
   }
 }
 
-void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquery) const
+void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquery)
 {
   try
   {
@@ -405,7 +404,7 @@ void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquer
 std::string QueryProcessingHub::getMsgZipFileName(
     const std::vector<std::string>& icaoCodes,
     const Fmi::LocalDateTime& ldt,
-    std::vector<std::string>::const_iterator* icaoIterator) const
+    std::vector<std::string>::const_iterator* icaoIterator)
 {
   // <icaocode>_<messagetimedate>_<messagetimetime>.xml
   //

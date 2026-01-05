@@ -38,7 +38,7 @@ class TimePeriod
 {
  public:
   TimePeriod(const Fmi::DateTime &t1, const Fmi::DateTime &t2) : period_start(t1), period_end(t2) {}
-  void setStartTime(const Fmi::DateTime &t) { period_start = t; }
+  // void setStartTime(const Fmi::DateTime &t) { period_start = t; }
   void setEndTime(const Fmi::DateTime &t) { period_end = t; }
   const Fmi::DateTime &getStartTime() const { return period_start; }
   const Fmi::DateTime &getEndTime() const { return period_end; }
@@ -955,6 +955,37 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
   }
 }
 
+SupportedLocations get_supported_locations(const AviMetaData &amd,
+                                           const AviCollections & /* aviCollections */)
+
+{
+  try
+  {
+    SupportedLocations sls;
+
+    for (const auto &station : amd.getStations())
+    {
+      // TODO: Station name needed ?
+
+      location_info li;
+      li.id = station.getIcao();
+      li.longitude = station.getLongitude();
+      li.latitude = station.getLatitude();
+      li.name = station.getName();
+      li.type = "ICAO";
+      li.keyword = amd.getProducer();
+
+      sls[li.id] = li;
+    }
+
+    return sls;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 }  // namespace
 
 const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
@@ -1460,37 +1491,6 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
     }
 
     return edrProducerMetaData;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-SupportedLocations get_supported_locations(const AviMetaData &amd,
-                                           const AviCollections & /* aviCollections */)
-
-{
-  try
-  {
-    SupportedLocations sls;
-
-    for (const auto &station : amd.getStations())
-    {
-      // TODO: Station name needed ?
-
-      location_info li;
-      li.id = station.getIcao();
-      li.longitude = station.getLongitude();
-      li.latitude = station.getLatitude();
-      li.name = station.getName();
-      li.type = "ICAO";
-      li.keyword = amd.getProducer();
-
-      sls[li.id] = li;
-    }
-
-    return sls;
   }
   catch (...)
   {

@@ -116,12 +116,12 @@ class QEngineQuery
       const Query& query,
       const std::string& producer,
       const ProducerDataPeriod& producerDataPeriod) const;
-  Spine::LocationList getLocationListForPath(const Query& theQuery,
-                                             const Spine::TaggedLocation& theTLoc,
-                                             const std::string& place,
-                                             const NFmiSvgPath& svgPath,
-                                             const State& theState,
-                                             bool isWkt) const;
+  static Spine::LocationList getLocationListForPath(const Query& theQuery,
+                                                    const Spine::TaggedLocation& theTLoc,
+                                                    const std::string& place,
+                                                    const NFmiSvgPath& svgPath,
+                                                    const State& theState,
+                                                    bool isWkt);
   TS::TimeSeriesGroupPtr getQEngineValuesForArea(
       const Query& theQuery,
       const std::string& theProducer,

@@ -840,7 +840,7 @@ Spine::LocationList QEngineQuery::getLocationListForPath(const Query& theQuery,
                                                          const std::string& place,
                                                          const NFmiSvgPath& svgPath,
                                                          const State& theState,
-                                                         bool isWkt) const
+                                                         bool isWkt)
 {
   try
   {
