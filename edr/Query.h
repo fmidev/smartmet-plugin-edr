@@ -55,10 +55,10 @@ class Query : public ObsQueryParams, public EDRQueryParams
 
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
 
-  double step;  // used with path geometry
+  double step = 0;  // used with path geometry
 
-  std::size_t startrow;    // Paging; first (0-) row to return; default 0
-  std::size_t maxresults;  // max rows to return (page length); default 0 (all)
+  std::size_t startrow = 0;    // Paging; first (0-) row to return; default 0
+  std::size_t maxresults = 0;  // max rows to return (page length); default 0 (all)
 
   std::string wmo;
   std::string fmisid;
@@ -97,20 +97,20 @@ class Query : public ObsQueryParams, public EDRQueryParams
   Levels levels;
   Pressures pressures;
   Heights heights;
-  bool levelRange;  // Set if querying level/pressure/height range
+  bool levelRange = false;  // Set if querying level/pressure/height range
 
   TS::OptionParsers::ParameterOptions poptions;
   MaxAggregationIntervals maxAggregationIntervals;
   Engine::Geonames::WktGeometries wktGeometries;
   TS::TimeSeriesGeneratorOptions toptions;
 
-  bool maxdistanceOptionGiven;
-  bool findnearestvalidpoint;
+  bool maxdistanceOptionGiven = false;
+  bool findnearestvalidpoint = false;
   bool debug = false;
-  bool starttimeOptionGiven;
-  bool endtimeOptionGiven;
+  bool starttimeOptionGiven = false;
+  bool endtimeOptionGiven = false;
   bool useCurrentTime = false;
-  bool timeAggregationRequested;
+  bool timeAggregationRequested = false;
   std::string forecastSource;
   T::AttributeList attributeList;
 

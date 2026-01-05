@@ -5,10 +5,10 @@
 #include "Engines.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
-#include <optional>
 #include <macgyver/DateTime.h>
 #include <list>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #ifndef WITHOUT_OBSERVATION
@@ -47,16 +47,12 @@ struct edr_parameter
 
 struct edr_spatial_extent
 {
-  edr_spatial_extent()
-      : bbox_xmin(0.0), bbox_ymin(0.0), bbox_xmax(0.0), bbox_ymax(0.0), crs("EPSG:4326"),
-        geometryIds({})
-  {
-  }
+  edr_spatial_extent() : crs("EPSG:4326"), geometryIds({}) {}
 
-  double bbox_xmin;
-  double bbox_ymin;
-  double bbox_xmax;
-  double bbox_ymax;
+  double bbox_xmin = 0;
+  double bbox_ymin = 0;
+  double bbox_xmax = 0;
+  double bbox_ymax = 0;
   std::string crs;
   std::map<std::string, std::optional<int>> geometryIds;
 };
@@ -64,16 +60,13 @@ struct edr_spatial_extent
 struct edr_temporal_extent_period
 {
   edr_temporal_extent_period()
-      : start_time(Fmi::DateTime::NOT_A_DATE_TIME),
-        end_time(Fmi::DateTime::NOT_A_DATE_TIME),
-        timestep(0),
-        timesteps(0)
+      : start_time(Fmi::DateTime::NOT_A_DATE_TIME), end_time(Fmi::DateTime::NOT_A_DATE_TIME)
   {
   }
   Fmi::DateTime start_time;
   Fmi::DateTime end_time;
-  int timestep;
-  int timesteps;
+  int timestep = 0;
+  int timesteps = 0;
 };
 
 struct edr_temporal_extent
@@ -128,39 +121,40 @@ struct EDRMetaData
   bool isObsProducer() const { return metadata_source == SourceEngine::Observation; }
   bool isGridProducer() const { return metadata_source == SourceEngine::Grid; }
   bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
-  bool sourceHasInstances() const {
-      return !(data_queries.empty() || isObsProducer() || isAviProducer());
+  bool sourceHasInstances() const
+  {
+    return !(data_queries.empty() || isObsProducer() || isAviProducer());
   }
 
-  const Engine::Avi::Engine *aviEngine = nullptr;
-  bool getGeometry(const std::string &item, Json::Value &geometry) const;
+  const Engine::Avi::Engine* aviEngine = nullptr;
+  bool getGeometry(const std::string& item, Json::Value& geometry) const;
 };
 
 using EDRProducerMetaData =
     std::map<std::string, std::vector<EDRMetaData>>;  // producer-> meta data
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine& qEngine,
-                                        const ProducerLicenses &licenses,
+                                        const ProducerLicenses& licenses,
                                         const std::string& default_language,
                                         const ParameterInfo* pinfo,
                                         const CollectionInfoContainer& cic,
                                         const SupportedDataQueries& sdq,
                                         const SupportedOutputFormats& sofs,
-                                        const DefaultOutputFormats &defs,
+                                        const DefaultOutputFormats& defs,
                                         const SupportedProducerLocations& spl);
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine& gEngine,
-                                          const ProducerLicenses &licenses,
+                                          const ProducerLicenses& licenses,
                                           const std::string& default_language,
                                           const ParameterInfo* pinfo,
                                           const CollectionInfoContainer& cic,
                                           const SupportedDataQueries& sdq,
                                           const SupportedOutputFormats& sofs,
-                                          const DefaultOutputFormats &defs,
+                                          const DefaultOutputFormats& defs,
                                           const SupportedProducerLocations& spl);
 #ifndef WITHOUT_OBSERVATION
 EDRProducerMetaData get_edr_metadata_obs(
     Engine::Observation::Engine& obsEngine,
-    const ProducerLicenses &licenses,
+    const ProducerLicenses& licenses,
     const std::string& default_language,
     const ParameterInfo* pinfo,
     const std::map<std::string, const SmartMet::Engine::Observation::ObservableProperty*>&
@@ -168,7 +162,7 @@ EDRProducerMetaData get_edr_metadata_obs(
     const CollectionInfoContainer& cic,
     const SupportedDataQueries& sdq,
     const SupportedOutputFormats& sofs,
-    const DefaultOutputFormats &defs,
+    const DefaultOutputFormats& defs,
     const SupportedProducerLocations& spl,
     const ProducerParameters& prodParams,
     unsigned int observation_period);
@@ -176,14 +170,14 @@ EDRProducerMetaData get_edr_metadata_obs(
 #ifndef WITHOUT_AVI
 class Config;
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
-                                         const Config &config,
-                                         const ProducerLicenses &licenses,
+                                         const Config& config,
+                                         const ProducerLicenses& licenses,
                                          const std::string& default_language,
                                          const ParameterInfo* pinfo,
                                          const CollectionInfoContainer& cic,
                                          const SupportedDataQueries& sdq,
                                          const SupportedOutputFormats& sofs,
-                                         const DefaultOutputFormats &defs,
+                                         const DefaultOutputFormats& defs,
                                          const SupportedProducerLocations& spl);
 
 void load_locations_avi(const Engine::Avi::Engine& aviEngine,
