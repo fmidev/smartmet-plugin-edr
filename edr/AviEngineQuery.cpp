@@ -35,7 +35,7 @@ void storeAviData(const State &state,
           ((column.itsName == "icao") && (!fetchIcao)))
         continue;
 
-      TS::TimeSeriesGroupPtr messageData(new TS::TimeSeriesGroup());
+      TS::TimeSeriesGroupPtr messageData = std::make_shared<TS::TimeSeriesGroup>();
 
       for (auto stationId : aviData.itsStationIds)
       {
