@@ -951,8 +951,8 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
       auto endtime = datetime_parts.at(1);
 
       bool cErr = (datetime_parts.size() != 2);
-      bool sErr = ((starttime.size() > 0) && (toupper(starttime[0]) == 'P'));
-      bool eErr = ((endtime.size() > 0) && (toupper(endtime[0]) == 'P'));
+      bool sErr = (!starttime.empty() && (toupper(starttime[0]) == 'P'));
+      bool eErr = (!endtime.empty() && (toupper(endtime[0]) == 'P'));
       if (cErr || sErr || eErr)
       {
         auto const& ts = (cErr ? datetime : (sErr ? starttime : endtime));
@@ -984,7 +984,7 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
         req.addParameter("endtime", datetime);
       }
 
-      if ((datetime.size() > 0) && (toupper(datetime[0]) == 'P'))
+      if (!datetime.empty() && (toupper(datetime[0]) == 'P'))
         throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
     }
   }
