@@ -18,7 +18,7 @@ namespace EDR
 class EDRAPI
 {
  public:
-  EDRAPI() {}
+  EDRAPI() = default;
   void setSettings(const std::string& tmpldir, const APISettings& api_settings);
   const std::string& getAPI(const std::string& url, const std::string& host) const;
   bool isEDRAPIQuery(const std::string& url) const;

@@ -21,7 +21,7 @@ struct AggregationInterval
   unsigned int behind = 0;
   unsigned int ahead = 0;
 
-  AggregationInterval() {}
+  AggregationInterval() = default;
   AggregationInterval(unsigned int be, unsigned int ah) : behind(be), ahead(ah) {}
   friend std::ostream &operator<<(std::ostream &out, const AggregationInterval &interval);
 };

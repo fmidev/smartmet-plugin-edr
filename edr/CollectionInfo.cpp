@@ -12,7 +12,7 @@ namespace
 const CollectionInfo EMPTY_COLLECTION_INFO;
 }  // namespace
 
-CollectionInfoContainer::CollectionInfoContainer() {}
+CollectionInfoContainer::CollectionInfoContainer() = default;
 
 void CollectionInfoContainer::addInfo(SourceEngine theSource,
                                       const std::string& theId,
