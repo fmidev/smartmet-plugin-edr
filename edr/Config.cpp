@@ -1057,7 +1057,8 @@ License Config::parse_config_license(const std::string &path, const std::string 
       if (!setting.isGroup())
         throw Fmi::Exception(BCP, "Configured value of '" + licenseName + "' must be an object");
 
-      std::string fieldName, fieldValue;
+      std::string fieldName;
+      std::string fieldValue;
 
       for (int i = 0; (i < setting.getLength()); i++)
       {

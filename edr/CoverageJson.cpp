@@ -2697,8 +2697,10 @@ Json::Value format_output_data_vertical_profile(
     coverageCollection["referencing"] = referencing;
 
     // Iterate coverages/timesteps
-    auto timeIter = ts_lon->begin(), tI = timeIter;
-    size_t timeSteps, tS;
+    auto timeIter = ts_lon->begin();
+    auto tI = timeIter;
+    size_t timeSteps;
+    size_t tS;
 
     if (useDataLevels)
       timeSteps = ts_lon->size();
@@ -2769,7 +2771,10 @@ Json::Value format_output_data_vertical_profile(
           // Observation (sounding) data is in timestep order and itemIdx runs every row (level)
           // until time changes
 
-          size_t valIdx = 0, itemIdx = tS = tStep;
+          size_t valIdx = 0;
+          size_t itemIdx = tStep;
+          tS = tStep;
+
           bool loadLevels = (levelArray.size() == 0);
 
           for (tI = timeIter; (itemIdx < timeSteps); itemIdx++, valIdx++, tI++)

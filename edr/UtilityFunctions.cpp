@@ -326,7 +326,8 @@ bool parseRangeListValue(std::string& valueStr,
 
     bool isList = false;
 
-    std::vector<std::string> parts, listParts;
+    std::vector<std::string> parts;
+    std::vector<std::string> listParts;
     boost::algorithm::split(parts, v, boost::algorithm::is_any_of("/"));
 
     if (onlyRange && (parts.size() != 2))
@@ -487,7 +488,9 @@ std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d)
 {
   try
   {
-    std::string z, zLo, zHi;
+    std::string z;
+    std::string zLo;
+    std::string zHi;
     bool zIsRange = false;
 
     auto parts = parseBBoxAndZ(bbox, z, zIsRange, zLo, zHi);

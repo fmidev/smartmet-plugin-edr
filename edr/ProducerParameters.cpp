@@ -76,7 +76,7 @@ void ProducerParameters::init(const libconfig::Config& config)
 
       for (int i = 0; i < producers.getLength(); ++i)
       {
-        auto producer = producers[i].getName();
+        const auto* producer = producers[i].getName();
         auto producer_params = get_parameters(config, producer);
         parse_parameters(producer, producer_params, itsProducerParameters);
       }

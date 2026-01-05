@@ -1399,7 +1399,8 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
         TS::TimeSeriesPtr tsForNonGridParam(new TS::TimeSeries);
         TS::TimeSeriesGroupPtr tsForGroup(new TS::TimeSeriesGroup);
 
-        int columns = 0, rows = 0;
+        int columns = 0;
+        int rows = 0;
 
         if (C_INT(gridQuery->mQueryParameterList.size()) > pp &&
             !gridQuery->mQueryParameterList[pp].mValueList.empty())

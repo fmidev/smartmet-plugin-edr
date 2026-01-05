@@ -164,8 +164,12 @@ bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
     if (begin_iter == end_iter)
       return false;
 
-    auto it = begin_iter, first_it = begin_iter, last_it = begin_iter;
-    int laststep = 0, step = 0, timesteps = 0;
+    auto it = begin_iter;
+    auto first_it = begin_iter;
+    auto last_it = begin_iter;
+    int laststep = 0;
+    int step = 0;
+    int timesteps = 0;
 
     for (;; it++)
     {
@@ -708,7 +712,9 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     //
     // Storing station's temporal extent too, varies e.g. for taf collection
     //
-    std::set<Fmi::LocalDateTime> timesteps, stationTimesteps;
+    std::set<Fmi::LocalDateTime> timesteps;
+    std::set<Fmi::LocalDateTime> stationTimesteps;
+
     for (auto stationId : aviData.itsStationIds)
     {
       auto icaoIter = aviData.itsValues[stationId]["icao"].cbegin();

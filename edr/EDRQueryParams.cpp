@@ -54,7 +54,8 @@ bool is_data_query(const Spine::HTTP::Request& req,
     std::string res = req.getResource();
     boost::algorithm::split(resParts, res, boost::algorithm::is_any_of("/"));
     auto numParts = resParts.size();
-    size_t resIdx = 0, idx = 0;
+    size_t resIdx = 0;
+    size_t idx = 0;
 
     for (auto const& part : resParts)
     {
@@ -774,7 +775,8 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
     {
       auto z = Spine::optional_string(req.getParameter("z"), "");
       bool zIsRange = false;
-      std::string zLo, zHi;
+      std::string zLo;
+      std::string zHi;
 
       UtilityFunctions::parseRangeListValue(z, zIsRange, zLo, zHi);
     }
@@ -871,7 +873,8 @@ void EDRQueryParams::parseCube()
 
     auto z = Fmi::trim_copy(Spine::optional_string(req.getParameter("z"), ""));
     bool zIsRange = false;
-    std::string zLo, zHi;
+    std::string zLo;
+    std::string zHi;
 
     auto parts = UtilityFunctions::parseBBoxAndZ(bbox, z, zIsRange, zLo, zHi);
     size_t idx = ((parts.size() == 4) ? 2 : 3);
@@ -1118,7 +1121,8 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
     double max_level = std::numeric_limits<double>::max();
     bool hasZParam = (!z.empty()), range = false;
 
-    std::string zLo, zHi;
+    std::string zLo;
+    std::string zHi;
     if (UtilityFunctions::parseRangeListValue(z, range, zLo, zHi))
     {
       if (range)
