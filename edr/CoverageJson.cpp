@@ -945,7 +945,6 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd)
       param["type"] = Json::Value("Parameter");
 
       // Description field: 1) from config 2) from engine 3) parameter name
-      // Description field: 1) from config 2) from engine 3) parameter name
 
       std::string desc;
 
@@ -956,7 +955,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd)
       else
         desc = edr_param.name;
 
-      auto description = Json::Value(desc);
+      param["description"] = Json::Value(desc);
 
       if (!pinfo.unit_label.empty() || !pinfo.unit_symbol_value.empty() ||
           !pinfo.unit_symbol_type.empty())
