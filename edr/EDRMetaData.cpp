@@ -230,7 +230,6 @@ bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
-    return false;
   }
 }
 
