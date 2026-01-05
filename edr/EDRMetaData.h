@@ -82,7 +82,7 @@ struct edr_temporal_extent
   std::set<int> time_steps;
 };
 
-typedef std::map<std::string, edr_temporal_extent> StationTemporalExtentMetaData;
+using StationTemporalExtentMetaData = std::map<std::string, edr_temporal_extent>;
 
 struct edr_vertical_extent
 {
