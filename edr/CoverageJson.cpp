@@ -1004,7 +1004,7 @@ Json::Value parse_license_link(const ProducerLicenses &licenses, const std::stri
       license = licenses.find(DEFAULT_LICENSE);
 
     if ((license == licenses.end()) || license->second.empty())
-      return Json::Value();
+      return {};
 
     auto license_link = Json::Value(Json::ValueType::objectValue);
 

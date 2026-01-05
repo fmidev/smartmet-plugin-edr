@@ -31,7 +31,7 @@ Fmi::LocalDateTime ProducerDataPeriod::getTime(const std::string& producer,
       Fmi::TimeZonePtr tz = timezones.time_zone_from_string(timezone);
 
       if (itsDataPeriod.find(producer) == itsDataPeriod.end())
-        return Fmi::LocalDateTime(Fmi::DateTime::NOT_A_DATE_TIME, tz);
+        return {Fmi::DateTime::NOT_A_DATE_TIME, tz};
 
       if (time_enum == STARTTIME)
         return {itsDataPeriod.at(producer).begin(), tz};
@@ -106,8 +106,7 @@ void ProducerDataPeriod::getObsEngineDataPeriods(const Engine::Observation::Engi
         if (obsproducers.find(producer) == obsproducers.end())
           continue;
 
-        itsDataPeriod.insert(
-            make_pair(producer, Fmi::TimePeriod(now - Fmi::Hours(24), now)));
+        itsDataPeriod.insert(make_pair(producer, Fmi::TimePeriod(now - Fmi::Hours(24), now)));
       }
     }
   }

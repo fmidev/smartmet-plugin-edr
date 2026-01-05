@@ -31,12 +31,12 @@ using namespace std;
 
 namespace
 {
-  Fmi::DateTime y1900(Fmi::Date(1900, 1, 1));
-  Fmi::DateTime y1970(Fmi::Date(1970, 1, 1));
-  Fmi::DateTime y2100(Fmi::Date(2100, 1, 1));
+Fmi::DateTime y1900(Fmi::Date(1900, 1, 1));
+Fmi::DateTime y1970(Fmi::Date(1970, 1, 1));
+Fmi::DateTime y2100(Fmi::Date(2100, 1, 1));
 
-  Fmi::TimeZonePtr utc("Etc/UTC");
-} // anonymous namespace
+Fmi::TimeZonePtr utc("Etc/UTC");
+}  // anonymous namespace
 
 namespace SmartMet
 {
@@ -400,13 +400,14 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
     bool endTimeUTC = masterquery.toptions.endTimeUTC;
 
     // The orginal start time and the end time of the query
-    const auto mk_ldt = [](const Fmi::DateTime& time, const Fmi::TimeZonePtr& tz, bool is_utc) -> Fmi::LocalDateTime
-      {
-        if (is_utc)
-          return Fmi::LocalDateTime(time, tz);
-        else
-          return Fmi::LocalDateTime(time.date(), time.time_of_day(), tz);
-      };
+    const auto mk_ldt =
+        [](const Fmi::DateTime& time, const Fmi::TimeZonePtr& tz, bool is_utc) -> Fmi::LocalDateTime
+    {
+      if (is_utc)
+        return {time, tz};
+      else
+        return {time.date(), time.time_of_day(), tz};
+    };
 
     Fmi::LocalDateTime startTime = mk_ldt(masterquery.toptions.startTime, tz, startTimeUTC);
     Fmi::LocalDateTime endTime = mk_ldt(masterquery.toptions.endTime, tz, endTimeUTC);
@@ -447,7 +448,6 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
       seconds = tstep * ((seconds + tstep - 1) / tstep);
       grid_startTime = Fmi::LocalDateTime(startT.date(), Fmi::Seconds(seconds), startTime.zone());
     }
-
 
     // If the daylight saving time is in the request time interval then we need
     // to add an extra hour to the end time of the query.
@@ -501,7 +501,7 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
       {
         // startTime is "data", which means that we should read all the data from the beginning
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::StartTimeFromData;
-        grid_startTime = y1900; // "19000101T000000";
+        grid_startTime = y1900;  // "19000101T000000";
 
         if (!masterquery.toptions.endTimeData)
           gridQuery.mTimesteps = steps;
@@ -552,7 +552,7 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
 
         gridQuery.mTimesteps = gridQuery.mMaxParameterValues;
         if (grid_startTime == grid_endTime)
-          grid_endTime = y2100; // "21000101T000000"
+          grid_endTime = y2100;  // "21000101T000000"
       }
     }
     else
@@ -975,7 +975,7 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
           {
             // Grib uses Pa and querydata hPa, so we have to convert the value.
             qParam.mParameterLevel = C_INT(qParam.mParameterLevel * 100);
-            //qParam.mFlags |= QueryServer::QueryParameter::Flags::PressureLevels;
+            // qParam.mFlags |= QueryServer::QueryParameter::Flags::PressureLevels;
           }
           break;
 
@@ -987,11 +987,10 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
           break;
 
         case 2:
-          //qParam.mParameterLevelId = 0;
+          // qParam.mParameterLevelId = 0;
           qParam.mFlags |= QueryServer::QueryParameter::Flags::MetricLevels;
           break;
       }
-
 
       if (qParam.mParameterLevel < 0)
         qParam.mParameterLevel = origLevel;
@@ -1203,7 +1202,7 @@ void GridInterface::findLevels(Query& masterquery,
               // Fetching pressure levels.
               itsGridEngine->getProducerParameterLevelList(producerName, 2, 0.01, tmpLevels);
               for (auto lev = tmpLevels.rbegin(); lev != tmpLevels.rend(); ++lev)
-                levels.emplace_back(*lev*100);
+                levels.emplace_back(*lev * 100);
             }
             else if (levelId == 3)
             {
@@ -1226,7 +1225,7 @@ void GridInterface::findLevels(Query& masterquery,
                   case 2:  // Pressure level
                     itsGridEngine->getProducerParameterLevelList(producerName, 2, 0.01, tmpLevels);
                     for (auto lev = tmpLevels.rbegin(); lev != tmpLevels.rend(); ++lev)
-                      levels.emplace_back(*lev*100);
+                      levels.emplace_back(*lev * 100);
                     break;
 
                   case 3:  // model
@@ -1251,7 +1250,7 @@ void GridInterface::findLevels(Query& masterquery,
             // If the level type is "pressure" then we should use these levels in reverse order.
             for (auto level = masterquery.levels.rbegin(); level != masterquery.levels.rend();
                  ++level)
-              levels.emplace_back((double)(*level*100));
+              levels.emplace_back((double)(*level * 100));
           }
           else
           {
@@ -1265,7 +1264,7 @@ void GridInterface::findLevels(Query& masterquery,
       case 1:  // OP
         levelId = 2;
         for (const auto& level : masterquery.pressures)
-          levels.emplace_back((double)level*100);
+          levels.emplace_back((double)level * 100);
         break;
 
       case 2:
@@ -1927,7 +1926,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
 
               int idx = 0;
               int levelValue = level;
-              if (levelValue > 0  &&  levelId == 2)
+              if (levelValue > 0 && levelId == 2)
                 levelValue = level / 100;
 
               while (idx < pLen && levelValue <= 0)
@@ -2145,9 +2144,7 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
           if (!tsForNonGridParam->empty())
           {
             TS::TimeSeriesPtr aggregatedTs = TS::aggregate(
-                tsForNonGridParam,
-                paramFuncs[pIdx].functions,
-                tsForNonGridParam->getTimes());
+                tsForNonGridParam, paramFuncs[pIdx].functions, tsForNonGridParam->getTimes());
             aggregatedTs = erase_redundant_timesteps(aggregatedTs, aggregationTimes);
             aggregatedData.emplace_back(aggregatedTs);
           }
@@ -2155,20 +2152,16 @@ void GridInterface::exteractQueryResult(std::shared_ptr<QueryServer::Query>& gri
 
         if (!tsForParameter->empty())
         {
-          TS::TimeSeriesPtr aggregatedTs = TS::aggregate(
-              tsForParameter,
-              paramFuncs[pIdx].functions,
-              tsForParameter->getTimes());
+          TS::TimeSeriesPtr aggregatedTs =
+              TS::aggregate(tsForParameter, paramFuncs[pIdx].functions, tsForParameter->getTimes());
           aggregatedTs = erase_redundant_timesteps(aggregatedTs, aggregationTimes);
           aggregatedData.emplace_back(aggregatedTs);
         }
 
         if (!tsForGroup->empty())
         {
-          TS::TimeSeriesGroupPtr aggregatedTsg = TS::aggregate(
-              tsForGroup,
-              paramFuncs[pIdx].functions,
-              tsForGroup->front().getTimes());
+          TS::TimeSeriesGroupPtr aggregatedTsg =
+              TS::aggregate(tsForGroup, paramFuncs[pIdx].functions, tsForGroup->front().getTimes());
           aggregatedTsg = erase_redundant_timesteps(aggregatedTsg, aggregationTimes);
           aggregatedData.emplace_back(aggregatedTsg);
         }
@@ -2296,7 +2289,7 @@ void GridInterface::processGridQuery(const State& state,
   }
 }
 
-}  // namespace TimeSeries
+}  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet
 
