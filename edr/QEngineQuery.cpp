@@ -538,7 +538,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
       nearestpoint = qi->validPoint(latlon, query.maxdistance_kilometers());
     }
 
-    std::string country = state.getGeoEngine().countryName(loc->iso2, query.language);
+    // std::string country = state.getGeoEngine().countryName(loc->iso2, query.language);
 
     std::vector<TS::TimeSeriesData> aggregatedData;  // store here data of all levels
 
@@ -823,8 +823,10 @@ void QEngineQuery::pointQuery(const Query& theQuery,
       theQueryLevelDataCache.itsTimeSeries.insert(make_pair(theCacheKey, querydata_result));
     }
 
-    TS::TimeSeriesPtr aggregated_querydata_result = TS::aggregate(querydata_result, theParamFunc.functions, theRequestedTList);
-    aggregated_querydata_result = TS::erase_redundant_timesteps(aggregated_querydata_result, theRequestedTList);
+    TS::TimeSeriesPtr aggregated_querydata_result =
+        TS::aggregate(querydata_result, theParamFunc.functions, theRequestedTList);
+    aggregated_querydata_result =
+        TS::erase_redundant_timesteps(aggregated_querydata_result, theRequestedTList);
     theAggregatedData.emplace_back(aggregated_querydata_result);
   }
   catch (...)
@@ -1041,7 +1043,8 @@ void QEngineQuery::areaQuery(const Query& theQuery,
     bool isWkt = false;
     NFmiSvgPath svgPath;
     loc = resolveLocation(theTLoc, theQuery, svgPath, isWkt);
-    const auto country = itsPlugin.itsEngines.geoEngine->countryName(loc->iso2, theQuery.language);
+    // const auto country = itsPlugin.itsEngines.geoEngine->countryName(loc->iso2,
+    // theQuery.language);
 
     TS::TimeSeriesGroupPtr querydata_result;
 
@@ -1125,7 +1128,8 @@ void QEngineQuery::areaQuery(const Query& theQuery,
     {
       TS::TimeSeriesGroupPtr aggregated_querydata_result =
           TS::aggregate(querydata_result, theParamFunc.functions, theRequestedTList);
-      aggregated_querydata_result = TS::erase_redundant_timesteps(aggregated_querydata_result, theRequestedTList);
+      aggregated_querydata_result =
+          TS::erase_redundant_timesteps(aggregated_querydata_result, theRequestedTList);
       theAggregatedData.emplace_back(aggregated_querydata_result);
     }
   }

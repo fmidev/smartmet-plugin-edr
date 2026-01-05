@@ -248,7 +248,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       const auto &edr_parameter = engine_parameter_info.at(parameter_name);
 
       auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
-      auto description = (!pinfo.description.empty() ? pinfo.description : "");
+      // auto description = (!pinfo.description.empty() ? pinfo.description : "");
       auto label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter.name);
       auto symbol = (!pinfo.unit_symbol_value.empty() ? pinfo.unit_symbol_value : "");
       auto symbol_type = (!pinfo.unit_symbol_type.empty() ? pinfo.unit_symbol_type : "");
