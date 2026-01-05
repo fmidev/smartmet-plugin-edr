@@ -489,7 +489,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       {
         std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldnt be "
                      "here -> report error!!:\n"
-                  << tsdata << std::endl;
+                  << tsdata << '\n';
         continue;
       }
 
@@ -3025,8 +3025,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
     {
       if (outdata_first.size() > 1)
         std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
-                     "nothing -> report error! "
-                  << std::endl;
+                     "nothing -> report error!\n";
       std::vector<TS::TimeSeriesData> tsd;
       TS::TimeSeriesVectorPtr tsv = *ptr;
       for (const auto &ts : *tsv)

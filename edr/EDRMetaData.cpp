@@ -70,7 +70,7 @@ void report_duplicate_collection(const std::string &collection,
   std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Duplicate collection '" +
                 collection + "' removed from " + duplicate_source +
                 ", it has already been defined in " + original_source + ANSI_FG_DEFAULT)
-            << std::endl;
+            << '\n';
 }
 
 void report_missing_data(const std::string &collection)
@@ -84,7 +84,7 @@ void report_invalid_analysistime(const std::string &collection, const std::strin
 {
   std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Ignored collection '" +
                 collection + "' with invalid analysistime " + analysisTime + ANSI_FG_DEFAULT)
-            << std::endl;
+            << '\n';
 }
 
 const std::set<std::string> &get_supported_data_queries(const std::string &producer,

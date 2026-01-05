@@ -128,7 +128,7 @@ void report_unsupported_option(const std::string& name, const std::optional<std:
   if (value)
     std::cerr << (Spine::log_time_str() + ANSI_FG_RED + " [timeseries] Deprecated option '" + name +
                   ANSI_FG_DEFAULT)
-              << std::endl;
+              << '\n';
 }
 
 Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request& req)
@@ -153,16 +153,7 @@ Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request& req)
 Query::Query(const State& state, const Spine::HTTP::Request& request, Config& config)
     : ObsQueryParams(request),
       EDRQueryParams(state, request, config),
-      valueformatter(valueformatter_params(request)),
-      levelRange(false),
-      maxdistanceOptionGiven(false),
-      findnearestvalidpoint(false),
-      debug(false),
-      starttimeOptionGiven(false),
-      endtimeOptionGiven(false),
-      useCurrentTime(false),
-      timeAggregationRequested(false)
-
+      valueformatter(valueformatter_params(request))
 {
   try
   {
@@ -242,7 +233,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
       toptions.mode = TS::TimeSeriesGeneratorOptions::DataTimes;
 
 #ifdef MYDEBUG
-    std::cout << "Time options: " << std::endl << toptions << std::endl;
+    std::cout << "Time options:\n" << toptions << '\n';
 #endif
 
     latestTimestep = toptions.startTime;

@@ -933,7 +933,7 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
 
       if (!loc)
         std::cout << "EDR::ObsEngineQuery::fetchObsEngineValuesForArea:"
-                  << " GeoNames entry not found for fmisid " << fmisid << std::endl;
+                  << " GeoNames entry not found for fmisid " << fmisid << '\n';
       // Value is checked also in handleObsParametersForArea, so continue to it
 
       auto observation_result_with_added_fields = handleObsParametersForArea(

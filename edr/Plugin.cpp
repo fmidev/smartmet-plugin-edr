@@ -682,7 +682,7 @@ Plugin::Plugin(Spine::Reactor* theReactor, const char* theConfig)
   {
     if (theReactor->getRequiredAPIVersion() != SMARTMET_API_VERSION)
     {
-      std::cerr << "*** EDRPlugin and Server SmartMet API version mismatch ***" << std::endl;
+      std::cerr << "*** EDRPlugin and Server SmartMet API version mismatch ***\n";
       return;
     }
   }

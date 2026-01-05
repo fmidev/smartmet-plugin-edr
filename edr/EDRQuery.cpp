@@ -99,7 +99,7 @@ std::ostream &operator<<(std::ostream &out, const EDRQuery &edrQ)
 
   out << "\nhost: " << edrQ.host << "\ncollection_id: " << edrQ.collection_id
       << "\ninstance_id: " << edrQ.instance_id << "\nquery_type: " << to_string(edrQ.query_type)
-      << "\nquery_id: " << to_string(edrQ.query_id) << std::endl;
+      << "\nquery_id: " << to_string(edrQ.query_id) << '\n';
 
   return out;
 }

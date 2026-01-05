@@ -1,14 +1,14 @@
-#include "Plugin.h"
 #include "EDRQueryParams.h"
 #include "EDRDefs.h"
 #include "EDRMetaData.h"
+#include "Plugin.h"
+#include "UtilityFunctions.h"
+#include <engines/observation/Keywords.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/StringConversion.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
-#include <engines/observation/Keywords.h>
 #include <string>
-#include "UtilityFunctions.h"
 
 namespace SmartMet
 {
@@ -56,7 +56,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
     auto numParts = resParts.size();
     size_t resIdx = 0, idx = 0;
 
-    for (auto const &part : resParts)
+    for (auto const& part : resParts)
     {
       if (part == "collections")
       {
@@ -91,7 +91,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
   }
 }
 
-std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::string &base_url)
+std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::string& base_url)
 {
   try
   {
@@ -131,7 +131,7 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
   }
 }
 
-std::string utcDateTime(const Fmi::DateTime &datetime)
+std::string utcDateTime(const Fmi::DateTime& datetime)
 {
   if (datetime.is_not_a_date_time())
     return "not_a_datetime";
@@ -139,7 +139,7 @@ std::string utcDateTime(const Fmi::DateTime &datetime)
   return Fmi::to_iso_string(datetime) + "Z";
 }
 
-std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime = "")
+std::string nearestTimeNow(const EDRMetaData& emd, const std::string& datetime = "")
 {
   Fmi::DateTime now;
 
@@ -155,9 +155,9 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
 
   // Note: single time instansts are always used
 
-  auto const &time_periods = (emd.temporal_extent.single_time_periods.empty()
-                              ? emd.temporal_extent.time_periods
-                              : emd.temporal_extent.single_time_periods);
+  auto const& time_periods =
+      (emd.temporal_extent.single_time_periods.empty() ? emd.temporal_extent.time_periods
+                                                       : emd.temporal_extent.single_time_periods);
 
   // Before (or match) 1'st time period start ?
   //
@@ -174,7 +174,7 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
       return utcDateTime(time_periods.back().start_time);
 
     if (now >= time_periods.back().end_time)
-     return utcDateTime(time_periods.back().end_time);
+      return utcDateTime(time_periods.back().end_time);
 
     tp1 = tp2 = &time_periods.back();
   }
@@ -182,10 +182,10 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
   {
     // Search for time period(s) within or between which current time is
 
-    for (const auto &tp : time_periods)
+    for (const auto& tp : time_periods)
     {
-      auto const &t1 = tp.start_time;
-      auto const &t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
+      auto const& t1 = tp.start_time;
+      auto const& t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
 
       // After period's end ?
       //
@@ -209,12 +209,12 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
 
     // No time period(s) found (never) ?
     //
-    if ((! tp1) && (! tp2))
+    if ((!tp1) && (!tp2))
       return utcDateTime(now);
 
-    if (! tp1)
+    if (!tp1)
       tp1 = tp2;
-    else if (! tp2)
+    else if (!tp2)
       tp2 = tp1;
   }
 
@@ -222,8 +222,8 @@ std::string nearestTimeNow(const EDRMetaData &emd, const std::string &datetime =
   //
   if (tp1 != tp2)
   {
-    auto const &t1 = (tp1->end_time.is_not_a_date_time() ? tp1->start_time : tp1->end_time);
-    auto const &t2 = tp2->start_time;
+    auto const& t1 = (tp1->end_time.is_not_a_date_time() ? tp1->start_time : tp1->end_time);
+    auto const& t2 = tp2->start_time;
 
     auto td1 = now - t1;
     auto td2 = t2 - now;
@@ -354,13 +354,11 @@ EDRQueryParams::EDRQueryParams(const State& state,
     {
       parseCube();
     }
-    else if (
-             (itsEDRQuery.query_type == EDRQueryType::Position) ||
+    else if ((itsEDRQuery.query_type == EDRQueryType::Position) ||
              (itsEDRQuery.query_type == EDRQueryType::Radius) ||
              (itsEDRQuery.query_type == EDRQueryType::Area) ||
              (itsEDRQuery.query_type == EDRQueryType::Trajectory) ||
-             (itsEDRQuery.query_type == EDRQueryType::Corridor)
-            )
+             (itsEDRQuery.query_type == EDRQueryType::Corridor))
       throw EDRException("Missing coords option!");
 
     // EDR datetime
@@ -493,9 +491,9 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
 
     if (instances)
     {
-       auto epmd = state.getProducerMetaData(resource_parts.at(2));
-       if (!epmd.sourceHasInstances())
-         throw EDRException("Collection '" + resource_parts.at(2) + "' does not have instances!");
+      auto epmd = state.getProducerMetaData(resource_parts.at(2));
+      if (!epmd.sourceHasInstances())
+        throw EDRException("Collection '" + resource_parts.at(2) + "' does not have instances!");
 
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
       if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
@@ -548,8 +546,9 @@ std::string EDRQueryParams::parseResourceParts2AndBeyond(
   }
 }
 
-std::string EDRQueryParams::parseEDRQuery(
-    const State& state, const Config& config, const std::string& resource)
+std::string EDRQueryParams::parseEDRQuery(const State& state,
+                                          const Config& config,
+                                          const std::string& resource)
 {
   try
   {
@@ -802,7 +801,7 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
   }
 }
 
-void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string &coords)
+void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
 {
   try
   {
@@ -898,8 +897,9 @@ void EDRQueryParams::parseCube()
   }
 }
 
-void EDRQueryParams::parseDateTime(
-  const State& state, const std::string &producer, const EDRMetaData& emd)
+void EDRQueryParams::parseDateTime(const State& state,
+                                   const std::string& producer,
+                                   const EDRMetaData& emd)
 {
   try
   {
@@ -944,7 +944,8 @@ void EDRQueryParams::parseDateTime(
     {
       std::vector<std::string> datetime_parts;
       boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
-      if (datetime_parts.size() != 2)  // Cannot have size()==1, because above check. size() > 2 is however not OK
+      if (datetime_parts.size() !=
+          2)  // Cannot have size()==1, because above check. size() > 2 is however not OK
         throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
       auto starttime = datetime_parts.at(0);
       auto endtime = datetime_parts.at(1);
@@ -954,7 +955,7 @@ void EDRQueryParams::parseDateTime(
       bool eErr = ((endtime.size() > 0) && (toupper(endtime[0]) == 'P'));
       if (cErr || sErr || eErr)
       {
-        auto const &ts = (cErr ? datetime : (sErr ? starttime : endtime));
+        auto const& ts = (cErr ? datetime : (sErr ? starttime : endtime));
         throw EDRException("Invalid 'datetime' parameter value '" + ts + "'");
       }
 
@@ -1052,7 +1053,7 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
 
     if (parameter_names.empty())
     {
-      for (const auto &param : emd.parameters)
+      for (const auto& param : emd.parameters)
       {
         if (!cleaned_param_names.empty())
           cleaned_param_names += ",";
@@ -1084,7 +1085,7 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
       {
         std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p +
                       "' ignored!" + ANSI_FG_DEFAULT)
-                  << std::endl;
+                  << '\n';
       }
       if (emd.parameters.find(p) != emd.parameters.end())
       {
@@ -1108,14 +1109,14 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
 std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
                                                     const EDRMetaData& emd,
                                                     bool grid_producer,
-                                                    bool &noReqParams)
+                                                    bool& noReqParams)
 {
   try
   {
     auto z = Spine::optional_string(req.getParameter("z"), "");
     double min_level = std::numeric_limits<double>::min();
     double max_level = std::numeric_limits<double>::max();
-    bool hasZParam = (! z.empty()), range = false;
+    bool hasZParam = (!z.empty()), range = false;
 
     std::string zLo, zHi;
     if (UtilityFunctions::parseRangeListValue(z, range, zLo, zHi))
@@ -1157,7 +1158,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
         if (hasZParam)
         {
           double d_level = Fmi::stod(l);
-          level = std::to_string((int) floor(d_level));
+          level = std::to_string((int)floor(d_level));
 
           if (!range)
           {
@@ -1224,20 +1225,12 @@ void EDRQueryParams::parseICAOCodesAndAviProducer(const EDRMetaData& emd)
   }
 }
 
-void EDRQueryParams::validateRequestParameterNamesWithMetaData(const EDRMetaData &emd) const
-{
-}
-void EDRQueryParams::validateRequestDateTimeWithMetaData(const EDRMetaData &emd) const
-{
-}
-void EDRQueryParams::validateRequestLevelsWithMetaData(const EDRMetaData &emd) const
-{
-}
-void EDRQueryParams::validateRequestCoordinatesWithMetaData(const EDRMetaData &emd) const
-{
-}
+void EDRQueryParams::validateRequestParameterNamesWithMetaData(const EDRMetaData& emd) const {}
+void EDRQueryParams::validateRequestDateTimeWithMetaData(const EDRMetaData& emd) const {}
+void EDRQueryParams::validateRequestLevelsWithMetaData(const EDRMetaData& emd) const {}
+void EDRQueryParams::validateRequestCoordinatesWithMetaData(const EDRMetaData& emd) const {}
 
-void EDRQueryParams::validateRequestParametersWithMetaData(const EDRMetaData &emd) const
+void EDRQueryParams::validateRequestParametersWithMetaData(const EDRMetaData& emd) const
 {
   validateRequestParameterNamesWithMetaData(emd);
   validateRequestDateTimeWithMetaData(emd);

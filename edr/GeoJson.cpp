@@ -1,9 +1,9 @@
 #include "GeoJson.h"
 #include "UtilityFunctions.h"
-#include <optional>
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
+#include <optional>
 
 namespace SmartMet
 {
@@ -169,7 +169,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       return ret;
 
     const auto &outdata_front = outdata.front();
-    if (const auto* ptr = std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front))
+    if (const auto *ptr = std::get_if<TS::TimeSeriesVectorPtr>(&outdata_front))
     {
       TS::TimeSeriesVectorPtr tsv = *ptr;
       return get_coordinates(tsv, query_parameters);
@@ -186,7 +186,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
         continue;
 
       auto tsdata = outdata.at(i);
-      if (const auto* ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
+      if (const auto *ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
       {
         TS::TimeSeriesPtr ts = *ptr;
         if (!ts->empty())
@@ -203,9 +203,9 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       {
         std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldnt be "
                      "here -> report error!!:\n"
-                  << tsdata << std::endl;
+                  << tsdata << '\n';
       }
-      else if (const auto* ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+      else if (const auto *ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
       {
         TS::TimeSeriesGroupPtr tsg = *ptr;
 
@@ -285,9 +285,9 @@ int to_int(const TS::TimedValue &tv)
 {
   int ret = std::numeric_limits<int>::max();
 
-  if (const auto* ptr = std::get_if<int>(&tv.value))
+  if (const auto *ptr = std::get_if<int>(&tv.value))
     ret = *ptr;
-  else if (const auto* ptr = std::get_if<double>(&tv.value))
+  else if (const auto *ptr = std::get_if<double>(&tv.value))
     ret = *ptr;
 
   return ret;
@@ -295,7 +295,7 @@ int to_int(const TS::TimedValue &tv)
 
 double to_double(const TS::TimedValue &tv)
 {
-  if (const auto* ptr = std::get_if<double>(&tv.value))
+  if (const auto *ptr = std::get_if<double>(&tv.value))
     return *ptr;
 
   return std::numeric_limits<double>::max();
@@ -310,15 +310,15 @@ void add_value(const TS::TimedValue &tv,
   {
     const auto &val = tv.value;
 
-    if (const auto* ptr = std::get_if<double>(&val))
+    if (const auto *ptr = std::get_if<double>(&val))
     {
       values_array[values_index] = Json::Value(*ptr, precision);
     }
-    else if (const auto* ptr = std::get_if<int>(&val))
+    else if (const auto *ptr = std::get_if<int>(&val))
     {
       values_array[values_index] = Json::Value(*ptr);
     }
-    else if (const auto* ptr = std::get_if<std::string>(&val))
+    else if (const auto *ptr = std::get_if<std::string>(&val))
     {
       values_array[values_index] = Json::Value(*ptr);
     }
@@ -535,8 +535,8 @@ void add_position_features(Json::Value &features,
         level_value = to_int(ts_level->at(k));
       coordinate_xyz coord(lon_value, lat_value, level_value);
       auto key = hash_value(coord);
-      auto timestep = Json::Value(
-          Fmi::date_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
+      auto timestep =
+          Json::Value(Fmi::date_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
       timesteps_per_coordinate[key].push_back(timestep);
       parameter_values_per_coordinate[key].push_back(
           UtilityFunctions::json_value(ts_data->at(k).value, parameter_precision));
@@ -699,11 +699,11 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
         {
           const auto &llts_level = tsg_level->at(k);
           const auto &level_value = llts_level.timeseries.at(l);
-          if (const auto* ptr = std::get_if<double>(&level_value.value))
+          if (const auto *ptr = std::get_if<double>(&level_value.value))
           {
             level = *ptr;
           }
-          else if (const auto* ptr = std::get_if<int>(&level_value.value))
+          else if (const auto *ptr = std::get_if<int>(&level_value.value))
           {
             level = *ptr;
           }
@@ -900,8 +900,8 @@ Json::Value format_output_data_feature_collection(
     double bbox_ymax = -90.0;
 
     ParameterNames dpn;
-    auto dpp = get_data_per_parameter(
-        outputData, emd, levels, coordinate_filter, query_parameters, dpn);
+    auto dpp =
+        get_data_per_parameter(outputData, emd, levels, coordinate_filter, query_parameters, dpn);
 
     auto features = Json::Value(Json::ValueType::arrayValue);
     auto output_name = dpn.cbegin();
@@ -1011,12 +1011,11 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       return format_output_data_position(outputData, emd, query_parameters);
     }
 
-    if (const auto* ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
+    if (const auto *ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
     {
       if (outdata_first.size() > 1)
         std::cout << "formatOutputData - TS::TimeSeriesVectorPtr - Can do "
-                     "nothing -> report error! "
-                  << std::endl;
+                     "nothing -> report error!\n";
       std::vector<TS::TimeSeriesData> tsd;
       TS::TimeSeriesVectorPtr tsv = *ptr;
       for (const auto &ts : *tsv)
