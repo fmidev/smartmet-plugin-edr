@@ -41,9 +41,9 @@ class QueryProcessingHub
 
  private:
   static Json::Value processMetaDataQuery(const State& state, const EDRQuery& edr_query);
-  std::shared_ptr<std::string> processMetaDataQuery(const State& state,
-                                                    const Query& masterquery,
-                                                    Spine::Table& table) const;
+  static std::shared_ptr<std::string> processMetaDataQuery(const State& state,
+                                                           const Query& masterquery,
+                                                           Spine::Table& table);
 
   static void setPrecisions(EDRMetaData& emd, const Query& masterquery);
   void processIWXXMAndTACData(const Config& config,
@@ -53,10 +53,10 @@ class QueryProcessingHub
   static std::string getMsgZipFileName(const std::vector<std::string>& icaoCodes,
                                        const Fmi::LocalDateTime& ldt,
                                        std::vector<std::string>::const_iterator* icaoIterator);
-  std::string parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsgicao_data,
-                                       const TS::TimeSeriesGroupPtr& tsg_data,
-                                       const Query& masterquery,
-                                       ZipWriter* zipWriter) const;
+  static std::string parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsgicao_data,
+                                              const TS::TimeSeriesGroupPtr& tsg_data,
+                                              const Query& masterquery,
+                                              ZipWriter* zipWriter);
 
   QEngineQuery itsQEngineQuery;
   ObsEngineQuery itsObsEngineQuery;

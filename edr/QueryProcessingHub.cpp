@@ -355,7 +355,7 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state, const E
 
 std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state,
                                                                       const Query& masterquery,
-                                                                      Spine::Table& table) const
+                                                                      Spine::Table& table)
 {
   try
   {
@@ -422,7 +422,7 @@ std::string QueryProcessingHub::getMsgZipFileName(
 std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsgicao_data,
                                                          const TS::TimeSeriesGroupPtr& tsg_data,
                                                          const Query& masterquery,
-                                                         ZipWriter* zipWriter) const
+                                                         ZipWriter* zipWriter)
 {
   try
   {
