@@ -27,8 +27,8 @@ class ProducerParameters
     return (itsProducerParameters.find(producer) != itsProducerParameters.end());
   }
   bool isValidParameter(const std::string& producer, const std::string& parameter_db_name) const;
-  const std::string& parameterName(const std::string& producer,
-                                   const std::string& parameter_db_name) const;
+  std::string parameterName(const std::string& producer,
+                            const std::string& parameter_db_name) const;
 
  private:
   std::map<std::string, std::map<std::string, std::string>>

@@ -88,14 +88,14 @@ void ProducerParameters::init(const libconfig::Config& config)
   }
 }
 
-const std::string& ProducerParameters::parameterName(const std::string& producer,
-                                                     const std::string& parameter_db_name) const
+std::string ProducerParameters::parameterName(const std::string& producer,
+                                              const std::string& parameter_db_name) const
 {
   try
   {
     // If no producer defined in config -> return original name
     if (itsProducerParameters.find(producer) == itsProducerParameters.end())
-      return parameter_db_name;
+      return parameter_db_name;  // cannot return const ref because this could be a temp obj
 
     auto db_pname = parameter_db_name;
     boost::algorithm::to_lower(db_pname);
