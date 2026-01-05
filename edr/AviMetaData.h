@@ -49,8 +49,12 @@ class AviBBox
 class AviStation
 {
  public:
-  AviStation(long theId, std::string theIcao, std::string theName,
-             double theLatitude, double theLongitude, std::optional<int> firId)
+  AviStation(long theId,
+             std::string theIcao,
+             std::string theName,
+             double theLatitude,
+             double theLongitude,
+             std::optional<int> firId)
       : itsId(theId),
         itsIcao(std::move(theIcao)),
         itsName(std::move(theName)),
@@ -118,7 +122,7 @@ class AviMetaData
   bool getLocationCheck() const { return itsLocationCheck; }
 
   void setBBox(const AviBBox &theBBox) { itsBBox = theBBox; }
-  const Engine::Avi::FIRQueryData *getFIRAreas() const { return itsFIRAreas; };
+  const Engine::Avi::FIRQueryData *getFIRAreas() const { return itsFIRAreas; }
   void setFIRAreas(const SmartMet::Engine::Avi::FIRQueryData &firAreas) { itsFIRAreas = &firAreas; }
   void addStation(const AviStation &theStation) { itsStations.push_back(theStation); }
 
