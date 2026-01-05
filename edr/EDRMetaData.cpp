@@ -480,7 +480,9 @@ bool parse_merged_time_periods(const std::vector<TimePeriod> &time_periods,
         return false;
     }
 
-    uint pushCount = (multiple_periods ? 1 : (lastPeriod ? 2 : 1));
+    uint pushCount = 1;
+    if (!multiple_periods && lastPeriod)
+      pushCount = 2;
 
     for (uint pc = 0; (pc < pushCount); pc++)
     {

@@ -561,11 +561,19 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
           (hasParam ? engine_parameter_info.at(parameter_name) : emptyEDRParameterInfo);
 
       auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
+
       // Description field: 1) from config 2) from engine 3) parameter name
-      auto description = Json::Value(
-          !pinfo.description.empty()
-              ? pinfo.description
-              : (!edr_parameter.description.empty() ? edr_parameter.description : parameter_name));
+
+      std::string desc;
+
+      if (!pinfo.description.empty())
+        desc = pinfo.description;
+      else if (!edr_parameter.description.empty())
+        desc = edr_parameter.description;
+      else
+        desc = parameter_name;
+
+      auto description = Json::Value(desc);
 
       auto label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter.name);
       auto symbol = (!pinfo.unit_symbol_value.empty() ? pinfo.unit_symbol_value : "");
@@ -935,11 +943,21 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd)
       auto param = Json::Value(Json::ValueType::objectValue);
       param["id"] = Json::Value(edr_param.name);
       param["type"] = Json::Value("Parameter");
+
       // Description field: 1) from config 2) from engine 3) parameter name
-      param["description"] = Json::Value(
-          !pinfo.description.empty()
-              ? pinfo.description
-              : (!edr_param.description.empty() ? edr_param.description : edr_param.name));
+      // Description field: 1) from config 2) from engine 3) parameter name
+
+      std::string desc;
+
+      if (!pinfo.description.empty())
+        desc = pinfo.description;
+      else if (!edr_param.description.empty())
+        desc = edr_param.description;
+      else
+        desc = edr_param.name;
+
+      auto description = Json::Value(desc);
+
       if (!pinfo.unit_label.empty() || !pinfo.unit_symbol_value.empty() ||
           !pinfo.unit_symbol_type.empty())
       {

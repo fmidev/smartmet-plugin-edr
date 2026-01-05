@@ -954,14 +954,18 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
       auto starttime = datetime_parts.at(0);
       auto endtime = datetime_parts.at(1);
 
-      bool cErr = (datetime_parts.size() != 2);
-      bool sErr = (!starttime.empty() && (toupper(starttime[0]) == 'P'));
-      bool eErr = (!endtime.empty() && (toupper(endtime[0]) == 'P'));
-      if (cErr || sErr || eErr)
-      {
-        auto const& ts = (cErr ? datetime : (sErr ? starttime : endtime));
-        throw EDRException("Invalid 'datetime' parameter value '" + ts + "'");
-      }
+      bool countError = datetime_parts.size() != 2;
+      bool startError = !starttime.empty() && (toupper(starttime[0]) == 'P');
+      bool endError = !endtime.empty() && (toupper(endtime[0]) == 'P');
+
+      if (countError)
+        throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
+
+      if (startError)
+        throw EDRException("Invalid 'starttime' parameter value '" + starttime + "'");
+
+      if (endError)
+        throw EDRException("Invalid 'endtime' parameter value '" + endtime + "'");
 
       if (starttime == "..")
         req.addParameter("starttime", "data");
