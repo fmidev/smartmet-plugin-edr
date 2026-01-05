@@ -77,7 +77,7 @@ void report_missing_data(const std::string &collection)
 {
   std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Ignored collection '" +
                 collection + "' with no timesteps" + ANSI_FG_DEFAULT)
-            << std::endl;
+            << '\n';
 }
 
 void report_invalid_analysistime(const std::string &collection, const std::string &analysisTime)
