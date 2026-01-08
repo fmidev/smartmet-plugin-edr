@@ -55,17 +55,20 @@ class ZipSource
   ZipSource(const ZipSource &) = delete;
   ZipSource &operator=(const ZipSource &) = delete;
 
-  ZipSource(zip_t *archive, const std::string &content) : zipSource(nullptr)
+  ZipSource(const std::string &content) : zipSource(nullptr)
   {
-    auto buf = std::make_unique<unsigned char[]>(content.size());
-    memcpy(buf.get(), content.data(), content.size());
+    zip_error_t ze;
+    zip_error_init(&ze);
 
-    zipSource = zip_source_buffer(archive, buf.get(), content.size(), 1);
-    if (!zipSource)
-      throw std::runtime_error("zip_source_buffer failed: " +
-                               std::string(zip_error_strerror(zip_get_error(archive))));
+    zipSource = zip_source_buffer_create(content.data(), content.size(), /*freep*/ 0, &ze);
+    if (! zipSource) {
+      std::string msg = zip_error_strerror(&ze);
+      zip_error_fini(&ze);
 
-    buf.release();
+      throw std::runtime_error("zip_source_buffer_create failed: " + msg);
+    }
+
+    zip_error_fini(&ze);
   }
 
   ~ZipSource()
@@ -76,13 +79,7 @@ class ZipSource
 
   zip_source_t *get() const { return zipSource; }
 
-  zip_source_t *release()
-  {
-    zip_source_t *ret = zipSource;
-    zipSource = nullptr;
-
-    return ret;
-  }
+  void release() { zipSource = nullptr; }
 
  private:
   zip_source_t *zipSource;
@@ -122,7 +119,7 @@ class ZipArchive
 
   void addFile(const std::string &fileName, const std::string &content)
   {
-    ZipSource zipSource(zipArchive, content);
+    ZipSource zipSource(content);
 
     zip_int64_t idx = zip_file_add(
         zipArchive, fileName.c_str(), zipSource.get(), ZIP_FL_ENC_UTF_8 | ZIP_FL_OVERWRITE);
