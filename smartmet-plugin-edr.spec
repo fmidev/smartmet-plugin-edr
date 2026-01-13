@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.1.8
+Version: 26.1.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -50,14 +50,14 @@ BuildRequires: smartmet-library-timeseries-devel >= 25.12.29
 BuildRequires: smartmet-engine-avi-devel >= 26.1.8
 BuildRequires: smartmet-engine-geonames-devel >= 25.12.2
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 25.12.29
+BuildRequires: smartmet-engine-observation-devel >= 26.1.13
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 25.12.29
 BuildRequires: smartmet-engine-gis-devel >= 25.9.29
 BuildRequires: smartmet-engine-grid-devel >= 25.12.29
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 25.8.22
+#Requires: smartmet-engine-observation >= 26.1.13
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
@@ -94,7 +94,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 25.9.29
 #TestRequires: smartmet-engine-querydata >= 25.12.29
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 25.12.29
+#TestRequires: smartmet-engine-observation >= 26.1.13
 %endif
 #TestRequires: smartmet-engine-grid >= 25.12.29
 #TestRequires: gdal310-libs
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Jan 13 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.1.13-1.fmi
+- Repackage due to smartmet-engine-observation ABI changes
+
 * Thu Jan  8 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.8-1.fmi
 - Fixed zip source object allocation/releasing (BRAINSTORM-3331)
 
