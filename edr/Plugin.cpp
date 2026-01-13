@@ -659,6 +659,10 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
         theResponse.setStatus(Spine::HTTP::Status::request_timeout);
       else
         theResponse.setStatus(Spine::HTTP::Status::bad_request);
+
+      auto problem_detail = itsConfig.getEDRAPI().getProblemDetailJson();
+      boost::algorithm::replace_all(problem_detail, "__DETAIL__", firstMessage);
+      theResponse.setContent(problem_detail);
     }
 
     // Adding the first exception information into the response header

@@ -11,6 +11,12 @@ namespace EDR
 namespace
 {
 const std::string EMPTY_STRING;
+const std::string PROBLEM_DETAIL_JSON =
+R"JSON({
+  "title" : "An error occurred",
+  "detail" : "__DETAIL__"
+}
+)JSON";
 }  // namespace
 
 bool EDRAPI::isEDRAPIQuery(const std::string& url) const
@@ -43,6 +49,16 @@ const std::string& EDRAPI::getAPI(const std::string& url, const std::string& hos
   }
 
   return itsAPIQueryResponses.at(host + url_string);
+}
+
+std::string EDRAPI::getProblemDetailJson() const
+{
+  auto it = itsAPISettings.find(PROBLEM_DETAIL);
+
+  if (it != itsAPISettings.end())
+    return it->second;
+
+  return PROBLEM_DETAIL_JSON;
 }
 
 void EDRAPI::setSettings(const std::string& tmpldir, const APISettings& api_settings)

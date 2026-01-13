@@ -57,6 +57,8 @@ enum class SourceEngine
 #define COVERAGE_JSON_FORMAT "CoverageJSON"
 #define GEO_JSON_FORMAT "GeoJSON"
 
+#define PROBLEM_DETAIL "problemdetail"
+
 std::string get_engine_name(SourceEngine source_engine);
 
 }  // namespace EDR
