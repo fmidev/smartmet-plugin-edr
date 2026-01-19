@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.1.13
+Version: 26.1.19
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Jan 19 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.19-1.fmi
+- Added configuration settings and changed CoverageJson metadata output according to (EDR core and) MetOcean profile requirements. If configuration for a parameter exists containing standard_name, level, method and/or duration, all of them are required. Parameter unit's label, symbol value and symbol type are now always required whether parameter's MetOcean related settings are present or not. Parameter name is used as the default for added parameter.label setting (it should contain english label and as such is the default for observed_property.label "en" label too) as well as for observed_property.label and parameter description as before (PAK-6315)
+
 * Tue Jan 13 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.1.13-1.fmi
 - Repackage due to smartmet-engine-observation ABI changes
 

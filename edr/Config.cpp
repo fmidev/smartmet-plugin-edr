@@ -1167,6 +1167,7 @@ Config::Config(const string &configfile)
 
     if (itsDefaultLanguage.empty())
       throw Fmi::Exception(BCP, "Default language code cannot be empty");
+    boost::algorithm::to_lower(itsDefaultLanguage);
 
     // Optional settings. Ensure base url starts with '/' but does not end with it
     itsConfig.lookupValue("timeformat", itsDefaultTimeFormat);

@@ -18,8 +18,14 @@ parameter_info ParameterInfo::get_parameter_info(const std::string &pname,
   if (find(parameter_name) != end())
   {
     const auto &pinfo = at(parameter_name);
+    ret.label = pinfo.label;
+    ret.metocean = pinfo.metocean;
     if (pinfo.description.find(language) != pinfo.description.end())
       ret.description = pinfo.description.at(language);
+    if (pinfo.observed_property_label.find(language) != pinfo.observed_property_label.end())
+      ret.observed_property_label = pinfo.observed_property_label.at(language);
+    else
+      ret.observed_property_label = pinfo.label;
     if (pinfo.unit_label.find(language) != pinfo.unit_label.end())
       ret.unit_label = pinfo.unit_label.at(language);
     if (!pinfo.unit_symbol_value.empty())

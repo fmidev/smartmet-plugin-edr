@@ -1135,10 +1135,10 @@ void Plugin::updateParameterInfo()
     {
       if (pname.empty())
         continue;
-      parameter_info_config pinfo;
+
       // Default values
-      pinfo.description["en"] = pname;
-      pinfo.unit_label["en"] = pname;
+      parameter_info_config pinfo;
+      pinfo.metocean.standard_name_vocabulary = "https://vocab.nerc.ac.uk/standard_name";
 
       auto pname_key = ("parameter_info." + pname);
       if (lconfig.exists(pname_key))
@@ -1152,11 +1152,51 @@ void Plugin::updateParameterInfo()
           for (int i = 0; i < len; i++)
           {
             const auto* name = setting[i].getName();
+            std::string name_key = desc_key + "." + name;
             std::string value;
-            lconfig.lookupValue(desc_key + "." + name, value);
-            pinfo.description[name] = value;
+            lconfig.lookupValue(name_key, value);
+            if (value.empty())
+              throw Fmi::Exception(BCP, name_key + " setting is required");
+            pinfo.description[Fmi::ascii_tolower_copy(name)] = value;
           }
         }
+        // Label
+        std::string label;
+        auto label_key = (pname_key + ".label");
+        if (lconfig.exists(label_key))
+          lconfig.lookupValue(label_key, label);
+        if (! label.empty())
+          pinfo.label = label;
+        // ObservedProperty. Using 'label' as the default english label
+        auto obsprop_key = (pname_key + ".observed_property");
+        if (lconfig.exists(obsprop_key))
+        {
+          auto& setting = lconfig.lookup(obsprop_key);
+          if (! setting.isGroup())
+            throw Fmi::Exception(
+                BCP, "Configuration file error. " + obsprop_key + " must be an object");
+          auto obsprop_label_key = (obsprop_key + ".label");
+          if (lconfig.exists(obsprop_label_key))
+          {
+            auto& setting = lconfig.lookup(obsprop_label_key);
+            int len = setting.getLength();
+            for (int i = 0; i < len; i++)
+            {
+              const auto* name = setting[i].getName();
+              std::string name_key = obsprop_label_key + "." + name;
+              std::string value;
+              lconfig.lookupValue(name_key, value);
+              if (value.empty())
+                throw Fmi::Exception(BCP, name_key + " setting is required");
+              pinfo.observed_property_label[Fmi::ascii_tolower_copy(name)] = value;
+            }
+          }
+        }
+        if (
+            (! pinfo.label.empty()) &&
+            (pinfo.observed_property_label.find("en") == pinfo.observed_property_label.end())
+           )
+          pinfo.observed_property_label["en"] = pinfo.label;
         // Unit
         auto unit_label_key = (pname_key + ".unit.label");
         if (lconfig.exists(unit_label_key))
@@ -1166,13 +1206,73 @@ void Plugin::updateParameterInfo()
           for (int i = 0; i < len; i++)
           {
             const auto* name = setting[i].getName();
+            std::string name_key = unit_label_key + "." + name;
             std::string value;
-            lconfig.lookupValue(unit_label_key + "." + name, value);
-            pinfo.unit_label[name] = value;
+            lconfig.lookupValue(name_key, value);
+            if (value.empty())
+              throw Fmi::Exception(BCP, name_key + " setting is required");
+            pinfo.unit_label[Fmi::ascii_tolower_copy(name)] = value;
           }
         }
+        if (pinfo.unit_label.empty())
+          throw Fmi::Exception(BCP, unit_label_key + " setting is required");
         lconfig.lookupValue(pname_key + ".unit.symbol.value", pinfo.unit_symbol_value);
         lconfig.lookupValue(pname_key + ".unit.symbol.type", pinfo.unit_symbol_type);
+        if (pinfo.unit_symbol_value.empty() || pinfo.unit_symbol_type.empty())
+          throw Fmi::Exception(
+              BCP, pname_key + " unit.symbol value and unit.symbol.type settings are required");
+        // metocean; standard name vocabulary
+        std::string vocabulary;
+        lconfig.lookupValue(pname_key + ".standard_name_vocabulary", vocabulary);
+        if (! vocabulary.empty())
+        {
+          if (vocabulary.back() == '/')
+            vocabulary.pop_back();
+          if (! vocabulary.empty())
+            pinfo.metocean.standard_name_vocabulary = vocabulary;
+        }
+        // metocean; standard name
+        lconfig.lookupValue(pname_key + ".standard_name", pinfo.metocean.standard_name);
+        // metocean; level
+        auto level_key = (pname_key + ".level");
+        if (lconfig.exists(level_key))
+          lconfig.lookupValue(level_key, pinfo.metocean.level);
+        else
+          level_key.clear();
+        // metocean; measurement type
+        auto meastype_key = (pname_key + ".measurement_type");
+        if (lconfig.exists(meastype_key))
+        {
+          auto& setting = lconfig.lookup(meastype_key);
+          if (! setting.isGroup())
+            throw Fmi::Exception(
+                BCP, "Configuration file error. " + meastype_key + " must be an object");
+          auto method_key = meastype_key + ".method";
+          if (! lconfig.exists(method_key))
+            throw Fmi::Exception(BCP, method_key + " setting is required");
+          lconfig.lookupValue(method_key, pinfo.metocean.method);
+          auto duration_key = meastype_key + ".duration";
+          if (! lconfig.exists(duration_key))
+            throw Fmi::Exception(BCP, duration_key + " setting is required");
+          lconfig.lookupValue(duration_key, pinfo.metocean.duration);
+        }
+
+        // If standard_name, method, duration or level is given, require all of them
+        // for MetOcean profile metadata output
+
+        if (
+            (
+             pinfo.metocean.standard_name.empty() &&
+             (! (pinfo.metocean.method.empty() && pinfo.metocean.duration.empty()))
+            ) ||
+            (pinfo.metocean.standard_name.empty() != level_key.empty())
+           )
+          throw Fmi::Exception(BCP, pname_key + " standard_name and level settings are required");
+        else if (
+                 (! pinfo.metocean.standard_name.empty()) &&
+                 (pinfo.metocean.method.empty() || pinfo.metocean.duration.empty())
+                )
+          throw Fmi::Exception(BCP, meastype_key + " method and duration settings are required");
       }
       itsConfigParameterInfo[pname] = pinfo;
     }
