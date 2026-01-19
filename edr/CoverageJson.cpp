@@ -558,11 +558,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &p
     else
       desc = edr_parameter_name;
 
-    auto description = Json::Value(desc);
-
     auto unit_label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter_name);
-    auto symbol = (!pinfo.unit_symbol_value.empty() ? pinfo.unit_symbol_value : "");
-    auto symbol_type = (!pinfo.unit_symbol_type.empty() ? pinfo.unit_symbol_type : "");
 
     auto parameter = Json::Value(Json::ValueType::objectValue);
     parameter["id"] = Json::Value(edr_parameter_name);
@@ -571,19 +567,19 @@ Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &p
     // QEngine returns parameter description in finnish and skandinavian
     // characters cause problems metoffice test interface uses description
     // field -> set parameter name to description field
-    parameter["description"] = Json::Value(Json::ValueType::objectValue);
-    parameter["description"][metadata.language] = description;  // Json::Value(parameter_name);
-    parameter["unit"] = Json::Value(Json::ValueType::objectValue);
-    parameter["unit"]["label"] = Json::Value(Json::ValueType::objectValue);
-    parameter["unit"]["label"][metadata.language] = Json::Value(unit_label);
-    parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
-    parameter["unit"]["symbol"]["value"] = Json::Value(symbol);
-    parameter["unit"]["symbol"]["type"] = Json::Value(symbol_type);
+    parameter["description"] = Json::Value(desc);
+    if ((! pinfo.unit_symbol_value.empty()) && (! pinfo.unit_symbol_type.empty()))
+    {
+      parameter["unit"] = Json::Value(Json::ValueType::objectValue);
+      parameter["unit"]["label"] = Json::Value(unit_label);
+      parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
+      parameter["unit"]["symbol"]["value"] = Json::Value(pinfo.unit_symbol_value);
+      parameter["unit"]["symbol"]["type"] = Json::Value(pinfo.unit_symbol_type);
+    }
     parameter["label"] = Json::Value(label);
     parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
     parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
-    parameter["observedProperty"]["label"] = Json::Value(Json::ValueType::objectValue);
-    parameter["observedProperty"]["label"][metadata.language] = Json::Value(observed_property_label);
+    parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
 
     if (! standard_name.empty())
     {
