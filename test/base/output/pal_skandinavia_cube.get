@@ -1464,25 +1464,18 @@
 	{
 		"temperature" : 
 		{
+			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
+			"label" : "Temperature",
 			"type" : "Parameter",
-			"description" : 
-			{
-				"fi" : "Ilman lämpötila"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Temperature",
-				"label" : 
-				{
-					"fi" : "Temperature"
-				}
+				"label" : "Temperature"
 			},
 			"unit" : 
 			{
-				"label" : 
-				{
-					"fi" : "Celsius"
-				},
+				"label" : "Celsius",
 				"symbol" : 
 				{
 					"type" : "http://codes.wmo.int/common/unit/_degC",
