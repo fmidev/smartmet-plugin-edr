@@ -585,6 +585,10 @@ Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &p
     {
       parameter["metocean:standard_name"] = Json::Value(standard_name);
       parameter["metocean:level"] = Json::Value(pinfo.metocean.level);
+
+      parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
+      parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
+      parameter["measurementType"]["duration"] = Json::Value(pinfo.metocean.duration);
     }
 
     return parameter;
