@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.1.19
+Version: 26.1.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -52,7 +52,7 @@ BuildRequires: smartmet-engine-geonames-devel >= 25.12.2
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 26.1.13
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 25.12.29
+BuildRequires: smartmet-engine-querydata-devel >= 26.1.19
 BuildRequires: smartmet-engine-gis-devel >= 25.9.29
 BuildRequires: smartmet-engine-grid-devel >= 25.12.29
 # obsengine can be disabled in configuration: not included intentionally
@@ -71,7 +71,7 @@ Requires: smartmet-library-gis >= 25.12.29
 Requires: smartmet-library-grid-files >= 25.12.29
 Requires: smartmet-engine-avi >= 26.1.8
 Requires: smartmet-engine-geonames >= 25.12.2
-Requires: smartmet-engine-querydata >= 25.12.29
+Requires: smartmet-engine-querydata >= 26.1.19
 Requires: smartmet-engine-gis >= 25.9.29
 Requires: smartmet-engine-grid >= 25.12.29
 Requires: smartmet-server >= 26.1.8
@@ -92,7 +92,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-avi >= 26.1.8
 #TestRequires: smartmet-engine-geonames >= 25.12.2
 #TestRequires: smartmet-engine-gis >= 25.9.29
-#TestRequires: smartmet-engine-querydata >= 25.12.29
+#TestRequires: smartmet-engine-querydata >= 26.1.19
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 26.1.13
 %endif
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Jan 20 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.20-1.fmi
+- MetOcean profile related changes/additions to GeoJSON output (code copied from CoverageJSON output). Added missing measurementType output to CoverageJSON too
+
 * Mon Jan 19 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.19-1.fmi
 - Added configuration settings and changed CoverageJson metadata output according to (EDR core and) MetOcean profile requirements. If configuration for a parameter exists containing standard_name, level, method and/or duration, all of them are required. Parameter unit's label, symbol value and symbol type are now always required whether parameter's MetOcean related settings are present or not. Parameter name is used as the default for added parameter.label setting (it should contain english label and as such is the default for observed_property.label "en" label too) as well as for observed_property.label and parameter description as before (PAK-6315)
 - Store collection metadata parameter description, observedProperty label and unit label as simple strings, not as objects having the value stored by the metadata language code
