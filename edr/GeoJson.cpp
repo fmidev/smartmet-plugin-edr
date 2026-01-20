@@ -237,6 +237,8 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
   {
     auto parameters = Json::Value(Json::ValueType::arrayValue);
 
+    static const edr_parameter emptyEDRParameterInfo("", "");
+
     const auto &engine_parameter_info = metadata.parameters;
     const auto &config_parameter_info = *metadata.parameter_info;
 
@@ -247,31 +249,73 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       if (lon_lat_level_param(parameter_name))
         continue;
 
-      const auto &edr_parameter = engine_parameter_info.at(parameter_name);
+      // BRAINSTORM-3029; when fetching flash 'data_source' -parameter, expanded parameters
+      // ('<column>_data_source') do not (currently) have engine_parameter info
+      //
+      // PAK-6315: Code copied from CoverageJSON output (MetOcean profile changes, missing
+      // engine_parameter info was not handled)
+
+      bool hasParam = (engine_parameter_info.find(parameter_name) != engine_parameter_info.end());
+      const auto &edr_parameter =
+          (hasParam ? engine_parameter_info.at(parameter_name) : emptyEDRParameterInfo);
+      const auto &edr_parameter_name = (hasParam ? edr_parameter.name : parameter_name);
 
       auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
-      // auto description = (!pinfo.description.empty() ? pinfo.description : "");
-      auto label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter.name);
-      auto symbol = (!pinfo.unit_symbol_value.empty() ? pinfo.unit_symbol_value : "");
-      auto symbol_type = (!pinfo.unit_symbol_type.empty() ? pinfo.unit_symbol_type : "");
+
+      // Description field: 1) from config 2) from engine 3) parameter name
+
+      std::string desc;
+      std::string observed_property_id;
+      const std::string &label = (pinfo.label.empty() ? edr_parameter_name : pinfo.label);
+      const std::string &observed_property_label =
+          (pinfo.observed_property_label.empty() ? label : pinfo.observed_property_label);
+
+      const std::string &standard_name = pinfo.metocean.standard_name;
+      if (! standard_name.empty())
+        observed_property_id = pinfo.metocean.standard_name_vocabulary + "/" + standard_name;
+      else
+        observed_property_id = edr_parameter_name;
+
+      if (!pinfo.description.empty())
+        desc = pinfo.description;
+      else if (!edr_parameter.description.empty())
+        desc = edr_parameter.description;
+      else
+        desc = edr_parameter_name;
+
+      auto unit_label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter_name);
 
       auto parameter = Json::Value(Json::ValueType::objectValue);
-      parameter["id"] = Json::Value(parameter_name);
+      parameter["id"] = Json::Value(edr_parameter_name);
       parameter["type"] = Json::Value("Parameter");
       // Description field is optional
       // QEngine returns parameter description in finnish and skandinavian
       // characters cause problems metoffice test interface uses description
       // field -> set parameter name to description field
-      parameter["description"] = Json::Value(parameter_name);
-      parameter["unit"] = Json::Value(Json::ValueType::objectValue);
-      parameter["unit"]["label"] = Json::Value(label);
-      parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
-      parameter["unit"]["symbol"]["value"] = Json::Value(symbol);
-      parameter["unit"]["symbol"]["type"] = Json::Value(symbol_type);
-
+      parameter["description"] = Json::Value(desc);
+      if ((! pinfo.unit_symbol_value.empty()) && (! pinfo.unit_symbol_type.empty()))
+      {
+        parameter["unit"] = Json::Value(Json::ValueType::objectValue);
+        parameter["unit"]["label"] = Json::Value(unit_label);
+        parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
+        parameter["unit"]["symbol"]["value"] = Json::Value(pinfo.unit_symbol_value);
+        parameter["unit"]["symbol"]["type"] = Json::Value(pinfo.unit_symbol_type);
+      }
+      parameter["label"] = Json::Value(label);
       parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
-      parameter["observedProperty"]["id"] = Json::Value(edr_parameter.name);
-      parameter["observedProperty"]["label"] = Json::Value(edr_parameter.name);
+      parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
+      parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
+
+      if (! standard_name.empty())
+      {
+        parameter["metocean:standard_name"] = Json::Value(standard_name);
+        parameter["metocean:level"] = Json::Value(pinfo.metocean.level);
+
+        parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
+        parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
+        parameter["measurementType"]["duration"] = Json::Value(pinfo.metocean.duration);
+      }
+
       parameters[parameters.size()] = parameter;
     }
 
