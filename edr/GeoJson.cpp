@@ -490,7 +490,6 @@ Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, i
 
 Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
-                                         std::optional<int> /* level */,
                                          const std::vector<Spine::Parameter> &query_parameters,
                                          const std::string &language)
 {
@@ -930,7 +929,6 @@ Json::Value format_output_data_feature_collection(
     const std::set<int> &levels,
     const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
-    EDRQueryType /* query_type */,
     const std::string &language)
 {
   try
@@ -1054,12 +1052,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
     {
       // Zero or one levels
       if (levels.size() <= 1)
-      {
-        std::optional<int> level;
-        if (levels.size() == 1)
-          level = *(levels.begin());
-        return format_output_data_one_point(outputData, emd, level, query_parameters, language);
-      }
+        return format_output_data_one_point(outputData, emd, query_parameters, language);
 
       // More than one level
       return format_output_data_position(outputData, emd, query_parameters, language);
@@ -1081,12 +1074,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       od.emplace_back("_obs_", tsd);
       // Zero or one levels
       if (levels.size() <= 1)
-      {
-        std::optional<int> level;
-        if (levels.size() == 1)
-          level = *(levels.begin());
-        return format_output_data_one_point(od, emd, level, query_parameters, language);
-      }
+        return format_output_data_one_point(od, emd, query_parameters, language);
       // More than one level
       return format_output_data_position(od, emd, query_parameters, language);
     }
@@ -1094,7 +1082,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
     if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
     {
       return format_output_data_feature_collection(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type, language);
+          outputData, emd, levels, coordinate_filter, query_parameters, language);
     }
 
     return empty_result;
