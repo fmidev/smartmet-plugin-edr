@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.1.20
+Version: 26.1.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Jan 22 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.22-1.fmi
+- Data response parameter descriptions and parameter, observedProperty and unit labels are stored using i18n (e.g. "en" : "Label") for the request language code (e.g. &lang=en) which defaults to configured language (PAK-6315)
+
 * Tue Jan 20 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.20-1.fmi
 - MetOcean profile related changes/additions to GeoJSON output (code copied from CoverageJSON output). Added missing measurementType output to CoverageJSON too
 
