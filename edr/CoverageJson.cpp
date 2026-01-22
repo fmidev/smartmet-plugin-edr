@@ -518,7 +518,9 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
   }
 }
 
-Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &parameter_name)
+Json::Value parameter_metadata(const EDRMetaData &metadata,
+                               const std::string &parameter_name,
+                               const std::string &language = "")
 {
   try
   {
@@ -535,7 +537,8 @@ Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &p
         (hasParam ? engine_parameter_info.at(parameter_name) : emptyEDRParameterInfo);
     const auto &edr_parameter_name = (hasParam ? edr_parameter.name : parameter_name);
 
-    auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
+    auto const &lang = (language.empty() ? metadata.language : language);
+    auto pinfo = config_parameter_info.get_parameter_info(parameter_name, lang);
 
     // Description field: 1) from config 2) from engine 3) parameter name
 
@@ -555,6 +558,8 @@ Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &p
       desc = pinfo.description;
     else if (!edr_parameter.description.empty())
       desc = edr_parameter.description;
+    else if (! standard_name.empty())
+      desc = standard_name + " " + Fmi::to_string(pinfo.metocean.level) + "m";
     else
       desc = edr_parameter_name;
 
@@ -567,19 +572,47 @@ Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &p
     // QEngine returns parameter description in finnish and skandinavian
     // characters cause problems metoffice test interface uses description
     // field -> set parameter name to description field
-    parameter["description"] = Json::Value(desc);
+    if (language.empty())
+      parameter["description"] = Json::Value(desc);
+    else
+    {
+      auto lang_desc = Json::Value(Json::ValueType::objectValue);
+      lang_desc[lang] = Json::Value(desc);
+      parameter["description"] = lang_desc;
+    }
     if ((! pinfo.unit_symbol_value.empty()) && (! pinfo.unit_symbol_type.empty()))
     {
       parameter["unit"] = Json::Value(Json::ValueType::objectValue);
-      parameter["unit"]["label"] = Json::Value(unit_label);
+      if (language.empty())
+        parameter["unit"]["label"] = Json::Value(unit_label);
+      else
+      {
+        auto lang_label = Json::Value(Json::ValueType::objectValue);
+        lang_label[lang] = Json::Value(unit_label);
+        parameter["unit"]["label"] = lang_label;
+      }
       parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
       parameter["unit"]["symbol"]["value"] = Json::Value(pinfo.unit_symbol_value);
       parameter["unit"]["symbol"]["type"] = Json::Value(pinfo.unit_symbol_type);
     }
-    parameter["label"] = Json::Value(label);
+    if (language.empty())
+      parameter["label"] = Json::Value(label);
+    else
+    {
+      auto lang_label = Json::Value(Json::ValueType::objectValue);
+      lang_label[lang] = Json::Value(label);
+      parameter["label"] = lang_label;
+    }
     parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
     parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
-    parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
+    if (language.empty())
+      parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
+    else
+    {
+      auto lang_label = Json::Value(Json::ValueType::objectValue);
+      lang_label[lang] = Json::Value(observed_property_label);
+      parameter["observedProperty"]["label"] = lang_label;
+    }
 
     if (! standard_name.empty())
     {
@@ -600,7 +633,8 @@ Json::Value parameter_metadata(const EDRMetaData &metadata, const std::string &p
 }
 
 Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query_parameters,
-                                      const EDRMetaData &metadata)
+                                      const EDRMetaData &metadata,
+                                      const std::string &language)
 {
   try
   {
@@ -627,7 +661,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       }
 
       if (! lon_lat_level_param(parameter_name))
-        parameters[parameter_name] = parameter_metadata(metadata, parameter_name);
+        parameters[parameter_name] = parameter_metadata(metadata, parameter_name, language);
     }
 
     return parameters;
@@ -897,14 +931,15 @@ Json::Value add_prologue_multi_point(std::optional<int> level,
 Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
                                              const std::vector<Spine::Parameter> &query_parameters,
                                              bool levels_exists,
-                                             const std::string &domain_type)
+                                             const std::string &domain_type,
+                                             const std::string &language)
 {
   try
   {
     Json::Value coverage_collection;
 
     coverage_collection["type"] = Json::Value("CoverageCollection");
-    coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd);
+    coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
 
     auto referencing = Json::Value(Json::ValueType::arrayValue);
     auto referencing_xy = Json::Value(Json::ValueType::objectValue);
@@ -1569,7 +1604,8 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
                                   const std::optional<int> &level,
                                   std::set<std::string> &timesteps,
                                   Json::Value &ranges,
-                                  Json::Value &coverage)
+                                  Json::Value &coverage,
+                                  const std::string &language)
 {
   try
   {
@@ -1603,7 +1639,7 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
                                           coordinates.front().lat,
                                           longitude_precision,
                                           latitude_precision);
-        coverage["parameters"] = get_edr_series_parameters(query_parameters, emd);
+        coverage["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
         json_param_object["type"] = Json::Value("NdArray");
         auto axis_names = Json::Value(Json::ValueType::arrayValue);
         axis_names[0] = Json::Value("t");
@@ -1637,7 +1673,8 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
 Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
                                          std::optional<int> level,
-                                         const std::vector<Spine::Parameter> &query_parameters)
+                                         const std::vector<Spine::Parameter> &query_parameters,
+                                         const std::string &language)
 {
   try
   {
@@ -1656,7 +1693,8 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
       const auto &outdata = outputData[i].second;
       // iterate columns (parameters)
       process_parameters_one_point(
-          outdata, query_parameters, emd, coordinates, i, level, timesteps, ranges, coverage);
+          outdata, query_parameters, emd, coordinates, i, level, timesteps, ranges, coverage,
+          language);
     }
 
     auto &time_array = coverage["domain"]["axes"]["t"]["values"];
@@ -1827,7 +1865,8 @@ void process_parameters_at_position(const std::vector<TS::TimeSeriesData> &outda
 
 Json::Value format_output_data_position(const TS::OutputData &outputData,
                                         const EDRMetaData &emd,
-                                        const std::vector<Spine::Parameter> &query_parameters)
+                                        const std::vector<Spine::Parameter> &query_parameters,
+                                        const std::string &language)
 {
   try
   {
@@ -1854,7 +1893,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
 
     coverage_collection["type"] = Json::Value("CoverageCollection");
     coverage_collection["domainType"] = Json::Value("Point");
-    coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd);
+    coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
 
     // Referencing x,y coordinates
     auto referencing = Json::Value(Json::ValueType::arrayValue);
@@ -2099,7 +2138,8 @@ void process_coverage_collection_point_parameter(const DataPerLevel &dpl,
 Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
                                              const ParameterNames &dpn,
                                              const EDRMetaData &emd,
-                                             const std::vector<Spine::Parameter> &query_parameters)
+                                             const std::vector<Spine::Parameter> &query_parameters,
+                                             const std::string &language)
 {
   try
   {
@@ -2137,7 +2177,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
     }
 
     coverage_collection =
-        add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point");
+        add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point", language);
     coverage_collection["coverages"] = coverages;
 
     return coverage_collection;
@@ -2230,7 +2270,8 @@ Json::Value format_coverage_collection_trajectory(
     const DataPerParameter &dpp,
     const ParameterNames &dpn,
     const EDRMetaData &emd,
-    const std::vector<Spine::Parameter> &query_parameters)
+    const std::vector<Spine::Parameter> &query_parameters,
+    const std::string &language)
 {
   try
   {
@@ -2263,7 +2304,8 @@ Json::Value format_coverage_collection_trajectory(
       output_name++;
     }
     coverage_collection =
-        add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory");
+        add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory",
+                                         language);
     coverage_collection["coverages"] = coverages;
 
     return coverage_collection;
@@ -2495,7 +2537,8 @@ Json::Value format_output_data_coverage_collection(
     const std::set<int> &levels,
     const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
-    EDRQueryType query_type)
+    EDRQueryType query_type,
+    const std::string &language)
 {
   try
   {
@@ -2506,9 +2549,9 @@ Json::Value format_output_data_coverage_collection(
     auto dpp = get_data_per_parameter(outputData, levels, coordinate_filter, query_parameters, dpn);
 
     if (query_type == EDRQueryType::Trajectory)
-      return format_coverage_collection_trajectory(dpp, dpn, emd, query_parameters);
+      return format_coverage_collection_trajectory(dpp, dpn, emd, query_parameters, language);
 
-    return format_coverage_collection_point(dpp, dpn, emd, query_parameters);
+    return format_coverage_collection_point(dpp, dpn, emd, query_parameters, language);
   }
   catch (...)
   {
@@ -2557,7 +2600,8 @@ Json::Value format_output_data_vertical_profile(
     const CoordinateFilter & /* coordinate_filter */,
     const std::vector<Spine::Parameter> &query_parameters,
     EDRQueryType /* query_type */,
-    bool useDataLevels)
+    bool useDataLevels,
+    const std::string &language)
 {
   try
   {
@@ -2652,7 +2696,7 @@ Json::Value format_output_data_vertical_profile(
     coverageCollection = Json::Value(Json::ValueType::objectValue);
     coverageCollection["type"] = Json::Value("CoverageCollection");
     coverageCollection["domainType"] = Json::Value("VerticalProfile");
-    coverageCollection["parameters"] = get_edr_series_parameters(query_parameters, emd);
+    coverageCollection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
     coverageCollection["coverages"] = Json::Value(Json::ValueType::arrayValue);
 
     auto coordinates = get_coordinates(outputData, query_parameters);
@@ -2996,7 +3040,8 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              const std::set<int> &levels,
                              const CoordinateFilter &coordinate_filter,
                              const std::vector<Spine::Parameter> &query_parameters,
-                             bool useDataLevels)
+                             bool useDataLevels,
+                             const std::string &language)
 {
   try
   {
@@ -3020,12 +3065,13 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
         std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
-        return format_output_data_one_point(outputData, emd, level, query_parameters);
+        return format_output_data_one_point(outputData, emd, level, query_parameters, language);
       }
 
       // More than one level
       return format_output_data_vertical_profile(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
+          outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels,
+          language);
       //      return format_output_data_position(outputData, emd, query_parameters);
     }
 
@@ -3049,17 +3095,18 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
         std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
-        return format_output_data_one_point(od, emd, level, query_parameters);
+        return format_output_data_one_point(od, emd, level, query_parameters, language);
       }
       // More than one level
       return format_output_data_vertical_profile(
-          od, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels);
+          od, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels,
+          language);
     }
 
     if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
     {
       return format_output_data_coverage_collection(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type);
+          outputData, emd, levels, coordinate_filter, query_parameters, query_type, language);
     }
 
     return empty_result;
