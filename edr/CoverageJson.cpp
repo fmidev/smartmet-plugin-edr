@@ -520,6 +520,10 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
 
 Json::Value parameter_metadata(const EDRMetaData &metadata,
                                const std::string &parameter_name,
+                               std::optional<std::set<std::string>> &stdnames,
+                               std::optional<std::set<std::string>> &methods,
+                               std::optional<std::set<std::string>> &durations,
+                               std::optional<std::set<float>> &levels,
                                const std::string &language = "")
 {
   try
@@ -622,6 +626,14 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
       parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
       parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
       parameter["measurementType"]["duration"] = Json::Value(pinfo.metocean.duration);
+
+      if (stdnames)
+      {
+        stdnames->insert(standard_name);
+        methods->insert(pinfo.metocean.method);
+        durations->insert(pinfo.metocean.duration);
+        levels->insert(pinfo.metocean.level);
+      }
     }
 
     return parameter;
@@ -642,6 +654,12 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
     std::string prev_param;
     auto isGridProducer = metadata.isGridProducer();
 
+    // Custom dimensions (not used)
+    std::optional<std::set<std::string>> stdnames;
+    std::optional<std::set<std::string>> methods;
+    std::optional<std::set<std::string>> durations;
+    std::optional<std::set<float>> levels;
+
     for (const auto &p : query_parameters)
     {
       auto parameter_name = parse_parameter_name(p.originalName());
@@ -661,7 +679,8 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       }
 
       if (! lon_lat_level_param(parameter_name))
-        parameters[parameter_name] = parameter_metadata(metadata, parameter_name, language);
+        parameters[parameter_name] = parameter_metadata(
+            metadata, parameter_name, stdnames, methods, durations, levels, language);
     }
 
     return parameters;
@@ -988,16 +1007,88 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
   }
 }
 
-Json::Value parse_parameter_names(const EDRMetaData &collection_emd)
+Json::Value parse_parameter_names(const EDRMetaData &collection_emd, Json::Value &custom)
 {
   try
   {
     auto parameter_names = Json::Value(Json::ValueType::objectValue);
 
+    // Custom dimensions
+    std::optional<std::set<std::string>> stdnames = std::set<std::string>{};
+    std::optional<std::set<std::string>> methods = std::set<std::string>{};
+    std::optional<std::set<std::string>> durations = std::set<std::string>{};
+    std::optional<std::set<float>> levels = std::set<float>{};
+
     for (const auto &name : collection_emd.parameter_names)
     {
       if (! name.empty())
-        parameter_names[name] = parameter_metadata(collection_emd, name);
+        parameter_names[name] = parameter_metadata(
+            collection_emd, name, stdnames, methods, durations, levels);
+    }
+
+    if (stdnames->size() > 0)
+    {
+      auto stdname_interval = Json::Value(Json::ValueType::arrayValue);
+      stdname_interval[0] = Json::Value(*(stdnames->begin()));
+      stdname_interval[1] = Json::Value(*(stdnames->rbegin()));
+      auto stdname_values = Json::Value(Json::ValueType::arrayValue);
+      for (auto const &name : *stdnames)
+      {
+        stdname_values[stdname_values.size()] = Json::Value(name);
+      }
+      auto stdname_dim = Json::Value(Json::ValueType::objectValue);
+      stdname_dim["id"] = Json::Value("standard_name");
+      stdname_dim["interval"] = stdname_interval;
+      stdname_dim["values"] = stdname_values;
+      stdname_dim["reference"] = Json::Value("https://vocab.nerc.ac.uk/standard_name/");
+      custom[custom.size()] = stdname_dim;
+
+      auto level_interval = Json::Value(Json::ValueType::arrayValue);
+      level_interval[0] = Json::Value(*(levels->begin()));
+      level_interval[1] = Json::Value(*(levels->rbegin()));
+      auto level_values = Json::Value(Json::ValueType::arrayValue);
+      for (auto const &level : *levels)
+      {
+        level_values[level_values.size()] = Json::Value(level);
+      }
+      auto level_dim = Json::Value(Json::ValueType::objectValue);
+      level_dim["id"] = Json::Value("level");
+      level_dim["interval"] = level_interval;
+      level_dim["values"] = level_values;
+      level_dim["reference"] = Json::Value(
+          "https://vocab.nerc.ac.uk/standard_name/height_above_ground/");
+      custom[custom.size()] = level_dim;
+
+      auto method_interval = Json::Value(Json::ValueType::arrayValue);
+      method_interval[0] = Json::Value(*(methods->begin()));
+      method_interval[1] = Json::Value(*(methods->rbegin()));
+      auto method_values = Json::Value(Json::ValueType::arrayValue);
+      for (auto const &method : *methods)
+      {
+        method_values[method_values.size()] = Json::Value(method);
+      }
+      auto method_dim = Json::Value(Json::ValueType::objectValue);
+      method_dim["id"] = Json::Value("method");
+      method_dim["interval"] = method_interval;
+      method_dim["values"] = method_values;
+      method_dim["reference"] = Json::Value(
+          "https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ape.html");
+      custom[custom.size()] = method_dim;
+
+      auto duration_interval = Json::Value(Json::ValueType::arrayValue);
+      duration_interval[0] = Json::Value(*(durations->begin()));
+      duration_interval[1] = Json::Value(*(durations->rbegin()));
+      auto duration_values = Json::Value(Json::ValueType::arrayValue);
+      for (auto const &duration : *durations)
+      {
+        duration_values[duration_values.size()] = Json::Value(duration);
+      }
+      auto duration_dim = Json::Value(Json::ValueType::objectValue);
+      duration_dim["id"] = Json::Value("duration");
+      duration_dim["interval"] = duration_interval;
+      duration_dim["values"] = duration_values;
+      duration_dim["reference"] = Json::Value("https://en.wikipedia.org/wiki/ISO_8601#Durations");
+      custom[custom.size()] = duration_dim;
     }
 
     return parameter_names;
@@ -1157,7 +1248,7 @@ void parse_vertical_extent(const EDRMetaData &emd, Json::Value &extent)
   }
 }
 
-void add_timestep_dimension(const edr_temporal_extent &temporal_extent, Json::Value &collection)
+void add_timestep_dimension(const edr_temporal_extent &temporal_extent, Json::Value &custom)
 {
   try
   {
@@ -1181,10 +1272,7 @@ void add_timestep_dimension(const edr_temporal_extent &temporal_extent, Json::Va
       timestepdim["values"] = timesteps;
       timestepdim["reference"] = Json::Value("minutes");
 
-      auto custom = Json::Value(Json::ValueType::arrayValue);
-      custom[0] = timestepdim;
-
-      collection["extent"]["custom"] = custom;
+      custom[custom.size()] = timestepdim;
     }
   }
   catch (...)
@@ -1318,12 +1406,18 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       crs[0] = Json::Value("OGC:CRS84");
       instance["crs"] = crs;
 
+      // Custom dimensions
+      auto custom = Json::Value(Json::ValueType::arrayValue);
+
       // Parameter names (mandatory)
-      auto parameter_names = parse_parameter_names(emd);
+      auto parameter_names = parse_parameter_names(emd, custom);
       instance["parameter_names"] = parameter_names;
 
       // Timestep dimension (allowed timesteps for &timestep=n)
-      add_timestep_dimension(emd.temporal_extent, instance);
+      add_timestep_dimension(emd.temporal_extent, custom);
+
+      if (custom.size() > 0)
+        instance["extent"]["custom"] = custom;
 
       instances[instance_index] = instance;
       instance_index++;
@@ -1516,8 +1610,11 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       crs[0] = Json::Value("OGC:CRS84");
       value["crs"] = crs;
 
+      // Custom dimensions
+      auto custom = Json::Value(Json::ValueType::arrayValue);
+
       // Parameter names (mandatory)
-      auto parameter_names = parse_parameter_names(collection_emd);
+      auto parameter_names = parse_parameter_names(collection_emd, custom);
 
       value["parameter_names"] = parameter_names;
       auto output_formats = Json::Value(Json::ValueType::arrayValue);
@@ -1527,7 +1624,10 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       value["output_formats"] = output_formats;
 
       // Timestep dimension (allowed timesteps for &timestep=n)
-      add_timestep_dimension(collection_emd.temporal_extent, value);
+      add_timestep_dimension(collection_emd.temporal_extent, custom);
+
+      if (custom.size() > 0)
+        value["extent"]["custom"] = custom;
 
       collections[collection_index++] = value;
     }
