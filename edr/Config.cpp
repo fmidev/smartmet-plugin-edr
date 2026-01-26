@@ -1339,6 +1339,24 @@ const std::set<std::string> &Config::getSupportedDataQueries(const std::string &
   }
 }
 
+void Config::setCustomDimReference(const std::string &dimension, const std::string &reference)
+{
+  try
+  {
+    if (itsCustomDimReferences.find(dimension) == itsCustomDimReferences.end())
+      throw Fmi::Exception(BCP, "Unknown custom dimension '" + dimension + "'!");
+    if (reference.empty())
+      throw Fmi::Exception(
+          BCP, "Empty reference not allowed for custom dimension '" + dimension + "'!");
+
+    itsCustomDimReferences[dimension] = reference;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

@@ -14,7 +14,6 @@ namespace EDR
 {
 struct metocean_config
 {
-  std::string standard_name_vocabulary;
   std::string standard_name;
   std::string method;
   std::string duration;

@@ -36,6 +36,7 @@ using AviCollections = std::list<AviCollection>;
 using APISettings = std::map<std::string, std::string>;
 using License = std::map<std::string, std::string>;
 using ProducerLicenses = std::map<std::string, License>;  // producer -> license
+using CustomDimReferences = std::map<std::string, std::string>;
 
 enum class SourceEngine
 {

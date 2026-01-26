@@ -1128,6 +1128,7 @@ void Plugin::updateParameterInfo()
     auto metadata = itsMetaData.load();
 
     std::set<std::string> parameter_names = get_metadata_parameters(metadata);
+    bool requireMetOceanCustomDimReferences = false;
 
     const auto& lconfig = itsConfig.config();
 
@@ -1136,9 +1137,7 @@ void Plugin::updateParameterInfo()
       if (pname.empty())
         continue;
 
-      // Default values
       parameter_info_config pinfo;
-      pinfo.metocean.standard_name_vocabulary = "https://vocab.nerc.ac.uk/standard_name";
 
       auto pname_key = ("parameter_info." + pname);
       if (lconfig.exists(pname_key))
@@ -1221,16 +1220,6 @@ void Plugin::updateParameterInfo()
         if (pinfo.unit_symbol_value.empty() || pinfo.unit_symbol_type.empty())
           throw Fmi::Exception(
               BCP, pname_key + " unit.symbol value and unit.symbol.type settings are required");
-        // metocean; standard name vocabulary
-        std::string vocabulary;
-        lconfig.lookupValue(pname_key + ".standard_name_vocabulary", vocabulary);
-        if (! vocabulary.empty())
-        {
-          if (vocabulary.back() == '/')
-            vocabulary.pop_back();
-          if (! vocabulary.empty())
-            pinfo.metocean.standard_name_vocabulary = vocabulary;
-        }
         // metocean; standard name
         lconfig.lookupValue(pname_key + ".standard_name", pinfo.metocean.standard_name);
         // metocean; level
@@ -1275,6 +1264,31 @@ void Plugin::updateParameterInfo()
           throw Fmi::Exception(BCP, meastype_key + " method and duration settings are required");
       }
       itsConfigParameterInfo[pname] = pinfo;
+
+      if (! pinfo.metocean.standard_name.empty())
+        requireMetOceanCustomDimReferences = true;
+    }
+
+    // MetOcean related custom dimension references are required only if any standard_name
+    // is configured for parameters
+
+    for (const auto& dim_ref : itsConfig.getCustomDimReferences())
+    {
+      auto ref_key = ("custom_dimensions.references." + dim_ref.first);
+      bool requireSetting = (requireMetOceanCustomDimReferences && dim_ref.second.empty());
+
+      if (! lconfig.exists(ref_key))
+      {
+        if (requireSetting)
+          throw Fmi::Exception(BCP, "Missing custom dimension reference '" + ref_key + "'");
+
+        continue;
+      }
+
+      std::string reference;
+      lconfig.lookupValue(ref_key, reference);
+
+      itsConfig.setCustomDimReference(dim_ref.first, reference);
     }
   }
   catch (...)

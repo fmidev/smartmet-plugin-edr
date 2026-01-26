@@ -524,6 +524,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
                                std::optional<std::set<std::string>> &methods,
                                std::optional<std::set<std::string>> &durations,
                                std::optional<std::set<float>> &levels,
+                               const CustomDimReferences &custom_dim_refs,
                                const std::string &language = "")
 {
   try
@@ -532,6 +533,15 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
 
     const auto &engine_parameter_info = metadata.parameters;
     const auto &config_parameter_info = *metadata.parameter_info;
+    std::string standard_name_vocabulary;
+
+    auto it = custom_dim_refs.find("standard_name");
+    if (it != custom_dim_refs.end())
+    {
+      standard_name_vocabulary = it->second;
+      if (standard_name_vocabulary.back() == '/')
+        standard_name_vocabulary.pop_back();
+    }
 
     // BRAINSTORM-3029; when fetching flash 'data_source' -parameter, expanded parameters
     // ('<column>_data_source') do not (currently) have engine_parameter info
@@ -554,7 +564,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
 
     const std::string &standard_name = pinfo.metocean.standard_name;
     if (! standard_name.empty())
-      observed_property_id = pinfo.metocean.standard_name_vocabulary + "/" + standard_name;
+      observed_property_id = standard_name_vocabulary + "/" + standard_name;
     else
       observed_property_id = edr_parameter_name;
 
@@ -646,6 +656,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
 
 Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query_parameters,
                                       const EDRMetaData &metadata,
+                                      const CustomDimReferences &custom_dim_refs,
                                       const std::string &language)
 {
   try
@@ -680,7 +691,8 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 
       if (! lon_lat_level_param(parameter_name))
         parameters[parameter_name] = parameter_metadata(
-            metadata, parameter_name, stdnames, methods, durations, levels, language);
+            metadata, parameter_name, stdnames, methods, durations, levels, custom_dim_refs,
+            language);
     }
 
     return parameters;
@@ -951,6 +963,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
                                              const std::vector<Spine::Parameter> &query_parameters,
                                              bool levels_exists,
                                              const std::string &domain_type,
+                                             const CustomDimReferences &custom_dim_refs,
                                              const std::string &language)
 {
   try
@@ -958,7 +971,8 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
     Json::Value coverage_collection;
 
     coverage_collection["type"] = Json::Value("CoverageCollection");
-    coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
+    coverage_collection["parameters"] =
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
 
     auto referencing = Json::Value(Json::ValueType::arrayValue);
     auto referencing_xy = Json::Value(Json::ValueType::objectValue);
@@ -1007,7 +1021,9 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
   }
 }
 
-Json::Value parse_parameter_names(const EDRMetaData &collection_emd, Json::Value &custom)
+Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
+                                  const CustomDimReferences &custom_dim_refs,
+                                  Json::Value &custom_dims)
 {
   try
   {
@@ -1023,7 +1039,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd, Json::Value
     {
       if (! name.empty())
         parameter_names[name] = parameter_metadata(
-            collection_emd, name, stdnames, methods, durations, levels);
+            collection_emd, name, stdnames, methods, durations, levels, custom_dim_refs);
     }
 
     if (stdnames->size() > 0)
@@ -1037,11 +1053,14 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd, Json::Value
         stdname_values[stdname_values.size()] = Json::Value(name);
       }
       auto stdname_dim = Json::Value(Json::ValueType::objectValue);
-      stdname_dim["id"] = Json::Value("standard_name");
+      auto dim = "standard_name";
+      stdname_dim["id"] = Json::Value(dim);
       stdname_dim["interval"] = stdname_interval;
       stdname_dim["values"] = stdname_values;
-      stdname_dim["reference"] = Json::Value("https://vocab.nerc.ac.uk/standard_name/");
-      custom[custom.size()] = stdname_dim;
+      auto it = custom_dim_refs.find(dim);
+      if (it != custom_dim_refs.end())
+        stdname_dim["reference"] = Json::Value(it->second);
+      custom_dims[custom_dims.size()] = stdname_dim;
 
       auto level_interval = Json::Value(Json::ValueType::arrayValue);
       level_interval[0] = Json::Value(*(levels->begin()));
@@ -1052,12 +1071,14 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd, Json::Value
         level_values[level_values.size()] = Json::Value(level);
       }
       auto level_dim = Json::Value(Json::ValueType::objectValue);
-      level_dim["id"] = Json::Value("level");
+      dim = "level";
+      level_dim["id"] = Json::Value(dim);
       level_dim["interval"] = level_interval;
       level_dim["values"] = level_values;
-      level_dim["reference"] = Json::Value(
-          "https://vocab.nerc.ac.uk/standard_name/height_above_ground/");
-      custom[custom.size()] = level_dim;
+      it = custom_dim_refs.find(dim);
+      if (it != custom_dim_refs.end())
+        level_dim["reference"] = Json::Value(it->second);
+      custom_dims[custom_dims.size()] = level_dim;
 
       auto method_interval = Json::Value(Json::ValueType::arrayValue);
       method_interval[0] = Json::Value(*(methods->begin()));
@@ -1068,12 +1089,14 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd, Json::Value
         method_values[method_values.size()] = Json::Value(method);
       }
       auto method_dim = Json::Value(Json::ValueType::objectValue);
-      method_dim["id"] = Json::Value("method");
+      dim = "method";
+      method_dim["id"] = Json::Value(dim);
       method_dim["interval"] = method_interval;
       method_dim["values"] = method_values;
-      method_dim["reference"] = Json::Value(
-          "https://cfconventions.org/Data/cf-conventions/cf-conventions-1.7/build/ape.html");
-      custom[custom.size()] = method_dim;
+      it = custom_dim_refs.find(dim);
+      if (it != custom_dim_refs.end())
+        method_dim["reference"] = Json::Value(it->second);
+      custom_dims[custom_dims.size()] = method_dim;
 
       auto duration_interval = Json::Value(Json::ValueType::arrayValue);
       duration_interval[0] = Json::Value(*(durations->begin()));
@@ -1084,11 +1107,14 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd, Json::Value
         duration_values[duration_values.size()] = Json::Value(duration);
       }
       auto duration_dim = Json::Value(Json::ValueType::objectValue);
-      duration_dim["id"] = Json::Value("duration");
+      dim = "duration";
+      duration_dim["id"] = Json::Value(dim);
       duration_dim["interval"] = duration_interval;
       duration_dim["values"] = duration_values;
-      duration_dim["reference"] = Json::Value("https://en.wikipedia.org/wiki/ISO_8601#Durations");
-      custom[custom.size()] = duration_dim;
+      it = custom_dim_refs.find(dim);
+      if (it != custom_dim_refs.end())
+        duration_dim["reference"] = Json::Value(it->second);
+      custom_dims[custom_dims.size()] = duration_dim;
     }
 
     return parameter_names;
@@ -1248,7 +1274,9 @@ void parse_vertical_extent(const EDRMetaData &emd, Json::Value &extent)
   }
 }
 
-void add_timestep_dimension(const edr_temporal_extent &temporal_extent, Json::Value &custom)
+void add_timestep_dimension(const edr_temporal_extent &temporal_extent,
+                            const CustomDimReferences &custom_dim_refs,
+                            Json::Value &custom_dims)
 {
   try
   {
@@ -1267,12 +1295,15 @@ void add_timestep_dimension(const edr_temporal_extent &temporal_extent, Json::Va
       interval[1] = Json::Value(*itl);
 
       auto timestepdim = Json::Value(Json::ValueType::objectValue);
-      timestepdim["id"] = Json::Value("timestep");
+      auto dim = "timestep";
+      timestepdim["id"] = Json::Value(dim);
       timestepdim["interval"] = interval;
       timestepdim["values"] = timesteps;
-      timestepdim["reference"] = Json::Value("minutes");
+      auto it = custom_dim_refs.find(dim);
+      if (it != custom_dim_refs.end())
+        timestepdim["reference"] = Json::Value(it->second);
 
-      custom[custom.size()] = timestepdim;
+      custom_dims[custom_dims.size()] = timestepdim;
     }
   }
   catch (...)
@@ -1306,7 +1337,8 @@ clang-format on
 // Metadata of specified producers' specified  collections' instance/instances
 Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                          const EDRQuery &edr_query,
-                                         const ProducerLicenses &licenses)
+                                         const ProducerLicenses &licenses,
+                                         const CustomDimReferences &custom_dim_refs)
 {
   try
   {
@@ -1407,17 +1439,17 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       instance["crs"] = crs;
 
       // Custom dimensions
-      auto custom = Json::Value(Json::ValueType::arrayValue);
+      auto custom_dims = Json::Value(Json::ValueType::arrayValue);
 
       // Parameter names (mandatory)
-      auto parameter_names = parse_parameter_names(emd, custom);
+      auto parameter_names = parse_parameter_names(emd, custom_dim_refs, custom_dims);
       instance["parameter_names"] = parameter_names;
 
       // Timestep dimension (allowed timesteps for &timestep=n)
-      add_timestep_dimension(emd.temporal_extent, custom);
+      add_timestep_dimension(emd.temporal_extent, custom_dim_refs, custom_dims);
 
-      if (custom.size() > 0)
-        instance["extent"]["custom"] = custom;
+      if (custom_dims.size() > 0)
+        instance["extent"]["custom"] = custom_dims;
 
       instances[instance_index] = instance;
       instance_index++;
@@ -1501,7 +1533,8 @@ void add_parameter_names_into_keywords(const EDRMetaData &collection_emd, Json::
 
 Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                            const EDRQuery &edr_query,
-                                           const ProducerLicenses &licenses)
+                                           const ProducerLicenses &licenses,
+                                           const CustomDimReferences &custom_dim_refs)
 {
   try
   {
@@ -1611,10 +1644,10 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       value["crs"] = crs;
 
       // Custom dimensions
-      auto custom = Json::Value(Json::ValueType::arrayValue);
+      auto custom_dims = Json::Value(Json::ValueType::arrayValue);
 
       // Parameter names (mandatory)
-      auto parameter_names = parse_parameter_names(collection_emd, custom);
+      auto parameter_names = parse_parameter_names(collection_emd, custom_dim_refs, custom_dims);
 
       value["parameter_names"] = parameter_names;
       auto output_formats = Json::Value(Json::ValueType::arrayValue);
@@ -1624,10 +1657,10 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       value["output_formats"] = output_formats;
 
       // Timestep dimension (allowed timesteps for &timestep=n)
-      add_timestep_dimension(collection_emd.temporal_extent, custom);
+      add_timestep_dimension(collection_emd.temporal_extent, custom_dim_refs, custom_dims);
 
-      if (custom.size() > 0)
-        value["extent"]["custom"] = custom;
+      if (custom_dims.size() > 0)
+        value["extent"]["custom"] = custom_dims;
 
       collections[collection_index++] = value;
     }
@@ -1646,7 +1679,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
 Json::Value parse_edr_metadata(const EDRProducerMetaData &epmd,
                                const EDRQuery &edr_query,
-                               const ProducerLicenses &licenses)
+                               const ProducerLicenses &licenses,
+                               const CustomDimReferences &custom_dim_refs)
 {
   try
   {
@@ -1656,11 +1690,11 @@ Json::Value parse_edr_metadata(const EDRProducerMetaData &epmd,
 
     if (edr_query.query_id == EDRQueryId::AllCollections ||
         edr_query.query_id == EDRQueryId::SpecifiedCollection)
-      return parse_edr_metadata_collections(epmd, edr_query, licenses);
+      return parse_edr_metadata_collections(epmd, edr_query, licenses, custom_dim_refs);
 
     if (edr_query.query_id == EDRQueryId::SpecifiedCollectionAllInstances ||
         edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
-      return parse_edr_metadata_instances(epmd, edr_query, licenses);
+      return parse_edr_metadata_instances(epmd, edr_query, licenses, custom_dim_refs);
 
     return nulljson;
   }
@@ -1705,6 +1739,7 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
                                   std::set<std::string> &timesteps,
                                   Json::Value &ranges,
                                   Json::Value &coverage,
+                                  const CustomDimReferences &custom_dim_refs,
                                   const std::string &language)
 {
   try
@@ -1739,7 +1774,8 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
                                           coordinates.front().lat,
                                           longitude_precision,
                                           latitude_precision);
-        coverage["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
+        coverage["parameters"] =
+            get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
         json_param_object["type"] = Json::Value("NdArray");
         auto axis_names = Json::Value(Json::ValueType::arrayValue);
         axis_names[0] = Json::Value("t");
@@ -1774,6 +1810,7 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
                                          std::optional<int> level,
                                          const std::vector<Spine::Parameter> &query_parameters,
+                                         const CustomDimReferences &custom_dim_refs,
                                          const std::string &language)
 {
   try
@@ -1794,7 +1831,7 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
       // iterate columns (parameters)
       process_parameters_one_point(
           outdata, query_parameters, emd, coordinates, i, level, timesteps, ranges, coverage,
-          language);
+          custom_dim_refs, language);
     }
 
     auto &time_array = coverage["domain"]["axes"]["t"]["values"];
@@ -1966,6 +2003,7 @@ void process_parameters_at_position(const std::vector<TS::TimeSeriesData> &outda
 Json::Value format_output_data_position(const TS::OutputData &outputData,
                                         const EDRMetaData &emd,
                                         const std::vector<Spine::Parameter> &query_parameters,
+                                        const CustomDimReferences &custom_dim_refs,
                                         const std::string &language)
 {
   try
@@ -1993,7 +2031,8 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
 
     coverage_collection["type"] = Json::Value("CoverageCollection");
     coverage_collection["domainType"] = Json::Value("Point");
-    coverage_collection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
+    coverage_collection["parameters"] =
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
 
     // Referencing x,y coordinates
     auto referencing = Json::Value(Json::ValueType::arrayValue);
@@ -2239,6 +2278,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
                                              const ParameterNames &dpn,
                                              const EDRMetaData &emd,
                                              const std::vector<Spine::Parameter> &query_parameters,
+                                             const CustomDimReferences &custom_dim_refs,
                                              const std::string &language)
 {
   try
@@ -2277,7 +2317,8 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
     }
 
     coverage_collection =
-        add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point", language);
+        add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point",
+        custom_dim_refs, language);
     coverage_collection["coverages"] = coverages;
 
     return coverage_collection;
@@ -2371,6 +2412,7 @@ Json::Value format_coverage_collection_trajectory(
     const ParameterNames &dpn,
     const EDRMetaData &emd,
     const std::vector<Spine::Parameter> &query_parameters,
+    const CustomDimReferences &custom_dim_refs,
     const std::string &language)
 {
   try
@@ -2405,7 +2447,7 @@ Json::Value format_coverage_collection_trajectory(
     }
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory",
-                                         language);
+                                         custom_dim_refs, language);
     coverage_collection["coverages"] = coverages;
 
     return coverage_collection;
@@ -2638,6 +2680,7 @@ Json::Value format_output_data_coverage_collection(
     const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
     EDRQueryType query_type,
+    const CustomDimReferences &custom_dim_refs,
     const std::string &language)
 {
   try
@@ -2649,9 +2692,11 @@ Json::Value format_output_data_coverage_collection(
     auto dpp = get_data_per_parameter(outputData, levels, coordinate_filter, query_parameters, dpn);
 
     if (query_type == EDRQueryType::Trajectory)
-      return format_coverage_collection_trajectory(dpp, dpn, emd, query_parameters, language);
+      return format_coverage_collection_trajectory(
+          dpp, dpn, emd, query_parameters, custom_dim_refs, language);
 
-    return format_coverage_collection_point(dpp, dpn, emd, query_parameters, language);
+    return format_coverage_collection_point(
+        dpp, dpn, emd, query_parameters, custom_dim_refs, language);
   }
   catch (...)
   {
@@ -2701,6 +2746,7 @@ Json::Value format_output_data_vertical_profile(
     const std::vector<Spine::Parameter> &query_parameters,
     EDRQueryType /* query_type */,
     bool useDataLevels,
+    const CustomDimReferences &custom_dim_refs,
     const std::string &language)
 {
   try
@@ -2796,7 +2842,8 @@ Json::Value format_output_data_vertical_profile(
     coverageCollection = Json::Value(Json::ValueType::objectValue);
     coverageCollection["type"] = Json::Value("CoverageCollection");
     coverageCollection["domainType"] = Json::Value("VerticalProfile");
-    coverageCollection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
+    coverageCollection["parameters"] =
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
     coverageCollection["coverages"] = Json::Value(Json::ValueType::arrayValue);
 
     auto coordinates = get_coordinates(outputData, query_parameters);
@@ -3141,6 +3188,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              const CoordinateFilter &coordinate_filter,
                              const std::vector<Spine::Parameter> &query_parameters,
                              bool useDataLevels,
+                             const CustomDimReferences &custom_dim_refs,
                              const std::string &language)
 {
   try
@@ -3165,13 +3213,14 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
         std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
-        return format_output_data_one_point(outputData, emd, level, query_parameters, language);
+        return format_output_data_one_point(
+            outputData, emd, level, query_parameters, custom_dim_refs, language);
       }
 
       // More than one level
       return format_output_data_vertical_profile(
           outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels,
-          language);
+          custom_dim_refs, language);
       //      return format_output_data_position(outputData, emd, query_parameters);
     }
 
@@ -3195,18 +3244,20 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
         std::optional<int> level;
         if (levels.size() == 1)
           level = *(levels.begin());
-        return format_output_data_one_point(od, emd, level, query_parameters, language);
+        return format_output_data_one_point(
+            od, emd, level, query_parameters, custom_dim_refs, language);
       }
       // More than one level
       return format_output_data_vertical_profile(
           od, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels,
-          language);
+          custom_dim_refs, language);
     }
 
     if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
     {
       return format_output_data_coverage_collection(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type, language);
+          outputData, emd, levels, coordinate_filter, query_parameters, query_type,
+          custom_dim_refs, language);
     }
 
     return empty_result;
@@ -3229,7 +3280,8 @@ Json::Value reportError(int code, const std::string &description)
 
 Json::Value parseEDRMetaData(const EDRQuery &edr_query,
                              const EngineMetaData &emd,
-                             const ProducerLicenses &licenses)
+                             const ProducerLicenses &licenses,
+                             const CustomDimReferences &custom_dim_refs)
 {
   try
   {
@@ -3247,7 +3299,7 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query,
       for (const auto &item : metadata)
       {
         const auto &engine_metadata = item.second;
-        auto md = parse_edr_metadata(engine_metadata, edr_query, licenses);
+        auto md = parse_edr_metadata(engine_metadata, edr_query, licenses, custom_dim_refs);
         edr_metadata.append(md);
       }
 
@@ -3281,7 +3333,7 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query,
         }
       }
       if (producer_metadata)
-        result = parse_edr_metadata(*producer_metadata, edr_query, licenses);
+        result = parse_edr_metadata(*producer_metadata, edr_query, licenses, custom_dim_refs);
     }
     return result;
   }

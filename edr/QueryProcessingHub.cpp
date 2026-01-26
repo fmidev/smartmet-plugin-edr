@@ -344,8 +344,9 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state, const E
     // Atomic copy of metadata
     auto metadata = state.getPlugin().itsMetaData.load();
     auto licenses = state.getPlugin().itsConfig.allProducerLicenses();
+    auto const &custom_dim_refs = state.getPlugin().itsConfig.getCustomDimReferences();
 
-    return CoverageJson::parseEDRMetaData(edr_query, *metadata, licenses);
+    return CoverageJson::parseEDRMetaData(edr_query, *metadata, licenses, custom_dim_refs);
   }
   catch (...)
   {
@@ -607,6 +608,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     const auto& edr_query = masterquery.edrQuery();
     const auto& producer = edr_query.collection_id;
     EDRMetaData emd = thePlugin.getProducerMetaData(producer);
+    auto const &custom_dim_refs = thePlugin.itsConfig.getCustomDimReferences();
 
     if (masterquery.toptions.timeStep)
       check_timestep(masterquery, emd, producer);
@@ -706,6 +708,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                           masterquery.coordinateFilter(),
                                                           masterquery.poptions.parameters(),
                                                           producer == SOUNDING_PRODUCER,
+                                                          custom_dim_refs,
                                                           edr_query.language);
       table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }
@@ -717,6 +720,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      masterquery.levels,
                                                      masterquery.coordinateFilter(),
                                                      masterquery.poptions.parameters(),
+                                                     custom_dim_refs,
                                                      edr_query.language);
       table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }

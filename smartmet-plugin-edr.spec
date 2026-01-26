@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.1.22
+Version: 26.1.26
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Jan 26 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.26-1.fmi
+- Added custom dimension reference configuration and MetOcean profile custom dimensions to metadata (PAK-6315)
+
 * Thu Jan 22 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.22-1.fmi
 - Data response parameter descriptions and parameter, observedProperty and unit labels are stored using i18n (e.g. "en" : "Label") for the request language code (e.g. &lang=en) which defaults to configured language (PAK-6315)
 

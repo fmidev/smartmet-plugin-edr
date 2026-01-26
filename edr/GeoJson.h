@@ -19,6 +19,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              const std::set<int> &levels,
                              const CoordinateFilter &coordinate_filter,
                              const std::vector<Spine::Parameter> &query_parameters,
+                             const CustomDimReferences &custom_dim_refs,
                              const std::string &language);
 }  // namespace GeoJson
 }  // namespace EDR
