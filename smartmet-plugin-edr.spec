@@ -97,7 +97,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-observation >= 26.1.13
 %endif
 #TestRequires: smartmet-engine-grid >= 25.12.29
-#TestRequires: gdal310-libs
+#TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
 %description
