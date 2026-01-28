@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.1.26
+Version: 26.1.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -41,7 +41,7 @@ BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 26.1.8
 BuildRequires: smartmet-library-locus-devel >= 25.9.29
-BuildRequires: smartmet-library-macgyver-devel >= 26.1.8
+BuildRequires: smartmet-library-macgyver-devel >= 26.1.26
 BuildRequires: smartmet-library-grid-content-devel >= 25.12.29
 BuildRequires: smartmet-library-grid-files-devel >= 25.12.29
 BuildRequires: smartmet-library-newbase-devel >= 26.1.7
@@ -63,7 +63,7 @@ Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 25.12.29
 Requires: smartmet-library-locus >= 25.9.29
-Requires: smartmet-library-macgyver >= 26.1.8
+Requires: smartmet-library-macgyver >= 26.1.26
 Requires: smartmet-library-newbase >= 26.1.7
 Requires: smartmet-library-spine >= 26.1.8
 Requires: smartmet-library-timeseries >= 25.12.29
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Jan 28 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.28-1.fmi
+- Added MetOcean profile custom dimension request parameters standard_name, method, duration and level (PAK-6316)
+
 * Mon Jan 26 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.26-1.fmi
 - Added custom dimension reference configuration and MetOcean profile custom dimensions to metadata (PAK-6315)
 

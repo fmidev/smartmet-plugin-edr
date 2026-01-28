@@ -1263,10 +1263,17 @@ void Plugin::updateParameterInfo()
                 )
           throw Fmi::Exception(BCP, meastype_key + " method and duration settings are required");
       }
-      itsConfigParameterInfo[pname] = pinfo;
 
       if (! pinfo.metocean.standard_name.empty())
+      {
+        boost::algorithm::to_lower(pinfo.metocean.standard_name);
+        boost::algorithm::to_lower(pinfo.metocean.method);
+        boost::algorithm::to_lower(pinfo.metocean.duration);
+
         requireMetOceanCustomDimReferences = true;
+      }
+
+      itsConfigParameterInfo[pname] = pinfo;
     }
 
     // MetOcean related custom dimension references are required only if any standard_name

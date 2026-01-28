@@ -366,9 +366,13 @@ EDRQueryParams::EDRQueryParams(const State& state,
     // EDR datetime
     parseDateTime(state, itsEDRQuery.collection_id, emd);
 
+    // (MetOcean profile) custom dimensions to filter parameters
+    CustomDimensions customDimensions(req);
+
     // EDR parameter names and z
     bool noReqParams = false;
-    auto parameter_names = parseParameterNamesAndZ(state, emd, grid_producer, noReqParams);
+    auto parameter_names = parseParameterNamesAndZ(
+        state, emd, grid_producer, noReqParams, customDimensions);
 
     if (parameter_names.empty())
     {
@@ -1034,10 +1038,144 @@ void EDRQueryParams::handleGridParameter(std::string& p,
   }
 }
 
+EDRQueryParams::CustomDimensions::CustomDimensions(const Spine::HTTP::Request& req)
+{
+  try
+  {
+    auto req_standard_names =
+      boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("standard_name"), ""));
+    auto req_methods =
+      boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("method"), ""));
+    auto req_durations =
+      boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("duration"), ""));
+    auto req_levels =
+      boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("level"), ""));
+
+    if (! req_standard_names.empty())
+    {
+      std::vector<std::string> standard_name_vec;
+      boost::algorithm::split(
+          standard_name_vec, req_standard_names, boost::algorithm::is_any_of(","));
+
+      for (auto const &standard_name : standard_name_vec)
+      {
+        auto s = boost::algorithm::trim_copy(standard_name);
+        if (s.empty())
+          throw EDRException("Empty standard_name value not allowed");
+        standard_names.emplace_back(boost::algorithm::to_lower_copy(s));
+      }
+    }
+
+    if (! req_methods.empty())
+    {
+      std::vector<std::string> method_vec;
+      boost::algorithm::split(method_vec, req_methods, boost::algorithm::is_any_of(","));
+
+      for (auto const &method : method_vec)
+      {
+        auto s = boost::algorithm::trim_copy(method);
+        if (s.empty())
+          throw EDRException("Empty method value not allowed");
+        methods.emplace_back(boost::algorithm::to_lower_copy(s));
+      }
+    }
+
+    if (! req_durations.empty())
+    {
+      std::vector<std::string> duration_vec;
+      boost::algorithm::split(duration_vec, req_durations, boost::algorithm::is_any_of(","));
+
+      for (auto const &duration : duration_vec)
+      {
+        auto s = boost::algorithm::trim_copy(duration);
+        if (s.empty())
+          throw EDRException("Empty duration value not allowed");
+        durations.emplace_back(boost::algorithm::to_lower_copy(s));
+      }
+    }
+
+    if (! req_levels.empty())
+    {
+      std::vector<std::string> level_vec;
+      boost::algorithm::split(level_vec, req_levels, boost::algorithm::is_any_of(","));
+
+      for (auto const &level : level_vec)
+      {
+        auto s = boost::algorithm::trim_copy(level);
+        if (s.empty())
+          throw EDRException("Empty level value not allowed");
+        try
+        {
+          levels.push_back(atof(s.c_str()));
+        }
+        catch (...)
+        {
+          throw EDRException("Invalid level value '" + s + "'");
+        }
+      }
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+bool EDRQueryParams::CustomDimensions::matches(const std::string &parameterName,
+                                               const ParameterInfo &parameterInfo) const
+{
+  try
+  {
+    if (standard_names.empty() && methods.empty() && durations.empty() && levels.empty())
+      return true;
+
+    auto it = parameterInfo.find(parameterName);
+    if ((it == parameterInfo.end()) || it->second.metocean.standard_name.empty())
+      return true;
+
+    auto const &stdname = it->second.metocean.standard_name;
+
+    if (
+        (! standard_names.empty()) &&
+        (std::find(standard_names.begin(), standard_names.end(), stdname) == standard_names.end())
+       )
+      return false;
+
+    auto const &method = it->second.metocean.method;
+
+    if (
+        (! methods.empty()) &&
+        (std::find(methods.begin(), methods.end(), method) == methods.end())
+       )
+      return false;
+
+    auto const &duration = it->second.metocean.duration;
+
+    if (
+        (! durations.empty()) &&
+        (std::find(durations.begin(), durations.end(), duration) == durations.end())
+       )
+      return false;
+
+    auto level = it->second.metocean.level;
+
+    if ((! levels.empty()) && (std::find(levels.begin(), levels.end(), level) == levels.end()))
+      return false;
+
+    return true;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_names,
                                                 const EDRMetaData& emd,
                                                 bool grid_producer,
-                                                const std::string& z) const
+                                                const std::string& z,
+                                                const ParameterInfo &parameterInfo,
+                                                const CustomDimensions &customDimensions) const
 {
   try
   {
@@ -1063,6 +1201,9 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
     {
       for (const auto& param : emd.parameters)
       {
+        if (! customDimensions.matches(param.first, parameterInfo))
+          continue;
+
         if (!cleaned_param_names.empty())
           cleaned_param_names += ",";
 
@@ -1094,18 +1235,21 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
         std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p +
                       "' ignored!" + ANSI_FG_DEFAULT)
                   << '\n';
+        continue;
       }
-      if (emd.parameters.find(p) != emd.parameters.end())
-      {
-        if (!cleaned_param_names.empty())
-          cleaned_param_names += ",";
 
-        if (grid_producer)
-          handleGridParameter(p, producerId, geometryId, levelId, z);
+      if (! customDimensions.matches(p, parameterInfo))
+        continue;
 
-        cleaned_param_names += p;
-      }
+      if (!cleaned_param_names.empty())
+        cleaned_param_names += ",";
+
+      if (grid_producer)
+        handleGridParameter(p, producerId, geometryId, levelId, z);
+
+      cleaned_param_names += p;
     }
+
     return cleaned_param_names;
   }
   catch (...)
@@ -1117,7 +1261,8 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
 std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
                                                     const EDRMetaData& emd,
                                                     bool grid_producer,
-                                                    bool& noReqParams)
+                                                    bool& noReqParams,
+                                                    const CustomDimensions &customDimensions)
 {
   try
   {
@@ -1201,11 +1346,13 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
 #ifndef WITHOUT_AVI
     if (parameter_names.empty() && isAviProducer(state.getAviMetaData(), itsEDRQuery.collection_id))
     {
-      parameter_names = "message";
-      req.addParameter("parameter-name", parameter_names);
+      req.addParameter("parameter-name", "message");
+      return "message";
     }
 #endif
-    return cleanParameterNames(parameter_names, emd, grid_producer, z);
+    auto const &parameterInfo = state.getPlugin().getConfigParameterInfo();
+    return cleanParameterNames(
+        parameter_names, emd, grid_producer, z, parameterInfo, customDimensions);
   }
   catch (...)
   {

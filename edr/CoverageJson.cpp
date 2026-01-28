@@ -635,13 +635,14 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
 
       parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
       parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
-      parameter["measurementType"]["duration"] = Json::Value(pinfo.metocean.duration);
+      auto duration = boost::algorithm::to_upper_copy(pinfo.metocean.duration);
+      parameter["measurementType"]["duration"] = Json::Value(duration);
 
       if (stdnames)
       {
         stdnames->insert(standard_name);
         methods->insert(pinfo.metocean.method);
-        durations->insert(pinfo.metocean.duration);
+        durations->insert(duration);
         levels->insert(pinfo.metocean.level);
       }
     }

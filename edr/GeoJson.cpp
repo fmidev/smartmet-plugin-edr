@@ -332,7 +332,8 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 
         parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
         parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
-        parameter["measurementType"]["duration"] = Json::Value(pinfo.metocean.duration);
+        auto duration = boost::algorithm::to_upper_copy(pinfo.metocean.duration);
+        parameter["measurementType"]["duration"] = Json::Value(duration);
       }
 
       parameters[parameters.size()] = parameter;
