@@ -1131,7 +1131,7 @@ bool EDRQueryParams::CustomDimensions::matches(const std::string &parameterName,
 
     auto it = parameterInfo.find(parameterName);
     if ((it == parameterInfo.end()) || it->second.metocean.standard_name.empty())
-      return true;
+      return false;
 
     auto const &stdname = it->second.metocean.standard_name;
 

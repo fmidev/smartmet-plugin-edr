@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.1.28
+Version: 26.1.29
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Jan 29 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.29-1.fmi
+- Fixed bug resulting an unconfigured parameter or a configured parameter without standard_name to be included in query if parameter-name was not but some custom dimension(s) was given in query (PAK-6316)
+
 * Wed Jan 28 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.28-1.fmi
 - Added MetOcean profile custom dimension request parameters standard_name, method, duration and level (PAK-6316)
 
