@@ -379,9 +379,6 @@ EDRQueryParams::EDRQueryParams(const State& state,
       if (emd.parameters.empty())
         throw EDRException("No metadata for " + itsEDRQuery.collection_id + "!");
 
-      if (noReqParams)
-        throw EDRException("Missing parameter-name option!");
-
       throw EDRException("No matching parameter names given!");
     }
 
