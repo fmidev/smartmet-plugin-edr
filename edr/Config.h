@@ -100,6 +100,13 @@ class Config : private boost::noncopyable
 
   bool getPretty() const { return itsPretty; }
 
+  const CustomDimReferences &getCustomDimReferences() const
+  {
+    return itsCustomDimReferences;
+  }
+
+  void setCustomDimReference(const std::string &dimension, const std::string &reference);
+
  private:
   libconfig::Config itsConfig;
   std::string itsDefaultPrecision = "normal";
@@ -147,6 +154,17 @@ class Config : private boost::noncopyable
   CollectionInfoContainer itsCollectionInfo;
   ProducerParameters itsProducerParameters;
   mutable EDRAPI itsEDRAPI;
+
+  // Custom dimension references. If initial value is empty, reference configuration is required
+  // only if any standard_name is configured (e.g. MetOcean profile)
+
+  CustomDimReferences itsCustomDimReferences = {
+    { "standard_name", "" },
+    { "level", "" },
+    { "method", "" },
+    { "duration", "" },
+    { "timestep", "minutes" }
+  };
 
   // Private helper functions
   void add_default_precisions();

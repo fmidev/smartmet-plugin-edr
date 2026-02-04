@@ -232,6 +232,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
 
 Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query_parameters,
                                       const EDRMetaData &metadata,
+                                      const CustomDimReferences &custom_dim_refs,
                                       const std::string &language)
 {
   try
@@ -242,6 +243,15 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 
     const auto &engine_parameter_info = metadata.parameters;
     const auto &config_parameter_info = *metadata.parameter_info;
+    std::string standard_name_vocabulary;
+
+    auto it = custom_dim_refs.find("standard_name");
+    if (it != custom_dim_refs.end())
+    {
+      standard_name_vocabulary = it->second;
+      if (standard_name_vocabulary.back() == '/')
+        standard_name_vocabulary.pop_back();
+    }
 
     for (const auto &p : query_parameters)
     {
@@ -273,7 +283,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 
       const std::string &standard_name = pinfo.metocean.standard_name;
       if (! standard_name.empty())
-        observed_property_id = pinfo.metocean.standard_name_vocabulary + "/" + standard_name;
+        observed_property_id = standard_name_vocabulary + "/" + standard_name;
       else
         observed_property_id = edr_parameter_name;
 
@@ -322,7 +332,8 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
 
         parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
         parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
-        parameter["measurementType"]["duration"] = Json::Value(pinfo.metocean.duration);
+        auto duration = boost::algorithm::to_upper_copy(pinfo.metocean.duration);
+        parameter["measurementType"]["duration"] = Json::Value(duration);
       }
 
       parameters[parameters.size()] = parameter;
@@ -491,6 +502,7 @@ Json::Value get_bbox(const std::vector<TS::LonLat> &coords, int lon_precision, i
 Json::Value format_output_data_one_point(const TS::OutputData &outputData,
                                          const EDRMetaData &emd,
                                          const std::vector<Spine::Parameter> &query_parameters,
+                                         const CustomDimReferences &custom_dim_refs,
                                          const std::string &language)
 {
   try
@@ -501,7 +513,8 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
     auto features = Json::Value(Json::ValueType::arrayValue);
 
     feature_collection["type"] = Json::Value("FeatureCollection");
-    feature_collection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
+    feature_collection["parameters"] =
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
     auto coordinates = get_coordinates(outputData, query_parameters);
     const auto &lon_precision = emd.getPrecision("longitude");
     const auto &lat_precision = emd.getPrecision("latitude");
@@ -637,6 +650,7 @@ void add_position_features(Json::Value &features,
 Json::Value format_output_data_position(const TS::OutputData &outputData,
                                         const EDRMetaData &emd,
                                         const std::vector<Spine::Parameter> &query_parameters,
+                                        const CustomDimReferences &custom_dim_refs,
                                         const std::string &language)
 {
   try
@@ -646,7 +660,8 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     auto features = Json::Value(Json::ValueType::arrayValue);
 
     feature_collection["type"] = Json::Value("FeatureCollection");
-    feature_collection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
+    feature_collection["parameters"] =
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
 
     const auto lon_precision = emd.getPrecision("longitude");
     const auto lat_precision = emd.getPrecision("latitude");
@@ -929,6 +944,7 @@ Json::Value format_output_data_feature_collection(
     const std::set<int> &levels,
     const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
+    const CustomDimReferences &custom_dim_refs,
     const std::string &language)
 {
   try
@@ -941,7 +957,8 @@ Json::Value format_output_data_feature_collection(
     auto feature_collection = Json::Value(Json::ValueType::objectValue);
 
     feature_collection["type"] = Json::Value("FeatureCollection");
-    feature_collection["parameters"] = get_edr_series_parameters(query_parameters, emd, language);
+    feature_collection["parameters"] =
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
     const auto &lon_precision = emd.getPrecision("longitude");
     const auto &lat_precision = emd.getPrecision("latitude");
     auto level_precision = 0;
@@ -1016,6 +1033,7 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              const std::set<int> &levels,
                              const CoordinateFilter &coordinate_filter,
                              const std::vector<Spine::Parameter> &query_parameters,
+                             const CustomDimReferences &custom_dim_refs,
                              const std::string &language)
 {
   try
@@ -1052,10 +1070,12 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
     {
       // Zero or one levels
       if (levels.size() <= 1)
-        return format_output_data_one_point(outputData, emd, query_parameters, language);
+        return format_output_data_one_point(
+            outputData, emd, query_parameters, custom_dim_refs, language);
 
       // More than one level
-      return format_output_data_position(outputData, emd, query_parameters, language);
+      return format_output_data_position(
+          outputData, emd, query_parameters, custom_dim_refs, language);
     }
 
     if (const auto *ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
@@ -1074,15 +1094,15 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
       od.emplace_back("_obs_", tsd);
       // Zero or one levels
       if (levels.size() <= 1)
-        return format_output_data_one_point(od, emd, query_parameters, language);
+        return format_output_data_one_point(od, emd, query_parameters, custom_dim_refs, language);
       // More than one level
-      return format_output_data_position(od, emd, query_parameters, language);
+      return format_output_data_position(od, emd, query_parameters, custom_dim_refs, language);
     }
 
     if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
     {
       return format_output_data_feature_collection(
-          outputData, emd, levels, coordinate_filter, query_parameters, language);
+          outputData, emd, levels, coordinate_filter, query_parameters, custom_dim_refs, language);
     }
 
     return empty_result;

@@ -49,6 +49,8 @@ class Plugin : public SmartMetPlugin
   bool isValidCollection(const std::string& producer) const;
   bool isValidInstance(const std::string& producer, const std::string& instanceId) const;
 
+  const ParameterInfo &getConfigParameterInfo() const { return itsConfigParameterInfo; }
+
  protected:
   void init() override;
   void shutdown() override;

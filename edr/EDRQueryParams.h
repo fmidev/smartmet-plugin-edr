@@ -34,6 +34,21 @@ class EDRQueryParams
   static bool isAviProducer(const EDRProducerMetaData& avi_metadata, const std::string& producer);
 
  private:
+  class CustomDimensions
+  {
+   public:
+    CustomDimensions() = delete;
+    CustomDimensions(const Spine::HTTP::Request& request);
+
+    bool matches(const std::string &parameterName, const ParameterInfo &parameterInfo) const;
+
+   private:
+    std::vector<std::string> standard_names;
+    std::vector<std::string> methods;
+    std::vector<std::string> durations;
+    std::vector<float> levels;
+  };
+
   std::string parseEDRQuery(const State& state, const Config& config, const std::string& resource);
   std::string parseResourceParts2AndBeyond(const State& state,
                                            const std::vector<std::string>& resource_parts);
@@ -50,11 +65,14 @@ class EDRQueryParams
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,
-                                      bool& noReqParams);
+                                      bool& noReqParams,
+                                      const CustomDimensions& customDimensions);
   std::string cleanParameterNames(const std::string& parameter_names,
                                   const EDRMetaData& emd,
                                   bool grid_producer,
-                                  const std::string& z) const;
+                                  const std::string& z,
+                                  const ParameterInfo &parameterInfo,
+                                  const CustomDimensions& customDimensions) const;
   static void handleGridParameter(std::string& p,
                                   const std::string& producerId,
                                   const std::string& geometryId,
