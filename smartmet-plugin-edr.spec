@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.2.4
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -120,6 +120,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Feb  4 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.2.4-3.fmi
+- Update to proj-9.7, gdal-3.12, fmt-12
+
 * Wed Feb  4 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.4-2.fmi
 - New release version. Fixed global data bbox buffering overflow in locations/all query (BRAINSTORM-3347). Removed irrelevant 'Missing parameter-name option' exception since the option is now optional
 
