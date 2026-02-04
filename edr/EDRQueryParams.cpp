@@ -828,10 +828,14 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
       //
       itsEDRQuery.query_type = EDRQueryType::Area;
 
-      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin - 0.1) + " ");
-      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin - 0.1) + ",");
-      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax + 0.1) + " ");
-      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax + 0.1) + ",");
+      auto offset = ((emd.spatial_extent.bbox_xmin > -179.9) ? 0.1 : 0.0);
+      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin - offset) + " ");
+      offset = ((emd.spatial_extent.bbox_ymin > -89.9) ? 0.1 : 0.0);
+      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin - offset) + ",");
+      offset = ((emd.spatial_extent.bbox_xmax < 179.9) ? 0.1 : 0.0);
+      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax + offset) + " ");
+      offset = ((emd.spatial_extent.bbox_ymax < 89.9) ? 0.1 : 0.0);
+      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax + offset) + ",");
 
       coords = "POLYGON((" + xmin + ymin + xmax + ymin + xmax + ymax + xmin + ymax + xmin + ymin;
       coords.pop_back();

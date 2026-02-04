@@ -126,7 +126,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Wed Feb  4 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.4-1.fmi
-- New release version. Removed irrelevant 'Missing parameter-name option' exception since the option is now optional
+- New release version. Fixed global data bbox buffering overflow in locations/all query (BRAINSTORM-3347). Removed irrelevant 'Missing parameter-name option' exception since the option is now optional
 
 * Thu Jan 29 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.1.29-1.fmi
 - Fixed bug resulting an unconfigured parameter or a configured parameter without standard_name to be included in query if parameter-name was not but some custom dimension(s) was given in query (PAK-6316)
