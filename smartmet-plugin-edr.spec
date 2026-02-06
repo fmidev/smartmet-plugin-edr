@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.2.4
+Version: 26.2.6
 Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -120,6 +120,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Feb  6 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.6-1.fmi
+- Fixes to response content type (BRAINSTORM-3267). Store custom dimension request parameter 'level' using 'custom_level' since 'level' is used internally to store 'z' parameter's values (BRAINSTORM-3349)
+
 * Wed Feb  4 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.2.4-3.fmi
 - Update to proj-9.7, gdal-3.12, fmt-12
 

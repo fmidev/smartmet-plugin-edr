@@ -327,11 +327,13 @@ EDRQueryParams::EDRQueryParams(const State& state,
     // If meta data query return from here
     if (itsEDRQuery.query_id != EDRQueryId::DataQuery)
     {
-      /*
-      auto fparam = req.getParameter("f");
-      if(fparam && *fparam != "application/json")
-        throw EDRException("Invalid format! Format must be 'application/json' for metadata query!");
-      */
+      // BRAINSTORM-3267; if mime_type is left empty, plugin sets the type usíng output format
+      //
+      if (itsEDRQuery.query_type == EDRQueryType::Locations)
+        mime_type = "application/geo+json";
+      else
+        mime_type = "application/json";
+
       return;
     }
 
@@ -394,6 +396,11 @@ EDRQueryParams::EDRQueryParams(const State& state,
                          "'. The following output formats are supported for collection " +
                          itsEDRQuery.collection_id + ": " + output_format_list);
     }
+
+    if (output_format == COVERAGE_JSON_FORMAT)
+      mime_type = "application/prs.coverage+json";
+    else if (output_format == GEO_JSON_FORMAT)
+      mime_type = "application/geo+json";
 
     // Longitude, latitude are always needed
     parameter_names += ",longitude,latitude";
@@ -1050,7 +1057,7 @@ EDRQueryParams::CustomDimensions::CustomDimensions(const Spine::HTTP::Request& r
     auto req_durations =
       boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("duration"), ""));
     auto req_levels =
-      boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("level"), ""));
+      boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("custom_level"), ""));
 
     if (! req_standard_names.empty())
     {

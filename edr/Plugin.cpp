@@ -391,15 +391,19 @@ void Plugin::query(const State& state,
       gridEnabled = true;
 
     formatter.reset(fmt);
-    std::string mime;
-    if (q.output_format == IWXXM_FORMAT)
-      mime = "text/xml";
-    else if (q.output_format == IWXXMZIP_FORMAT)
-      mime = "application/zip";
-    else if (q.output_format == TAC_FORMAT)
-      mime = "text/plain";
-    else
-      mime = "application/json; charset=utf-8";
+    std::string mime(q.mimeType());
+
+    if (mime.empty())
+    {
+      if (q.output_format == IWXXM_FORMAT)
+        mime = "text/xml";
+      else if (q.output_format == IWXXMZIP_FORMAT)
+        mime = "application/zip";
+      else if (q.output_format == TAC_FORMAT)
+        mime = "text/plain";
+      else
+        mime = "application/json";
+    }
     response.setHeader("Content-Type", mime);
 
     // Calculate the hash value for the product.
@@ -502,10 +506,7 @@ void Plugin::query(const State& state,
       if (q.output_format == IWXXMZIP_FORMAT)
       {
         if (qph.getZipFileName().empty())
-        {
-          response.setHeader("Content-Type", "application/json; charset=utf-8");
           response.setStatus(204);
-        }
         else
           response.setHeader("Content-Disposition",
                              std::string("attachement; filename=") + qph.getZipFileName());
@@ -515,6 +516,9 @@ void Plugin::query(const State& state,
         result->clear();
         response.setStatus(204);
       }
+
+      if (response.getStatus() == 204)
+        response.removeHeader("Content-type");
 
       response.setContent(*result);
     }
@@ -606,6 +610,18 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
 
     theResponse.setStatus(Spine::HTTP::Status::ok);
 
+    // BRAINSTORM-3349
+    //
+    // Store custom dimension request parameter 'level' using other name since it's used
+    // internally to store 'z' parameter's values
+
+    auto opt = Spine::optional_string(request.getParameter("level"), "");
+    if (! opt.empty())
+    {
+       request.addParameter("custom_level", opt);
+       request.removeParameter("level");
+    }
+
     query(state, request, theResponse);  // may modify the status
 
     // Adding response headers
@@ -663,6 +679,7 @@ void Plugin::requestHandler(Spine::Reactor& /* theReactor */,
       auto problem_detail = itsConfig.getEDRAPI().getProblemDetailJson();
       boost::algorithm::replace_all(problem_detail, "__DETAIL__", firstMessage);
       theResponse.setContent(problem_detail);
+      theResponse.setHeader("Content-Type", "application/problem+json");
     }
 
     // Adding the first exception information into the response header
