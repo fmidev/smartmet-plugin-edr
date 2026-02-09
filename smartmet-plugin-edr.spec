@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.2.4
+Version: 26.2.9
 Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Mon Feb  9 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.9-1.fmi
+- Version with old/nonupdated gdal,proj etc to update opendata by checkouting commit 9ed80c2c67ad60735462c4c4e10cf6030187b220 and merging later edr changes. Fixes to response content type (BRAINSTORM-3267). Store custom dimension request parameter 'level' using 'custom_level' since 'level' is used internally to store 'z' parameter's values (BRAINSTORM-3349). Fixed/switched coordinate referencing axis order to x,y and accepted related test result chances (BRAINSTORM-3351). Changed coverage referencing coordinates system id scheme to http and accepted related test result chances (BRAINSTORM-3365)
+
 * Wed Feb  4 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.4-2.fmi
 - New release version. Fixed global data bbox buffering overflow in locations/all query (BRAINSTORM-3347). Removed irrelevant 'Missing parameter-name option' exception since the option is now optional
 

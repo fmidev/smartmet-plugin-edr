@@ -29,6 +29,8 @@ class EDRQueryParams
   std::string requestWKT;
   std::string output_format;
 
+  const std::string &mimeType() const { return mime_type; }
+
  protected:
   Spine::HTTP::Request req;  // this is used by Query
   static bool isAviProducer(const EDRProducerMetaData& avi_metadata, const std::string& producer);
@@ -89,6 +91,7 @@ class EDRQueryParams
 
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;
+  std::string mime_type;
 };
 
 }  // namespace EDR
