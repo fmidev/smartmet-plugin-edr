@@ -810,7 +810,7 @@ Json::Value add_prologue_one_point(std::optional<int> level,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("https://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
@@ -919,7 +919,7 @@ Json::Value add_prologue_multi_point(std::optional<int> level,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("https://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
 
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
     if (level)
@@ -982,7 +982,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("https://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
 
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
     if (levels_exists)
@@ -2043,7 +2043,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("https://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
@@ -2867,7 +2867,7 @@ Json::Value format_output_data_vertical_profile(
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("https://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
