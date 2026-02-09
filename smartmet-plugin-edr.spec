@@ -120,7 +120,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
-* Fri Feb  9 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.9-1.fmi
+* Mon Feb  9 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.9-1.fmi
 - New release version. Fixes to response content type (BRAINSTORM-3267). Store custom dimension request parameter 'level' using 'custom_level' since 'level' is used internally to store 'z' parameter's values (BRAINSTORM-3349). Fixed/switched coordinate referencing axis order to x,y (BRAINSTORM-3351)
 
 * Wed Feb  4 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.2.4-3.fmi
