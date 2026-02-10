@@ -1001,6 +1001,23 @@ const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
   return NOT_A_DATE_TIME;
 }
 
+std::string latin1_to_utf8(const std::string& s)
+{
+  std::string out;
+  out.reserve(s.size() * 2);
+
+  for (unsigned char c : s) {
+    if (c < 0x80)
+      out.push_back(c);
+    else {
+      out.push_back(0xC0 | (c >> 6));
+      out.push_back(0x80 | (c & 0x3F));
+    }
+  }
+
+  return out;
+}
+
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
                                         const ProducerLicenses & /* licenses */,
                                         const std::string &default_language,
@@ -1071,8 +1088,9 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
         auto parameter_name = p.name;
         boost::algorithm::to_lower(parameter_name);
         producer_emd.parameter_names.insert(parameter_name);
+        auto utf8_description = latin1_to_utf8(p.description);
         producer_emd.parameters.insert(
-            std::make_pair(parameter_name, edr_parameter(p.name, p.description)));
+            std::make_pair(parameter_name, edr_parameter(p.name, utf8_description)));
       }
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;

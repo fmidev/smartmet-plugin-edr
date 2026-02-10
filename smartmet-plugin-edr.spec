@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.2.10
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -120,6 +120,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Feb 10 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.10-3.fmi
+- Changed custom dimension interval to array of arrays (BRAINSTORM-3368). Converting querydata parameter descriptions from latin-1 to utf-8 (BRAINSTORM-3367)
+
 * Tue Feb 10 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.10-2.fmi
 - Setting value datatype 'float' if parameter's 1'st value is null since 'null' is not valid datatype (BRAINSTORM-3366)
 

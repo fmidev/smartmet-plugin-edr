@@ -1048,6 +1048,8 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto stdname_interval = Json::Value(Json::ValueType::arrayValue);
       stdname_interval[0] = Json::Value(*(stdnames->begin()));
       stdname_interval[1] = Json::Value(*(stdnames->rbegin()));
+      auto stdname_interval_arr = Json::Value(Json::ValueType::arrayValue);
+      stdname_interval_arr[0] = stdname_interval;
       auto stdname_values = Json::Value(Json::ValueType::arrayValue);
       for (auto const &name : *stdnames)
       {
@@ -1056,7 +1058,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto stdname_dim = Json::Value(Json::ValueType::objectValue);
       auto dim = "standard_name";
       stdname_dim["id"] = Json::Value(dim);
-      stdname_dim["interval"] = stdname_interval;
+      stdname_dim["interval"] = stdname_interval_arr;
       stdname_dim["values"] = stdname_values;
       auto it = custom_dim_refs.find(dim);
       if (it != custom_dim_refs.end())
@@ -1066,6 +1068,8 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto level_interval = Json::Value(Json::ValueType::arrayValue);
       level_interval[0] = Json::Value(*(levels->begin()));
       level_interval[1] = Json::Value(*(levels->rbegin()));
+      auto level_interval_arr = Json::Value(Json::ValueType::arrayValue);
+      level_interval_arr[0] = level_interval;
       auto level_values = Json::Value(Json::ValueType::arrayValue);
       for (auto const &level : *levels)
       {
@@ -1074,7 +1078,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto level_dim = Json::Value(Json::ValueType::objectValue);
       dim = "level";
       level_dim["id"] = Json::Value(dim);
-      level_dim["interval"] = level_interval;
+      level_dim["interval"] = level_interval_arr;
       level_dim["values"] = level_values;
       it = custom_dim_refs.find(dim);
       if (it != custom_dim_refs.end())
@@ -1084,6 +1088,8 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto method_interval = Json::Value(Json::ValueType::arrayValue);
       method_interval[0] = Json::Value(*(methods->begin()));
       method_interval[1] = Json::Value(*(methods->rbegin()));
+      auto method_interval_arr = Json::Value(Json::ValueType::arrayValue);
+      method_interval_arr[0] = method_interval;
       auto method_values = Json::Value(Json::ValueType::arrayValue);
       for (auto const &method : *methods)
       {
@@ -1092,7 +1098,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto method_dim = Json::Value(Json::ValueType::objectValue);
       dim = "method";
       method_dim["id"] = Json::Value(dim);
-      method_dim["interval"] = method_interval;
+      method_dim["interval"] = method_interval_arr;
       method_dim["values"] = method_values;
       it = custom_dim_refs.find(dim);
       if (it != custom_dim_refs.end())
@@ -1102,6 +1108,8 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto duration_interval = Json::Value(Json::ValueType::arrayValue);
       duration_interval[0] = Json::Value(*(durations->begin()));
       duration_interval[1] = Json::Value(*(durations->rbegin()));
+      auto duration_interval_arr = Json::Value(Json::ValueType::arrayValue);
+      duration_interval_arr[0] = duration_interval;
       auto duration_values = Json::Value(Json::ValueType::arrayValue);
       for (auto const &duration : *durations)
       {
@@ -1110,7 +1118,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
       auto duration_dim = Json::Value(Json::ValueType::objectValue);
       dim = "duration";
       duration_dim["id"] = Json::Value(dim);
-      duration_dim["interval"] = duration_interval;
+      duration_dim["interval"] = duration_interval_arr;
       duration_dim["values"] = duration_values;
       it = custom_dim_refs.find(dim);
       if (it != custom_dim_refs.end())
@@ -1294,11 +1302,13 @@ void add_timestep_dimension(const edr_temporal_extent &temporal_extent,
       itl--;
       interval[0] = Json::Value(*(temporal_extent.time_steps.begin()));
       interval[1] = Json::Value(*itl);
+      auto interval_arr = Json::Value(Json::ValueType::arrayValue);
+      interval_arr[0] = interval;
 
       auto timestepdim = Json::Value(Json::ValueType::objectValue);
       auto dim = "timestep";
       timestepdim["id"] = Json::Value(dim);
-      timestepdim["interval"] = interval;
+      timestepdim["interval"] = interval_arr;
       timestepdim["values"] = timesteps;
       auto it = custom_dim_refs.find(dim);
       if (it != custom_dim_refs.end())
