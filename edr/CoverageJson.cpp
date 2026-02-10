@@ -736,7 +736,7 @@ void add_value(const TS::TimedValue &tv,
     {
       Json::Value nulljson;
       if (values_index == 0)
-        data_type = nulljson;
+        data_type = Json::Value("float");
       values_array[values_index] = nulljson;
     }
   }
