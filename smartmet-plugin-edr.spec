@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.2.9
-Release: 2%{?dist}.fmi
+Version: 26.2.10
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -125,6 +125,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Feb 10 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.10-1.fmi
+- Setting value datatype 'float' if parameter's 1'st value is null since 'null' is not valid datatype (BRAINSTORM-3366)
+
 * Mon Feb  9 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.2.9-1.fmi
 - Version with old/nonupdated gdal,proj etc to update opendata by checkouting commit 9ed80c2c67ad60735462c4c4e10cf6030187b220 and merging later edr changes. Fixes to response content type (BRAINSTORM-3267). Store custom dimension request parameter 'level' using 'custom_level' since 'level' is used internally to store 'z' parameter's values (BRAINSTORM-3349). Fixed/switched coordinate referencing axis order to x,y and accepted related test result chances (BRAINSTORM-3351). Changed coverage referencing coordinates system id scheme to http and accepted related test result chances (BRAINSTORM-3365)
 
