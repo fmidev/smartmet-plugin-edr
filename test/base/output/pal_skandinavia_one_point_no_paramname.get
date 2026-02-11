@@ -378,7 +378,7 @@
 			"type" : "Parameter",
 			"description" : 
 			{
-				"fi" : "Auringon s‰teily"
+				"fi" : "Auringon s√§teily"
 			},
 			"label" : 
 			{
@@ -399,7 +399,7 @@
 			"type" : "Parameter",
 			"description" : 
 			{
-				"fi" : "Pitk‰aaltoinen s‰teily"
+				"fi" : "Pitk√§aaltoinen s√§teily"
 			},
 			"label" : 
 			{

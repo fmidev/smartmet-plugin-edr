@@ -257,8 +257,10 @@
 				"id" : "timestep",
 				"interval" : 
 				[
-					60,
-					1440
+					[
+						60,
+						1440
+					]
 				],
 				"reference" : "minutes",
 				"values" : 
@@ -488,7 +490,7 @@
 		"radiationglobal" : 
 		{
 			"id" : "RadiationGlobal",
-			"description" : "Auringon s‰teily",
+			"description" : "Auringon s√§teily",
 			"label" : "RadiationGlobal",
 			"type" : "Parameter",
 			"observedProperty" : 
@@ -500,7 +502,7 @@
 		"radiationlw" : 
 		{
 			"id" : "RadiationLW",
-			"description" : "Pitk‰aaltoinen s‰teily",
+			"description" : "Pitk√§aaltoinen s√§teily",
 			"label" : "RadiationLW",
 			"type" : "Parameter",
 			"observedProperty" : 
