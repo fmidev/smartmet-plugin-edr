@@ -1582,8 +1582,10 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       // Then get collection info from configuration file, if we didn't get it from engine
       get_collection_info_from_configuration_file(collection_emd, title, description, keyword_set);
 
-      value["title"] = Json::Value(title);
-      value["description"] = Json::Value(description);
+      if (! title.empty())
+        value["title"] = Json::Value(title);
+      if (! description.empty())
+        value["description"] = Json::Value(description);
       auto keywords = Json::Value(Json::ValueType::arrayValue);
       for (const auto &kword : keyword_set)
         keywords[keywords.size()] = kword;
