@@ -1383,7 +1383,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
 
     // Going through all parameters
 
-    std::map<ulonglong, uint> pidList;
+    std::map<UInt64, uint> pidList;
 
     int pIdx = 0;
     int pLen = C_INT(gridQuery->mQueryParameterList.size());
@@ -1452,13 +1452,13 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
               auto* rec = gridQuery->mQueryParameterList[pid].getValueListRecord(col, t);
               if (rec && (rec->mValue != ParamValueMissing || !rec->mValueString.empty()))
               {
-                pidList.insert(std::pair<ulonglong, uint>(((ulonglong)pIdx << 32) + t, pp));
+                pidList.insert(std::pair<UInt64, uint>(((UInt64)pIdx << 32) + t, pp));
               }
               else if (ai > 0)
               {
                 rec = gridQuery->mQueryParameterList[ai].getValueListRecord(col, t);
                 if (rec)
-                  pidList.insert(std::pair<ulonglong, uint>(((ulonglong)pIdx << 32) + t, ai));
+                  pidList.insert(std::pair<UInt64, uint>(((UInt64)pIdx << 32) + t, ai));
               }
 
               if (rec && (rec->mValue != ParamValueMissing || !rec->mValueString.empty()))
@@ -1823,7 +1823,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
 
               if (idx >= 0 && idx < pLen)
               {
-                auto cpid = pidList.find(((ulonglong)(idx) << 32) + t);
+                auto cpid = pidList.find(((UInt64)(idx) << 32) + t);
                 if (cpid != pidList.end())
                 {
                   uint i = cpid->second;
