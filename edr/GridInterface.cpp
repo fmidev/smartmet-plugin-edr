@@ -1855,9 +1855,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                   else if (n == "G")  // Generation
                   {
                     T::GenerationInfo info;
-                    if (itsGridEngine->getGenerationInfoById(
-                            C_INT(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId),
-                            info))
+                    if (itsGridEngine->getGenerationInfoById(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId,info))
                     {
                       TS::TimedValue tsValue(queryTime, info.mName);
                       tsForNonGridParam->emplace_back(tsValue);
@@ -1865,8 +1863,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                     else
                     {
                       TS::TimedValue tsValue(
-                          queryTime,
-                          C_INT(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId));
+                          queryTime,gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId);
                       tsForNonGridParam->emplace_back(tsValue);
                     }
                   }
