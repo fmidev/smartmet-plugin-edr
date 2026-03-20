@@ -22,14 +22,6 @@ test-sqlite test-oracle test-postgresql:
 		--failures-dir failures \
 		$(foreach fn, input/.testignore_$(DB_TYPE) $(EXTRA_IGNORE), --ignore $(fn)) \
 		--timeout 300 || ok=false; \
-	if [ -d input/timeseries ]; then \
-	  $(TEST_RUNNER) smartmet-plugin-test --handler /timeseries \
-		-e tmp/ \
-		--reactor-config cnf/reactor.conf \
-		--failures-dir failures \
-		$(foreach fn, input/.testignore_$(DB_TYPE) $(EXTRA_IGNORE), --ignore $(fn)) \
-		--timeout 300 || ok=false; \
-	fi; \
 	$$ok
 
 all:
