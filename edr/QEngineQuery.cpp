@@ -347,7 +347,7 @@ void QEngineQuery::processQEngineQuery(const State& state,
         continue;
       processed_locations.insert(location_id);
 
-      Query q = masterquery;
+      CommonQuery q = masterquery;
       QueryLevelDataCache queryLevelDataCache;
 
       std::vector<TS::TimeSeriesData> tsdatavector;
