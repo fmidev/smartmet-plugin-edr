@@ -613,7 +613,7 @@ void Plugin::timeSeriesQuery(const State& state,
     tsq.loptions->setLocations(tagged_ll);
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
-    data.setPaging(0, 1);
+    data.setPaging(tsq.startrow, tsq.maxresults);
 
     std::string producer_option =
         Spine::optional_string(request.getParameter(PRODUCER_PARAM),
