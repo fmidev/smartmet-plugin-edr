@@ -26,6 +26,19 @@ namespace
 
 const char* default_timezone = "localtime";
 
+void parse_ids(const std::optional<std::string>& string_param, std::vector<std::string>& id_vector)
+{
+  try
+  {
+    if (string_param)
+      boost::algorithm::split(id_vector, *string_param, boost::algorithm::is_any_of(","));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void parse_ids(const std::optional<std::string>& string_param, std::vector<int>& id_vector)
 {
   try
@@ -194,6 +207,11 @@ void CommonQuery::commonInit(const State& state,
     // LPNNs
     name = req.getParameter("lpnn");
     parse_ids(name, lpnns);
+    // RWSIDs
+    name = req.getParameter("rwsid");
+    parse_ids(name, rwsids);
+    // WIGOS Station identifiers
+    parse_ids(req.getParameter("wsi"), wsis);
 
     report_unsupported_option("adjustfield", req.getParameter("adjustfield"));
     report_unsupported_option("width", req.getParameter("width"));

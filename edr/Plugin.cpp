@@ -352,83 +352,6 @@ void Plugin::query(const State& state,
 
     QueryProcessingHub qph(*this);
 
-    // Detect whether this is a timeseries-style request or an EDR request
-    const bool isTimeSeriesRequest =
-        !itsConfig.timeSeriesUrl().empty() &&
-        (request.getResource() == itsConfig.timeSeriesUrl() ||
-         request.getResource().substr(0, itsConfig.timeSeriesUrl().size() + 1) ==
-             itsConfig.timeSeriesUrl() + "/");
-
-    if (isTimeSeriesRequest)
-    {
-      // --- TimeSeries-style request path ---
-      TimeSeriesQuery tsq(state, request, itsConfig);
-
-      // Resolve locations for FMISIDs, WMOs, LPNNs
-      Engine::Geonames::LocationOptions lopt =
-          itsEngines.geoEngine->parseLocations(tsq.fmisids, tsq.lpnns, tsq.wmos, tsq.language);
-      const Spine::TaggedLocationList& locations = lopt.locations();
-      Spine::TaggedLocationList tagged_ll = tsq.loptions->locations();
-      tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
-      tsq.loptions->setLocations(tagged_ll);
-
-      high_resolution_clock::time_point t2 = high_resolution_clock::now();
-      data.setPaging(0, 1);
-
-      std::string producer_option_ts =
-          Spine::optional_string(request.getParameter(PRODUCER_PARAM),
-                                 Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
-      boost::algorithm::to_lower(producer_option_ts);
-
-      QueryServer::QueryStreamer_sptr queryStreamer;
-      std::shared_ptr<Spine::TableFormatter> formatter(
-          get_formatter_and_qstreamer(tsq, queryStreamer));
-
-      std::string mime = formatter->mimetype() + "; charset=UTF-8";
-      response.setHeader("Content-Type", mime);
-
-      std::size_t product_hash = Fmi::bad_hash;
-      high_resolution_clock::time_point t3_ts = high_resolution_clock::now();
-      std::string timeheader_ts =
-          Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
-          Fmi::to_string(duration_cast<microseconds>(t3_ts - t2).count());
-
-      std::shared_ptr<std::string> obj_ts =
-          qph.processQuery(state, data, tsq, queryStreamer, product_hash);
-
-      if (obj_ts)
-      {
-        response.setHeader("X-Duration", timeheader_ts);
-        response.setContent(obj_ts);
-        return;
-      }
-
-      response.setHeader("X-EDR-Cache", "no");
-
-      high_resolution_clock::time_point t4_ts = high_resolution_clock::now();
-      timeheader_ts.append("+").append(
-          Fmi::to_string(duration_cast<microseconds>(t4_ts - t3_ts).count()));
-
-      data.setMissingText(tsq.valueformatter.missing());
-      Spine::TableFormatter::Names headers = get_headers(tsq.poptions.parameters());
-      std::string wxml_type = get_wxml_type(producer_option_ts, itsObsEngineStationTypes);
-      auto formatter_options = itsConfig.formatterOptions();
-      formatter_options.setFormatType(wxml_type);
-      auto out = formatter->format(data, headers, request, formatter_options);
-
-      high_resolution_clock::time_point t5_ts = high_resolution_clock::now();
-      timeheader_ts.append("+").append(
-          Fmi::to_string(duration_cast<microseconds>(t5_ts - t4_ts).count()));
-
-      std::shared_ptr<std::string> result(new std::string());
-      std::swap(out, *result);
-      response.setHeader("X-Duration", timeheader_ts);
-      response.setContent(*result);
-      return;
-    }
-
-    // --- EDR request path ---
-
     Query q(state, request, itsConfig);
 
     std::shared_ptr<std::string> obj;
@@ -659,6 +582,184 @@ void Plugin::grouplocations(Spine::HTTP::Request& request) const
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Perform a timeseries query
+ */
+// ----------------------------------------------------------------------
+
+void Plugin::timeSeriesQuery(const State& state,
+                             const Spine::HTTP::Request& request,
+                             Spine::HTTP::Response& response)
+{
+  try
+  {
+    using std::chrono::duration_cast;
+    using std::chrono::high_resolution_clock;
+    using std::chrono::microseconds;
+
+    Spine::Table data;
+
+    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+
+    QueryProcessingHub qph(*this);
+
+    TimeSeriesQuery tsq(state, request, itsConfig);
+
+    // Resolve locations for FMISIDs, WMOs, LPNNs
+    Engine::Geonames::LocationOptions lopt =
+        itsEngines.geoEngine->parseLocations(tsq.fmisids, tsq.lpnns, tsq.wmos, tsq.language);
+    const Spine::TaggedLocationList& locations = lopt.locations();
+    Spine::TaggedLocationList tagged_ll = tsq.loptions->locations();
+    tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
+    tsq.loptions->setLocations(tagged_ll);
+
+    high_resolution_clock::time_point t2 = high_resolution_clock::now();
+    data.setPaging(0, 1);
+
+    std::string producer_option =
+        Spine::optional_string(request.getParameter(PRODUCER_PARAM),
+                               Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
+    boost::algorithm::to_lower(producer_option);
+
+    QueryServer::QueryStreamer_sptr queryStreamer;
+    std::shared_ptr<Spine::TableFormatter> formatter(
+        get_formatter_and_qstreamer(tsq, queryStreamer));
+
+    std::string mime = formatter->mimetype() + "; charset=UTF-8";
+    response.setHeader("Content-Type", mime);
+
+    std::size_t product_hash = Fmi::bad_hash;
+    high_resolution_clock::time_point t3 = high_resolution_clock::now();
+    std::string timeheader =
+        Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
+        Fmi::to_string(duration_cast<microseconds>(t3 - t2).count());
+
+    std::shared_ptr<std::string> obj =
+        qph.processQuery(state, data, tsq, queryStreamer, product_hash);
+
+    if (obj)
+    {
+      response.setHeader("X-Duration", timeheader);
+      response.setContent(obj);
+      return;
+    }
+
+    response.setHeader("X-EDR-Cache", "no");
+
+    high_resolution_clock::time_point t4 = high_resolution_clock::now();
+    timeheader.append("+").append(
+        Fmi::to_string(duration_cast<microseconds>(t4 - t3).count()));
+
+    data.setMissingText(tsq.valueformatter.missing());
+    Spine::TableFormatter::Names headers = get_headers(tsq.poptions.parameters());
+    std::string wxml_type = get_wxml_type(producer_option, itsObsEngineStationTypes);
+    auto formatter_options = itsConfig.formatterOptions();
+    formatter_options.setFormatType(wxml_type);
+    auto out = formatter->format(data, headers, request, formatter_options);
+
+    high_resolution_clock::time_point t5 = high_resolution_clock::now();
+    timeheader.append("+").append(
+        Fmi::to_string(duration_cast<microseconds>(t5 - t4).count()));
+
+    std::shared_ptr<std::string> result(new std::string());
+    std::swap(out, *result);
+    response.setHeader("X-Duration", timeheader);
+    response.setContent(*result);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief TimeSeries content handler
+ */
+// ----------------------------------------------------------------------
+
+void Plugin::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
+                                      const Spine::HTTP::Request& theRequest,
+                                      Spine::HTTP::Response& theResponse)
+{
+  bool isdebug = false;
+
+  try
+  {
+    auto request = theRequest;
+
+    if (Spine::optional_bool(request.getParameter("grouplocations"), false))
+      grouplocations(request);
+
+    isdebug = ("debug" == Spine::optional_string(request.getParameter("format"), ""));
+
+    theResponse.setHeader("Access-Control-Allow-Origin", "*");
+
+    auto expires_seconds = itsConfig.expirationTime();
+    State state(*this);
+    state.setPretty(Spine::optional_bool(request.getParameter("pretty"), itsConfig.getPretty()));
+
+    theResponse.setStatus(Spine::HTTP::Status::ok);
+
+    timeSeriesQuery(state, request, theResponse);
+
+    std::shared_ptr<Fmi::TimeFormatter> tformat(Fmi::TimeFormatter::create("http"));
+
+    if (expires_seconds == 0)
+    {
+      theResponse.setHeader("Cache-Control", "no-cache, must-revalidate");
+      theResponse.setHeader("Pragma", "no-cache");
+    }
+    else
+    {
+      std::string cachecontrol = "public, max-age=" + Fmi::to_string(expires_seconds);
+      theResponse.setHeader("Cache-Control", cachecontrol);
+
+      Fmi::DateTime t_expires = state.getTime() + Fmi::Seconds(expires_seconds);
+      std::string expiration = tformat->format(t_expires);
+      theResponse.setHeader("Expires", expiration);
+    }
+
+    std::string modification = tformat->format(state.getTime());
+    theResponse.setHeader("Last-Modified", modification);
+  }
+  catch (...)
+  {
+    Fmi::Exception ex(BCP, "Request processing exception!", nullptr);
+    ex.addParameter("URI", theRequest.getURI());
+    ex.addParameter("ClientIP", theRequest.getClientIP());
+    ex.addParameter("HostName", Spine::HostInfo::getHostName(theRequest.getClientIP()));
+
+    const bool check_token = true;
+    auto apikey = Spine::FmiApiKey::getFmiApiKey(theRequest, check_token);
+    ex.addParameter("Apikey", (apikey ? *apikey : std::string("-")));
+
+    ex.printError();
+
+    std::string firstMessage = ex.what();
+    if (isdebug)
+    {
+      theResponse.setContent(ex.getHtmlStackTrace());
+      theResponse.setStatus(Spine::HTTP::Status::ok);
+    }
+    else
+    {
+      if (firstMessage.find("timeout") != std::string::npos)
+        theResponse.setStatus(Spine::HTTP::Status::request_timeout);
+      else
+        theResponse.setStatus(Spine::HTTP::Status::bad_request);
+
+      theResponse.setContent(firstMessage);
+    }
+
+    boost::algorithm::replace_all(firstMessage, "\n", " ");
+    if (firstMessage.size() > 300)
+      firstMessage.resize(300);
+    theResponse.setHeader("X-TimeSeriesPlugin-Error", firstMessage);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Main content handler
  */
 // ----------------------------------------------------------------------
@@ -865,6 +966,7 @@ void Plugin::init()
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
     // Optional handler for timeseries-style requests: /timeseries
+    // Note: no positional URI parameters (false), only named HTTP request parameters
     if (!itsConfig.timeSeriesUrl().empty())
     {
       if (!itsReactor->addContentHandler(
@@ -873,9 +975,9 @@ void Plugin::init()
               [this](Spine::Reactor& theReactor,
                      const Spine::HTTP::Request& theRequest,
                      Spine::HTTP::Response& theResponse)
-              { callRequestHandler(theReactor, theRequest, theResponse); },
+              { timeSeriesRequestHandler(theReactor, theRequest, theResponse); },
               {},
-              true))
+              false))
         throw Fmi::Exception(BCP, "Failed to register timeseries content handler");
     }
 

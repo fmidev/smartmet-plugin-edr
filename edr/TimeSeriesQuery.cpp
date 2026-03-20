@@ -20,7 +20,7 @@ TimeSeriesQuery::TimeSeriesQuery(const State& state,
                                  Config& config)
     : CommonQuery(state, req, config)
 {
-  format = Spine::optional_string(req.getParameter("format"), "debug");
+  format = Spine::optional_string(req.getParameter("format"), "ascii");
 
   // stepDefault=1.0, setDataTimesMode=false, no extra producer check
   commonInit(state, req, config);

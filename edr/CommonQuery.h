@@ -73,6 +73,8 @@ class CommonQuery : public ObsQueryParams
   std::vector<int> wmos;
   std::vector<int> lpnns;
   std::vector<int> fmisids;
+  std::vector<int> rwsids;
+  std::vector<std::string> wsis;
 
   ParamPrecisions precisions;
   Fmi::ValueFormatter valueformatter;
