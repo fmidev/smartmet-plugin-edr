@@ -1179,6 +1179,16 @@ Config::Config(const string &configfile)
       throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");
     if (itsDefaultUrl.back() == '/')
       itsDefaultUrl.pop_back();
+
+    if (itsConfig.lookupValue("timeseries_url", itsTimeSeriesUrl))
+    {
+      Fmi::trim(itsTimeSeriesUrl);
+      if (!itsTimeSeriesUrl.empty() && (itsTimeSeriesUrl.front() != '/'))
+        itsTimeSeriesUrl = "/" + itsTimeSeriesUrl;
+      if (!itsTimeSeriesUrl.empty() && itsTimeSeriesUrl.back() == '/')
+        itsTimeSeriesUrl.pop_back();
+    }
+
     itsConfig.lookupValue("expires", itsExpirationTime);
     itsConfig.lookupValue("aviengine_disabled", itsAviEngineDisabled);
     itsConfig.lookupValue("observation_disabled", itsObsEngineDisabled);

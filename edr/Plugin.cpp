@@ -7,6 +7,7 @@
 #include "Plugin.h"
 #include "QueryProcessingHub.h"
 #include "State.h"
+#include "TimeSeriesQuery.h"
 #include "UtilityFunctions.h"
 #include <engines/gis/Engine.h>
 #include <fmt/format.h>
@@ -53,7 +54,7 @@ std::set<std::string> get_metadata_parameters(const std::shared_ptr<EngineMetaDa
   return parameter_names;
 }
 
-Spine::TableFormatter* get_formatter_and_qstreamer(const Query& q,
+Spine::TableFormatter* get_formatter_and_qstreamer(const CommonQuery& q,
                                                    QueryServer::QueryStreamer_sptr& queryStreamer)
 {
   try
@@ -350,6 +351,83 @@ void Plugin::query(const State& state,
     high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
     QueryProcessingHub qph(*this);
+
+    // Detect whether this is a timeseries-style request or an EDR request
+    const bool isTimeSeriesRequest =
+        !itsConfig.timeSeriesUrl().empty() &&
+        (request.getResource() == itsConfig.timeSeriesUrl() ||
+         request.getResource().substr(0, itsConfig.timeSeriesUrl().size() + 1) ==
+             itsConfig.timeSeriesUrl() + "/");
+
+    if (isTimeSeriesRequest)
+    {
+      // --- TimeSeries-style request path ---
+      TimeSeriesQuery tsq(state, request, itsConfig);
+
+      // Resolve locations for FMISIDs, WMOs, LPNNs
+      Engine::Geonames::LocationOptions lopt =
+          itsEngines.geoEngine->parseLocations(tsq.fmisids, tsq.lpnns, tsq.wmos, tsq.language);
+      const Spine::TaggedLocationList& locations = lopt.locations();
+      Spine::TaggedLocationList tagged_ll = tsq.loptions->locations();
+      tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
+      tsq.loptions->setLocations(tagged_ll);
+
+      high_resolution_clock::time_point t2 = high_resolution_clock::now();
+      data.setPaging(0, 1);
+
+      std::string producer_option_ts =
+          Spine::optional_string(request.getParameter(PRODUCER_PARAM),
+                                 Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
+      boost::algorithm::to_lower(producer_option_ts);
+
+      QueryServer::QueryStreamer_sptr queryStreamer;
+      std::shared_ptr<Spine::TableFormatter> formatter(
+          get_formatter_and_qstreamer(tsq, queryStreamer));
+
+      std::string mime = formatter->mimetype() + "; charset=UTF-8";
+      response.setHeader("Content-Type", mime);
+
+      std::size_t product_hash = Fmi::bad_hash;
+      high_resolution_clock::time_point t3_ts = high_resolution_clock::now();
+      std::string timeheader_ts =
+          Fmi::to_string(duration_cast<microseconds>(t2 - t1).count()) + '+' +
+          Fmi::to_string(duration_cast<microseconds>(t3_ts - t2).count());
+
+      std::shared_ptr<std::string> obj_ts =
+          qph.processQuery(state, data, tsq, queryStreamer, product_hash);
+
+      if (obj_ts)
+      {
+        response.setHeader("X-Duration", timeheader_ts);
+        response.setContent(obj_ts);
+        return;
+      }
+
+      response.setHeader("X-EDR-Cache", "no");
+
+      high_resolution_clock::time_point t4_ts = high_resolution_clock::now();
+      timeheader_ts.append("+").append(
+          Fmi::to_string(duration_cast<microseconds>(t4_ts - t3_ts).count()));
+
+      data.setMissingText(tsq.valueformatter.missing());
+      Spine::TableFormatter::Names headers = get_headers(tsq.poptions.parameters());
+      std::string wxml_type = get_wxml_type(producer_option_ts, itsObsEngineStationTypes);
+      auto formatter_options = itsConfig.formatterOptions();
+      formatter_options.setFormatType(wxml_type);
+      auto out = formatter->format(data, headers, request, formatter_options);
+
+      high_resolution_clock::time_point t5_ts = high_resolution_clock::now();
+      timeheader_ts.append("+").append(
+          Fmi::to_string(duration_cast<microseconds>(t5_ts - t4_ts).count()));
+
+      std::shared_ptr<std::string> result(new std::string());
+      std::swap(out, *result);
+      response.setHeader("X-Duration", timeheader_ts);
+      response.setContent(*result);
+      return;
+    }
+
+    // --- EDR request path ---
 
     Query q(state, request, itsConfig);
 
@@ -785,6 +863,21 @@ void Plugin::init()
             {},
             true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
+
+    // Optional handler for timeseries-style requests: /timeseries
+    if (!itsConfig.timeSeriesUrl().empty())
+    {
+      if (!itsReactor->addContentHandler(
+              this,
+              itsConfig.timeSeriesUrl(),
+              [this](Spine::Reactor& theReactor,
+                     const Spine::HTTP::Request& theRequest,
+                     Spine::HTTP::Response& theResponse)
+              { callRequestHandler(theReactor, theRequest, theResponse); },
+              {},
+              true))
+        throw Fmi::Exception(BCP, "Failed to register timeseries content handler");
+    }
 
     // Get locations
     updateSupportedLocations();

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "CommonQuery.h"
 #include "GridInterface.h"
 #include "Plugin.h"
 
@@ -29,18 +30,18 @@ class GridEngineQuery
   GridEngineQuery(const Plugin& thePlugin);
 
   bool processGridEngineQuery(const State& state,
-                              Query& query,
+                              CommonQuery& query,
                               TS::OutputData& outputData,
                               const QueryServer::QueryStreamer_sptr& queryStreamer,
                               const AreaProducers& areaproducers,
                               const ProducerDataPeriod& producerDataPeriod) const;
-  bool isGridEngineQuery(const AreaProducers& theProducers, const Query& theQuery) const;
+  bool isGridEngineQuery(const AreaProducers& theProducers, const CommonQuery& theQuery) const;
 
  private:
   void getLocationDefinition(Spine::LocationPtr& loc,
                              std::vector<std::vector<T::Coordinate>>& polygonPath,
                              const Spine::TaggedLocation& tloc,
-                             Query& query) const;
+                             CommonQuery& query) const;
 
   const Plugin& itsPlugin;
 

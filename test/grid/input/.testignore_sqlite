@@ -1,0 +1,8 @@
+timeseries/netatmo_observations.get
+timeseries/netatmo_observations_selected_stations.get
+timeseries/netatmo_observations_uusimaa.get
+timeseries/roadcloud_observations.get
+timeseries/roadcloud_observations_selected_stations.get
+timeseries/sounding_observations_area_kymenlaakso.get
+timeseries/sounding_observations_default_sounding_type.get
+timeseries/sounding_observations_selected_sounding_type.get

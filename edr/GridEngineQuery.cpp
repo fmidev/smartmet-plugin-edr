@@ -24,7 +24,7 @@ GridEngineQuery::GridEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin)
 void GridEngineQuery::getLocationDefinition(Spine::LocationPtr& loc,
                                             std::vector<std::vector<T::Coordinate>>& polygonPath,
                                             const Spine::TaggedLocation& tloc,
-                                            Query& query) const
+                                            CommonQuery& query) const
 {
   switch (loc->type)
   {
@@ -180,7 +180,7 @@ void GridEngineQuery::getLocationDefinition(Spine::LocationPtr& loc,
 }
 
 bool GridEngineQuery::processGridEngineQuery(const State& state,
-                                             Query& query,
+                                             CommonQuery& query,
                                              TS::OutputData& outputData,
                                              const QueryServer::QueryStreamer_sptr& queryStreamer,
                                              const AreaProducers& areaproducers,
@@ -243,7 +243,7 @@ bool GridEngineQuery::processGridEngineQuery(const State& state,
 }
 
 bool GridEngineQuery::isGridEngineQuery(const AreaProducers& theProducers,
-                                        const Query& theQuery) const
+                                        const CommonQuery& theQuery) const
 {
   // Grid-query is executed if the following conditions are fulfilled:
   //   1. The usage of Grid-Engine is enabled (=> timeseries configuration file)

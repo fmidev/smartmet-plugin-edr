@@ -61,6 +61,7 @@ class Config : private boost::noncopyable
   const std::string &defaultLocaleName() const { return itsDefaultLocaleName; }
   const std::string &defaultTimeFormat() const { return itsDefaultTimeFormat; }
   const std::string &defaultUrl() const { return itsDefaultUrl; }
+  const std::string &timeSeriesUrl() const { return itsTimeSeriesUrl; }
   const std::string &defaultMaxDistance() const { return itsDefaultMaxDistance; }
   const std::string &defaultWxmlTimeString() const
   {
@@ -116,6 +117,7 @@ class Config : private boost::noncopyable
   std::unique_ptr<std::locale> itsDefaultLocale;
   std::string itsDefaultTimeFormat = "iso";
   std::string itsDefaultUrl = "/edr/";
+  std::string itsTimeSeriesUrl;  // if non-empty, also handle timeseries-style requests at this URL
   std::string itsDefaultMaxDistance = "60.0km";
   unsigned int itsExpirationTime = 60;  // seconds
   std::vector<std::string> itsParameterAliasFiles;
