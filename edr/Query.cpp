@@ -28,7 +28,7 @@ Query::Query(const State& state, const Spine::HTTP::Request& request, Config& co
     : EDRQueryParams(state, request, config),
       CommonQuery(state, EDRQueryParams::req, config)
 {
-  // BRAINSTORM-3178: table data is JSON format string, do not use "format" request param
+  // BRAINSTORM-3178: EDR table data is JSON format string, ignore the "format" request param
   format = "ascii";
 
   // Metadata queries do not need full parameter parsing
