@@ -195,6 +195,8 @@ void CommonQuery::commonInit(const State& state,
 {
   try
   {
+    is_timeseries_query = req.getResource() == config.timeSeriesUrl();
+
     // FMISIDs
     auto name = req.getParameter("fmisid");
     parse_ids(name, fmisids);
@@ -472,6 +474,19 @@ void CommonQuery::parse_precision(const Spine::HTTP::Request& req, const Config&
 
     for (const TS::OptionParsers::ParameterList::value_type& p : poptions.parameters())
     {
+      if (is_timeseries_query)
+      {
+        // For timeseries queries, check if there is a parameter-specific override for the parameter
+        // in the "timeseries" section of the config. If not, fall back to the general parameter
+        // precision or the default precision.
+        const auto it_override = prec.ts_parameter_precisions_overrides.find(p.name());
+        if (it_override != prec.ts_parameter_precisions_overrides.end())
+        {
+          precisions.push_back(it_override->second);
+          continue;
+        }
+      }
+
       const auto it = prec.parameter_precisions.find(p.name());
       if (it == prec.parameter_precisions.end())
         precisions.push_back(prec.default_precision);

@@ -83,6 +83,7 @@ class CommonQuery : public ObsQueryParams
   Pressures pressures;
   Heights heights;
   bool levelRange = false;  // Set if querying level/pressure/height range
+  bool is_timeseries_query;
 
   TS::OptionParsers::ParameterOptions poptions;
   MaxAggregationIntervals maxAggregationIntervals;

@@ -183,12 +183,43 @@ void Config::parse_config_precision(const string &name)
 
       try
       {
-        int value = settings[i];
-
         if (paramname == "default")
+        {
+          int value = settings[i];
           prec.default_precision = value;
+        }
+        else if (paramname == "timeseries")
+        {
+          if (!settings[i].isGroup())
+            throw Fmi::Exception(BCP,
+                                 "Timeseries precision overrides for point forecasts must "
+                                 "be stored in groups delimited by {}: line " +
+                                     Fmi::to_string(settings[i].getSourceLine()));
+          // timeseries precision overrides are stored in a separate map in the Precision struct
+          for (int j = 0; j < settings[i].getLength(); ++j)
+          {
+            string ts_paramname = settings[i][j].getName();
+            if (ts_paramname == "default")
+              continue;  // default precision override for timeseries is not supported,
+                         // ignore if given
+
+            try
+            {
+              int ts_value = settings[i][j];
+              prec.ts_parameter_precisions_overrides.insert(
+                  Precision::Map::value_type(ts_paramname, ts_value));
+            }
+            catch (...)
+            {
+              Spine::Exceptions::handle("EDR plugin");
+            }
+          }
+        }
         else
+        {
+          int value = settings[i];
           prec.parameter_precisions.insert(Precision::Map::value_type(paramname, value));
+        }
       }
       catch (...)
       {
