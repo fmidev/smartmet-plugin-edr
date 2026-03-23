@@ -22,6 +22,7 @@ struct Precision
 
   int default_precision = 0;
   Map parameter_precisions;
+  Map ts_parameter_precisions_overrides;
 
   Precision() = default;
 };

@@ -196,6 +196,36 @@ void Config::parse_config_precision(const string &name)
       }
     }
 
+    std::string ts_override_key = optname + ".timeseries";
+    if (itsConfig.exists(ts_override_key))
+    {
+      libconfig::Setting &tsSettings = itsConfig.lookup(ts_override_key);
+
+      if (!tsSettings.isGroup())
+        throw Fmi::Exception(BCP,
+                             "Timeseries precision overrides for point forecasts must "
+                             "be stored in groups delimited by {}: line " +
+                                 Fmi::to_string(tsSettings.getSourceLine()));
+
+      for (int i = 0; i < tsSettings.getLength(); ++i)
+      {
+        string paramname = tsSettings[i].getName();
+        if (paramname == "default")
+          continue;  // default precision override for timeseries is not supported,
+                     // ignore if given
+
+        try
+        {
+          int value = tsSettings[i];
+          prec.ts_parameter_precisions_overrides.insert(Precision::Map::value_type(paramname, value));
+        }
+        catch (...)
+        {
+          Spine::Exceptions::handle("EDR plugin");
+        }
+      }
+    }
+
     // This line may crash if prec.parameters is empty
     // Looks like a bug in g++
 
