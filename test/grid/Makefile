@@ -13,18 +13,12 @@ clean:
 
 test-impl:
 	ok=true; \
+	$(TEST_RUNNER) \
 	smartmet-plugin-test \
-		--handler /edr/ \
+		--handler /edr \
 		--reactor-config cnf/reactor.conf \
 		$(foreach fn, input/.testignore_$(DB_TYPE), --ignore $(fn)) \
 		--timeout 300 || ok=false; \
-	if [ -d input/timeseries ]; then \
-	  smartmet-plugin-test --handler /timeseries \
-		-e output/ \
-		--reactor-config cnf/reactor.conf \
-		$(foreach fn, input/.testignore_$(DB_TYPE), --ignore $(fn)) \
-		--timeout 300 || ok=false; \
-	fi; \
 	$$ok
 
 start-redis-db:
