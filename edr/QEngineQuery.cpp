@@ -613,7 +613,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                          nearestpoint,
                          precision,
                          isPointQuery,
-                         loadDataLevels,
+                         false,  // loadDataLevels
                          pressure,
                          "pressure:",
                          {},
@@ -634,7 +634,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                          nearestpoint,
                          precision,
                          isPointQuery,
-                         loadDataLevels,
+                         false,  // loadDataLevels
                          height,
                          "height:",
                          height,
@@ -763,22 +763,15 @@ void QEngineQuery::pointQuery(const CommonQuery& theQuery,
     {
       querydata_result = theQueryLevelDataCache.itsTimeSeries[theCacheKey];
     }
-    else if (paramname == "fmisid" || paramname == "lpnn" || paramname == "wmo")
+    else if (paramname == "fmisid" && loc->fmisid)
     {
+      // WmoStationNumber, Wmo, RWSID may be obtained from point querydata, hence Q.cpp handles
+      // them. If the location has no fmisid, we try using point querydata station number instead
       querydata_result = std::make_shared<TS::TimeSeries>();
       for (const auto& t : theQueryDataTlist)
-      {
-        if (loc->fmisid && paramname == "fmisid")
-        {
-          querydata_result->emplace_back(TS::TimedValue(t, *(loc->fmisid)));
-        }
-        else
-        {
-          querydata_result->emplace_back(TS::TimedValue(t, TS::None()));
-        }
-      }
+        querydata_result->emplace_back(TS::TimedValue(t, *(loc->fmisid)));
     }
-    else if (UtilityFunctions::is_special_parameter(paramname))
+    else if (UtilityFunctions::is_special_parameter(paramname) && paramname != "fmisid")
     {
       querydata_result = std::make_shared<TS::TimeSeries>();
       UtilityFunctions::get_special_parameter_values(paramname,

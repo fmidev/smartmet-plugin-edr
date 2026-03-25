@@ -630,10 +630,9 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       // fetches results for all location and all parameters
       observation_result = itsPlugin.itsEngines.obsEngine->values(settings, tmpoptions);
     }
-#ifdef MYDEBYG
+#ifdef MYDEBUG
     std::cout << "observation_result for places: " << *observation_result << std::endl;
 #endif
-
     if (observation_result->empty())
       return;
 
@@ -1181,6 +1180,12 @@ void ObsEngineQuery::getObsSettings(std::vector<SettingsInfo>& settingsVector,
     // FMISIDs
     for (auto fmisid : query.fmisids)
       stationSettings.fmisids.push_back(fmisid);
+    // RWSIDs
+    for (auto rwsid : query.rwsids)
+      stationSettings.rwsids.push_back(rwsid);
+    // WSIs
+    for (const auto& wsi : query.wsis)
+      stationSettings.wsis.push_back(wsi);
 
     // Bounding box
     if (!query.boundingBox.empty() && UtilityFunctions::is_flash_producer(producer))

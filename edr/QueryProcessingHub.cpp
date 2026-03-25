@@ -795,7 +795,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       bool process_qengine_query = true;
 #ifndef WITHOUT_OBSERVATION
-      if (!areaproducers.empty() && !thePlugin.itsConfig.obsEngineDisabled() &&
+      if (!areaproducers.empty() && thePlugin.itsEngines.obsEngine != nullptr &&
           itsObsEngineQuery.isObsProducer(areaproducers.front()))
       {
         itsObsEngineQuery.processObsEngineQuery(
