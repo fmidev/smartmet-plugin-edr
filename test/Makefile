@@ -55,6 +55,10 @@ test-oracle test-postgresql test-sqlite: $(TEST_PREPARE_TARGETS)
 test-oracle-impl test-postgresql-impl test-sqlite-impl:
 	$(MAKE) -C base $(@:-impl=)
 
+test-grid: $(TEST_PREPARE_TARGETS)
+	$(MAKE) -C grid test-grid
+	$(MAKE) $(TEST_FINISH_TARGETS)
+
 stmp-geonames-db:
 	$(MAKE) geonames-database
 	date >$@
