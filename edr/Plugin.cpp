@@ -932,8 +932,15 @@ void Plugin::init()
 #ifndef WITHOUT_OBSERVATION
     {
       /* ObsEngine - always load if available; observation_disabled only affects EDR routing */
-      itsEngines.obsEngine =
-          itsReactor->getEngine<Engine::Observation::Engine>("Observation", nullptr);
+      try
+      {
+        itsEngines.obsEngine =
+            itsReactor->getEngine<Engine::Observation::Engine>("Observation", nullptr);
+      }
+      catch (...)
+      {
+        // Observation engine not loaded - continue without it
+      }
 
       // fetch obsengine station types (producers)
       if (itsEngines.obsEngine != nullptr)
