@@ -9,16 +9,16 @@ ifdef CI
 GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
 TEST_PREPARE_TARGETS += geonames-database
 TEST_FINISH_TARGETS += stop-test-db
-TEST_TARGETS := test-sqlite-impl
+TEST_TARGETS := test-sqlite-impl test-grid
 EXTRA_IGNORE := input/.testignore_circle-ci
 else
 ifdef LOCAL_TESTS_ONLY
 GEONAMES_HOST_EDIT := cat
-TEST_TARGETS := test-sqlite-impl
+TEST_TARGETS := test-sqlite-impl test-grid
 EXTRA_IGNORE := input/.testignore_circle-ci
 else
 GEONAMES_HOST_EDIT := cat
-TEST_TARGETS := test-sqlite-impl test-oracle-impl test-postgresql-impl
+TEST_TARGETS := test-sqlite-impl test-oracle-impl test-postgresql-impl test-grid
 EXTRA_IGNORE :=
 endif
 endif

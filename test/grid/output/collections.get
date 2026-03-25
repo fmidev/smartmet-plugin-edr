@@ -1,0 +1,10720 @@
+{
+"links" : 
+[
+{
+"title" : "Collections metadata in JSON",
+"href" : "http://smartmet.fmi.fi/edr/collections",
+"rel" : "self",
+"type" : "application/json"
+},
+{
+"href" : "https://creativecommons.org/licenses/by/4.0/",
+"hreflang" : "en",
+"rel" : "license",
+"type" : "text/html"
+}
+],
+"collections" : 
+[
+{
+"id" : "climate_tmax",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"normalmaxtemperaturef02",
+"normalmaxtemperaturef12",
+"normalmaxtemperaturef37",
+"normalmaxtemperaturef50",
+"normalmaxtemperaturef63",
+"normalmaxtemperaturef88",
+"normalmaxtemperaturef98"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+1440,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+15.9266,
+59.6105,
+33.1732,
+70.1417
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2001-01-01T12:00:00Z",
+"2001-12-31T12:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R365/2001-01-01T12:00:00Z/PT1440M"
+]
+}
+},
+"parameter_names" : 
+{
+"normalmaxtemperaturef02" : 
+{
+"id" : "NormalMaxTemperatureF02",
+"description" : "NormalMaxTemperatureF02",
+"label" : "NormalMaxTemperatureF02",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF02",
+"label" : "NormalMaxTemperatureF02"
+}
+},
+"normalmaxtemperaturef12" : 
+{
+"id" : "NormalMaxTemperatureF12",
+"description" : "NormalMaxTemperatureF12",
+"label" : "NormalMaxTemperatureF12",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF12",
+"label" : "NormalMaxTemperatureF12"
+}
+},
+"normalmaxtemperaturef37" : 
+{
+"id" : "NormalMaxTemperatureF37",
+"description" : "NormalMaxTemperatureF37",
+"label" : "NormalMaxTemperatureF37",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF37",
+"label" : "NormalMaxTemperatureF37"
+}
+},
+"normalmaxtemperaturef50" : 
+{
+"id" : "NormalMaxTemperatureF50",
+"description" : "NormalMaxTemperatureF50",
+"label" : "NormalMaxTemperatureF50",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF50",
+"label" : "NormalMaxTemperatureF50"
+}
+},
+"normalmaxtemperaturef63" : 
+{
+"id" : "NormalMaxTemperatureF63",
+"description" : "NormalMaxTemperatureF63",
+"label" : "NormalMaxTemperatureF63",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF63",
+"label" : "NormalMaxTemperatureF63"
+}
+},
+"normalmaxtemperaturef88" : 
+{
+"id" : "NormalMaxTemperatureF88",
+"description" : "NormalMaxTemperatureF88",
+"label" : "NormalMaxTemperatureF88",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF88",
+"label" : "NormalMaxTemperatureF88"
+}
+},
+"normalmaxtemperaturef98" : 
+{
+"id" : "NormalMaxTemperatureF98",
+"description" : "NormalMaxTemperatureF98",
+"label" : "NormalMaxTemperatureF98",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF98",
+"label" : "NormalMaxTemperatureF98"
+}
+}
+}
+},
+{
+"id" : "climatepoints",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/climatepoints",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"normalgroundmintemperature",
+"normalgroundmintemperaturef02",
+"normalgroundmintemperaturef12",
+"normalgroundmintemperaturef37",
+"normalgroundmintemperaturef50",
+"normalgroundmintemperaturef63",
+"normalgroundmintemperaturef88",
+"normalgroundmintemperaturef98",
+"normalmaxtemperature",
+"normalmaxtemperaturef02",
+"normalmaxtemperaturef12",
+"normalmaxtemperaturef37",
+"normalmaxtemperaturef50",
+"normalmaxtemperaturef63",
+"normalmaxtemperaturef88",
+"normalmaxtemperaturef98",
+"normalmeantemperature",
+"normalmeantemperaturef02",
+"normalmeantemperaturef12",
+"normalmeantemperaturef37",
+"normalmeantemperaturef50",
+"normalmeantemperaturef63",
+"normalmeantemperaturef88",
+"normalmeantemperaturef98",
+"normalmintemperature",
+"normalmintemperaturef02",
+"normalmintemperaturef12",
+"normalmintemperaturef37",
+"normalmintemperaturef50",
+"normalmintemperaturef63",
+"normalmintemperaturef88",
+"normalmintemperaturef98"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climatepoints/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climatepoints/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climatepoints/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climatepoints/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+1440,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+19.9455,
+59.7736,
+30.3497,
+70.0813
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2012-01-01T12:00:00Z",
+"2013-01-15T12:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R381/2012-01-01T12:00:00Z/PT1440M"
+]
+}
+},
+"parameter_names" : 
+{
+"normalgroundmintemperature" : 
+{
+"id" : "NormalGroundMinTemperature",
+"description" : "NormalGroundMinTemperature",
+"label" : "NormalGroundMinTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperature",
+"label" : "NormalGroundMinTemperature"
+}
+},
+"normalgroundmintemperaturef02" : 
+{
+"id" : "NormalGroundMinTemperatureF02",
+"description" : "NormalGroundMinTemperatureF02",
+"label" : "NormalGroundMinTemperatureF02",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperatureF02",
+"label" : "NormalGroundMinTemperatureF02"
+}
+},
+"normalgroundmintemperaturef12" : 
+{
+"id" : "NormalGroundMinTemperatureF12",
+"description" : "NormalGroundMinTemperatureF12",
+"label" : "NormalGroundMinTemperatureF12",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperatureF12",
+"label" : "NormalGroundMinTemperatureF12"
+}
+},
+"normalgroundmintemperaturef37" : 
+{
+"id" : "NormalGroundMinTemperatureF37",
+"description" : "NormalGroundMinTemperatureF37",
+"label" : "NormalGroundMinTemperatureF37",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperatureF37",
+"label" : "NormalGroundMinTemperatureF37"
+}
+},
+"normalgroundmintemperaturef50" : 
+{
+"id" : "NormalGroundMinTemperatureF50",
+"description" : "NormalGroundMinTemperatureF50",
+"label" : "NormalGroundMinTemperatureF50",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperatureF50",
+"label" : "NormalGroundMinTemperatureF50"
+}
+},
+"normalgroundmintemperaturef63" : 
+{
+"id" : "NormalGroundMinTemperatureF63",
+"description" : "NormalGroundMinTemperatureF63",
+"label" : "NormalGroundMinTemperatureF63",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperatureF63",
+"label" : "NormalGroundMinTemperatureF63"
+}
+},
+"normalgroundmintemperaturef88" : 
+{
+"id" : "NormalGroundMinTemperatureF88",
+"description" : "NormalGroundMinTemperatureF88",
+"label" : "NormalGroundMinTemperatureF88",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperatureF88",
+"label" : "NormalGroundMinTemperatureF88"
+}
+},
+"normalgroundmintemperaturef98" : 
+{
+"id" : "NormalGroundMinTemperatureF98",
+"description" : "NormalGroundMinTemperatureF98",
+"label" : "NormalGroundMinTemperatureF98",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalGroundMinTemperatureF98",
+"label" : "NormalGroundMinTemperatureF98"
+}
+},
+"normalmaxtemperature" : 
+{
+"id" : "NormalMaxTemperature",
+"description" : "NormalMaxTemperature",
+"label" : "NormalMaxTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperature",
+"label" : "NormalMaxTemperature"
+}
+},
+"normalmaxtemperaturef02" : 
+{
+"id" : "NormalMaxTemperatureF02",
+"description" : "NormalMaxTemperatureF02",
+"label" : "NormalMaxTemperatureF02",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF02",
+"label" : "NormalMaxTemperatureF02"
+}
+},
+"normalmaxtemperaturef12" : 
+{
+"id" : "NormalMaxTemperatureF12",
+"description" : "NormalMaxTemperatureF12",
+"label" : "NormalMaxTemperatureF12",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF12",
+"label" : "NormalMaxTemperatureF12"
+}
+},
+"normalmaxtemperaturef37" : 
+{
+"id" : "NormalMaxTemperatureF37",
+"description" : "NormalMaxTemperatureF37",
+"label" : "NormalMaxTemperatureF37",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF37",
+"label" : "NormalMaxTemperatureF37"
+}
+},
+"normalmaxtemperaturef50" : 
+{
+"id" : "NormalMaxTemperatureF50",
+"description" : "NormalMaxTemperatureF50",
+"label" : "NormalMaxTemperatureF50",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF50",
+"label" : "NormalMaxTemperatureF50"
+}
+},
+"normalmaxtemperaturef63" : 
+{
+"id" : "NormalMaxTemperatureF63",
+"description" : "NormalMaxTemperatureF63",
+"label" : "NormalMaxTemperatureF63",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF63",
+"label" : "NormalMaxTemperatureF63"
+}
+},
+"normalmaxtemperaturef88" : 
+{
+"id" : "NormalMaxTemperatureF88",
+"description" : "NormalMaxTemperatureF88",
+"label" : "NormalMaxTemperatureF88",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF88",
+"label" : "NormalMaxTemperatureF88"
+}
+},
+"normalmaxtemperaturef98" : 
+{
+"id" : "NormalMaxTemperatureF98",
+"description" : "NormalMaxTemperatureF98",
+"label" : "NormalMaxTemperatureF98",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMaxTemperatureF98",
+"label" : "NormalMaxTemperatureF98"
+}
+},
+"normalmeantemperature" : 
+{
+"id" : "NormalMeanTemperature",
+"description" : "NormalMeanTemperature",
+"label" : "NormalMeanTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperature",
+"label" : "NormalMeanTemperature"
+}
+},
+"normalmeantemperaturef02" : 
+{
+"id" : "NormalMeanTemperatureF02",
+"description" : "NormalMeanTemperatureF02",
+"label" : "NormalMeanTemperatureF02",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperatureF02",
+"label" : "NormalMeanTemperatureF02"
+}
+},
+"normalmeantemperaturef12" : 
+{
+"id" : "NormalMeanTemperatureF12",
+"description" : "NormalMeanTemperatureF12",
+"label" : "NormalMeanTemperatureF12",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperatureF12",
+"label" : "NormalMeanTemperatureF12"
+}
+},
+"normalmeantemperaturef37" : 
+{
+"id" : "NormalMeanTemperatureF37",
+"description" : "NormalMeanTemperatureF37",
+"label" : "NormalMeanTemperatureF37",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperatureF37",
+"label" : "NormalMeanTemperatureF37"
+}
+},
+"normalmeantemperaturef50" : 
+{
+"id" : "NormalMeanTemperatureF50",
+"description" : "NormalMeanTemperatureF50",
+"label" : "NormalMeanTemperatureF50",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperatureF50",
+"label" : "NormalMeanTemperatureF50"
+}
+},
+"normalmeantemperaturef63" : 
+{
+"id" : "NormalMeanTemperatureF63",
+"description" : "NormalMeanTemperatureF63",
+"label" : "NormalMeanTemperatureF63",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperatureF63",
+"label" : "NormalMeanTemperatureF63"
+}
+},
+"normalmeantemperaturef88" : 
+{
+"id" : "NormalMeanTemperatureF88",
+"description" : "NormalMeanTemperatureF88",
+"label" : "NormalMeanTemperatureF88",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperatureF88",
+"label" : "NormalMeanTemperatureF88"
+}
+},
+"normalmeantemperaturef98" : 
+{
+"id" : "NormalMeanTemperatureF98",
+"description" : "NormalMeanTemperatureF98",
+"label" : "NormalMeanTemperatureF98",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMeanTemperatureF98",
+"label" : "NormalMeanTemperatureF98"
+}
+},
+"normalmintemperature" : 
+{
+"id" : "NormalMinTemperature",
+"description" : "NormalMinTemperature",
+"label" : "NormalMinTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperature",
+"label" : "NormalMinTemperature"
+}
+},
+"normalmintemperaturef02" : 
+{
+"id" : "NormalMinTemperatureF02",
+"description" : "NormalMinTemperatureF02",
+"label" : "NormalMinTemperatureF02",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperatureF02",
+"label" : "NormalMinTemperatureF02"
+}
+},
+"normalmintemperaturef12" : 
+{
+"id" : "NormalMinTemperatureF12",
+"description" : "NormalMinTemperatureF12",
+"label" : "NormalMinTemperatureF12",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperatureF12",
+"label" : "NormalMinTemperatureF12"
+}
+},
+"normalmintemperaturef37" : 
+{
+"id" : "NormalMinTemperatureF37",
+"description" : "NormalMinTemperatureF37",
+"label" : "NormalMinTemperatureF37",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperatureF37",
+"label" : "NormalMinTemperatureF37"
+}
+},
+"normalmintemperaturef50" : 
+{
+"id" : "NormalMinTemperatureF50",
+"description" : "NormalMinTemperatureF50",
+"label" : "NormalMinTemperatureF50",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperatureF50",
+"label" : "NormalMinTemperatureF50"
+}
+},
+"normalmintemperaturef63" : 
+{
+"id" : "NormalMinTemperatureF63",
+"description" : "NormalMinTemperatureF63",
+"label" : "NormalMinTemperatureF63",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperatureF63",
+"label" : "NormalMinTemperatureF63"
+}
+},
+"normalmintemperaturef88" : 
+{
+"id" : "NormalMinTemperatureF88",
+"description" : "NormalMinTemperatureF88",
+"label" : "NormalMinTemperatureF88",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperatureF88",
+"label" : "NormalMinTemperatureF88"
+}
+},
+"normalmintemperaturef98" : 
+{
+"id" : "NormalMinTemperatureF98",
+"description" : "NormalMinTemperatureF98",
+"label" : "NormalMinTemperatureF98",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "NormalMinTemperatureF98",
+"label" : "NormalMinTemperatureF98"
+}
+}
+}
+},
+{
+"id" : "ecmwf_eurooppa_pinta",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"dewpoint",
+"fogintensity",
+"highcloudcover",
+"hourlymaximumgust",
+"lowcloudcover",
+"mediumcloudcover",
+"middleandlowcloudcover",
+"precipitation1h",
+"precipitationform",
+"precipitationtype",
+"pressure",
+"probabilitythunderstorm",
+"temperature",
+"totalcloudcover",
+"weathersymbol1",
+"weathersymbol3",
+"winddirection",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+180,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+180,
+360,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-61.7141,
+25,
+79.7,
+78.2649
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2008-08-04T12:00:00Z",
+"2008-08-14T12:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R41/2008-08-04T12:00:00Z/PT180M",
+"R20/2008-08-09T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"dewpoint" : 
+{
+"id" : "DewPoint",
+"description" : "Kastepiste",
+"label" : "DewPoint",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "DewPoint",
+"label" : "DewPoint"
+}
+},
+"fogintensity" : 
+{
+"id" : "FogIntensity",
+"description" : "Density of Fog",
+"label" : "FogIntensity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "FogIntensity",
+"label" : "FogIntensity"
+}
+},
+"highcloudcover" : 
+{
+"id" : "HighCloudCover",
+"description" : "High Cloud Cover",
+"label" : "HighCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HighCloudCover",
+"label" : "HighCloudCover"
+}
+},
+"hourlymaximumgust" : 
+{
+"id" : "HourlyMaximumGust",
+"description" : "MaxGustMS",
+"label" : "HourlyMaximumGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumGust",
+"label" : "HourlyMaximumGust"
+}
+},
+"lowcloudcover" : 
+{
+"id" : "LowCloudCover",
+"description" : "Low Cloud Cover",
+"label" : "LowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "LowCloudCover",
+"label" : "LowCloudCover"
+}
+},
+"mediumcloudcover" : 
+{
+"id" : "MediumCloudCover",
+"description" : "Medium Cloud Cover",
+"label" : "MediumCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MediumCloudCover",
+"label" : "MediumCloudCover"
+}
+},
+"middleandlowcloudcover" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"description" : "Middle+Low Cloud Cover",
+"label" : "MiddleAndLowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"label" : "MiddleAndLowCloudCover"
+}
+},
+"precipitation1h" : 
+{
+"id" : "Precipitation1h",
+"description" : "Precipitation mm/h",
+"label" : "Precipitation1h",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Precipitation1h",
+"label" : "Precipitation1h"
+}
+},
+"precipitationform" : 
+{
+"id" : "PrecipitationForm",
+"description" : "Precipitation Form",
+"label" : "PrecipitationForm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationForm",
+"label" : "PrecipitationForm"
+}
+},
+"precipitationtype" : 
+{
+"id" : "PrecipitationType",
+"description" : "Precipitation Type",
+"label" : "PrecipitationType",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationType",
+"label" : "PrecipitationType"
+}
+},
+"pressure" : 
+{
+"id" : "Pressure",
+"description" : "Pintapaine",
+"label" : "Pressure",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Pressure",
+"label" : "Pressure"
+}
+},
+"probabilitythunderstorm" : 
+{
+"id" : "ProbabilityThunderstorm",
+"description" : "Probability of Thunder",
+"label" : "ProbabilityThunderstorm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ProbabilityThunderstorm",
+"label" : "ProbabilityThunderstorm"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "Total Cloud Cover",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"weathersymbol1" : 
+{
+"id" : "WeatherSymbol1",
+"description" : "Precipitation Symbol",
+"label" : "WeatherSymbol1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol1",
+"label" : "WeatherSymbol1"
+}
+},
+"weathersymbol3" : 
+{
+"id" : "WeatherSymbol3",
+"description" : "Weather Symbol",
+"label" : "WeatherSymbol3",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol3",
+"label" : "WeatherSymbol3"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Wind dir",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Wind vector",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "ecmwf_maailma_piste",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_piste",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"fogintensity",
+"highcloudcover",
+"lowcloudcover",
+"mediumcloudcover",
+"middleandlowcloudcover",
+"precipitation1h",
+"precipitationform",
+"precipitationtype",
+"probabilitythunderstorm",
+"temperature",
+"totalcloudcover",
+"weathersymbol1",
+"weathersymbol3",
+"winddirection",
+"windgust",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_piste/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_piste/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_piste/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_piste/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+360,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+360,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-157.87,
+-66.6,
+7145,
+73.5
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2008-08-04T12:00:00Z",
+"2008-08-15T00:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R43/2008-08-04T12:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"fogintensity" : 
+{
+"id" : "FogIntensity",
+"description" : "Sumun tiheys",
+"label" : "FogIntensity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "FogIntensity",
+"label" : "FogIntensity"
+}
+},
+"highcloudcover" : 
+{
+"id" : "HighCloudCover",
+"description" : "Yläpilvien määrä",
+"label" : "HighCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HighCloudCover",
+"label" : "HighCloudCover"
+}
+},
+"lowcloudcover" : 
+{
+"id" : "LowCloudCover",
+"description" : "Alapilvien määrä",
+"label" : "LowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "LowCloudCover",
+"label" : "LowCloudCover"
+}
+},
+"mediumcloudcover" : 
+{
+"id" : "MediumCloudCover",
+"description" : "Keskipilvien määrä",
+"label" : "MediumCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MediumCloudCover",
+"label" : "MediumCloudCover"
+}
+},
+"middleandlowcloudcover" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"description" : "Ala ja keskipilvet",
+"label" : "MiddleAndLowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"label" : "MiddleAndLowCloudCover"
+}
+},
+"precipitation1h" : 
+{
+"id" : "Precipitation1h",
+"description" : "Sateen intensiteetti mm/h",
+"label" : "Precipitation1h",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Precipitation1h",
+"label" : "Precipitation1h"
+}
+},
+"precipitationform" : 
+{
+"id" : "PrecipitationForm",
+"description" : "Sateen olomuoto",
+"label" : "PrecipitationForm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationForm",
+"label" : "PrecipitationForm"
+}
+},
+"precipitationtype" : 
+{
+"id" : "PrecipitationType",
+"description" : "Sateen tyyppi",
+"label" : "PrecipitationType",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationType",
+"label" : "PrecipitationType"
+}
+},
+"probabilitythunderstorm" : 
+{
+"id" : "ProbabilityThunderstorm",
+"description" : "Ukkosen todennäköisyys",
+"label" : "ProbabilityThunderstorm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ProbabilityThunderstorm",
+"label" : "ProbabilityThunderstorm"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "Kokonaispilvisyys",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"weathersymbol1" : 
+{
+"id" : "WeatherSymbol1",
+"description" : "HSade1",
+"label" : "WeatherSymbol1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol1",
+"label" : "WeatherSymbol1"
+}
+},
+"weathersymbol3" : 
+{
+"id" : "WeatherSymbol3",
+"description" : "Hessaa",
+"label" : "WeatherSymbol3",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol3",
+"label" : "WeatherSymbol3"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Tuulen suunta",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windgust" : 
+{
+"id" : "WindGust",
+"description" : "Puuska-indeksi",
+"label" : "WindGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindGust",
+"label" : "WindGust"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Tuulen nopeus",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U-komponentti",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Tuulivektori",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V-komponentti",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "ecmwf_skandinavia_painepinta",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"geopheight",
+"hourlymaximumgust",
+"humidity",
+"potentialtemperature",
+"pseudoadiabaticpotentialtemperature",
+"temperature",
+"verticalvelocitymms",
+"winddirection",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+180,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+180,
+360,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-9.09871,
+51.3,
+49,
+72.6421
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2008-09-09T00:00:00Z",
+"2008-09-19T00:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R41/2008-09-09T00:00:00Z/PT180M",
+"R20/2008-09-14T06:00:00Z/PT360M"
+]
+},
+"vertical" : 
+{
+"interval" : 
+[
+[
+"1000",
+"300"
+]
+],
+"values" : 
+[
+"1000",
+"925",
+"850",
+"700",
+"500",
+"300"
+],
+"vrs" : "Vertical Reference System: PressureLevel"
+}
+},
+"parameter_names" : 
+{
+"geopheight" : 
+{
+"id" : "GeopHeight",
+"description" : "Z-korkeus",
+"label" : "GeopHeight",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "GeopHeight",
+"label" : "GeopHeight"
+}
+},
+"hourlymaximumgust" : 
+{
+"id" : "HourlyMaximumGust",
+"description" : "MaxGustMS",
+"label" : "HourlyMaximumGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumGust",
+"label" : "HourlyMaximumGust"
+}
+},
+"humidity" : 
+{
+"id" : "Humidity",
+"description" : "Suhteellinen kosteus",
+"label" : "Humidity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Humidity",
+"label" : "Humidity"
+}
+},
+"potentialtemperature" : 
+{
+"id" : "PotentialTemperature",
+"description" : "tpot",
+"label" : "PotentialTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PotentialTemperature",
+"label" : "PotentialTemperature"
+}
+},
+"pseudoadiabaticpotentialtemperature" : 
+{
+"id" : "PseudoAdiabaticPotentialTemperature",
+"description" : "Thetaw",
+"label" : "PseudoAdiabaticPotentialTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PseudoAdiabaticPotentialTemperature",
+"label" : "PseudoAdiabaticPotentialTemperature"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"verticalvelocitymms" : 
+{
+"id" : "VerticalVelocityMMS",
+"description" : "w",
+"label" : "VerticalVelocityMMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "VerticalVelocityMMS",
+"label" : "VerticalVelocityMMS"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Wind dir",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Wind vector",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "harmonie_hybrid",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/harmonie_hybrid",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"geomheight",
+"temperature"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/harmonie_hybrid/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/harmonie_hybrid/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/harmonie_hybrid/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/harmonie_hybrid/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+24.908,
+59.9426,
+26.0874,
+61.0586
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2017-05-12T01:00:00Z",
+"2017-05-12T03:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R3/2017-05-12T01:00:00Z/PT60M"
+]
+},
+"vertical" : 
+{
+"interval" : 
+[
+[
+"63",
+"65"
+]
+],
+"values" : 
+[
+"63",
+"64",
+"65"
+],
+"vrs" : "Vertical Reference System: HybridLevel"
+}
+},
+"parameter_names" : 
+{
+"geomheight" : 
+{
+"id" : "GeomHeight",
+"description" : "GeomHeight",
+"label" : "GeomHeight",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "GeomHeight",
+"label" : "GeomHeight"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "T",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+}
+}
+},
+{
+"id" : "hirlam",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"cloudsymbol",
+"dewpoint",
+"fogintensity",
+"geopheight",
+"highcloudcover",
+"hourlymaximumgust",
+"humidity",
+"kindex",
+"lowcloudcover",
+"mediumcloudcover",
+"middleandlowcloudcover",
+"precipitation1h",
+"precipitationconv",
+"precipitationform",
+"precipitationlarge",
+"precipitationtype",
+"pressure",
+"probabilitythunderstorm",
+"radiationglobal",
+"radiationlw",
+"radiationnettopatmlw",
+"temperature",
+"totalcloudcover",
+"visibility",
+"weathersymbol1",
+"weathersymbol3",
+"winddirection",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+17.9645,
+55.4114,
+45.0119,
+72.6449
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2013-03-18T00:00:00Z",
+"2013-03-20T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R55/2013-03-18T00:00:00Z/PT60M"
+]
+}
+},
+"parameter_names" : 
+{
+"cloudsymbol" : 
+{
+"id" : "CloudSymbol",
+"description" : "Pilvisymboli",
+"label" : "CloudSymbol",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "CloudSymbol",
+"label" : "CloudSymbol"
+}
+},
+"dewpoint" : 
+{
+"id" : "DewPoint",
+"description" : "Kastepiste",
+"label" : "DewPoint",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "DewPoint",
+"label" : "DewPoint"
+}
+},
+"fogintensity" : 
+{
+"id" : "FogIntensity",
+"description" : "Density of Fog",
+"label" : "FogIntensity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "FogIntensity",
+"label" : "FogIntensity"
+}
+},
+"geopheight" : 
+{
+"id" : "GeopHeight",
+"description" : "Geop",
+"label" : "GeopHeight",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "GeopHeight",
+"label" : "GeopHeight"
+}
+},
+"highcloudcover" : 
+{
+"id" : "HighCloudCover",
+"description" : "High Cloud Cover",
+"label" : "HighCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HighCloudCover",
+"label" : "HighCloudCover"
+}
+},
+"hourlymaximumgust" : 
+{
+"id" : "HourlyMaximumGust",
+"description" : "MaxGustMS",
+"label" : "HourlyMaximumGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumGust",
+"label" : "HourlyMaximumGust"
+}
+},
+"humidity" : 
+{
+"id" : "Humidity",
+"description" : "Suhteellinen kosteus",
+"label" : "Humidity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Humidity",
+"label" : "Humidity"
+}
+},
+"kindex" : 
+{
+"id" : "KIndex",
+"description" : "K-indeksi",
+"label" : "KIndex",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "KIndex",
+"label" : "KIndex"
+}
+},
+"lowcloudcover" : 
+{
+"id" : "LowCloudCover",
+"description" : "Low Cloud Cover",
+"label" : "LowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "LowCloudCover",
+"label" : "LowCloudCover"
+}
+},
+"mediumcloudcover" : 
+{
+"id" : "MediumCloudCover",
+"description" : "Medium Cloud Cover",
+"label" : "MediumCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MediumCloudCover",
+"label" : "MediumCloudCover"
+}
+},
+"middleandlowcloudcover" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"description" : "Middle+Low Cloud Cover",
+"label" : "MiddleAndLowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"label" : "MiddleAndLowCloudCover"
+}
+},
+"precipitation1h" : 
+{
+"id" : "Precipitation1h",
+"description" : "Precipitation mm/h",
+"label" : "Precipitation1h",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Precipitation1h",
+"label" : "Precipitation1h"
+}
+},
+"precipitationconv" : 
+{
+"id" : "PrecipitationConv",
+"description" : "Konvektiivinen sade",
+"label" : "PrecipitationConv",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationConv",
+"label" : "PrecipitationConv"
+}
+},
+"precipitationform" : 
+{
+"id" : "PrecipitationForm",
+"description" : "Precipitation Form",
+"label" : "PrecipitationForm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationForm",
+"label" : "PrecipitationForm"
+}
+},
+"precipitationlarge" : 
+{
+"id" : "PrecipitationLarge",
+"description" : "Laajan skaalan sade",
+"label" : "PrecipitationLarge",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationLarge",
+"label" : "PrecipitationLarge"
+}
+},
+"precipitationtype" : 
+{
+"id" : "PrecipitationType",
+"description" : "Precipitation Type",
+"label" : "PrecipitationType",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationType",
+"label" : "PrecipitationType"
+}
+},
+"pressure" : 
+{
+"id" : "Pressure",
+"description" : "Pintapaine",
+"label" : "Pressure",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Pressure",
+"label" : "Pressure"
+}
+},
+"probabilitythunderstorm" : 
+{
+"id" : "ProbabilityThunderstorm",
+"description" : "Probability of Thunder",
+"label" : "ProbabilityThunderstorm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ProbabilityThunderstorm",
+"label" : "ProbabilityThunderstorm"
+}
+},
+"radiationglobal" : 
+{
+"id" : "RadiationGlobal",
+"description" : "Auringon säteily",
+"label" : "RadiationGlobal",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationGlobal",
+"label" : "RadiationGlobal"
+}
+},
+"radiationlw" : 
+{
+"id" : "RadiationLW",
+"description" : "Pitkäaaltoinen säteily",
+"label" : "RadiationLW",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationLW",
+"label" : "RadiationLW"
+}
+},
+"radiationnettopatmlw" : 
+{
+"id" : "RadiationNetTopAtmLW",
+"description" : "PseudoSatel",
+"label" : "RadiationNetTopAtmLW",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationNetTopAtmLW",
+"label" : "RadiationNetTopAtmLW"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "Total Cloud Cover",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"visibility" : 
+{
+"id" : "Visibility",
+"description" : "Vis",
+"label" : "Visibility",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Visibility",
+"label" : "Visibility"
+}
+},
+"weathersymbol1" : 
+{
+"id" : "WeatherSymbol1",
+"description" : "Precipitation Symbol",
+"label" : "WeatherSymbol1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol1",
+"label" : "WeatherSymbol1"
+}
+},
+"weathersymbol3" : 
+{
+"id" : "WeatherSymbol3",
+"description" : "Weather Symbol",
+"label" : "WeatherSymbol3",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol3",
+"label" : "WeatherSymbol3"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Wind dir",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Wind vector",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "hirwind",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/hirwind",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"winddirection",
+"windspeedms",
+"windums",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirwind/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirwind/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirwind/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirwind/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-178.485,
+25.6477,
+179.174,
+88.5799
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2018-04-06T06:00:00Z",
+"2018-04-06T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]"
+}
+},
+"parameter_names" : 
+{
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "DD-D",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed in m/s [m s-1]",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U-Wind 10m",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V-Wind 10m",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "kalman",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/kalman",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"cloudsymbol",
+"dewpoint",
+"fogintensity",
+"highcloudcover",
+"hourlymaximumgust",
+"humidity",
+"lowcloudcover",
+"mediumcloudcover",
+"middleandlowcloudcover",
+"precipitation1h",
+"precipitationform",
+"precipitationtype",
+"pressure",
+"probabilitythunderstorm",
+"temperature",
+"totalcloudcover",
+"weathersymbol",
+"weathersymbol1",
+"weathersymbol3",
+"winddirection",
+"windgust",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/kalman/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/kalman/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/kalman/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/kalman/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+180,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+180,
+360,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-179.117,
+-77.8667,
+179.217,
+83.6561
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2016-06-28T15:00:00Z",
+"2016-07-08T12:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R40/2016-06-28T15:00:00Z/PT180M",
+"R20/2016-07-03T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"cloudsymbol" : 
+{
+"id" : "CloudSymbol",
+"description" : "Pilvisymboli",
+"label" : "CloudSymbol",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "CloudSymbol",
+"label" : "CloudSymbol"
+}
+},
+"dewpoint" : 
+{
+"id" : "DewPoint",
+"description" : "DewPoint",
+"label" : "DewPoint",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "DewPoint",
+"label" : "DewPoint"
+}
+},
+"fogintensity" : 
+{
+"id" : "FogIntensity",
+"description" : "Density of Fog",
+"label" : "FogIntensity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "FogIntensity",
+"label" : "FogIntensity"
+}
+},
+"highcloudcover" : 
+{
+"id" : "HighCloudCover",
+"description" : "High Cloud Cover",
+"label" : "HighCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HighCloudCover",
+"label" : "HighCloudCover"
+}
+},
+"hourlymaximumgust" : 
+{
+"id" : "HourlyMaximumGust",
+"description" : "MaxGustMS",
+"label" : "HourlyMaximumGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumGust",
+"label" : "HourlyMaximumGust"
+}
+},
+"humidity" : 
+{
+"id" : "Humidity",
+"description" : "RH",
+"label" : "Humidity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Humidity",
+"label" : "Humidity"
+}
+},
+"lowcloudcover" : 
+{
+"id" : "LowCloudCover",
+"description" : "Low Cloud Cover",
+"label" : "LowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "LowCloudCover",
+"label" : "LowCloudCover"
+}
+},
+"mediumcloudcover" : 
+{
+"id" : "MediumCloudCover",
+"description" : "Medium Cloud Cover",
+"label" : "MediumCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MediumCloudCover",
+"label" : "MediumCloudCover"
+}
+},
+"middleandlowcloudcover" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"description" : "Middle+Low Cloud Cover",
+"label" : "MiddleAndLowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"label" : "MiddleAndLowCloudCover"
+}
+},
+"precipitation1h" : 
+{
+"id" : "Precipitation1h",
+"description" : "Precipitation mm/h",
+"label" : "Precipitation1h",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Precipitation1h",
+"label" : "Precipitation1h"
+}
+},
+"precipitationform" : 
+{
+"id" : "PrecipitationForm",
+"description" : "Precipitation Form",
+"label" : "PrecipitationForm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationForm",
+"label" : "PrecipitationForm"
+}
+},
+"precipitationtype" : 
+{
+"id" : "PrecipitationType",
+"description" : "Precipitation Type",
+"label" : "PrecipitationType",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationType",
+"label" : "PrecipitationType"
+}
+},
+"pressure" : 
+{
+"id" : "Pressure",
+"description" : "P",
+"label" : "Pressure",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Pressure",
+"label" : "Pressure"
+}
+},
+"probabilitythunderstorm" : 
+{
+"id" : "ProbabilityThunderstorm",
+"description" : "Probability of Thunder",
+"label" : "ProbabilityThunderstorm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ProbabilityThunderstorm",
+"label" : "ProbabilityThunderstorm"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "T",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "Total Cloud Cover",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"weathersymbol" : 
+{
+"id" : "WeatherSymbol",
+"description" : "WeatherSymbol",
+"label" : "WeatherSymbol",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol",
+"label" : "WeatherSymbol"
+}
+},
+"weathersymbol1" : 
+{
+"id" : "WeatherSymbol1",
+"description" : "Precipitation Symbol",
+"label" : "WeatherSymbol1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol1",
+"label" : "WeatherSymbol1"
+}
+},
+"weathersymbol3" : 
+{
+"id" : "WeatherSymbol3",
+"description" : "Weather Symbol",
+"label" : "WeatherSymbol3",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol3",
+"label" : "WeatherSymbol3"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Wind dir",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windgust" : 
+{
+"id" : "WindGust",
+"description" : "GUST",
+"label" : "WindGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindGust",
+"label" : "WindGust"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Wind vector",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "pal_skandinavia",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"dewpoint",
+"fogintensity",
+"highcloudcover",
+"hourlymaximumgust",
+"humidity",
+"kindex",
+"lowcloudcover",
+"mediumcloudcover",
+"middleandlowcloudcover",
+"pop",
+"precipitation1h",
+"precipitationform",
+"precipitationtype",
+"pressure",
+"probabilitythunderstorm",
+"radiationglobal",
+"radiationlw",
+"temperature",
+"totalcloudcover",
+"weathersymbol1",
+"weathersymbol3",
+"winddirection",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-9.09871,
+51.3,
+49,
+72.6421
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2008-08-05T03:00:00Z",
+"2008-08-09T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R100/2008-08-05T03:00:00Z/PT60M"
+]
+}
+},
+"parameter_names" : 
+{
+"dewpoint" : 
+{
+"id" : "DewPoint",
+"description" : "Kastepiste",
+"label" : "DewPoint",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "DewPoint",
+"label" : "DewPoint"
+}
+},
+"fogintensity" : 
+{
+"id" : "FogIntensity",
+"description" : "Density of Fog",
+"label" : "FogIntensity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "FogIntensity",
+"label" : "FogIntensity"
+}
+},
+"highcloudcover" : 
+{
+"id" : "HighCloudCover",
+"description" : "High Cloud Cover",
+"label" : "HighCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HighCloudCover",
+"label" : "HighCloudCover"
+}
+},
+"hourlymaximumgust" : 
+{
+"id" : "HourlyMaximumGust",
+"description" : "MaxGustMS",
+"label" : "HourlyMaximumGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumGust",
+"label" : "HourlyMaximumGust"
+}
+},
+"humidity" : 
+{
+"id" : "Humidity",
+"description" : "Suhteellinen kosteus",
+"label" : "Humidity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Humidity",
+"label" : "Humidity"
+}
+},
+"kindex" : 
+{
+"id" : "KIndex",
+"description" : "K-indeksi",
+"label" : "KIndex",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "KIndex",
+"label" : "KIndex"
+}
+},
+"lowcloudcover" : 
+{
+"id" : "LowCloudCover",
+"description" : "Low Cloud Cover",
+"label" : "LowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "LowCloudCover",
+"label" : "LowCloudCover"
+}
+},
+"mediumcloudcover" : 
+{
+"id" : "MediumCloudCover",
+"description" : "Medium Cloud Cover",
+"label" : "MediumCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MediumCloudCover",
+"label" : "MediumCloudCover"
+}
+},
+"middleandlowcloudcover" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"description" : "Middle+Low Cloud Cover",
+"label" : "MiddleAndLowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"label" : "MiddleAndLowCloudCover"
+}
+},
+"pop" : 
+{
+"id" : "PoP",
+"description" : "PoP",
+"label" : "PoP",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PoP",
+"label" : "PoP"
+}
+},
+"precipitation1h" : 
+{
+"id" : "Precipitation1h",
+"description" : "Precipitation mm/h",
+"label" : "Precipitation1h",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Precipitation1h",
+"label" : "Precipitation1h"
+}
+},
+"precipitationform" : 
+{
+"id" : "PrecipitationForm",
+"description" : "Precipitation Form",
+"label" : "PrecipitationForm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationForm",
+"label" : "PrecipitationForm"
+}
+},
+"precipitationtype" : 
+{
+"id" : "PrecipitationType",
+"description" : "Precipitation Type",
+"label" : "PrecipitationType",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationType",
+"label" : "PrecipitationType"
+}
+},
+"pressure" : 
+{
+"id" : "Pressure",
+"description" : "Pintapaine",
+"label" : "Pressure",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Pressure",
+"label" : "Pressure"
+}
+},
+"probabilitythunderstorm" : 
+{
+"id" : "ProbabilityThunderstorm",
+"description" : "Probability of Thunder",
+"label" : "ProbabilityThunderstorm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ProbabilityThunderstorm",
+"label" : "ProbabilityThunderstorm"
+}
+},
+"radiationglobal" : 
+{
+"id" : "RadiationGlobal",
+"description" : "Auringon säteily",
+"label" : "RadiationGlobal",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationGlobal",
+"label" : "RadiationGlobal"
+}
+},
+"radiationlw" : 
+{
+"id" : "RadiationLW",
+"description" : "Pitkäaaltoinen säteily",
+"label" : "RadiationLW",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationLW",
+"label" : "RadiationLW"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "Total Cloud Cover",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"weathersymbol1" : 
+{
+"id" : "WeatherSymbol1",
+"description" : "Precipitation Symbol",
+"label" : "WeatherSymbol1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol1",
+"label" : "WeatherSymbol1"
+}
+},
+"weathersymbol3" : 
+{
+"id" : "WeatherSymbol3",
+"description" : "Weather Symbol",
+"label" : "WeatherSymbol3",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol3",
+"label" : "WeatherSymbol3"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Wind dir",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Wind vector",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "pal_skandinavia2",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"temperature"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+22.835,
+58.835,
+26.0933,
+62.1749
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2013-03-17T22:00:00Z",
+"2013-03-27T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R27/2013-03-17T22:00:00Z/PT60M",
+"R20/2013-03-19T03:00:00Z/PT180M",
+"R23/2013-03-21T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+}
+}
+},
+{
+"id" : "tosummertime",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"dewpoint",
+"fogintensity",
+"highcloudcover",
+"hourlymaximumgust",
+"hourlymaximumwindspeed",
+"humidity",
+"kindex",
+"lowcloudcover",
+"mediumcloudcover",
+"middleandlowcloudcover",
+"pop",
+"precipitation1h",
+"precipitationform",
+"precipitationtype",
+"pressure",
+"probabilitythunderstorm",
+"radiationglobal",
+"radiationlw",
+"temperature",
+"totalcloudcover",
+"weathersymbol1",
+"weathersymbol3",
+"winddirection",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-9.09871,
+51.3,
+49,
+72.6421
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2012-03-23T22:00:00Z",
+"2012-04-02T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R27/2012-03-23T22:00:00Z/PT60M",
+"R20/2012-03-25T03:00:00Z/PT180M",
+"R23/2012-03-27T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"dewpoint" : 
+{
+"id" : "DewPoint",
+"description" : "Kastepiste",
+"label" : "DewPoint",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "DewPoint",
+"label" : "DewPoint"
+}
+},
+"fogintensity" : 
+{
+"id" : "FogIntensity",
+"description" : "Density of Fog",
+"label" : "FogIntensity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "FogIntensity",
+"label" : "FogIntensity"
+}
+},
+"highcloudcover" : 
+{
+"id" : "HighCloudCover",
+"description" : "High Cloud Cover",
+"label" : "HighCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HighCloudCover",
+"label" : "HighCloudCover"
+}
+},
+"hourlymaximumgust" : 
+{
+"id" : "HourlyMaximumGust",
+"description" : "MaxGustMS",
+"label" : "HourlyMaximumGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumGust",
+"label" : "HourlyMaximumGust"
+}
+},
+"hourlymaximumwindspeed" : 
+{
+"id" : "HourlyMaximumWindSpeed",
+"description" : "wsmax",
+"label" : "HourlyMaximumWindSpeed",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumWindSpeed",
+"label" : "HourlyMaximumWindSpeed"
+}
+},
+"humidity" : 
+{
+"id" : "Humidity",
+"description" : "Suhteellinen kosteus",
+"label" : "Humidity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Humidity",
+"label" : "Humidity"
+}
+},
+"kindex" : 
+{
+"id" : "KIndex",
+"description" : "K-indeksi",
+"label" : "KIndex",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "KIndex",
+"label" : "KIndex"
+}
+},
+"lowcloudcover" : 
+{
+"id" : "LowCloudCover",
+"description" : "Low Cloud Cover",
+"label" : "LowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "LowCloudCover",
+"label" : "LowCloudCover"
+}
+},
+"mediumcloudcover" : 
+{
+"id" : "MediumCloudCover",
+"description" : "Medium Cloud Cover",
+"label" : "MediumCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MediumCloudCover",
+"label" : "MediumCloudCover"
+}
+},
+"middleandlowcloudcover" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"description" : "Middle+Low Cloud Cover",
+"label" : "MiddleAndLowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"label" : "MiddleAndLowCloudCover"
+}
+},
+"pop" : 
+{
+"id" : "PoP",
+"description" : "PoP",
+"label" : "PoP",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PoP",
+"label" : "PoP"
+}
+},
+"precipitation1h" : 
+{
+"id" : "Precipitation1h",
+"description" : "Precipitation mm/h",
+"label" : "Precipitation1h",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Precipitation1h",
+"label" : "Precipitation1h"
+}
+},
+"precipitationform" : 
+{
+"id" : "PrecipitationForm",
+"description" : "Precipitation Form",
+"label" : "PrecipitationForm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationForm",
+"label" : "PrecipitationForm"
+}
+},
+"precipitationtype" : 
+{
+"id" : "PrecipitationType",
+"description" : "Precipitation Type",
+"label" : "PrecipitationType",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationType",
+"label" : "PrecipitationType"
+}
+},
+"pressure" : 
+{
+"id" : "Pressure",
+"description" : "Pintapaine",
+"label" : "Pressure",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Pressure",
+"label" : "Pressure"
+}
+},
+"probabilitythunderstorm" : 
+{
+"id" : "ProbabilityThunderstorm",
+"description" : "Probability of Thunder",
+"label" : "ProbabilityThunderstorm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ProbabilityThunderstorm",
+"label" : "ProbabilityThunderstorm"
+}
+},
+"radiationglobal" : 
+{
+"id" : "RadiationGlobal",
+"description" : "Auringon säteily",
+"label" : "RadiationGlobal",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationGlobal",
+"label" : "RadiationGlobal"
+}
+},
+"radiationlw" : 
+{
+"id" : "RadiationLW",
+"description" : "Pitkäaaltoinen säteily",
+"label" : "RadiationLW",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationLW",
+"label" : "RadiationLW"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "Total Cloud Cover",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"weathersymbol1" : 
+{
+"id" : "WeatherSymbol1",
+"description" : "Precipitation Symbol",
+"label" : "WeatherSymbol1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol1",
+"label" : "WeatherSymbol1"
+}
+},
+"weathersymbol3" : 
+{
+"id" : "WeatherSymbol3",
+"description" : "Weather Symbol",
+"label" : "WeatherSymbol3",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol3",
+"label" : "WeatherSymbol3"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Wind dir",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Wind vector",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "towintertime",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"dewpoint",
+"fogintensity",
+"highcloudcover",
+"hourlymaximumgust",
+"hourlymaximumwindspeed",
+"humidity",
+"kindex",
+"lowcloudcover",
+"mediumcloudcover",
+"middleandlowcloudcover",
+"pop",
+"precipitation1h",
+"precipitationform",
+"precipitationtype",
+"pressure",
+"probabilitythunderstorm",
+"radiationglobal",
+"radiationlw",
+"temperature",
+"totalcloudcover",
+"weathersymbol1",
+"weathersymbol3",
+"winddirection",
+"windspeedms",
+"windums",
+"windvectorms",
+"windvms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-9.09871,
+51.3,
+49,
+72.6421
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2012-10-26T22:00:00Z",
+"2012-11-05T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R27/2012-10-26T22:00:00Z/PT60M",
+"R20/2012-10-28T03:00:00Z/PT180M",
+"R23/2012-10-30T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"dewpoint" : 
+{
+"id" : "DewPoint",
+"description" : "Kastepiste",
+"label" : "DewPoint",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "DewPoint",
+"label" : "DewPoint"
+}
+},
+"fogintensity" : 
+{
+"id" : "FogIntensity",
+"description" : "Density of Fog",
+"label" : "FogIntensity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "FogIntensity",
+"label" : "FogIntensity"
+}
+},
+"highcloudcover" : 
+{
+"id" : "HighCloudCover",
+"description" : "High Cloud Cover",
+"label" : "HighCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HighCloudCover",
+"label" : "HighCloudCover"
+}
+},
+"hourlymaximumgust" : 
+{
+"id" : "HourlyMaximumGust",
+"description" : "MaxGustMS",
+"label" : "HourlyMaximumGust",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumGust",
+"label" : "HourlyMaximumGust"
+}
+},
+"hourlymaximumwindspeed" : 
+{
+"id" : "HourlyMaximumWindSpeed",
+"description" : "wsmax",
+"label" : "HourlyMaximumWindSpeed",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "HourlyMaximumWindSpeed",
+"label" : "HourlyMaximumWindSpeed"
+}
+},
+"humidity" : 
+{
+"id" : "Humidity",
+"description" : "Suhteellinen kosteus",
+"label" : "Humidity",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Humidity",
+"label" : "Humidity"
+}
+},
+"kindex" : 
+{
+"id" : "KIndex",
+"description" : "K-indeksi",
+"label" : "KIndex",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "KIndex",
+"label" : "KIndex"
+}
+},
+"lowcloudcover" : 
+{
+"id" : "LowCloudCover",
+"description" : "Low Cloud Cover",
+"label" : "LowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "LowCloudCover",
+"label" : "LowCloudCover"
+}
+},
+"mediumcloudcover" : 
+{
+"id" : "MediumCloudCover",
+"description" : "Medium Cloud Cover",
+"label" : "MediumCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MediumCloudCover",
+"label" : "MediumCloudCover"
+}
+},
+"middleandlowcloudcover" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"description" : "Middle+Low Cloud Cover",
+"label" : "MiddleAndLowCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MiddleAndLowCloudCover",
+"label" : "MiddleAndLowCloudCover"
+}
+},
+"pop" : 
+{
+"id" : "PoP",
+"description" : "PoP",
+"label" : "PoP",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PoP",
+"label" : "PoP"
+}
+},
+"precipitation1h" : 
+{
+"id" : "Precipitation1h",
+"description" : "Precipitation mm/h",
+"label" : "Precipitation1h",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Precipitation1h",
+"label" : "Precipitation1h"
+}
+},
+"precipitationform" : 
+{
+"id" : "PrecipitationForm",
+"description" : "Precipitation Form",
+"label" : "PrecipitationForm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationForm",
+"label" : "PrecipitationForm"
+}
+},
+"precipitationtype" : 
+{
+"id" : "PrecipitationType",
+"description" : "Precipitation Type",
+"label" : "PrecipitationType",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationType",
+"label" : "PrecipitationType"
+}
+},
+"pressure" : 
+{
+"id" : "Pressure",
+"description" : "Pintapaine",
+"label" : "Pressure",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Pressure",
+"label" : "Pressure"
+}
+},
+"probabilitythunderstorm" : 
+{
+"id" : "ProbabilityThunderstorm",
+"description" : "Probability of Thunder",
+"label" : "ProbabilityThunderstorm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ProbabilityThunderstorm",
+"label" : "ProbabilityThunderstorm"
+}
+},
+"radiationglobal" : 
+{
+"id" : "RadiationGlobal",
+"description" : "Auringon säteily",
+"label" : "RadiationGlobal",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationGlobal",
+"label" : "RadiationGlobal"
+}
+},
+"radiationlw" : 
+{
+"id" : "RadiationLW",
+"description" : "Pitkäaaltoinen säteily",
+"label" : "RadiationLW",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "RadiationLW",
+"label" : "RadiationLW"
+}
+},
+"temperature" : 
+{
+"id" : "Temperature",
+"description" : "Lämpötila",
+"label" : "Temperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "Temperature",
+"label" : "Temperature"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "Total Cloud Cover",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"weathersymbol1" : 
+{
+"id" : "WeatherSymbol1",
+"description" : "Precipitation Symbol",
+"label" : "WeatherSymbol1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol1",
+"label" : "WeatherSymbol1"
+}
+},
+"weathersymbol3" : 
+{
+"id" : "WeatherSymbol3",
+"description" : "Weather Symbol",
+"label" : "WeatherSymbol3",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WeatherSymbol3",
+"label" : "WeatherSymbol3"
+}
+},
+"winddirection" : 
+{
+"id" : "WindDirection",
+"description" : "Wind dir",
+"label" : "WindDirection",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindDirection",
+"label" : "WindDirection"
+}
+},
+"windspeedms" : 
+{
+"id" : "WindSpeedMS",
+"description" : "Wind speed",
+"label" : "WindSpeedMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindSpeedMS",
+"label" : "WindSpeedMS"
+}
+},
+"windums" : 
+{
+"id" : "WindUMS",
+"description" : "U",
+"label" : "WindUMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS",
+"label" : "WindUMS"
+}
+},
+"windvectorms" : 
+{
+"id" : "WindVectorMS",
+"description" : "Wind vector",
+"label" : "WindVectorMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVectorMS",
+"label" : "WindVectorMS"
+}
+},
+"windvms" : 
+{
+"id" : "WindVMS",
+"description" : "V",
+"label" : "WindVMS",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS",
+"label" : "WindVMS"
+}
+}
+}
+},
+{
+"id" : "tutka_suomi_rr",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+},
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr/instances",
+"hreflang" : "en",
+"rel" : "collection",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"precipitationrate"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"instances" : 
+{
+"link" : 
+{
+"title" : "Instances query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr/instances",
+"hreflang" : "en",
+"rel" : "collection",
+"variables" : 
+{
+"title" : "Instances query",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "instances"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+15.0477,
+57.93,
+34.9,
+69.3059
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2013-09-10T10:35:00Z",
+"2013-09-10T10:35:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]"
+}
+},
+"parameter_names" : 
+{
+"precipitationrate" : 
+{
+"id" : "PrecipitationRate",
+"description" : "PrecipitationRate",
+"label" : "PrecipitationRate",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationRate",
+"label" : "PrecipitationRate"
+}
+}
+}
+},
+{
+"id" : "weeklyclimatology",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"averagetemperature",
+"maximumtemperature",
+"minimumtemperature",
+"precipitationamount",
+"sealevel",
+"snowfallrate",
+"sunhours",
+"totalcloudcover",
+"windums10m",
+"windvms10m"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+10080,
+10080
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+10080
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+-85.4293,
+24.6604,
+92.6851,
+87.5
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2016-06-27T00:00:00Z",
+"2016-07-18T00:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R4/2016-06-27T00:00:00Z/PT10080M"
+]
+}
+},
+"parameter_names" : 
+{
+"averagetemperature" : 
+{
+"id" : "AverageTemperature",
+"description" : "T",
+"label" : "AverageTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "AverageTemperature",
+"label" : "AverageTemperature"
+}
+},
+"maximumtemperature" : 
+{
+"id" : "MaximumTemperature",
+"description" : "MX2T",
+"label" : "MaximumTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MaximumTemperature",
+"label" : "MaximumTemperature"
+}
+},
+"minimumtemperature" : 
+{
+"id" : "MinimumTemperature",
+"description" : "MN2T",
+"label" : "MinimumTemperature",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "MinimumTemperature",
+"label" : "MinimumTemperature"
+}
+},
+"precipitationamount" : 
+{
+"id" : "PrecipitationAmount",
+"description" : "TP",
+"label" : "PrecipitationAmount",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "PrecipitationAmount",
+"label" : "PrecipitationAmount"
+}
+},
+"sealevel" : 
+{
+"id" : "SeaLevel",
+"description" : "MSL",
+"label" : "SeaLevel",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "SeaLevel",
+"label" : "SeaLevel"
+}
+},
+"snowfallrate" : 
+{
+"id" : "SnowfallRate",
+"description" : "SF",
+"label" : "SnowfallRate",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "SnowfallRate",
+"label" : "SnowfallRate"
+}
+},
+"sunhours" : 
+{
+"id" : "SunHours",
+"description" : "SUND",
+"label" : "SunHours",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "SunHours",
+"label" : "SunHours"
+}
+},
+"totalcloudcover" : 
+{
+"id" : "TotalCloudCover",
+"description" : "TCC",
+"label" : "TotalCloudCover",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "TotalCloudCover",
+"label" : "TotalCloudCover"
+}
+},
+"windums10m" : 
+{
+"id" : "WindUMS10M",
+"description" : "10U",
+"label" : "WindUMS10M",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindUMS10M",
+"label" : "WindUMS10M"
+}
+},
+"windvms10m" : 
+{
+"id" : "WindVMS10M",
+"description" : "10V",
+"label" : "WindVMS10M",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "WindVMS10M",
+"label" : "WindVMS10M"
+}
+}
+}
+},
+{
+"id" : "climate_tmax.5909.0",
+"title" : "Producer: climate_tmax; Geometry id: 5909; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax.5909.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"climate_tmax",
+"f02-t-max-c",
+"f12-t-max-c",
+"f37-t-max-c",
+"f50-t-max-c",
+"f63-t-max-c",
+"f88-t-max-c",
+"f98-t-max-c"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax.5909.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax.5909.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax.5909.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/climate_tmax.5909.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+1440,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+59.6105,
+33.1855,
+70.0408
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2001-01-01T12:00:00Z",
+"2001-12-31T12:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R365/2001-01-01T12:00:00Z/PT1440M"
+]
+}
+},
+"parameter_names" : 
+{
+"f02-t-max-c" : 
+{
+"id" : "f02-t-max-c",
+"description" : "NormalMaxTemperatureF02 (812)",
+"label" : "f02-t-max-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f02-t-max-c",
+"label" : "f02-t-max-c"
+}
+},
+"f12-t-max-c" : 
+{
+"id" : "f12-t-max-c",
+"description" : "NormalMaxTemperatureF02 (813)",
+"label" : "f12-t-max-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f12-t-max-c",
+"label" : "f12-t-max-c"
+}
+},
+"f37-t-max-c" : 
+{
+"id" : "f37-t-max-c",
+"description" : "NormalMaxTemperatureF37 (814)",
+"label" : "f37-t-max-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f37-t-max-c",
+"label" : "f37-t-max-c"
+}
+},
+"f50-t-max-c" : 
+{
+"id" : "f50-t-max-c",
+"description" : "NormalMaxTemperatureF50 (815)",
+"label" : "f50-t-max-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f50-t-max-c",
+"label" : "f50-t-max-c"
+}
+},
+"f63-t-max-c" : 
+{
+"id" : "f63-t-max-c",
+"description" : "NormalMaxTemperatureF63 (816)",
+"label" : "f63-t-max-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f63-t-max-c",
+"label" : "f63-t-max-c"
+}
+},
+"f88-t-max-c" : 
+{
+"id" : "f88-t-max-c",
+"description" : "NormalMaxTemperatureF88 (817)",
+"label" : "f88-t-max-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f88-t-max-c",
+"label" : "f88-t-max-c"
+}
+},
+"f98-t-max-c" : 
+{
+"id" : "f98-t-max-c",
+"description" : "NormalMaxTemperatureF98 (818)",
+"label" : "f98-t-max-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f98-t-max-c",
+"label" : "f98-t-max-c"
+}
+}
+}
+},
+{
+"id" : "ecmwf_eurooppa_pinta.5903.0",
+"title" : "Producer: ecmwf_eurooppa_pinta; Geometry id: 5903; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta.5903.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"ecmwf_eurooppa_pinta",
+"dd-d",
+"df-ms",
+"ff-ms",
+"fogint-n",
+"hessaa-n",
+"hsade1-n",
+"n-prcnt",
+"nh-prcnt",
+"nl-prcnt",
+"nlm-prcnt",
+"nm-prcnt",
+"p-pa",
+"pot-prcnt",
+"precform-n",
+"prectype-n",
+"rrr-kgm2",
+"t-k",
+"td-c",
+"u-ms",
+"v-ms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta.5903.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta.5903.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta.5903.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eurooppa_pinta.5903.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+180,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+180,
+360,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+25,
+79.7716,
+56.9755
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2008-08-04T12:00:00Z",
+"2008-08-14T12:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R41/2008-08-04T12:00:00Z/PT180M",
+"R20/2008-08-09T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"dd-d" : 
+{
+"id" : "dd-d",
+"description" : "Wind Direction in Degrees",
+"label" : "dd-d",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "dd-d",
+"label" : "dd-d"
+}
+},
+"df-ms" : 
+{
+"id" : "df-ms",
+"description" : "Wind Vector in m/s",
+"label" : "df-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "df-ms",
+"label" : "df-ms"
+}
+},
+"ff-ms" : 
+{
+"id" : "ff-ms",
+"description" : "Wind speed in m/s",
+"label" : "ff-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ff-ms",
+"label" : "ff-ms"
+}
+},
+"fogint-n" : 
+{
+"id" : "fogint-n",
+"description" : "Fog intensity from 0..2",
+"label" : "fogint-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "fogint-n",
+"label" : "fogint-n"
+}
+},
+"hessaa-n" : 
+{
+"id" : "hessaa-n",
+"description" : "Simple weather symbol fo HS and others",
+"label" : "hessaa-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hessaa-n",
+"label" : "hessaa-n"
+}
+},
+"hsade1-n" : 
+{
+"id" : "hsade1-n",
+"description" : "Precalculated weather symbol",
+"label" : "hsade1-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hsade1-n",
+"label" : "hsade1-n"
+}
+},
+"n-prcnt" : 
+{
+"id" : "n-prcnt",
+"description" : "Total Cloud Cover in %",
+"label" : "n-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "n-prcnt",
+"label" : "n-prcnt"
+}
+},
+"nh-prcnt" : 
+{
+"id" : "nh-prcnt",
+"description" : "High Cloud Amount",
+"label" : "nh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nh-prcnt",
+"label" : "nh-prcnt"
+}
+},
+"nl-prcnt" : 
+{
+"id" : "nl-prcnt",
+"description" : "Low Cloud Amount",
+"label" : "nl-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nl-prcnt",
+"label" : "nl-prcnt"
+}
+},
+"nlm-prcnt" : 
+{
+"id" : "nlm-prcnt",
+"description" : "Low and middle cloud cover",
+"label" : "nlm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nlm-prcnt",
+"label" : "nlm-prcnt"
+}
+},
+"nm-prcnt" : 
+{
+"id" : "nm-prcnt",
+"description" : "Medium Cloud Amount",
+"label" : "nm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nm-prcnt",
+"label" : "nm-prcnt"
+}
+},
+"p-pa" : 
+{
+"id" : "p-pa",
+"description" : "Pressure in Pascals",
+"label" : "p-pa",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "p-pa",
+"label" : "p-pa"
+}
+},
+"pot-prcnt" : 
+{
+"id" : "pot-prcnt",
+"description" : "Probability of thunderstorms",
+"label" : "pot-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pot-prcnt",
+"label" : "pot-prcnt"
+}
+},
+"precform-n" : 
+{
+"id" : "precform-n",
+"description" : "Precipitation form",
+"label" : "precform-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "precform-n",
+"label" : "precform-n"
+}
+},
+"prectype-n" : 
+{
+"id" : "prectype-n",
+"description" : "Precipitation type, large scale or convective",
+"label" : "prectype-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "prectype-n",
+"label" : "prectype-n"
+}
+},
+"rrr-kgm2" : 
+{
+"id" : "rrr-kgm2",
+"description" : "Total Precipitation rate in kg m-2",
+"label" : "rrr-kgm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrr-kgm2",
+"label" : "rrr-kgm2"
+}
+},
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+},
+"td-c" : 
+{
+"id" : "td-c",
+"description" : "Dew point Temperature in C",
+"label" : "td-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "td-c",
+"label" : "td-c"
+}
+},
+"u-ms" : 
+{
+"id" : "u-ms",
+"description" : "U wind in m/s",
+"label" : "u-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "u-ms",
+"label" : "u-ms"
+}
+},
+"v-ms" : 
+{
+"id" : "v-ms",
+"description" : "V wind in m/s",
+"label" : "v-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "v-ms",
+"label" : "v-ms"
+}
+}
+}
+},
+{
+"id" : "ecmwf_maailma_pinta.grib.5100.0",
+"title" : "Producer: ecmwf_maailma_pinta.grib; Geometry id: 5100; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_pinta.grib.5100.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"ecmwf_maailma_pinta.grib",
+"lc-0to1",
+"t-k",
+"td-c",
+"zh-gpm"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_pinta.grib.5100.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_pinta.grib.5100.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_pinta.grib.5100.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_maailma_pinta.grib.5100.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+-90,
+179.999,
+90
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2015-03-13T12:00:00Z",
+"2015-03-13T12:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]"
+}
+},
+"parameter_names" : 
+{
+"lc-0to1" : 
+{
+"id" : "lc-0to1",
+"description" : "Land Cover, 1=land, 0=sea",
+"label" : "lc-0to1",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "lc-0to1",
+"label" : "lc-0to1"
+}
+},
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+},
+"td-c" : 
+{
+"id" : "td-c",
+"description" : "Dew point Temperature in C",
+"label" : "td-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "td-c",
+"label" : "td-c"
+}
+},
+"zh-gpm" : 
+{
+"id" : "zh-gpm",
+"description" : "Geopotential Height",
+"label" : "zh-gpm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "zh-gpm",
+"label" : "zh-gpm"
+}
+}
+}
+},
+{
+"id" : "ecmwf_skandinavia_painepinta.5901.2",
+"title" : "Producer: ecmwf_skandinavia_painepinta; Geometry id: 5901; Level id: 2",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta.5901.2",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"ecmwf_skandinavia_painepinta",
+"dd-d",
+"df-ms",
+"ff-ms",
+"rh-prcnt",
+"t-k",
+"tp-k",
+"tpw-k",
+"u-ms",
+"v-ms",
+"vv-mms",
+"zh-gpm"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta.5901.2/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta.5901.2/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta.5901.2/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_skandinavia_painepinta.5901.2/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+180,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+180,
+360,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+51.3,
+49.0463,
+70.2054
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2008-09-09T00:00:00Z",
+"2008-09-19T00:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R41/2008-09-09T00:00:00Z/PT180M",
+"R20/2008-09-14T06:00:00Z/PT360M"
+]
+},
+"vertical" : 
+{
+"interval" : 
+[
+[
+"30000",
+"100000"
+]
+],
+"values" : 
+[
+"30000",
+"50000",
+"70000",
+"85000",
+"92500",
+"100000"
+],
+"vrs" : "2;PRESSURE;"
+}
+},
+"parameter_names" : 
+{
+"dd-d" : 
+{
+"id" : "dd-d",
+"description" : "Wind Direction in Degrees",
+"label" : "dd-d",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "dd-d",
+"label" : "dd-d"
+}
+},
+"df-ms" : 
+{
+"id" : "df-ms",
+"description" : "Wind Vector in m/s",
+"label" : "df-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "df-ms",
+"label" : "df-ms"
+}
+},
+"ff-ms" : 
+{
+"id" : "ff-ms",
+"description" : "Wind speed in m/s",
+"label" : "ff-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ff-ms",
+"label" : "ff-ms"
+}
+},
+"rh-prcnt" : 
+{
+"id" : "rh-prcnt",
+"description" : "Relative Humidity in percents",
+"label" : "rh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rh-prcnt",
+"label" : "rh-prcnt"
+}
+},
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+},
+"tp-k" : 
+{
+"id" : "tp-k",
+"description" : "Potential temperature",
+"label" : "tp-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "tp-k",
+"label" : "tp-k"
+}
+},
+"tpw-k" : 
+{
+"id" : "tpw-k",
+"description" : "Pseudoadiabatic potential temperature in K",
+"label" : "tpw-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "tpw-k",
+"label" : "tpw-k"
+}
+},
+"u-ms" : 
+{
+"id" : "u-ms",
+"description" : "U wind in m/s",
+"label" : "u-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "u-ms",
+"label" : "u-ms"
+}
+},
+"v-ms" : 
+{
+"id" : "v-ms",
+"description" : "V wind in m/s",
+"label" : "v-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "v-ms",
+"label" : "v-ms"
+}
+},
+"vv-mms" : 
+{
+"id" : "vv-mms",
+"description" : "Vertical Velocity in mm/s",
+"label" : "vv-mms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "vv-mms",
+"label" : "vv-mms"
+}
+},
+"zh-gpm" : 
+{
+"id" : "zh-gpm",
+"description" : "Geopotential Height",
+"label" : "zh-gpm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "zh-gpm",
+"label" : "zh-gpm"
+}
+}
+}
+},
+{
+"id" : "hirlam.5201.0",
+"title" : "Producer: hirlam; Geometry id: 5201; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam.5201.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"hirlam",
+"cldsym-n",
+"dd-d",
+"df-ms",
+"ff-ms",
+"fogint-n",
+"hessaa-n",
+"hsade1-n",
+"kindex-n",
+"n-prcnt",
+"nh-prcnt",
+"nl-prcnt",
+"nlm-prcnt",
+"nm-prcnt",
+"p-pa",
+"pot-prcnt",
+"precform-n",
+"prectype-n",
+"radglo-wm2",
+"radlw-wm2",
+"rh-prcnt",
+"rrc-mm10",
+"rrl-mm10",
+"rrr-kgm2",
+"rtoplw-wm2",
+"t-k",
+"td-c",
+"u-ms",
+"v-ms",
+"vv-m",
+"zh-gpm"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam.5201.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam.5201.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam.5201.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/hirlam.5201.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+55.437,
+44.74,
+72.5858
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2013-03-18T00:00:00Z",
+"2013-03-20T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R55/2013-03-18T00:00:00Z/PT60M"
+]
+}
+},
+"parameter_names" : 
+{
+"cldsym-n" : 
+{
+"id" : "cldsym-n",
+"description" : "Cloud Symbol",
+"label" : "cldsym-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "cldsym-n",
+"label" : "cldsym-n"
+}
+},
+"dd-d" : 
+{
+"id" : "dd-d",
+"description" : "Wind Direction in Degrees",
+"label" : "dd-d",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "dd-d",
+"label" : "dd-d"
+}
+},
+"df-ms" : 
+{
+"id" : "df-ms",
+"description" : "Wind Vector in m/s",
+"label" : "df-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "df-ms",
+"label" : "df-ms"
+}
+},
+"ff-ms" : 
+{
+"id" : "ff-ms",
+"description" : "Wind speed in m/s",
+"label" : "ff-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ff-ms",
+"label" : "ff-ms"
+}
+},
+"fogint-n" : 
+{
+"id" : "fogint-n",
+"description" : "Fog intensity from 0..2",
+"label" : "fogint-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "fogint-n",
+"label" : "fogint-n"
+}
+},
+"hessaa-n" : 
+{
+"id" : "hessaa-n",
+"description" : "Simple weather symbol fo HS and others",
+"label" : "hessaa-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hessaa-n",
+"label" : "hessaa-n"
+}
+},
+"hsade1-n" : 
+{
+"id" : "hsade1-n",
+"description" : "Precalculated weather symbol",
+"label" : "hsade1-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hsade1-n",
+"label" : "hsade1-n"
+}
+},
+"kindex-n" : 
+{
+"id" : "kindex-n",
+"description" : "Stability index (-50 -> 50)",
+"label" : "kindex-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "kindex-n",
+"label" : "kindex-n"
+}
+},
+"n-prcnt" : 
+{
+"id" : "n-prcnt",
+"description" : "Total Cloud Cover in %",
+"label" : "n-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "n-prcnt",
+"label" : "n-prcnt"
+}
+},
+"nh-prcnt" : 
+{
+"id" : "nh-prcnt",
+"description" : "High Cloud Amount",
+"label" : "nh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nh-prcnt",
+"label" : "nh-prcnt"
+}
+},
+"nl-prcnt" : 
+{
+"id" : "nl-prcnt",
+"description" : "Low Cloud Amount",
+"label" : "nl-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nl-prcnt",
+"label" : "nl-prcnt"
+}
+},
+"nlm-prcnt" : 
+{
+"id" : "nlm-prcnt",
+"description" : "Low and middle cloud cover",
+"label" : "nlm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nlm-prcnt",
+"label" : "nlm-prcnt"
+}
+},
+"nm-prcnt" : 
+{
+"id" : "nm-prcnt",
+"description" : "Medium Cloud Amount",
+"label" : "nm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nm-prcnt",
+"label" : "nm-prcnt"
+}
+},
+"p-pa" : 
+{
+"id" : "p-pa",
+"description" : "Pressure in Pascals",
+"label" : "p-pa",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "p-pa",
+"label" : "p-pa"
+}
+},
+"pot-prcnt" : 
+{
+"id" : "pot-prcnt",
+"description" : "Probability of thunderstorms",
+"label" : "pot-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pot-prcnt",
+"label" : "pot-prcnt"
+}
+},
+"precform-n" : 
+{
+"id" : "precform-n",
+"description" : "Precipitation form",
+"label" : "precform-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "precform-n",
+"label" : "precform-n"
+}
+},
+"prectype-n" : 
+{
+"id" : "prectype-n",
+"description" : "Precipitation type, large scale or convective",
+"label" : "prectype-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "prectype-n",
+"label" : "prectype-n"
+}
+},
+"radglo-wm2" : 
+{
+"id" : "radglo-wm2",
+"description" : "Global radiation",
+"label" : "radglo-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radglo-wm2",
+"label" : "radglo-wm2"
+}
+},
+"radlw-wm2" : 
+{
+"id" : "radlw-wm2",
+"description" : "Long wave radiation",
+"label" : "radlw-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radlw-wm2",
+"label" : "radlw-wm2"
+}
+},
+"rh-prcnt" : 
+{
+"id" : "rh-prcnt",
+"description" : "Relative Humidity in percents",
+"label" : "rh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rh-prcnt",
+"label" : "rh-prcnt"
+}
+},
+"rrc-mm10" : 
+{
+"id" : "rrc-mm10",
+"description" : "Convective precipitation in 10ths of mm",
+"label" : "rrc-mm10",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrc-mm10",
+"label" : "rrc-mm10"
+}
+},
+"rrl-mm10" : 
+{
+"id" : "rrl-mm10",
+"description" : "Large Scale precipitation in 10ths of mm",
+"label" : "rrl-mm10",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrl-mm10",
+"label" : "rrl-mm10"
+}
+},
+"rrr-kgm2" : 
+{
+"id" : "rrr-kgm2",
+"description" : "Total Precipitation rate in kg m-2",
+"label" : "rrr-kgm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrr-kgm2",
+"label" : "rrr-kgm2"
+}
+},
+"rtoplw-wm2" : 
+{
+"id" : "rtoplw-wm2",
+"description" : "Net long wave radiation, top of athmosphere",
+"label" : "rtoplw-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rtoplw-wm2",
+"label" : "rtoplw-wm2"
+}
+},
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+},
+"td-c" : 
+{
+"id" : "td-c",
+"description" : "Dew point Temperature in C",
+"label" : "td-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "td-c",
+"label" : "td-c"
+}
+},
+"u-ms" : 
+{
+"id" : "u-ms",
+"description" : "U wind in m/s",
+"label" : "u-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "u-ms",
+"label" : "u-ms"
+}
+},
+"v-ms" : 
+{
+"id" : "v-ms",
+"description" : "V wind in m/s",
+"label" : "v-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "v-ms",
+"label" : "v-ms"
+}
+},
+"vv-m" : 
+{
+"id" : "vv-m",
+"description" : "Visibility in Meters",
+"label" : "vv-m",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "vv-m",
+"label" : "vv-m"
+}
+},
+"zh-gpm" : 
+{
+"id" : "zh-gpm",
+"description" : "Geopotential Height",
+"label" : "zh-gpm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "zh-gpm",
+"label" : "zh-gpm"
+}
+}
+}
+},
+{
+"id" : "pal_skandinavia.5900.0",
+"title" : "Producer: pal_skandinavia; Geometry id: 5900; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia.5900.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+},
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia.5900.0/instances",
+"hreflang" : "en",
+"rel" : "collection",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"pal_skandinavia",
+"dd-d",
+"df-ms",
+"ff-ms",
+"fogint-n",
+"hessaa-n",
+"hsade1-n",
+"kindex-n",
+"n-prcnt",
+"nh-prcnt",
+"nl-prcnt",
+"nlm-prcnt",
+"nm-prcnt",
+"p-pa",
+"pop-prcnt",
+"pot-prcnt",
+"precform-n",
+"prectype-n",
+"radglo-wm2",
+"radlw-wm2",
+"rh-prcnt",
+"rrr-kgm2",
+"t-k",
+"td-c",
+"u-ms",
+"v-ms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia.5900.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"instances" : 
+{
+"link" : 
+{
+"title" : "Instances query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia.5900.0/instances",
+"hreflang" : "en",
+"rel" : "collection",
+"variables" : 
+{
+"title" : "Instances query",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "instances"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia.5900.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia.5900.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia.5900.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+51.3,
+49.0463,
+70.2054
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2008-08-05T05:00:00Z",
+"2008-08-06T04:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R24/2008-08-05T05:00:00Z/PT60M"
+]
+}
+},
+"parameter_names" : 
+{
+"dd-d" : 
+{
+"id" : "dd-d",
+"description" : "Wind Direction in Degrees",
+"label" : "dd-d",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "dd-d",
+"label" : "dd-d"
+}
+},
+"df-ms" : 
+{
+"id" : "df-ms",
+"description" : "Wind Vector in m/s",
+"label" : "df-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "df-ms",
+"label" : "df-ms"
+}
+},
+"ff-ms" : 
+{
+"id" : "ff-ms",
+"description" : "Wind speed in m/s",
+"label" : "ff-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ff-ms",
+"label" : "ff-ms"
+}
+},
+"fogint-n" : 
+{
+"id" : "fogint-n",
+"description" : "Fog intensity from 0..2",
+"label" : "fogint-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "fogint-n",
+"label" : "fogint-n"
+}
+},
+"hessaa-n" : 
+{
+"id" : "hessaa-n",
+"description" : "Simple weather symbol fo HS and others",
+"label" : "hessaa-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hessaa-n",
+"label" : "hessaa-n"
+}
+},
+"hsade1-n" : 
+{
+"id" : "hsade1-n",
+"description" : "Precalculated weather symbol",
+"label" : "hsade1-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hsade1-n",
+"label" : "hsade1-n"
+}
+},
+"kindex-n" : 
+{
+"id" : "kindex-n",
+"description" : "Stability index (-50 -> 50)",
+"label" : "kindex-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "kindex-n",
+"label" : "kindex-n"
+}
+},
+"n-prcnt" : 
+{
+"id" : "n-prcnt",
+"description" : "Total Cloud Cover in %",
+"label" : "n-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "n-prcnt",
+"label" : "n-prcnt"
+}
+},
+"nh-prcnt" : 
+{
+"id" : "nh-prcnt",
+"description" : "High Cloud Amount",
+"label" : "nh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nh-prcnt",
+"label" : "nh-prcnt"
+}
+},
+"nl-prcnt" : 
+{
+"id" : "nl-prcnt",
+"description" : "Low Cloud Amount",
+"label" : "nl-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nl-prcnt",
+"label" : "nl-prcnt"
+}
+},
+"nlm-prcnt" : 
+{
+"id" : "nlm-prcnt",
+"description" : "Low and middle cloud cover",
+"label" : "nlm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nlm-prcnt",
+"label" : "nlm-prcnt"
+}
+},
+"nm-prcnt" : 
+{
+"id" : "nm-prcnt",
+"description" : "Medium Cloud Amount",
+"label" : "nm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nm-prcnt",
+"label" : "nm-prcnt"
+}
+},
+"p-pa" : 
+{
+"id" : "p-pa",
+"description" : "Pressure in Pascals",
+"label" : "p-pa",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "p-pa",
+"label" : "p-pa"
+}
+},
+"pop-prcnt" : 
+{
+"id" : "pop-prcnt",
+"description" : "Probability of precipitation",
+"label" : "pop-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pop-prcnt",
+"label" : "pop-prcnt"
+}
+},
+"pot-prcnt" : 
+{
+"id" : "pot-prcnt",
+"description" : "Probability of thunderstorms",
+"label" : "pot-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pot-prcnt",
+"label" : "pot-prcnt"
+}
+},
+"precform-n" : 
+{
+"id" : "precform-n",
+"description" : "Precipitation form",
+"label" : "precform-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "precform-n",
+"label" : "precform-n"
+}
+},
+"prectype-n" : 
+{
+"id" : "prectype-n",
+"description" : "Precipitation type, large scale or convective",
+"label" : "prectype-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "prectype-n",
+"label" : "prectype-n"
+}
+},
+"radglo-wm2" : 
+{
+"id" : "radglo-wm2",
+"description" : "Global radiation",
+"label" : "radglo-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radglo-wm2",
+"label" : "radglo-wm2"
+}
+},
+"radlw-wm2" : 
+{
+"id" : "radlw-wm2",
+"description" : "Long wave radiation",
+"label" : "radlw-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radlw-wm2",
+"label" : "radlw-wm2"
+}
+},
+"rh-prcnt" : 
+{
+"id" : "rh-prcnt",
+"description" : "Relative Humidity in percents",
+"label" : "rh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rh-prcnt",
+"label" : "rh-prcnt"
+}
+},
+"rrr-kgm2" : 
+{
+"id" : "rrr-kgm2",
+"description" : "Total Precipitation rate in kg m-2",
+"label" : "rrr-kgm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrr-kgm2",
+"label" : "rrr-kgm2"
+}
+},
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+},
+"td-c" : 
+{
+"id" : "td-c",
+"description" : "Dew point Temperature in C",
+"label" : "td-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "td-c",
+"label" : "td-c"
+}
+},
+"u-ms" : 
+{
+"id" : "u-ms",
+"description" : "U wind in m/s",
+"label" : "u-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "u-ms",
+"label" : "u-ms"
+}
+},
+"v-ms" : 
+{
+"id" : "v-ms",
+"description" : "V wind in m/s",
+"label" : "v-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "v-ms",
+"label" : "v-ms"
+}
+}
+}
+},
+{
+"id" : "pal_skandinavia2.5908.0",
+"title" : "Producer: pal_skandinavia2; Geometry id: 5908; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2.5908.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"pal_skandinavia2",
+"t-k"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2.5908.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2.5908.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2.5908.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia2.5908.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+58.8349,
+26.0954,
+62.1768
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2013-03-17T22:00:00Z",
+"2013-03-27T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R27/2013-03-17T22:00:00Z/PT60M",
+"R20/2013-03-19T03:00:00Z/PT180M",
+"R23/2013-03-21T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+}
+}
+},
+{
+"id" : "tosummertime.5900.0",
+"title" : "Producer: tosummertime; Geometry id: 5900; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime.5900.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"tosummertime",
+"dd-d",
+"df-ms",
+"ff-ms",
+"fogint-n",
+"hessaa-n",
+"hsade1-n",
+"kindex-n",
+"n-prcnt",
+"nh-prcnt",
+"nl-prcnt",
+"nlm-prcnt",
+"nm-prcnt",
+"p-pa",
+"pop-prcnt",
+"pot-prcnt",
+"precform-n",
+"prectype-n",
+"radglo-wm2",
+"radlw-wm2",
+"rh-prcnt",
+"rrr-kgm2",
+"t-k",
+"td-c",
+"u-ms",
+"v-ms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime.5900.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime.5900.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime.5900.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tosummertime.5900.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+51.3,
+49.0463,
+70.2054
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2012-03-23T22:00:00Z",
+"2012-04-02T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R27/2012-03-23T22:00:00Z/PT60M",
+"R20/2012-03-25T03:00:00Z/PT180M",
+"R23/2012-03-27T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"dd-d" : 
+{
+"id" : "dd-d",
+"description" : "Wind Direction in Degrees",
+"label" : "dd-d",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "dd-d",
+"label" : "dd-d"
+}
+},
+"df-ms" : 
+{
+"id" : "df-ms",
+"description" : "Wind Vector in m/s",
+"label" : "df-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "df-ms",
+"label" : "df-ms"
+}
+},
+"ff-ms" : 
+{
+"id" : "ff-ms",
+"description" : "Wind speed in m/s",
+"label" : "ff-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ff-ms",
+"label" : "ff-ms"
+}
+},
+"fogint-n" : 
+{
+"id" : "fogint-n",
+"description" : "Fog intensity from 0..2",
+"label" : "fogint-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "fogint-n",
+"label" : "fogint-n"
+}
+},
+"hessaa-n" : 
+{
+"id" : "hessaa-n",
+"description" : "Simple weather symbol fo HS and others",
+"label" : "hessaa-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hessaa-n",
+"label" : "hessaa-n"
+}
+},
+"hsade1-n" : 
+{
+"id" : "hsade1-n",
+"description" : "Precalculated weather symbol",
+"label" : "hsade1-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hsade1-n",
+"label" : "hsade1-n"
+}
+},
+"kindex-n" : 
+{
+"id" : "kindex-n",
+"description" : "Stability index (-50 -> 50)",
+"label" : "kindex-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "kindex-n",
+"label" : "kindex-n"
+}
+},
+"n-prcnt" : 
+{
+"id" : "n-prcnt",
+"description" : "Total Cloud Cover in %",
+"label" : "n-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "n-prcnt",
+"label" : "n-prcnt"
+}
+},
+"nh-prcnt" : 
+{
+"id" : "nh-prcnt",
+"description" : "High Cloud Amount",
+"label" : "nh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nh-prcnt",
+"label" : "nh-prcnt"
+}
+},
+"nl-prcnt" : 
+{
+"id" : "nl-prcnt",
+"description" : "Low Cloud Amount",
+"label" : "nl-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nl-prcnt",
+"label" : "nl-prcnt"
+}
+},
+"nlm-prcnt" : 
+{
+"id" : "nlm-prcnt",
+"description" : "Low and middle cloud cover",
+"label" : "nlm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nlm-prcnt",
+"label" : "nlm-prcnt"
+}
+},
+"nm-prcnt" : 
+{
+"id" : "nm-prcnt",
+"description" : "Medium Cloud Amount",
+"label" : "nm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nm-prcnt",
+"label" : "nm-prcnt"
+}
+},
+"p-pa" : 
+{
+"id" : "p-pa",
+"description" : "Pressure in Pascals",
+"label" : "p-pa",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "p-pa",
+"label" : "p-pa"
+}
+},
+"pop-prcnt" : 
+{
+"id" : "pop-prcnt",
+"description" : "Probability of precipitation",
+"label" : "pop-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pop-prcnt",
+"label" : "pop-prcnt"
+}
+},
+"pot-prcnt" : 
+{
+"id" : "pot-prcnt",
+"description" : "Probability of thunderstorms",
+"label" : "pot-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pot-prcnt",
+"label" : "pot-prcnt"
+}
+},
+"precform-n" : 
+{
+"id" : "precform-n",
+"description" : "Precipitation form",
+"label" : "precform-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "precform-n",
+"label" : "precform-n"
+}
+},
+"prectype-n" : 
+{
+"id" : "prectype-n",
+"description" : "Precipitation type, large scale or convective",
+"label" : "prectype-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "prectype-n",
+"label" : "prectype-n"
+}
+},
+"radglo-wm2" : 
+{
+"id" : "radglo-wm2",
+"description" : "Global radiation",
+"label" : "radglo-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radglo-wm2",
+"label" : "radglo-wm2"
+}
+},
+"radlw-wm2" : 
+{
+"id" : "radlw-wm2",
+"description" : "Long wave radiation",
+"label" : "radlw-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radlw-wm2",
+"label" : "radlw-wm2"
+}
+},
+"rh-prcnt" : 
+{
+"id" : "rh-prcnt",
+"description" : "Relative Humidity in percents",
+"label" : "rh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rh-prcnt",
+"label" : "rh-prcnt"
+}
+},
+"rrr-kgm2" : 
+{
+"id" : "rrr-kgm2",
+"description" : "Total Precipitation rate in kg m-2",
+"label" : "rrr-kgm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrr-kgm2",
+"label" : "rrr-kgm2"
+}
+},
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+},
+"td-c" : 
+{
+"id" : "td-c",
+"description" : "Dew point Temperature in C",
+"label" : "td-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "td-c",
+"label" : "td-c"
+}
+},
+"u-ms" : 
+{
+"id" : "u-ms",
+"description" : "U wind in m/s",
+"label" : "u-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "u-ms",
+"label" : "u-ms"
+}
+},
+"v-ms" : 
+{
+"id" : "v-ms",
+"description" : "V wind in m/s",
+"label" : "v-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "v-ms",
+"label" : "v-ms"
+}
+}
+}
+},
+{
+"id" : "towintertime.5900.0",
+"title" : "Producer: towintertime; Geometry id: 5900; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime.5900.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"towintertime",
+"dd-d",
+"df-ms",
+"ff-ms",
+"fogint-n",
+"hessaa-n",
+"hsade1-n",
+"kindex-n",
+"n-prcnt",
+"nh-prcnt",
+"nl-prcnt",
+"nlm-prcnt",
+"nm-prcnt",
+"p-pa",
+"pop-prcnt",
+"pot-prcnt",
+"precform-n",
+"prectype-n",
+"radglo-wm2",
+"radlw-wm2",
+"rh-prcnt",
+"rrr-kgm2",
+"t-k",
+"td-c",
+"u-ms",
+"v-ms"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime.5900.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime.5900.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime.5900.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/towintertime.5900.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+60,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+60,
+120,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+51.3,
+49.0463,
+70.2054
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2012-10-26T22:00:00Z",
+"2012-11-05T06:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R27/2012-10-26T22:00:00Z/PT60M",
+"R20/2012-10-28T03:00:00Z/PT180M",
+"R23/2012-10-30T18:00:00Z/PT360M"
+]
+}
+},
+"parameter_names" : 
+{
+"dd-d" : 
+{
+"id" : "dd-d",
+"description" : "Wind Direction in Degrees",
+"label" : "dd-d",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "dd-d",
+"label" : "dd-d"
+}
+},
+"df-ms" : 
+{
+"id" : "df-ms",
+"description" : "Wind Vector in m/s",
+"label" : "df-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "df-ms",
+"label" : "df-ms"
+}
+},
+"ff-ms" : 
+{
+"id" : "ff-ms",
+"description" : "Wind speed in m/s",
+"label" : "ff-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "ff-ms",
+"label" : "ff-ms"
+}
+},
+"fogint-n" : 
+{
+"id" : "fogint-n",
+"description" : "Fog intensity from 0..2",
+"label" : "fogint-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "fogint-n",
+"label" : "fogint-n"
+}
+},
+"hessaa-n" : 
+{
+"id" : "hessaa-n",
+"description" : "Simple weather symbol fo HS and others",
+"label" : "hessaa-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hessaa-n",
+"label" : "hessaa-n"
+}
+},
+"hsade1-n" : 
+{
+"id" : "hsade1-n",
+"description" : "Precalculated weather symbol",
+"label" : "hsade1-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "hsade1-n",
+"label" : "hsade1-n"
+}
+},
+"kindex-n" : 
+{
+"id" : "kindex-n",
+"description" : "Stability index (-50 -> 50)",
+"label" : "kindex-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "kindex-n",
+"label" : "kindex-n"
+}
+},
+"n-prcnt" : 
+{
+"id" : "n-prcnt",
+"description" : "Total Cloud Cover in %",
+"label" : "n-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "n-prcnt",
+"label" : "n-prcnt"
+}
+},
+"nh-prcnt" : 
+{
+"id" : "nh-prcnt",
+"description" : "High Cloud Amount",
+"label" : "nh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nh-prcnt",
+"label" : "nh-prcnt"
+}
+},
+"nl-prcnt" : 
+{
+"id" : "nl-prcnt",
+"description" : "Low Cloud Amount",
+"label" : "nl-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nl-prcnt",
+"label" : "nl-prcnt"
+}
+},
+"nlm-prcnt" : 
+{
+"id" : "nlm-prcnt",
+"description" : "Low and middle cloud cover",
+"label" : "nlm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nlm-prcnt",
+"label" : "nlm-prcnt"
+}
+},
+"nm-prcnt" : 
+{
+"id" : "nm-prcnt",
+"description" : "Medium Cloud Amount",
+"label" : "nm-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "nm-prcnt",
+"label" : "nm-prcnt"
+}
+},
+"p-pa" : 
+{
+"id" : "p-pa",
+"description" : "Pressure in Pascals",
+"label" : "p-pa",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "p-pa",
+"label" : "p-pa"
+}
+},
+"pop-prcnt" : 
+{
+"id" : "pop-prcnt",
+"description" : "Probability of precipitation",
+"label" : "pop-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pop-prcnt",
+"label" : "pop-prcnt"
+}
+},
+"pot-prcnt" : 
+{
+"id" : "pot-prcnt",
+"description" : "Probability of thunderstorms",
+"label" : "pot-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "pot-prcnt",
+"label" : "pot-prcnt"
+}
+},
+"precform-n" : 
+{
+"id" : "precform-n",
+"description" : "Precipitation form",
+"label" : "precform-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "precform-n",
+"label" : "precform-n"
+}
+},
+"prectype-n" : 
+{
+"id" : "prectype-n",
+"description" : "Precipitation type, large scale or convective",
+"label" : "prectype-n",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "prectype-n",
+"label" : "prectype-n"
+}
+},
+"radglo-wm2" : 
+{
+"id" : "radglo-wm2",
+"description" : "Global radiation",
+"label" : "radglo-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radglo-wm2",
+"label" : "radglo-wm2"
+}
+},
+"radlw-wm2" : 
+{
+"id" : "radlw-wm2",
+"description" : "Long wave radiation",
+"label" : "radlw-wm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "radlw-wm2",
+"label" : "radlw-wm2"
+}
+},
+"rh-prcnt" : 
+{
+"id" : "rh-prcnt",
+"description" : "Relative Humidity in percents",
+"label" : "rh-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rh-prcnt",
+"label" : "rh-prcnt"
+}
+},
+"rrr-kgm2" : 
+{
+"id" : "rrr-kgm2",
+"description" : "Total Precipitation rate in kg m-2",
+"label" : "rrr-kgm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrr-kgm2",
+"label" : "rrr-kgm2"
+}
+},
+"t-k" : 
+{
+"id" : "t-k",
+"description" : "Temperature in Kelvins",
+"label" : "t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "t-k",
+"label" : "t-k"
+}
+},
+"td-c" : 
+{
+"id" : "td-c",
+"description" : "Dew point Temperature in C",
+"label" : "td-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "td-c",
+"label" : "td-c"
+}
+},
+"u-ms" : 
+{
+"id" : "u-ms",
+"description" : "U wind in m/s",
+"label" : "u-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "u-ms",
+"label" : "u-ms"
+}
+},
+"v-ms" : 
+{
+"id" : "v-ms",
+"description" : "V wind in m/s",
+"label" : "v-ms",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "v-ms",
+"label" : "v-ms"
+}
+}
+}
+},
+{
+"id" : "tutka_suomi_rr.5907.0",
+"title" : "Producer: tutka_suomi_rr; Geometry id: 5907; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr.5907.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"tutka_suomi_rr",
+"rrr-kgm2"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr.5907.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr.5907.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr.5907.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/tutka_suomi_rr.5907.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+5,
+1440
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+5,
+10,
+15,
+20,
+30,
+40,
+45,
+60,
+80,
+90,
+120,
+160,
+180,
+240,
+360,
+480,
+720,
+1440
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+57.93,
+34.9147,
+69.0059
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2013-09-10T10:00:00Z",
+"2013-09-10T10:35:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R8/2013-09-10T10:00:00Z/PT5M"
+]
+}
+},
+"parameter_names" : 
+{
+"rrr-kgm2" : 
+{
+"id" : "rrr-kgm2",
+"description" : "Total Precipitation rate in kg m-2",
+"label" : "rrr-kgm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rrr-kgm2",
+"label" : "rrr-kgm2"
+}
+}
+}
+},
+{
+"id" : "weeklyclimatology.5202.0",
+"title" : "Producer: weeklyclimatology; Geometry id: 5202; Level id: 0",
+"links" : 
+[
+{
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology.5202.0",
+"hreflang" : "en",
+"rel" : "data",
+"type" : "application/json"
+}
+],
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"keywords" : 
+[
+"weeklyclimatology",
+"f50-t-k",
+"n-prcnt",
+"rr-mm10",
+"snr-kgm2",
+"tmax-c",
+"tmin-c",
+"watlev-cm"
+],
+"crs" : 
+[
+"OGC:CRS84"
+],
+"data_queries" : 
+{
+"area" : 
+{
+"link" : 
+{
+"title" : "Area query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology.5202.0/area",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Area query",
+"description" : "Data at the requested area",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "area"
+}
+}
+},
+"locations" : 
+{
+"link" : 
+{
+"title" : "Locations query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology.5202.0/locations",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Locations query",
+"description" : "Data at point location defined by a unique identifier",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "locations"
+}
+}
+},
+"position" : 
+{
+"link" : 
+{
+"title" : "Position query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology.5202.0/position",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Position query",
+"description" : "Data at point location",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "position"
+}
+}
+},
+"radius" : 
+{
+"link" : 
+{
+"title" : "Radius query",
+"href" : "http://smartmet.fmi.fi/edr/collections/weeklyclimatology.5202.0/radius",
+"hreflang" : "en",
+"rel" : "data",
+"variables" : 
+{
+"title" : "Radius query",
+"description" : "Data at the area specified with a geographic position and radial distance",
+"output_formats" : 
+[
+"CoverageJSON",
+"GeoJSON"
+],
+"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+"crs_details" : 
+[
+{
+"crs" : "OGC:CRS84",
+"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+}
+],
+"default_output_format" : "CoverageJSON",
+"query_type" : "radius",
+"within_units" : 
+[
+"km",
+"mi"
+]
+}
+}
+}
+},
+"extent" : 
+{
+"custom" : 
+[
+{
+"id" : "timestep",
+"interval" : 
+[
+[
+10080,
+10080
+]
+],
+"reference" : "minutes",
+"values" : 
+[
+10080
+]
+}
+],
+"spatial" : 
+{
+"crs" : "OGC:CRS84",
+"bbox" : 
+[
+[
+0,
+25.2887,
+88.8909,
+73.6435
+]
+]
+},
+"temporal" : 
+{
+"interval" : 
+[
+[
+"2016-06-27T00:00:00Z",
+"2016-07-18T00:00:00Z"
+]
+],
+"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+"values" : 
+[
+"R4/2016-06-27T00:00:00Z/PT10080M"
+]
+}
+},
+"parameter_names" : 
+{
+"f50-t-k" : 
+{
+"id" : "f50-t-k",
+"description" : "50th fractal temperature in EPS",
+"label" : "f50-t-k",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "f50-t-k",
+"label" : "f50-t-k"
+}
+},
+"n-prcnt" : 
+{
+"id" : "n-prcnt",
+"description" : "Total Cloud Cover in %",
+"label" : "n-prcnt",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "n-prcnt",
+"label" : "n-prcnt"
+}
+},
+"rr-mm10" : 
+{
+"id" : "rr-mm10",
+"description" : "Total precipitation",
+"label" : "rr-mm10",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "rr-mm10",
+"label" : "rr-mm10"
+}
+},
+"snr-kgm2" : 
+{
+"id" : "snr-kgm2",
+"description" : "Snowfall rate in mm/s or mm/h",
+"label" : "snr-kgm2",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "snr-kgm2",
+"label" : "snr-kgm2"
+}
+},
+"tmax-c" : 
+{
+"id" : "tmax-c",
+"description" : "Maximum Temperature in Celsius",
+"label" : "tmax-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "tmax-c",
+"label" : "tmax-c"
+}
+},
+"tmin-c" : 
+{
+"id" : "tmin-c",
+"description" : "Minimum Temperature in Celsius",
+"label" : "tmin-c",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "tmin-c",
+"label" : "tmin-c"
+}
+},
+"watlev-cm" : 
+{
+"id" : "watlev-cm",
+"description" : "Water level in centimeters",
+"label" : "watlev-cm",
+"type" : "Parameter",
+"observedProperty" : 
+{
+"id" : "watlev-cm",
+"label" : "watlev-cm"
+}
+}
+}
+}
+]
+}
