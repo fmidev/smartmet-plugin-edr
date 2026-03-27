@@ -84,10 +84,8 @@
 20130101T174000 0.6 Juupajoki Hyytiälä
 20130101T060000 0.2 Juva Partala
 20130101T180000 0.2 Juva Partala
-20130101T054000 0.0 Jyväskylä lentoasema
-20130101T174000 0.1 Jyväskylä lentoasema
-20130101T060000 0.2 Jämsä Halli Lentoasemantie
-20130101T180000 0.6 Jämsä Halli Lentoasemantie
+20130101T060000 0.2 Jämsä Halli lentoasema
+20130101T180000 0.6 Jämsä Halli lentoasema
 20130101T054000 1.2 Kaarina Yltöinen
 20130101T174000 1.7 Kaarina Yltöinen
 20130101T060000 -0.8 Kajaani Petäisenniska
@@ -140,8 +138,8 @@
 20130101T174000 1.5 Kotka Rankki
 20130101T054000 0.5 Kouvola Anjala
 20130101T174000 1.4 Kouvola Anjala
-20130101T060000 0.0 Kouvola Utti Lentoportintie
-20130101T180000 0.2 Kouvola Utti Lentoportintie
+20130101T060000 0.0 Kouvola Utti lentoasema
+20130101T180000 0.2 Kouvola Utti lentoasema
 20130101T054000 0.8 Kristiinankaupunki Karhusaari
 20130101T060000 0.7 Kristiinankaupunki Majakka
 20130101T180000 1.2 Kristiinankaupunki Majakka
@@ -245,8 +243,6 @@
 20130101T174000 -0.1 Rautavaara Ylä-Luosta
 20130101T054000 -2.3 Rovaniemi Apukka
 20130101T174000 -0.8 Rovaniemi Apukka
-20130101T054000 -2.9 Rovaniemi lentoasema
-20130101T174000 -1.4 Rovaniemi lentoasema
 20130101T054000 -2.1 Rovaniemi rautatieasema
 20130101T174000 -0.5 Rovaniemi rautatieasema
 20130101T054000 -4.0 Salla kirkonkylä
