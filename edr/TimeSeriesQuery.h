@@ -21,6 +21,9 @@ class TimeSeriesQuery : public CommonQuery
  public:
   TimeSeriesQuery() = delete;
   TimeSeriesQuery(const State& state, const Spine::HTTP::Request& req, Config& config);
+
+ protected:
+  void remove_duplicate_parameters(std::list<std::string>& names) const override;
 };
 
 }  // namespace EDR

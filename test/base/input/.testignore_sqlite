@@ -9,7 +9,3 @@ timeseries/fmi_icebuoy_observations.get
 timeseries/fmi_icebuoy_observations_bbox.get
 timeseries/fmi_copernicus_observations.get
 timeseries/place_fmisid_lpnn_wmo_wsi_t2m.get
-#
-# Ei toimi tällä hetkellä. Pitää korjata
-#
-timeseries/duplicate_params.get

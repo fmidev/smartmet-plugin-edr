@@ -574,6 +574,8 @@ void CommonQuery::parse_parameters(const Spine::HTTP::Request& theReq)
     Names tmpNames;
     boost::algorithm::split(tmpNames, opt, boost::algorithm::is_any_of(","));
 
+    remove_duplicate_parameters(tmpNames);
+
     Names names;
     bool ind = true;
     uint loopCount = 0;
@@ -774,6 +776,11 @@ double CommonQuery::maxdistance_kilometers() const
 double CommonQuery::maxdistance_meters() const
 {
   return Fmi::DistanceParser::parse_meter(maxdistance);
+}
+
+void CommonQuery::remove_duplicate_parameters(std::list<std::string>&) const
+{
+  // FIXME: leave empty for base class for now. EDR did not implement this, but timeseries did
 }
 
 }  // namespace EDR

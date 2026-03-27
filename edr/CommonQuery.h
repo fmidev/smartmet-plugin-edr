@@ -127,6 +127,8 @@ class CommonQuery : public ObsQueryParams
   void parse_inkeyword_locations(const Spine::HTTP::Request& theReq, const State& state);
   void parse_origintime(const Spine::HTTP::Request& theReq);
 
+  virtual void remove_duplicate_parameters(std::list<std::string>& names) const;
+
   QueryServer::AliasFileCollection* itsAliasFileCollectionPtr = nullptr;
   std::string maxdistance;
 };
