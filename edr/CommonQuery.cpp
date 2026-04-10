@@ -489,9 +489,20 @@ void CommonQuery::parse_precision(const Spine::HTTP::Request& req, const Config&
 
       const auto it = prec.parameter_precisions.find(p.name());
       if (it == prec.parameter_precisions.end())
-        precisions.push_back(prec.default_precision);
+      {
+        // Handle the default precision for timeseries queries
+        // if no parameter-specific precision is found. For timeseries queries,
+        // if default_timeseries_precision is set, use it; otherwise (if not set or EDR query),
+        // use default_precision.
+        if (is_timeseries_query && prec.default_timeseries_precision)
+          precisions.push_back(*prec.default_timeseries_precision);
+        else
+          precisions.push_back(prec.default_precision);
+      }
       else
+      {
         precisions.push_back(it->second);
+      }
     }
   }
   catch (...)

@@ -200,8 +200,10 @@ void Config::parse_config_precision(const string &name)
           {
             string ts_paramname = settings[i][j].getName();
             if (ts_paramname == "default")
-              continue;  // default precision override for timeseries is not supported,
-                         // ignore if given
+            {
+              int value = settings[i][j];
+              prec.default_timeseries_precision = value;
+            }
 
             try
             {
