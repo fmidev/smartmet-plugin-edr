@@ -253,7 +253,7 @@ Spine::TaggedLocationList get_tloclist(const CommonQuery& query,
 
 }  // namespace
 
-QEngineQuery::QEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {}
+QEngineQuery::QEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin) {}
 
 // If query.groupareas is false, find out locations inside area and process them individaually
 void QEngineQuery::resolveAreaLocations(CommonQuery& query,

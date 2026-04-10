@@ -4,7 +4,7 @@
 #include "GridInterface.h"
 #include "LocationTools.h"
 #include "LonLatDistance.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "PostProcessing.h"
 #include "State.h"
 #include <grid-files/common/GeneralFunctions.h>
@@ -329,7 +329,7 @@ void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, cons
 
 }  // namespace
 
-QueryProcessingHub::QueryProcessingHub(const Plugin& thePlugin)
+QueryProcessingHub::QueryProcessingHub(const PluginImpl& thePlugin)
     : itsQEngineQuery(thePlugin),
       itsObsEngineQuery(thePlugin),
       itsAviEngineQuery(thePlugin),

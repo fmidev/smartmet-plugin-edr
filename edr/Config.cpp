@@ -1133,6 +1133,7 @@ Config::Config(const string &configfile)
     // Metadata update settings
     itsConfig.lookupValue("metadata_updates_disabled", itsMetaDataUpdatesDisabled);
     itsConfig.lookupValue("metadata_update_interval", itsMetaDataUpdateInterval);
+    itsConfig.lookupValue("enable_configuration_polling", itsEnableConfigurationPolling);
 
     // Obligatory settings
     itsDefaultLocaleName = itsConfig.lookup("locale").c_str();

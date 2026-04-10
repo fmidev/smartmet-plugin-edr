@@ -12,7 +12,7 @@ namespace Plugin
 {
 namespace EDR
 {
-GridEngineQuery::GridEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin)
+GridEngineQuery::GridEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin)
 {
   if (!itsPlugin.itsConfig.gridEngineDisabled())
   {
