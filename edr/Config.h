@@ -90,6 +90,7 @@ class Config : private boost::noncopyable
   unsigned int expirationTime() const { return itsExpirationTime; }
   bool metaDataUpdatesDisabled() const { return itsMetaDataUpdatesDisabled; }
   int metaDataUpdateInterval() const { return itsMetaDataUpdateInterval; }
+  bool enableConfigurationPolling() const { return itsEnableConfigurationPolling; }
 
   QueryServer::AliasFileCollection itsAliasFileCollection;
   time_t itsLastAliasCheck;
@@ -151,6 +152,7 @@ class Config : private boost::noncopyable
 
   bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
+  bool itsEnableConfigurationPolling = true; // enable automatic config file reload on change
 
   AviCollections itsAviCollections;
   CollectionInfoContainer itsCollectionInfo;

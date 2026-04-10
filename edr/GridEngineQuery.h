@@ -8,7 +8,7 @@
 
 #include "CommonQuery.h"
 #include "GridInterface.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 
 namespace SmartMet
 {
@@ -27,7 +27,7 @@ namespace EDR
 class GridEngineQuery
 {
  public:
-  GridEngineQuery(const Plugin& thePlugin);
+  GridEngineQuery(const PluginImpl& thePlugin);
 
   bool processGridEngineQuery(const State& state,
                               CommonQuery& query,
@@ -43,7 +43,7 @@ class GridEngineQuery
                              const Spine::TaggedLocation& tloc,
                              CommonQuery& query) const;
 
-  const Plugin& itsPlugin;
+  const PluginImpl& itsPlugin;
 
   std::unique_ptr<GridInterface> itsGridInterface;
 };

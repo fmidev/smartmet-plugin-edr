@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include <engines/avi/Engine.h>
 
 namespace SmartMet
@@ -19,7 +19,7 @@ namespace EDR
 class AviEngineQuery
 {
  public:
-  explicit AviEngineQuery(const Plugin &thePlugin);
+  explicit AviEngineQuery(const PluginImpl &thePlugin);
 
 #ifndef WITHOUT_AVI
   void processAviEngineQuery(const Config &config,
@@ -32,7 +32,7 @@ class AviEngineQuery
 
 #endif
 
-  const Plugin &itsPlugin;
+  const PluginImpl &itsPlugin;
 };
 
 }  // namespace EDR

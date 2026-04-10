@@ -373,7 +373,7 @@ void fill_missing_location_params(TS::TimeSeries& ts)
 
 }  // namespace
 
-ObsEngineQuery::ObsEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {}
+ObsEngineQuery::ObsEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin) {}
 
 #ifndef WITHOUT_OBSERVATION
 void ObsEngineQuery::processObsEngineQuery(const State& state,
