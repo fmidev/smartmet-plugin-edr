@@ -10,6 +10,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <libconfig.h++>
 
 namespace SmartMet
 {
@@ -17,7 +18,7 @@ namespace Plugin
 {
 namespace EDR
 {
-struct Precision
+class Precision
 {
   using Map = std::map<std::string, int>;
 
@@ -31,7 +32,7 @@ struct Precision
   /**
    * @brief Optional default precision for timeseries queries.
    *
-   * If not set, default_precision is used for timeseries queries as well.
+   * If set, this value is used for timeseries queries. If not set, default_precision is used.
    */
   std::optional<int> default_timeseries_precision = std::nullopt;
 
@@ -55,7 +56,12 @@ struct Precision
    */
   Map ts_parameter_precisions_overrides;
 
+public:
   Precision() = default;
+
+  Precision (const libconfig::Setting &settings);
+
+  int get_precision(const std::string& parameter_name, bool is_timeseries_query) const;
 };
 
 }  // namespace EDR

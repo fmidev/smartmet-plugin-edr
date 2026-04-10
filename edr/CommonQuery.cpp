@@ -474,35 +474,8 @@ void CommonQuery::parse_precision(const Spine::HTTP::Request& req, const Config&
 
     for (const TS::OptionParsers::ParameterList::value_type& p : poptions.parameters())
     {
-      if (is_timeseries_query)
-      {
-        // For timeseries queries, check if there is a parameter-specific override for the parameter
-        // in the "timeseries" section of the config. If not, fall back to the general parameter
-        // precision or the default precision.
-        const auto it_override = prec.ts_parameter_precisions_overrides.find(p.name());
-        if (it_override != prec.ts_parameter_precisions_overrides.end())
-        {
-          precisions.push_back(it_override->second);
-          continue;
-        }
-      }
-
-      const auto it = prec.parameter_precisions.find(p.name());
-      if (it == prec.parameter_precisions.end())
-      {
-        // Handle the default precision for timeseries queries
-        // if no parameter-specific precision is found. For timeseries queries,
-        // if default_timeseries_precision is set, use it; otherwise (if not set or EDR query),
-        // use default_precision.
-        if (is_timeseries_query && prec.default_timeseries_precision)
-          precisions.push_back(*prec.default_timeseries_precision);
-        else
-          precisions.push_back(prec.default_precision);
-      }
-      else
-      {
-        precisions.push_back(it->second);
-      }
+      const std::string param_name(p.name());
+      precisions.push_back(prec.get_precision(param_name, is_timeseries_query));
     }
   }
   catch (...)
