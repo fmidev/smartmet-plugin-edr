@@ -12,6 +12,7 @@
 #include "ObsEngineQuery.h"
 #include "Plugin.h"
 #include "QEngineQuery.h"
+#include "TimeSeriesQuery.h"
 #include "ZipWriter.h"
 #include <spine/HTTP.h>
 
@@ -33,6 +34,12 @@ class QueryProcessingHub
                                             const QueryServer::QueryStreamer_sptr& queryStreamer,
                                             std::size_t& product_hash);
 
+  std::shared_ptr<std::string> processQuery(const State& state,
+                                            Spine::Table& table,
+                                            TimeSeriesQuery& masterquery,
+                                            const QueryServer::QueryStreamer_sptr& queryStreamer,
+                                            std::size_t& product_hash);
+
   std::size_t hash_value(const State& state,
                          const Spine::HTTP::Request& request,
                          Query masterquery) const;
@@ -45,7 +52,7 @@ class QueryProcessingHub
                                                            const Query& masterquery,
                                                            Spine::Table& table);
 
-  static void setPrecisions(EDRMetaData& emd, const Query& masterquery);
+  static void setPrecisions(EDRMetaData& emd, const CommonQuery& masterquery);
   void processIWXXMAndTACData(const Config& config,
                               const TS::OutputData& outputData,
                               const Query& masterquery,

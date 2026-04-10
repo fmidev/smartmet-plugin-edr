@@ -63,6 +63,14 @@ class Plugin : public SmartMetPlugin
              const Spine::HTTP::Request& req,
              Spine::HTTP::Response& response);
 
+  void timeSeriesRequestHandler(Spine::Reactor& theReactor,
+                                const Spine::HTTP::Request& theRequest,
+                                Spine::HTTP::Response& theResponse);
+
+  void timeSeriesQuery(const State& theState,
+                       const Spine::HTTP::Request& req,
+                       Spine::HTTP::Response& response);
+
   Fmi::Cache::CacheStatistics getCacheStats() const override;
 
   void grouplocations(Spine::HTTP::Request& theRequest) const;

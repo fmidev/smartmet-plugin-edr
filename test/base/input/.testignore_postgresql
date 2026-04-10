@@ -1,0 +1,12 @@
+timeseries/foreign_yletekstitv.get
+timeseries/observation_interpolate_nearest_area.get
+timeseries/observation_interpolate_nearest_place.get
+timeseries/producer_road_keyword.get
+timeseries/road-latlon.get
+timeseries/sounding_observations_area_kymenlaakso.get
+timeseries/sounding_observations_default_sounding_type.get
+timeseries/sounding_observations_selected_sounding_type.get
+timeseries/fmi_iot_observations.get
+timeseries/fmi_iot_observations_selected_stations.get
+timeseries/fmi_iot_observations_uusimaa.get
+timeseries/place_fmisid_lpnn_wmo_wsi_t2m.get

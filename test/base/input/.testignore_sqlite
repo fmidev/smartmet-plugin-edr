@@ -1,0 +1,11 @@
+timeseries/sounding_observations_area_kymenlaakso.get
+timeseries/sounding_observations_default_sounding_type.get
+timeseries/sounding_observations_selected_sounding_type.get
+timeseries/fmi_iot_observations.get
+timeseries/fmi_iot_observations_selected_stations.get
+timeseries/fmi_iot_observations_uusimaa.get
+timeseries/magneto_observations.get
+timeseries/fmi_icebuoy_observations.get
+timeseries/fmi_icebuoy_observations_bbox.get
+timeseries/fmi_copernicus_observations.get
+timeseries/place_fmisid_lpnn_wmo_wsi_t2m.get

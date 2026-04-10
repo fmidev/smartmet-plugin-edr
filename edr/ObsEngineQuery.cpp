@@ -106,7 +106,7 @@ bool is_wkt_point(const Spine::LocationPtr& loc)
   }
 }
 
-TS::TimeSeriesGenerator::LocalTimeList get_all_timesteps(const Query& query,
+TS::TimeSeriesGenerator::LocalTimeList get_all_timesteps(const CommonQuery& query,
                                                          const TS::TimeSeries& ts,
                                                          const Fmi::TimeZonePtr& tz)
 {
@@ -144,7 +144,7 @@ TS::TimeSeriesGenerator::LocalTimeList get_all_timesteps(const Query& query,
   }
 }
 
-Spine::LocationPtr get_loc(const Query& query,
+Spine::LocationPtr get_loc(const CommonQuery& query,
                            const State& state,
                            const std::string& producer,
                            int fmisid)
@@ -195,7 +195,7 @@ std::vector<Fmi::LocalDateTime> get_actual_timesteps(const TS::TimeSeries& ts)
 }
 
 void resolve_parameter_settings(const ObsParameters& obsParameters,
-                                const Query& query,
+                                const CommonQuery& query,
                                 const std::string& producer,
                                 Engine::Observation::Settings& settings,
                                 unsigned int& aggregationIntervalBehind,
@@ -253,7 +253,7 @@ void resolve_parameter_settings(const ObsParameters& obsParameters,
 void resolve_time_settings(const std::string& producer,
                            const ProducerDataPeriod& producerDataPeriod,
                            const Fmi::DateTime& now,
-                           Query& query,
+                           CommonQuery& query,
                            unsigned int aggregationIntervalBehind,
                            unsigned int aggregationIntervalAhead,
                            Engine::Observation::Settings& settings,
@@ -377,7 +377,7 @@ ObsEngineQuery::ObsEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {
 
 #ifndef WITHOUT_OBSERVATION
 void ObsEngineQuery::processObsEngineQuery(const State& state,
-                                           Query& query,
+                                           CommonQuery& query,
                                            TS::OutputData& outputData,
                                            const AreaProducers& areaproducers,
                                            const ProducerDataPeriod& producerDataPeriod,
@@ -457,7 +457,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(
     const State& state,
     const std::string& producer,
     const Spine::LocationPtr& loc,
-    const Query& query,
+    const CommonQuery& query,
     const ObsParameters& obsParameters,
     const TS::TimeSeriesVectorPtr& observation_result,
     const std::vector<Fmi::LocalDateTime>& timestep_vector,
@@ -605,7 +605,7 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
                                                    const std::string& producer,
                                                    const ObsParameters& obsParameters,
                                                    Engine::Observation::Settings& settings,
-                                                   Query& query,
+                                                   CommonQuery& query,
                                                    TS::OutputData& outputData) const
 {
   try
@@ -630,10 +630,9 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       // fetches results for all location and all parameters
       observation_result = itsPlugin.itsEngines.obsEngine->values(settings, tmpoptions);
     }
-#ifdef MYDEBYG
+#ifdef MYDEBUG
     std::cout << "observation_result for places: " << *observation_result << std::endl;
 #endif
-
     if (observation_result->empty())
       return;
 
@@ -794,7 +793,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
     const ObsParameters& obsParameters,
     const TS::TimeSeriesVector* tsv_observation_result,
     const std::vector<Fmi::LocalDateTime>& ts_vector,
-    const Query& query) const
+    const CommonQuery& query) const
 {
   try
   {
@@ -877,7 +876,7 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
                                                  const ObsParameters& obsParameters,
                                                  const std::string& areaName,
                                                  Engine::Observation::Settings& settings,
-                                                 Query& query,
+                                                 CommonQuery& query,
                                                  TS::OutputData& outputData) const
 {
   try
@@ -1075,7 +1074,7 @@ bool ObsEngineQuery::isObsProducer(const std::string& producer) const
 }
 
 void ObsEngineQuery::handleLocationSettings(
-    const Query& query,
+    const CommonQuery& query,
     const std::string& producer,
     const Spine::TaggedLocation& tloc,
     Engine::Observation::Settings& settings,
@@ -1129,7 +1128,7 @@ void ObsEngineQuery::getObsSettings(std::vector<SettingsInfo>& settingsVector,
                                     const ProducerDataPeriod& producerDataPeriod,
                                     const Fmi::DateTime& now,
                                     const ObsParameters& obsParameters,
-                                    Query& query) const
+                                    CommonQuery& query) const
 {
   try
   {
@@ -1181,6 +1180,12 @@ void ObsEngineQuery::getObsSettings(std::vector<SettingsInfo>& settingsVector,
     // FMISIDs
     for (auto fmisid : query.fmisids)
       stationSettings.fmisids.push_back(fmisid);
+    // RWSIDs
+    for (auto rwsid : query.rwsids)
+      stationSettings.rwsids.push_back(rwsid);
+    // WSIs
+    for (const auto& wsi : query.wsis)
+      stationSettings.wsis.push_back(wsi);
 
     // Bounding box
     if (!query.boundingBox.empty() && UtilityFunctions::is_flash_producer(producer))
@@ -1231,7 +1236,7 @@ void ObsEngineQuery::getObsSettings(std::vector<SettingsInfo>& settingsVector,
 
 void ObsEngineQuery::getCommonObsSettings(Engine::Observation::Settings& settings,
                                           const std::string& producer,
-                                          Query& query) const
+                                          CommonQuery& query) const
 {
   try
   {
@@ -1283,7 +1288,7 @@ void ObsEngineQuery::getCommonObsSettings(Engine::Observation::Settings& setting
 
 bool ObsEngineQuery::resolveAreaStations(const Spine::LocationPtr& location,
                                          const std::string& producer,
-                                         const Query& query,
+                                         const CommonQuery& query,
                                          Engine::Observation::Settings& settings,
                                          std::string& name) const
 {
@@ -1410,7 +1415,7 @@ void ObsEngineQuery::resolveStationsForPath(
     const Spine::LocationPtr& loc,
     const std::string& loc_name_original,
     const std::string& loc_name,
-    const Query& query,
+    const CommonQuery& query,
     const Engine::Observation::Settings& settings,
     bool isWkt,
     std::string& wktString,
@@ -1480,7 +1485,7 @@ void ObsEngineQuery::resolveStationsForArea(
     const Spine::LocationPtr& loc,
     const std::string& loc_name_original,
     const std::string& loc_name,
-    const Query& query,
+    const CommonQuery& query,
     const Engine::Observation::Settings& settings,
     bool isWkt,
     std::string& wktString,
@@ -1534,7 +1539,7 @@ void ObsEngineQuery::resolveStationsForBBox(
     const Spine::LocationPtr& loc,
     const std::string& /* loc_name_original */,
     const std::string& loc_name,
-    const Query& /* query */,
+    const CommonQuery& /* query */,
     const Engine::Observation::Settings& settings,
     bool /* isWkt */,
     std::string& wktString,
@@ -1616,7 +1621,7 @@ void ObsEngineQuery::resolveStationsForCoordinatePointWithRadius(
     const Spine::LocationPtr& loc,
     const std::string& loc_name_original,
     const std::string& loc_name,
-    const Query& query,
+    const CommonQuery& query,
     const Engine::Observation::Settings& settings,
     bool isWkt,
     std::string& wktString,
@@ -1661,7 +1666,7 @@ void ObsEngineQuery::resolveStationsForCoordinatePointWithRadius(
   }
 }
 
-std::vector<ObsParameter> ObsEngineQuery::getObsParameters(const Query& query) const
+std::vector<ObsParameter> ObsEngineQuery::getObsParameters(const CommonQuery& query) const
 {
   try
   {

@@ -221,7 +221,7 @@ NFmiIndexMask get_area_indexmask(const Spine::TaggedLocation& tloc,
   }
 }
 
-Spine::TaggedLocationList get_tloclist(const Query& query,
+Spine::TaggedLocationList get_tloclist(const CommonQuery& query,
                                        const Spine::TaggedLocation& tloc,
                                        const Spine::LocationPtr& loc,
                                        const Spine::LocationPtr& area_loc,
@@ -256,7 +256,7 @@ Spine::TaggedLocationList get_tloclist(const Query& query,
 QEngineQuery::QEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {}
 
 // If query.groupareas is false, find out locations inside area and process them individaually
-void QEngineQuery::resolveAreaLocations(Query& query,
+void QEngineQuery::resolveAreaLocations(CommonQuery& query,
                                         const State& state,
                                         const AreaProducers& areaproducers) const
 {
@@ -318,7 +318,7 @@ void QEngineQuery::resolveAreaLocations(Query& query,
 }
 
 void QEngineQuery::processQEngineQuery(const State& state,
-                                       Query& masterquery,
+                                       CommonQuery& masterquery,
                                        TS::OutputData& outputData,
                                        const AreaProducers& areaproducers,
                                        const ProducerDataPeriod& producerDataPeriod) const
@@ -347,7 +347,7 @@ void QEngineQuery::processQEngineQuery(const State& state,
         continue;
       processed_locations.insert(location_id);
 
-      Query q = masterquery;
+      CommonQuery q = masterquery;
       QueryLevelDataCache queryLevelDataCache;
 
       std::vector<TS::TimeSeriesData> tsdatavector;
@@ -411,7 +411,7 @@ void QEngineQuery::processQEngineQuery(const State& state,
 }
 
 void QEngineQuery::fetchQEngineValues(const State& state,
-                                      const Query& query,
+                                      const CommonQuery& query,
                                       const std::string& producer,
                                       const TS::ParameterAndFunctions& paramfunc,
                                       const Spine::TaggedLocation& tloc,
@@ -494,7 +494,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                                       const TS::ParameterAndFunctions& paramfunc,
                                       int precision,
                                       const Spine::TaggedLocation& tloc,
-                                      Query& query,
+                                      CommonQuery& query,
                                       const AreaProducers& areaproducers,
                                       const ProducerDataPeriod& producerDataPeriod,
                                       QueryLevelDataCache& queryLevelDataCache,
@@ -604,7 +604,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                          query.maxdistance_kilometers(),
                          precision,
                          isPointQuery,
-                         loadDataLevels,
+                         false,  // loadDataLevels
                          pressure,
                          "pressure:",
                          {},
@@ -625,7 +625,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                          query.maxdistance_kilometers(),
                          precision,
                          isPointQuery,
-                         loadDataLevels,
+                         false,  // loadDataLevels
                          height,
                          "height:",
                          height,
@@ -644,7 +644,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
 }
 
 TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateQEngineQueryTimes(
-    const Query& query, const std::string& paramname) const
+    const CommonQuery& query, const std::string& paramname) const
 {
   try
   {
@@ -721,7 +721,7 @@ TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateQEngineQueryTimes(
   }
 }
 
-void QEngineQuery::pointQuery(const Query& theQuery,
+void QEngineQuery::pointQuery(const CommonQuery& theQuery,
                               const std::string& theProducer,
                               const TS::ParameterAndFunctions& theParamFunc,
                               const Spine::TaggedLocation& theTLoc,
@@ -754,22 +754,15 @@ void QEngineQuery::pointQuery(const Query& theQuery,
     {
       querydata_result = theQueryLevelDataCache.itsTimeSeries[theCacheKey];
     }
-    else if (paramname == "fmisid" || paramname == "lpnn" || paramname == "wmo")
+    else if (paramname == "fmisid" && loc->fmisid)
     {
+      // WmoStationNumber, Wmo, RWSID may be obtained from point querydata, hence Q.cpp handles
+      // them. If the location has no fmisid, we try using point querydata station number instead
       querydata_result = std::make_shared<TS::TimeSeries>();
       for (const auto& t : theQueryDataTlist)
-      {
-        if (loc->fmisid && paramname == "fmisid")
-        {
-          querydata_result->emplace_back(TS::TimedValue(t, *(loc->fmisid)));
-        }
-        else
-        {
-          querydata_result->emplace_back(TS::TimedValue(t, TS::None()));
-        }
-      }
+        querydata_result->emplace_back(TS::TimedValue(t, *(loc->fmisid)));
     }
-    else if (UtilityFunctions::is_special_parameter(paramname))
+    else if (UtilityFunctions::is_special_parameter(paramname) && paramname != "fmisid")
     {
       querydata_result = std::make_shared<TS::TimeSeries>();
       UtilityFunctions::get_special_parameter_values(paramname,
@@ -828,7 +821,7 @@ void QEngineQuery::pointQuery(const Query& theQuery,
   }
 }
 
-Spine::LocationList QEngineQuery::getLocationListForPath(const Query& theQuery,
+Spine::LocationList QEngineQuery::getLocationListForPath(const CommonQuery& theQuery,
                                                          const Spine::TaggedLocation& theTLoc,
                                                          const std::string& place,
                                                          const NFmiSvgPath& svgPath,
@@ -878,7 +871,7 @@ Spine::LocationList QEngineQuery::getLocationListForPath(const Query& theQuery,
 }
 
 TS::TimeSeriesGroupPtr QEngineQuery::getQEngineValuesForArea(
-    const Query& theQuery,
+    const CommonQuery& theQuery,
     const std::string& theProducer,
     const TS::ParameterAndFunctions& theParamFunc,
     const Spine::TaggedLocation& theTLoc,
@@ -1016,7 +1009,7 @@ Spine::LocationList QEngineQuery::getLocationListForArea(const Spine::TaggedLoca
   }
 }
 
-void QEngineQuery::areaQuery(const Query& theQuery,
+void QEngineQuery::areaQuery(const CommonQuery& theQuery,
                              const std::string& theProducer,
                              const TS::ParameterAndFunctions& theParamFunc,
                              const Spine::TaggedLocation& theTLoc,
@@ -1140,7 +1133,7 @@ void QEngineQuery::areaQuery(const Query& theQuery,
 }
 
 Engine::Querydata::Producer QEngineQuery::selectProducer(const Spine::Location& location,
-                                                         const Query& query,
+                                                         const CommonQuery& query,
                                                          const AreaProducers& areaproducers) const
 {
   try
@@ -1174,7 +1167,7 @@ Engine::Querydata::Producer QEngineQuery::selectProducer(const Spine::Location& 
 }
 
 Spine::LocationPtr QEngineQuery::resolveLocation(const Spine::TaggedLocation& tloc,
-                                                 const Query& query,
+                                                 const CommonQuery& query,
                                                  NFmiSvgPath& svgPath,
                                                  bool& isWkt) const
 {
@@ -1218,7 +1211,7 @@ Spine::LocationPtr QEngineQuery::resolveLocation(const Spine::TaggedLocation& tl
 }
 
 TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateTList(
-    const Query& query,
+    const CommonQuery& query,
     const std::string& producer,
     const ProducerDataPeriod& producerDataPeriod) const
 {

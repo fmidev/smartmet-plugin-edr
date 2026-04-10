@@ -1,19 +1,25 @@
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
+DB_TYPE := sqlite
+
 all:
 
 test test-grid:	start-redis-db
-	if $(MAKE) test-impl; then ok=true; else ok=false; fi; $(MAKE) stop-redis-db; $$ok
+	if $(MAKE) DB_TYPE=$(DB_TYPE) test-impl; then ok=true; else ok=false; fi; $(MAKE) stop-redis-db; $$ok
 
 clean:
 	rm -rf failures
 	rm -rf cnf/grid
 
 test-impl:
+	ok=true; \
+	$(TEST_RUNNER) \
 	smartmet-plugin-test \
-		--handler /edr/ \
+		--handler /edr \
 		--reactor-config cnf/reactor.conf \
-		--timeout 300
+		$(foreach fn, input/.testignore_$(DB_TYPE), --ignore $(fn)) \
+		--timeout 300 || ok=false; \
+	$$ok
 
 start-redis-db:
 	rm -rf cnf/grid

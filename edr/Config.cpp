@@ -175,31 +175,7 @@ void Config::parse_config_precision(const string &name)
                            "be stored in groups delimited by {}: line " +
                                Fmi::to_string(settings.getSourceLine()));
 
-    Precision prec;
-
-    for (int i = 0; i < settings.getLength(); ++i)
-    {
-      string paramname = settings[i].getName();
-
-      try
-      {
-        int value = settings[i];
-
-        if (paramname == "default")
-          prec.default_precision = value;
-        else
-          prec.parameter_precisions.insert(Precision::Map::value_type(paramname, value));
-      }
-      catch (...)
-      {
-        Spine::Exceptions::handle("EDR plugin");
-      }
-    }
-
-    // This line may crash if prec.parameters is empty
-    // Looks like a bug in g++
-
-    itsPrecisions.insert(Precisions::value_type(name, prec));
+    itsPrecisions.emplace(name, Precision(settings));
   }
   catch (...)
   {
@@ -1179,6 +1155,16 @@ Config::Config(const string &configfile)
       throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");
     if (itsDefaultUrl.back() == '/')
       itsDefaultUrl.pop_back();
+
+    if (itsConfig.lookupValue("timeseries_url", itsTimeSeriesUrl))
+    {
+      Fmi::trim(itsTimeSeriesUrl);
+      if (!itsTimeSeriesUrl.empty() && (itsTimeSeriesUrl.front() != '/'))
+        itsTimeSeriesUrl = "/" + itsTimeSeriesUrl;
+      if (!itsTimeSeriesUrl.empty() && itsTimeSeriesUrl.back() == '/')
+        itsTimeSeriesUrl.pop_back();
+    }
+
     itsConfig.lookupValue("expires", itsExpirationTime);
     itsConfig.lookupValue("aviengine_disabled", itsAviEngineDisabled);
     itsConfig.lookupValue("observation_disabled", itsObsEngineDisabled);
