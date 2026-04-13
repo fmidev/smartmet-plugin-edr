@@ -12,6 +12,11 @@ The EDR plugin implements the [OGC API — Environmental Data Retrieval](https:/
 - Point, area, corridor, and trajectory queries
 - JSON and CoverageJSON output formats
 
+## Documentation
+
+- [EDR Plugin Configuration Guide](docs/EDR-Plugin-Configuration-Guide.md)
+- [Using the EDR Plugin](docs/Using-EDR-Plugin.md)
+
 ## License
 
 MIT — see [LICENSE](LICENSE)
