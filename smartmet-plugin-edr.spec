@@ -34,7 +34,7 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.3.13
+BuildRequires: smartmet-library-spine-devel >= 26.4.14
 BuildRequires: smartmet-library-locus-devel >= 26.2.4
 BuildRequires: smartmet-library-macgyver-devel >= 26.2.4
 BuildRequires: smartmet-library-grid-content-devel >= 26.3.18
@@ -60,7 +60,7 @@ Requires: smartmet-library-gis >= 26.2.5
 Requires: smartmet-library-locus >= 26.2.4
 Requires: smartmet-library-macgyver >= 26.2.4
 Requires: smartmet-library-newbase >= 26.2.4
-Requires: smartmet-library-spine >= 26.3.13
+Requires: smartmet-library-spine >= 26.4.14
 Requires: smartmet-library-timeseries >= 26.2.4
 Requires: smartmet-library-gis >= 26.2.5
 Requires: smartmet-library-grid-files >= 26.3.18
@@ -77,7 +77,8 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.2.4
-#TestRequires: smartmet-library-spine-plugin-test >= 26.3.13
+#TestRequires: smartmet-library-spine >= 26.4.14
+#TestRequires: smartmet-library-spine-plugin-test >= 26.4.14
 #TestRequires: smartmet-library-newbase-devel >= 26.2.4
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.2.17
