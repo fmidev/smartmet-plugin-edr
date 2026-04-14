@@ -19,9 +19,9 @@
 #include <macgyver/CacheStats.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/TimeZones.h>
+#include <spine/ConfigTools.h>
 #include <spine/HTTP.h>
 #include <timeseries/TimeSeriesInclude.h>
-#include <ctime>
 #include <map>
 #include <memory>
 #include <set>
@@ -106,9 +106,9 @@ class PluginImpl
 
   Spine::Reactor* itsReactor = nullptr;
   const char* itsConfigFile = nullptr;
-  std::time_t itsConfigMTime = 0;
 
   Config itsConfig;
+  std::string itsConfigHash;
   bool itsReady = false;
 
   Engines itsEngines;

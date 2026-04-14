@@ -229,7 +229,7 @@ void Plugin::updateLoop()
   {
     std::unique_lock<std::mutex> lock(itsUpdateNotifyMutex);
     if (!itsShuttingDown)
-      itsUpdateNotifyCond.wait_for(lock, std::chrono::seconds(1));
+      itsUpdateNotifyCond.wait_for(lock, std::chrono::seconds(60));
     return !itsShuttingDown;
   };
 

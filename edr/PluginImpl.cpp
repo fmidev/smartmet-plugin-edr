@@ -20,7 +20,6 @@
 #include <spine/Reactor.h>
 #include <spine/TableFormatterFactory.h>
 #include <timeseries/ParameterKeywords.h>
-#include <sys/stat.h>
 #include <array>
 #include <iostream>
 
@@ -879,12 +878,11 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
 // ----------------------------------------------------------------------
 
 PluginImpl::PluginImpl(Spine::Reactor* theReactor, const char* theConfigFile)
-    : itsReactor(theReactor), itsConfigFile(theConfigFile), itsConfig(theConfigFile)
+    : itsReactor(theReactor),
+      itsConfigFile(theConfigFile),
+      itsConfig(theConfigFile),
+      itsConfigHash(Spine::config_hash(itsConfig.config()))
 {
-  // Record config file modification time for automatic reload detection
-  struct stat st;
-  if (::stat(theConfigFile, &st) == 0)
-    itsConfigMTime = st.st_mtime;
 }
 
 // ----------------------------------------------------------------------
@@ -1019,16 +1017,25 @@ void PluginImpl::shutdown()
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Check if config file has been modified since this impl was created
+ * \brief Check if config has changed since this impl was created.
+ *
+ * Re-reads the config file and computes its content hash. This detects
+ * changes in @include'd files and ignores whitespace-only edits.
  */
 // ----------------------------------------------------------------------
 
 bool PluginImpl::isReloadRequired() const
 {
-  struct stat st;
-  if (::stat(itsConfigFile, &st) == 0)
-    return st.st_mtime > itsConfigMTime;
-  return false;
+  try
+  {
+    libconfig::Config cfg;
+    cfg.readFile(itsConfigFile);
+    return Spine::config_hash(cfg) != itsConfigHash;
+  }
+  catch (...)
+  {
+    return false;
+  }
 }
 
 void PluginImpl::metaDataUpdateLoop()
