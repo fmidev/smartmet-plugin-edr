@@ -1279,13 +1279,14 @@ void ObsEngineQuery::getCommonObsSettings(Engine::Observation::Settings& setting
     // instance.
 
     // When tz=local, timestep generation must be done per-station using each station's
-    // actual timezone.  We keep "Europe/Helsinki" as the default timezone for time
-    // interpretation and obs engine queries (the old behaviour), but set the flag so
-    // fetchObsEngineValuesForPlaces generates per-station timestep lists for aggregation.
+    // actual timezone.  Use the server's system timezone as the default for interpreting
+    // start/end times and obs engine queries.  The per-station loop in
+    // fetchObsEngineValuesForPlaces will override with each station's own timezone
+    // for aggregation.
     if (query.timezone == LOCALTIME_PARAM)
     {
       query.useStationTimezone = true;
-      query.timezone = "Europe/Helsinki";
+      query.timezone = date::current_zone()->name();
     }
     settings.timezone = query.timezone;
 
