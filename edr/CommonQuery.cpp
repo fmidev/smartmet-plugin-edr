@@ -465,8 +465,15 @@ void CommonQuery::parse_precision(const Spine::HTTP::Request& req, const Config&
 {
   try
   {
+    // Timeseries-style requests may have a different default precision (configured via
+    // precision.enabled_timeseries). Fall back to the EDR default when no override is set.
+    const std::string& default_precision =
+        (is_timeseries_query && !config.defaultTimeSeriesPrecision().empty())
+            ? config.defaultTimeSeriesPrecision()
+            : config.defaultPrecision();
+
     string precname =
-        Spine::optional_string(req.getParameter("precision"), config.defaultPrecision());
+        Spine::optional_string(req.getParameter("precision"), default_precision);
 
     const Precision& prec = config.getPrecision(precname);
 
