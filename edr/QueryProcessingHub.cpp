@@ -240,7 +240,7 @@ bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams)
       theParams.begin(),
       theParams.end(),
       [](const Spine::Parameter& param)
-      { return TS::is_location_parameter(param.name()) || param.name() == "plaace"; });
+      { return TS::is_location_parameter(param.name()) || param.name() == "place"; });
 }
 
 void fetch_static_location_values(const CommonQuery& query,
