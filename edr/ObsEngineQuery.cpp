@@ -648,9 +648,11 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       query.toptions.timeStep = 0;
     }
 
-    // When tz=local was requested, defer timestep generation to the per-station loop
-    // so that each station uses its own timezone.  Otherwise generate once for all.
-    if (!query.toptions.all() && !query.useStationTimezone)
+    // Always generate the default tlist — it is needed by timeseries_by_fmisid for
+    // add_missing_timesteps.  When useStationTimezone is set, the per-station loop
+    // will generate an overriding station_tlist in each station's own timezone for
+    // aggregation.
+    if (!query.toptions.all())
       tlist = itsPlugin.itsTimeSeriesCache->generate(query.toptions, tz);
 
     TS::TimeSeriesByLocation observation_result_by_location =
@@ -1277,14 +1279,15 @@ void ObsEngineQuery::getCommonObsSettings(Engine::Observation::Settings& setting
     // instance.
 
     // When tz=local, timestep generation must be done per-station using each station's
-    // actual timezone. We set the flag before mutating query.timezone so that
-    // fetchObsEngineValuesForPlaces can detect the original intent.
+    // actual timezone.  We keep "Europe/Helsinki" as the default timezone for time
+    // interpretation and obs engine queries (the old behaviour), but set the flag so
+    // fetchObsEngineValuesForPlaces generates per-station timestep lists for aggregation.
     if (query.timezone == LOCALTIME_PARAM)
     {
       query.useStationTimezone = true;
-      query.timezone = "UTC";
+      query.timezone = "Europe/Helsinki";
     }
-    settings.timezone = (query.useStationTimezone ? UTC_PARAM : query.timezone);
+    settings.timezone = query.timezone;
 
     settings.format = query.format;
     settings.stationtype = producer;
