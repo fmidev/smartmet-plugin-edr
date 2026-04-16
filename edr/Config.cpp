@@ -183,16 +183,18 @@ void Config::parse_config_precision(const string &name)
 
       try
       {
-        int value = settings[i];
-
-        if (paramname == "default")
-          prec.default_precision = value;
-        else if (paramname == "timeseries" && settings[i].isGroup())
+        if (paramname == "timeseries" && settings[i].isGroup())
         {
           // For compatibility with upcoming timeseries precision settings,
           // allow a "timeseries" group with parameter-specific overrides,
           // but ignore it for now since there are no timeseries-specific yet
+          continue;
         }
+
+        int value = settings[i];
+
+        if (paramname == "default")
+          prec.default_precision = value;
         else
           prec.parameter_precisions.insert(Precision::Map::value_type(paramname, value));
       }
