@@ -10,8 +10,9 @@
 #include "GridEngineQuery.h"
 #include "Json.h"
 #include "ObsEngineQuery.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "QEngineQuery.h"
+#include "TimeSeriesQuery.h"
 #include "ZipWriter.h"
 #include <spine/HTTP.h>
 
@@ -25,11 +26,17 @@ namespace EDR
 class QueryProcessingHub
 {
  public:
-  QueryProcessingHub(const Plugin& thePlugin);
+  QueryProcessingHub(const PluginImpl& thePlugin);
 
   std::shared_ptr<std::string> processQuery(const State& state,
                                             Spine::Table& table,
                                             Query& masterquery,
+                                            const QueryServer::QueryStreamer_sptr& queryStreamer,
+                                            std::size_t& product_hash);
+
+  std::shared_ptr<std::string> processQuery(const State& state,
+                                            Spine::Table& table,
+                                            TimeSeriesQuery& masterquery,
                                             const QueryServer::QueryStreamer_sptr& queryStreamer,
                                             std::size_t& product_hash);
 
@@ -45,7 +52,7 @@ class QueryProcessingHub
                                                            const Query& masterquery,
                                                            Spine::Table& table);
 
-  static void setPrecisions(EDRMetaData& emd, const Query& masterquery);
+  static void setPrecisions(EDRMetaData& emd, const CommonQuery& masterquery);
   void processIWXXMAndTACData(const Config& config,
                               const TS::OutputData& outputData,
                               const Query& masterquery,

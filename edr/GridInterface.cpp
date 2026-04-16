@@ -136,7 +136,7 @@ bool GridInterface::isGridProducer(const std::string& producer)
   }
 }
 
-bool GridInterface::containsGridProducer(const Query& masterquery)
+bool GridInterface::containsGridProducer(const CommonQuery& masterquery)
 {
   FUNCTION_TRACE
   try
@@ -153,7 +153,7 @@ bool GridInterface::containsGridProducer(const Query& masterquery)
   }
 }
 
-bool GridInterface::containsParameterWithGridProducer(const Query& masterquery)
+bool GridInterface::containsParameterWithGridProducer(const CommonQuery& masterquery)
 {
   FUNCTION_TRACE
   try
@@ -374,7 +374,7 @@ bool GridInterface::isValidDefaultRequest(
 }
 
 void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
-                                      const Query& masterquery,
+                                      const CommonQuery& masterquery,
                                       const Spine::LocationPtr& loc)
 {
   FUNCTION_TRACE
@@ -627,7 +627,7 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareProducer(QueryServer::Query& gridQuery,
-                                    const Query& masterquery,
+                                    const CommonQuery& masterquery,
                                     int origLevelId,
                                     const AreaProducers& areaproducers,
                                     int& levelId,
@@ -667,7 +667,7 @@ void GridInterface::prepareProducer(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareGeneration(QueryServer::Query& gridQuery,
-                                      const Query& masterquery,
+                                      const CommonQuery& masterquery,
                                       bool& sameParamAnalysisTime)
 {
   FUNCTION_TRACE
@@ -754,7 +754,7 @@ bool GridInterface::isBuildInParameter(const char* parameter)
 }
 
 void GridInterface::prepareLocation(QueryServer::Query& gridQuery,
-                                    const Query& masterquery,
+                                    const CommonQuery& masterquery,
                                     const Spine::LocationPtr& loc,
                                     const T::GeometryId_set& geometryIdList,
                                     std::vector<std::vector<T::Coordinate>>& polygonPath,
@@ -817,7 +817,7 @@ void GridInterface::prepareLocation(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
-                                           const Query& masterquery,
+                                           const CommonQuery& masterquery,
                                            uint mode,
                                            int levelId,
                                            int geometryId,
@@ -1053,7 +1053,7 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareGridQuery(QueryServer::Query& gridQuery,
-                                     const Query& masterquery,
+                                     const CommonQuery& masterquery,
                                      uint mode,
                                      int origLevelId,
                                      double origLevel,
@@ -1111,7 +1111,7 @@ int GridInterface::getParameterIndex(QueryServer::Query& gridQuery, const std::s
   }
 }
 
-void GridInterface::findLevelId(Query& masterquery,
+void GridInterface::findLevelId(CommonQuery& masterquery,
                                 const AreaProducers& areaproducers,
                                 int& levelId,
                                 std::string& geometryIdStr)
@@ -1175,7 +1175,7 @@ void GridInterface::findLevelId(Query& masterquery,
   }
 }
 
-void GridInterface::findLevels(Query& masterquery,
+void GridInterface::findLevels(CommonQuery& masterquery,
                                const AreaProducers& areaproducers,
                                uint mode,
                                int& levelId,
@@ -1354,7 +1354,7 @@ void GridInterface::extractCoordinatesAndAggrecationTimes(
 
 void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& gridQuery,
                                        const State& state,
-                                       Query& masterquery,
+                                       CommonQuery& masterquery,
                                        TS::OutputData& outputData,
                                        const QueryServer::QueryStreamer_sptr& /* queryStreamer */,
                                        const AreaProducers& /* areaproducers */,
@@ -2183,7 +2183,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
 }
 
 void GridInterface::processGridQuery(const State& state,
-                                     Query& masterquery,
+                                     CommonQuery& masterquery,
                                      TS::OutputData& outputData,
                                      const QueryServer::QueryStreamer_sptr& queryStreamer,
                                      const AreaProducers& areaproducers,
@@ -2281,10 +2281,14 @@ void GridInterface::processGridQuery(const State& state,
                            qLevelId,
                            level);
 
-        // Since each level is fetched as a separate parameter (not by setting level id in loop),
-        // loop only once
+        if (!masterquery.is_timeseries_query)
+        {
+          // EDR only: must not be used for timeseries queries
+          // Since each level is fetched as a separate parameter (not by setting level id in loop),
+          // loop only once
 
-        break;
+          break;
+        }
       }
     }
   }

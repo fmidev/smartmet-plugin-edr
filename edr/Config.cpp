@@ -175,31 +175,7 @@ void Config::parse_config_precision(const string &name)
                            "be stored in groups delimited by {}: line " +
                                Fmi::to_string(settings.getSourceLine()));
 
-    Precision prec;
-
-    for (int i = 0; i < settings.getLength(); ++i)
-    {
-      string paramname = settings[i].getName();
-
-      try
-      {
-        int value = settings[i];
-
-        if (paramname == "default")
-          prec.default_precision = value;
-        else
-          prec.parameter_precisions.insert(Precision::Map::value_type(paramname, value));
-      }
-      catch (...)
-      {
-        Spine::Exceptions::handle("EDR plugin");
-      }
-    }
-
-    // This line may crash if prec.parameters is empty
-    // Looks like a bug in g++
-
-    itsPrecisions.insert(Precisions::value_type(name, prec));
+    itsPrecisions.emplace(name, Precision(settings));
   }
   catch (...)
   {
@@ -224,7 +200,7 @@ void Config::parse_config_precisions()
       // Require available precisions in
 
       if (!itsConfig.exists("precision.enabled"))
-        throw Fmi::Exception(BCP, "precision.enabled missing from EDR congiguration file");
+        throw Fmi::Exception(BCP, "precision.enabled missing from EDR configuration file");
 
       libconfig::Setting &enabled = itsConfig.lookup("precision.enabled");
       if (!enabled.isArray())
@@ -245,6 +221,31 @@ void Config::parse_config_precisions()
 
       if (itsPrecisions.empty())
         throw Fmi::Exception(BCP, "No precisions defined in pointforecast precision: datablock!");
+
+      // Optional timeseries-specific override. The first entry becomes the default
+      // precision for timeseries-style requests. Entries not already parsed via
+      // precision.enabled are parsed here too, so groups defined only for the
+      // timeseries case are picked up.
+      if (itsConfig.exists("precision.enabled_timeseries"))
+      {
+        libconfig::Setting &enabled_ts = itsConfig.lookup("precision.enabled_timeseries");
+        if (!enabled_ts.isArray())
+        {
+          throw Fmi::Exception(BCP,
+                               "precision.enabled_timeseries must be an array in "
+                               "EDR configuration file line " +
+                                   Fmi::to_string(enabled_ts.getSourceLine()));
+        }
+
+        for (int i = 0; i < enabled_ts.getLength(); ++i)
+        {
+          const char *name = enabled_ts[i];
+          if (i == 0)
+            itsDefaultTimeSeriesPrecision = name;
+          if (itsPrecisions.find(name) == itsPrecisions.end())
+            parse_config_precision(name);
+        }
+      }
     }
   }
   catch (...)
@@ -1157,6 +1158,7 @@ Config::Config(const string &configfile)
     // Metadata update settings
     itsConfig.lookupValue("metadata_updates_disabled", itsMetaDataUpdatesDisabled);
     itsConfig.lookupValue("metadata_update_interval", itsMetaDataUpdateInterval);
+    itsConfig.lookupValue("enable_configuration_polling", itsEnableConfigurationPolling);
 
     // Obligatory settings
     itsDefaultLocaleName = itsConfig.lookup("locale").c_str();
@@ -1179,6 +1181,16 @@ Config::Config(const string &configfile)
       throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");
     if (itsDefaultUrl.back() == '/')
       itsDefaultUrl.pop_back();
+
+    if (itsConfig.lookupValue("timeseries_url", itsTimeSeriesUrl))
+    {
+      Fmi::trim(itsTimeSeriesUrl);
+      if (!itsTimeSeriesUrl.empty() && (itsTimeSeriesUrl.front() != '/'))
+        itsTimeSeriesUrl = "/" + itsTimeSeriesUrl;
+      if (!itsTimeSeriesUrl.empty() && itsTimeSeriesUrl.back() == '/')
+        itsTimeSeriesUrl.pop_back();
+    }
+
     itsConfig.lookupValue("expires", itsExpirationTime);
     itsConfig.lookupValue("aviengine_disabled", itsAviEngineDisabled);
     itsConfig.lookupValue("observation_disabled", itsObsEngineDisabled);

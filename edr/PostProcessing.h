@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include "CommonQuery.h"
 #include "ObsParameter.h"
-#include "Query.h"
 #include <timeseries/TimeSeriesInclude.h>
 
 namespace SmartMet
@@ -18,12 +18,12 @@ namespace EDR
 {
 namespace PostProcessing
 {
-void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query& query, TS::OutputData& outputData);
+void store_data(TS::TimeSeriesVectorPtr aggregatedData, CommonQuery& query, TS::OutputData& outputData);
 void store_data(std::vector<TS::TimeSeriesData>& aggregatedData,
-                Query& query,
+                CommonQuery& query,
                 TS::OutputData& outputData);
-void fill_table(Query& query, TS::OutputData& outputData, Spine::Table& table);
-void fix_precisions(Query& masterquery, const ObsParameters& obsParameters);
+void fill_table(CommonQuery& query, TS::OutputData& outputData, Spine::Table& table);
+void fix_precisions(CommonQuery& masterquery, const ObsParameters& obsParameters);
 
 }  // namespace PostProcessing
 }  // namespace EDR

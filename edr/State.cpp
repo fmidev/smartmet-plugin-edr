@@ -1,5 +1,5 @@
 #include "State.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/querydata/Engine.h>
 #include <macgyver/DateTime.h>
@@ -18,7 +18,7 @@ namespace EDR
  */
 // ----------------------------------------------------------------------
 
-State::State(const Plugin& thePlugin)
+State::State(const PluginImpl& thePlugin)
     : itsPlugin(thePlugin),
       itsTime(Fmi::SecondClock::universal_time())
 {
@@ -130,7 +130,7 @@ const EDRProducerMetaData& State::getAviMetaData() const
  */
 // ----------------------------------------------------------------------
 
-const Plugin& State::getPlugin() const
+const PluginImpl& State::getPlugin() const
 {
   try
   {

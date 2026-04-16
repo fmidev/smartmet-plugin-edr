@@ -12,7 +12,7 @@ namespace Plugin
 {
 namespace EDR
 {
-GridEngineQuery::GridEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin)
+GridEngineQuery::GridEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin)
 {
   if (!itsPlugin.itsConfig.gridEngineDisabled())
   {
@@ -24,7 +24,7 @@ GridEngineQuery::GridEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin)
 void GridEngineQuery::getLocationDefinition(Spine::LocationPtr& loc,
                                             std::vector<std::vector<T::Coordinate>>& polygonPath,
                                             const Spine::TaggedLocation& tloc,
-                                            Query& query) const
+                                            CommonQuery& query) const
 {
   switch (loc->type)
   {
@@ -32,15 +32,76 @@ void GridEngineQuery::getLocationDefinition(Spine::LocationPtr& loc,
     {
       NFmiSvgPath svgPath;
       loc = query.wktGeometries.getLocation(tloc.loc->name);
-      svgPath = query.wktGeometries.getSvgPath(tloc.loc->name);
-      convertSvgPathToPolygonPath(svgPath, polygonPath);
-
-      if (polygonPath.size() > 1 && getPolygonPathLength(polygonPath) == polygonPath.size())
+      //
+      // FIXME: timeseries plugin had different mplementation for WKT geometries.
+      //        Keep them as they are for now, but eventually we should unify the implementation.
+      //
+      if (query.is_timeseries_query)
       {
-        T::Coordinate_vec polygonPoints;
-        convertToPointVector(polygonPath, polygonPoints);
-        polygonPath.clear();
-        polygonPath.push_back(polygonPoints);
+        //********************************************* */
+        //   For timeseries queries
+        //********************************************* */
+        OGRwkbGeometryType geomType = query.wktGeometries.getGeometry(tloc.loc->name)->getGeometryType();
+        if (geomType == wkbMultiLineString)
+        {
+          T::Coordinate_vec polygonPoints;
+          std::list<NFmiSvgPath> svgList = query.wktGeometries.getSvgPaths(tloc.loc->name);
+          for (const auto& svg : svgList)
+          {
+            Spine::LocationList ll = get_location_list(svg, tloc.tag, query.step,*itsPlugin.itsEngines.geoEngine);
+            for (auto it=ll.begin(); it!=ll.end();++it)
+              polygonPoints.emplace_back((*it)->longitude,(*it)->latitude);
+          }
+          polygonPath.push_back(polygonPoints);
+        }
+        else if (geomType == wkbMultiPoint)
+        {
+          T::Coordinate_vec polygonPoints;
+          Spine::LocationList ll = query.wktGeometries.getLocations(tloc.loc->name);
+          for (auto it=ll.begin(); it!=ll.end();++it)
+            polygonPoints.emplace_back((*it)->longitude,(*it)->latitude);
+          polygonPath.push_back(polygonPoints);
+        }
+        else if (geomType == wkbLineString)
+        {
+          NFmiSvgPath svgPath;
+          svgPath = query.wktGeometries.getSvgPath(tloc.loc->name);
+          T::Coordinate_vec polygonPoints;
+          Spine::LocationList ll = get_location_list(svgPath, tloc.tag, query.step, *itsPlugin.itsEngines.geoEngine);
+          for (auto it=ll.begin(); it!=ll.end();++it)
+            polygonPoints.emplace_back((*it)->longitude,(*it)->latitude);
+          polygonPath.push_back(polygonPoints);
+        }
+        else
+        {
+          NFmiSvgPath svgPath;
+          loc = query.wktGeometries.getLocation(tloc.loc->name);
+          svgPath = query.wktGeometries.getSvgPath(tloc.loc->name);
+          convertSvgPathToPolygonPath(svgPath, polygonPath);
+          if (polygonPath.size() > 1 && getPolygonPathLength(polygonPath) == polygonPath.size())
+          {
+            T::Coordinate_vec polygonPoints;
+            convertToPointVector(polygonPath, polygonPoints);
+            polygonPath.clear();
+            polygonPath.push_back(polygonPoints);
+          }
+        }
+      }
+      else
+      {
+        //********************************************* */
+        //   For EDR queries
+        //********************************************* */
+        svgPath = query.wktGeometries.getSvgPath(tloc.loc->name);
+        convertSvgPathToPolygonPath(svgPath, polygonPath);
+
+        if (polygonPath.size() > 1 && getPolygonPathLength(polygonPath) == polygonPath.size())
+        {
+          T::Coordinate_vec polygonPoints;
+          convertToPointVector(polygonPath, polygonPoints);
+          polygonPath.clear();
+          polygonPath.push_back(polygonPoints);
+        }
       }
       break;
     }
@@ -180,7 +241,7 @@ void GridEngineQuery::getLocationDefinition(Spine::LocationPtr& loc,
 }
 
 bool GridEngineQuery::processGridEngineQuery(const State& state,
-                                             Query& query,
+                                             CommonQuery& query,
                                              TS::OutputData& outputData,
                                              const QueryServer::QueryStreamer_sptr& queryStreamer,
                                              const AreaProducers& areaproducers,
@@ -243,7 +304,7 @@ bool GridEngineQuery::processGridEngineQuery(const State& state,
 }
 
 bool GridEngineQuery::isGridEngineQuery(const AreaProducers& theProducers,
-                                        const Query& theQuery) const
+                                        const CommonQuery& theQuery) const
 {
   // Grid-query is executed if the following conditions are fulfilled:
   //   1. The usage of Grid-Engine is enabled (=> timeseries configuration file)

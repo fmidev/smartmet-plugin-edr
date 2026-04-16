@@ -4,7 +4,7 @@
 #include "GridInterface.h"
 #include "LocationTools.h"
 #include "LonLatDistance.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "PostProcessing.h"
 #include "State.h"
 #include <grid-files/common/GeneralFunctions.h>
@@ -42,7 +42,7 @@ void parameters_hash_value(const Spine::HTTP::Request& request, std::size_t& has
 }
 
 #ifndef WITHOUT_OBSERVATION
-bool obs_producers_exists(const Query& masterquery, ObsEngineQuery obsEngineQuery)
+bool obs_producers_exists(const CommonQuery& masterquery, ObsEngineQuery obsEngineQuery)
 {
   try
   {
@@ -63,8 +63,8 @@ bool obs_producers_exists(const Query& masterquery, ObsEngineQuery obsEngineQuer
 }
 #endif
 
-Spine::LocationPtr get_loc(const Query& masterquery,
-                           const Query& q,
+Spine::LocationPtr get_loc(const CommonQuery& masterquery,
+                           const CommonQuery& q,
                            const Spine::TaggedLocation& tloc,
                            const Engine::Geonames::Engine& geoEngine,
                            const Engine::Gis::GeometryStorage& geometryStorage)
@@ -102,7 +102,7 @@ Spine::LocationPtr get_loc(const Query& masterquery,
   }
 }
 
-Spine::LocationPtr get_nearest_loc(const Query& masterquery, const Spine::TaggedLocation& tloc)
+Spine::LocationPtr get_nearest_loc(const CommonQuery& masterquery, const Spine::TaggedLocation& tloc)
 {
   try
   {
@@ -131,7 +131,7 @@ Spine::LocationPtr get_nearest_loc(const Query& masterquery, const Spine::Tagged
   }
 }
 
-Spine::TaggedLocationList get_tloc_list(const Query& masterquery,
+Spine::TaggedLocationList get_tloc_list(const CommonQuery& masterquery,
                                         const Spine::TaggedLocation& tloc,
                                         const Engine::Gis::GeometryStorage& geometryStorage)
 {
@@ -211,7 +211,7 @@ Spine::TaggedLocationList get_tloc_list(const Query& masterquery,
   }
 }
 
-void check_in_keyword_locations(Query& masterquery,
+void check_in_keyword_locations(CommonQuery& masterquery,
                                 const Engine::Gis::GeometryStorage& geometryStorage)
 {
   try
@@ -240,10 +240,10 @@ bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams)
       theParams.begin(),
       theParams.end(),
       [](const Spine::Parameter& param)
-      { return TS::is_location_parameter(param.name()) || param.name() == "plaace"; });
+      { return TS::is_location_parameter(param.name()) || param.name() == "place"; });
 }
 
-void fetch_static_location_values(const Query& query,
+void fetch_static_location_values(const CommonQuery& query,
                                   const Engine::Geonames::Engine& geoEngine,
                                   const Engine::Gis::GeometryStorage& geometryStorage,
                                   Spine::Table& data)
@@ -293,7 +293,7 @@ void fetch_static_location_values(const Query& query,
   }
 }
 
-void check_timestep(const Query& masterquery, const EDRMetaData& emd, const std::string& producer)
+void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, const std::string& producer)
 {
   try
   {
@@ -329,7 +329,7 @@ void check_timestep(const Query& masterquery, const EDRMetaData& emd, const std:
 
 }  // namespace
 
-QueryProcessingHub::QueryProcessingHub(const Plugin& thePlugin)
+QueryProcessingHub::QueryProcessingHub(const PluginImpl& thePlugin)
     : itsQEngineQuery(thePlugin),
       itsObsEngineQuery(thePlugin),
       itsAviEngineQuery(thePlugin),
@@ -380,7 +380,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const Stat
   }
 }
 
-void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquery)
+void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const CommonQuery& masterquery)
 {
   try
   {
@@ -724,6 +724,111 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      edr_query.language);
       table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }
+
+    return {};
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Process a timeseries-style data query (no EDR metadata, no EDR output formatting)
+ */
+// ----------------------------------------------------------------------
+
+std::shared_ptr<std::string> QueryProcessingHub::processQuery(
+    const State& state,
+    Spine::Table& table,
+    TimeSeriesQuery& masterquery,
+    const QueryServer::QueryStreamer_sptr& queryStreamer,
+    std::size_t& product_hash)
+{
+  try
+  {
+    const auto& thePlugin = state.getPlugin();
+    const auto& theEngines = thePlugin.itsEngines;
+
+    check_in_keyword_locations(masterquery, thePlugin.itsGeometryStorage);
+
+    if (is_static_location_query(masterquery.poptions.parameters()))
+    {
+      fetch_static_location_values(
+          masterquery, *theEngines.geoEngine, thePlugin.itsGeometryStorage, table);
+      return {};
+    }
+
+    ProducerDataPeriod producerDataPeriod;
+
+#ifndef WITHOUT_OBSERVATION
+    producerDataPeriod.init(
+        state, *theEngines.qEngine, theEngines.obsEngine.get(), masterquery.timeproducers);
+#else
+    producerDataPeriod.init(state, *theEngines.qEngine, masterquery.timeproducers);
+#endif
+
+    TS::OutputData outputData;
+
+    const bool producerMissing = masterquery.timeproducers.empty();
+    if (producerMissing)
+      masterquery.timeproducers.emplace_back(AreaProducers());
+
+#ifndef WITHOUT_OBSERVATION
+    const ObsParameters obsParameters = itsObsEngineQuery.getObsParameters(masterquery);
+#endif
+
+    Fmi::DateTime latestTimestep = masterquery.latestTimestep;
+    bool startTimeUTC = masterquery.toptions.startTimeUTC;
+
+    std::size_t producer_group = 0;
+    for (const AreaProducers& areaproducers : masterquery.timeproducers)
+    {
+      TimeSeriesQuery q = masterquery;
+      q.timeproducers.clear();
+      q.latestTimestep = latestTimestep;
+
+      if (producer_group != 0)
+        q.toptions.startTimeUTC = startTimeUTC;
+      q.toptions.endTimeUTC = masterquery.toptions.endTimeUTC;
+
+      bool process_qengine_query = true;
+#ifndef WITHOUT_OBSERVATION
+      if (!areaproducers.empty() && thePlugin.itsEngines.obsEngine != nullptr &&
+          itsObsEngineQuery.isObsProducer(areaproducers.front()))
+      {
+        itsObsEngineQuery.processObsEngineQuery(
+            state, q, outputData, areaproducers, producerDataPeriod, obsParameters);
+        process_qengine_query = false;
+      }
+      else
+#endif
+          if (itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
+      {
+        bool processed = itsGridEngineQuery.processGridEngineQuery(
+            state, q, outputData, queryStreamer, areaproducers, producerDataPeriod);
+
+        if (processed)
+        {
+          product_hash = Fmi::bad_hash;
+          process_qengine_query = false;
+        }
+      }
+
+      if (process_qengine_query)
+        itsQEngineQuery.processQEngineQuery(state, q, outputData, areaproducers, producerDataPeriod);
+
+      latestTimestep = q.latestTimestep;
+      startTimeUTC = q.toptions.startTimeUTC;
+      ++producer_group;
+    }
+
+#ifndef WITHOUT_OBSERVATION
+    PostProcessing::fix_precisions(masterquery, obsParameters);
+#endif
+
+    PostProcessing::fill_table(masterquery, outputData, table);
 
     return {};
   }

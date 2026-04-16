@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "Plugin.h"
+#include "CommonQuery.h"
+#include "PluginImpl.h"
 #include "ProducerDataPeriod.h"
 #include "QueryLevelDataCache.h"
 
@@ -28,33 +29,33 @@ namespace EDR
 class QEngineQuery
 {
  public:
-  QEngineQuery(const Plugin& thePlugin);
+  QEngineQuery(const PluginImpl& thePlugin);
 
   void processQEngineQuery(const State& state,
-                           Query& masterquery,
+                           CommonQuery& masterquery,
                            TS::OutputData& outputData,
                            const AreaProducers& areaproducers,
                            const ProducerDataPeriod& producerDataPeriod) const;
   Engine::Querydata::Producer selectProducer(const Spine::Location& location,
-                                             const Query& query,
+                                             const CommonQuery& query,
                                              const AreaProducers& areaproducers) const;
 
  private:
-  void resolveAreaLocations(Query& query,
+  void resolveAreaLocations(CommonQuery& query,
                             const State& state,
                             const AreaProducers& areaproducers) const;
   void fetchQEngineValues(const State& state,
                           const TS::ParameterAndFunctions& paramfunc,
                           int precision,
                           const Spine::TaggedLocation& tloc,
-                          Query& query,
+                          CommonQuery& query,
                           const AreaProducers& areaproducers,
                           const ProducerDataPeriod& producerDataPeriod,
                           QueryLevelDataCache& queryLevelDataCache,
                           TS::OutputData& outputData) const;
 
   void fetchQEngineValues(const State& state,
-                          const Query& query,
+                          const CommonQuery& query,
                           const std::string& producer,
                           const TS::ParameterAndFunctions& paramfunc,
                           const Spine::TaggedLocation& tloc,
@@ -72,9 +73,9 @@ class QEngineQuery
                           std::vector<TS::TimeSeriesData>& aggregatedData) const;
 
   TS::TimeSeriesGenerator::LocalTimeList generateQEngineQueryTimes(
-      const Query& query, const std::string& paramname) const;
+      const CommonQuery& query, const std::string& paramname) const;
 
-  void pointQuery(const Query& theQuery,
+  void pointQuery(const CommonQuery& theQuery,
                   const std::string& theProducer,
                   const TS::ParameterAndFunctions& theParamFunc,
                   const Spine::TaggedLocation& theTLoc,
@@ -91,7 +92,7 @@ class QEngineQuery
                   QueryLevelDataCache& theQueryLevelDataCache,
                   std::vector<TS::TimeSeriesData>& theAggregateData) const;
 
-  void areaQuery(const Query& theQuery,
+  void areaQuery(const CommonQuery& theQuery,
                  const std::string& theProducer,
                  const TS::ParameterAndFunctions& theParamFunc,
                  const Spine::TaggedLocation& theTLoc,
@@ -109,21 +110,21 @@ class QEngineQuery
                  std::vector<TS::TimeSeriesData>& theAggregatedData) const;
 
   Spine::LocationPtr resolveLocation(const Spine::TaggedLocation& tloc,
-                                     const Query& query,
+                                     const CommonQuery& query,
                                      NFmiSvgPath& svgPath,
                                      bool& isWkt) const;
   TS::TimeSeriesGenerator::LocalTimeList generateTList(
-      const Query& query,
+      const CommonQuery& query,
       const std::string& producer,
       const ProducerDataPeriod& producerDataPeriod) const;
-  static Spine::LocationList getLocationListForPath(const Query& theQuery,
+  static Spine::LocationList getLocationListForPath(const CommonQuery& theQuery,
                                                     const Spine::TaggedLocation& theTLoc,
                                                     const std::string& place,
                                                     const NFmiSvgPath& svgPath,
                                                     const State& theState,
                                                     bool isWkt);
   TS::TimeSeriesGroupPtr getQEngineValuesForArea(
-      const Query& theQuery,
+      const CommonQuery& theQuery,
       const std::string& theProducer,
       const TS::ParameterAndFunctions& theParamFunc,
       const Spine::TaggedLocation& theTLoc,
@@ -144,7 +145,7 @@ class QEngineQuery
                                              NFmiSvgPath& svgPath,
                                              bool isWkt) const;
 
-  const Plugin& itsPlugin;
+  const PluginImpl& itsPlugin;
 };
 
 }  // namespace EDR

@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include "CommonQuery.h"
 #include "ObsParameter.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "ProducerDataPeriod.h"
 
 namespace SmartMet
@@ -40,51 +41,51 @@ struct SettingsInfo
 class ObsEngineQuery
 {
  public:
-  ObsEngineQuery(const Plugin& thePlugin);
+  ObsEngineQuery(const PluginImpl& thePlugin);
 
 #ifndef WITHOUT_OBSERVATION
   void processObsEngineQuery(const State& state,
-                             Query& query,
+                             CommonQuery& query,
                              TS::OutputData& outputData,
                              const AreaProducers& areaproducers,
                              const ProducerDataPeriod& producerDataPeriod,
                              const ObsParameters& obsParameters) const;
   bool isObsProducer(const std::string& producer) const;
-  std::vector<ObsParameter> getObsParameters(const Query& query) const;
+  std::vector<ObsParameter> getObsParameters(const CommonQuery& query) const;
 
  private:
   void fetchObsEngineValuesForPlaces(const State& state,
                                      const std::string& producer,
                                      const ObsParameters& obsParameters,
                                      Engine::Observation::Settings& settings,
-                                     Query& query,
+                                     CommonQuery& query,
                                      TS::OutputData& outputData) const;
   void fetchObsEngineValuesForArea(const State& state,
                                    const std::string& producer,
                                    const ObsParameters& obsParameters,
                                    const std::string& areaName,
                                    Engine::Observation::Settings& settings,
-                                   Query& query,
+                                   CommonQuery& query,
                                    TS::OutputData& outputData) const;
   void getObsSettings(std::vector<SettingsInfo>& settingsVector,
                       const std::string& producer,
                       const ProducerDataPeriod& producerDataPeriod,
                       const Fmi::DateTime& now,
                       const ObsParameters& obsParameters,
-                      Query& query) const;
+                      CommonQuery& query) const;
   void getCommonObsSettings(Engine::Observation::Settings& settings,
                             const std::string& producer,
-                            Query& query) const;
+                            CommonQuery& query) const;
   bool resolveAreaStations(const Spine::LocationPtr& location,
                            const std::string& producer,
-                           const Query& query,
+                           const CommonQuery& query,
                            Engine::Observation::Settings& settings,
                            std::string& name) const;
   void resolveStationsForPath(const std::string& producer,
                               const Spine::LocationPtr& loc,
                               const std::string& loc_name_original,
                               const std::string& loc_name,
-                              const Query& query,
+                              const CommonQuery& query,
                               const Engine::Observation::Settings& settings,
                               bool isWkt,
                               std::string& wktString,
@@ -93,7 +94,7 @@ class ObsEngineQuery
                               const Spine::LocationPtr& loc,
                               const std::string& loc_name_original,
                               const std::string& loc_name,
-                              const Query& query,
+                              const CommonQuery& query,
                               const Engine::Observation::Settings& settings,
                               bool isWkt,
                               std::string& wktString,
@@ -102,7 +103,7 @@ class ObsEngineQuery
                               const Spine::LocationPtr& loc,
                               const std::string& loc_name_original,
                               const std::string& loc_name,
-                              const Query& query,
+                              const CommonQuery& query,
                               const Engine::Observation::Settings& settings,
                               bool isWkt,
                               std::string& wktString,
@@ -119,7 +120,7 @@ class ObsEngineQuery
       const Spine::LocationPtr& loc,
       const std::string& loc_name_original,
       const std::string& loc_name,
-      const Query& query,
+      const CommonQuery& query,
       const Engine::Observation::Settings& settings,
       bool isWkt,
       std::string& wktString,
@@ -128,7 +129,7 @@ class ObsEngineQuery
       const State& state,
       const std::string& producer,
       const Spine::LocationPtr& loc,
-      const Query& query,
+      const CommonQuery& query,
       const ObsParameters& obsParameters,
       const TS::TimeSeriesVectorPtr& observation_result,
       const std::vector<Fmi::LocalDateTime>& timestep_vector,
@@ -149,9 +150,9 @@ class ObsEngineQuery
       const ObsParameters& obsParameters,
       const TS::TimeSeriesVector* tsv_observation_result,
       const std::vector<Fmi::LocalDateTime>& ts_vector,
-      const Query& query) const;
+      const CommonQuery& query) const;
 
-  void handleLocationSettings(const Query& query,
+  void handleLocationSettings(const CommonQuery& query,
                               const std::string& producer,
                               const Spine::TaggedLocation& tloc,
                               Engine::Observation::Settings& settings,
@@ -160,7 +161,7 @@ class ObsEngineQuery
 
 #endif
 
-  const Plugin& itsPlugin;
+  const PluginImpl& itsPlugin;
 };
 
 }  // namespace EDR

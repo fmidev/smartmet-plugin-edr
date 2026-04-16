@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include "CommonQuery.h"
 #include "Json.h"
 #include "ObsParameter.h"
-#include "Query.h"
 #include <timeseries/TimeSeriesInclude.h>
 
 namespace SmartMet
@@ -24,7 +24,7 @@ void get_special_parameter_values(const std::string& paramname,
                                   int precision,
                                   const TS::TimeSeriesGenerator::LocalTimeList& tlist,
                                   const Spine::LocationPtr& loc,
-                                  const Query& query,
+                                  const CommonQuery& query,
                                   const State& state,
                                   const Fmi::TimeZones& timezones,
                                   TS::TimeSeriesPtr& result);
@@ -32,7 +32,7 @@ void get_special_parameter_values(const std::string& paramname,
                                   int precision,
                                   const TS::TimeSeriesGenerator::LocalTimeList& tlist,
                                   const Spine::LocationList& llist,
-                                  const Query& query,
+                                  const CommonQuery& query,
                                   const State& state,
                                   const Fmi::TimeZones& timezones,
                                   TS::TimeSeriesGroupPtr& result);

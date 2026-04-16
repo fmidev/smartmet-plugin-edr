@@ -91,7 +91,7 @@ std::string get_string(const TS::Value& val, const std::string& default_value = 
 
 TS::Value get_location_parameter_value(const Spine::LocationPtr& loc,
                                        const std::string& paramname,
-                                       const Query& query,
+                                       const CommonQuery& query,
                                        int precision)
 {
   try
@@ -132,7 +132,7 @@ void get_special_parameter_values(const std::string& paramname,
                                   int precision,
                                   const TS::TimeSeriesGenerator::LocalTimeList& tlist,
                                   const Spine::LocationPtr& loc,
-                                  const Query& query,
+                                  const CommonQuery& query,
                                   const State& state,
                                   const Fmi::TimeZones& timezones,
                                   TS::TimeSeriesPtr& result)
@@ -174,7 +174,7 @@ void get_special_parameter_values(const std::string& paramname,
                                   int precision,
                                   const TS::TimeSeriesGenerator::LocalTimeList& tlist,
                                   const Spine::LocationList& llist,
-                                  const Query& query,
+                                  const CommonQuery& query,
                                   const State& state,
                                   const Fmi::TimeZones& timezones,
                                   TS::TimeSeriesGroupPtr& result)
