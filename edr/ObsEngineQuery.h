@@ -8,7 +8,7 @@
 
 #include "CommonQuery.h"
 #include "ObsParameter.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "ProducerDataPeriod.h"
 
 namespace SmartMet
@@ -41,7 +41,7 @@ struct SettingsInfo
 class ObsEngineQuery
 {
  public:
-  ObsEngineQuery(const Plugin& thePlugin);
+  ObsEngineQuery(const PluginImpl& thePlugin);
 
 #ifndef WITHOUT_OBSERVATION
   void processObsEngineQuery(const State& state,
@@ -161,7 +161,7 @@ class ObsEngineQuery
 
 #endif
 
-  const Plugin& itsPlugin;
+  const PluginImpl& itsPlugin;
 };
 
 }  // namespace EDR

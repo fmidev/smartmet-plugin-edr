@@ -253,7 +253,7 @@ Spine::TaggedLocationList get_tloclist(const CommonQuery& query,
 
 }  // namespace
 
-QEngineQuery::QEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {}
+QEngineQuery::QEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin) {}
 
 // If query.groupareas is false, find out locations inside area and process them individaually
 void QEngineQuery::resolveAreaLocations(CommonQuery& query,
@@ -762,6 +762,14 @@ void QEngineQuery::pointQuery(const CommonQuery& theQuery,
       for (const auto& t : theQueryDataTlist)
         querydata_result->emplace_back(TS::TimedValue(t, *(loc->fmisid)));
     }
+    else if (paramname == "producer" || paramname == "model")
+    {
+      // Querydata engine has no case for kFmiProducer in dataIndependentValue(),
+      // so handle it here by returning the resolved producer name for every timestep.
+      querydata_result = std::make_shared<TS::TimeSeries>();
+      for (const auto& t : theQueryDataTlist)
+        querydata_result->emplace_back(TS::TimedValue(t, theProducer));
+    }
     else if (UtilityFunctions::is_special_parameter(paramname) && paramname != "fmisid")
     {
       querydata_result = std::make_shared<TS::TimeSeries>();
@@ -891,7 +899,21 @@ TS::TimeSeriesGroupPtr QEngineQuery::getQEngineValuesForArea(
   {
     TS::TimeSeriesGroupPtr querydata_result;
 
-    if (UtilityFunctions::is_special_parameter(paramname))
+    if (paramname == "producer" || paramname == "model")
+    {
+      // Querydata engine has no case for kFmiProducer in dataIndependentValue(),
+      // so handle it here by returning the resolved producer name for every timestep.
+      querydata_result = std::make_shared<TS::TimeSeriesGroup>();
+      for (const auto& location : llist)
+      {
+        TS::TimeSeries ts;
+        for (const auto& t : theQueryDataTlist)
+          ts.emplace_back(TS::TimedValue(t, theProducer));
+        querydata_result->push_back(
+            TS::LonLatTimeSeries(Spine::LonLat(location->longitude, location->latitude), ts));
+      }
+    }
+    else if (UtilityFunctions::is_special_parameter(paramname))
     {
       querydata_result = std::make_shared<TS::TimeSeriesGroup>();
       UtilityFunctions::get_special_parameter_values(paramname,

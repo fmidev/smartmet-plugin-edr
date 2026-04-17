@@ -187,7 +187,7 @@ void checkAviEngineQuery(const Query &query,
 
 }  // namespace
 
-AviEngineQuery::AviEngineQuery(const Plugin &thePlugin) : itsPlugin(thePlugin) {}
+AviEngineQuery::AviEngineQuery(const PluginImpl &thePlugin) : itsPlugin(thePlugin) {}
 
 #ifndef WITHOUT_AVI
 bool AviEngineQuery::isAviProducer(const std::string &producer) const

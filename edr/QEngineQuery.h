@@ -7,7 +7,7 @@
 #pragma once
 
 #include "CommonQuery.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "ProducerDataPeriod.h"
 #include "QueryLevelDataCache.h"
 
@@ -29,7 +29,7 @@ namespace EDR
 class QEngineQuery
 {
  public:
-  QEngineQuery(const Plugin& thePlugin);
+  QEngineQuery(const PluginImpl& thePlugin);
 
   void processQEngineQuery(const State& state,
                            CommonQuery& masterquery,
@@ -145,7 +145,7 @@ class QEngineQuery
                                              NFmiSvgPath& svgPath,
                                              bool isWkt) const;
 
-  const Plugin& itsPlugin;
+  const PluginImpl& itsPlugin;
 };
 
 }  // namespace EDR

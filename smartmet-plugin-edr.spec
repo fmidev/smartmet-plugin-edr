@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.4.15
+Version: 26.4.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -37,8 +37,8 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 26.4.13
 BuildRequires: smartmet-library-locus-devel >= 26.4.13
 BuildRequires: smartmet-library-macgyver-devel >= 26.4.13
-BuildRequires: smartmet-library-grid-content-devel >= 26.4.13
-BuildRequires: smartmet-library-grid-files-devel >= 26.4.13
+BuildRequires: smartmet-library-grid-content-devel >= 26.4.17
+BuildRequires: smartmet-library-grid-files-devel >= 26.4.17
 BuildRequires: smartmet-library-newbase-devel >= 26.2.4
 BuildRequires: smartmet-library-gis-devel >= 26.4.13
 BuildRequires: smartmet-library-timeseries-devel >= 26.4.13
@@ -49,7 +49,7 @@ BuildRequires: smartmet-engine-observation-devel >= 26.4.13
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 26.4.13
 BuildRequires: smartmet-engine-gis-devel >= 26.4.13
-BuildRequires: smartmet-engine-grid-devel >= 26.4.13
+BuildRequires: smartmet-engine-grid-devel >= 26.4.17
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 26.4.13
@@ -63,12 +63,12 @@ Requires: smartmet-library-newbase >= 26.2.4
 Requires: smartmet-library-spine >= 26.4.13
 Requires: smartmet-library-timeseries >= 26.4.13
 Requires: smartmet-library-gis >= 26.4.13
-Requires: smartmet-library-grid-files >= 26.4.13
+Requires: smartmet-library-grid-files >= 26.4.17
 Requires: smartmet-engine-avi >= 26.4.13
 Requires: smartmet-engine-geonames >= 26.4.13
 Requires: smartmet-engine-querydata >= 26.4.13
 Requires: smartmet-engine-gis >= 26.4.13
-Requires: smartmet-engine-grid >= 26.4.13
+Requires: smartmet-engine-grid >= 26.4.17
 Requires: smartmet-server >= 26.4.13
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -77,12 +77,13 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.2.4
+#TestRequires: smartmet-library-spine >= 26.4.13
 #TestRequires: smartmet-library-spine-plugin-test >= 26.4.13
 #TestRequires: smartmet-library-newbase-devel >= 26.2.4
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.2.17
 #TestRequires: smartmet-test-data >= 26.4.1
-#TestRequires: smartmet-engine-grid-test >= 26.4.13
+#TestRequires: smartmet-engine-grid-test >= 26.4.17
 #TestRequires: smartmet-library-gis >= 26.4.13
 #TestRequires: smartmet-engine-avi >= 26.4.13
 #TestRequires: smartmet-engine-geonames >= 26.4.13
@@ -91,7 +92,7 @@ Provides: %{SPECNAME}
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 26.4.13
 %endif
-#TestRequires: smartmet-engine-grid >= 26.4.13
+#TestRequires: smartmet-engine-grid >= 26.4.17
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
@@ -120,6 +121,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Apr 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.17-1.fmi
+- Repackaged due to grid-files API changes
+
+* Thu Apr 16 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.4.16-2.fmi
+- Accept upcoming configuration changes after adding timeseries query support
+
 * Wed Apr 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.15-1.fmi
 - Fix tz=local timezone handling for foreign observation stations
 - Support separate optional default precision for timeseries queries

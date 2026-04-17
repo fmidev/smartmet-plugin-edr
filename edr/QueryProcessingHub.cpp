@@ -4,7 +4,7 @@
 #include "GridInterface.h"
 #include "LocationTools.h"
 #include "LonLatDistance.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "PostProcessing.h"
 #include "State.h"
 #include <grid-files/common/GeneralFunctions.h>
@@ -240,7 +240,7 @@ bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams)
       theParams.begin(),
       theParams.end(),
       [](const Spine::Parameter& param)
-      { return TS::is_location_parameter(param.name()) || param.name() == "plaace"; });
+      { return TS::is_location_parameter(param.name()) || param.name() == "place"; });
 }
 
 void fetch_static_location_values(const CommonQuery& query,
@@ -329,7 +329,7 @@ void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, cons
 
 }  // namespace
 
-QueryProcessingHub::QueryProcessingHub(const Plugin& thePlugin)
+QueryProcessingHub::QueryProcessingHub(const PluginImpl& thePlugin)
     : itsQEngineQuery(thePlugin),
       itsObsEngineQuery(thePlugin),
       itsAviEngineQuery(thePlugin),

@@ -54,6 +54,9 @@ class Config : private boost::noncopyable
   const Precision &getPrecision(const std::string &name) const;
 
   const std::string &defaultPrecision() const { return itsDefaultPrecision; }
+  // Empty when no timeseries-specific override is configured; callers should fall back
+  // to defaultPrecision() in that case.
+  const std::string &defaultTimeSeriesPrecision() const { return itsDefaultTimeSeriesPrecision; }
   const std::string &defaultProducerMappingName() const { return itsDefaultProducerMappingName; }
   const std::string &defaultLanguage() const { return itsDefaultLanguage; }
   // You can copy the locale, not modify it!
@@ -90,6 +93,7 @@ class Config : private boost::noncopyable
   unsigned int expirationTime() const { return itsExpirationTime; }
   bool metaDataUpdatesDisabled() const { return itsMetaDataUpdatesDisabled; }
   int metaDataUpdateInterval() const { return itsMetaDataUpdateInterval; }
+  bool enableConfigurationPolling() const { return itsEnableConfigurationPolling; }
 
   QueryServer::AliasFileCollection itsAliasFileCollection;
   time_t itsLastAliasCheck;
@@ -111,6 +115,9 @@ class Config : private boost::noncopyable
  private:
   libconfig::Config itsConfig;
   std::string itsDefaultPrecision = "normal";
+  // Optional override: when precision.enabled_timeseries is provided, its first entry
+  // becomes the default precision for timeseries-style requests. Empty means no override.
+  std::string itsDefaultTimeSeriesPrecision;
   std::string itsDefaultProducerMappingName;
   std::string itsDefaultLanguage;
   std::string itsDefaultLocaleName;
@@ -151,6 +158,7 @@ class Config : private boost::noncopyable
 
   bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
+  bool itsEnableConfigurationPolling = true; // enable automatic config file reload on change
 
   AviCollections itsAviCollections;
   CollectionInfoContainer itsCollectionInfo;

@@ -10,7 +10,7 @@
 #include "GridEngineQuery.h"
 #include "Json.h"
 #include "ObsEngineQuery.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "QEngineQuery.h"
 #include "TimeSeriesQuery.h"
 #include "ZipWriter.h"
@@ -26,7 +26,7 @@ namespace EDR
 class QueryProcessingHub
 {
  public:
-  QueryProcessingHub(const Plugin& thePlugin);
+  QueryProcessingHub(const PluginImpl& thePlugin);
 
   std::shared_ptr<std::string> processQuery(const State& state,
                                             Spine::Table& table,
