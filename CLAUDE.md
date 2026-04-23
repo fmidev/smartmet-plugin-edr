@@ -98,3 +98,15 @@ Declared in `Engines.h` — the plugin obtains shared pointers to all engines at
 - `Engine::Grid` — GRIB/NetCDF grid data
 - `Engine::Observation` — station observations (conditional)
 - `Engine::Avi` — aviation weather (conditional)
+
+## Timeseries integration (in progress on `develop`)
+
+The `/timeseries` URL handling was merged in from the standalone timeseries plugin (branch `ts-merge`, merged to `develop` in `dc089b5`). Shared parsing lives in `CommonQuery` (base for both `Query` and `TimeSeriesQuery`); all engine query classes take `CommonQuery&`. `CommonQuery::is_timeseries_query` flags which URL was hit; engine code branches on it where the two styles legitimately differ.
+
+**Reference implementation.** The untouched timeseries plugin lives alongside this repo at `../4020-smartmet-plugin-timeseries/` (master branch). When hunting merge regressions, diff files against that tree — most behavioral regressions trace to divergences between the merged-in code in `edr/*.cpp` and the originals in `../4020-smartmet-plugin-timeseries/timeseries/*.cpp`.
+
+**Config parity caveat.** Deployments comparing `/timeseries?…` responses between the legacy timeseries plugin and the new EDR-served endpoint must keep config-parity across both servers. In particular:
+- `primaryForecastSource` gates whether `producer=default` (and producer-unspecified) requests go to the grid engine or querydata. The legacy `timeseries.conf` uses `"grid"`; an `edr.conf` that defaults to `"querydata"` will silently pick different producers — `source=grid` in the URL bypasses this.
+- `defaultGridGeometries`, `defaultProducerMappingName`, and the parameter alias file must match.
+
+Missing keys default silently (`libconfig::lookupValue` doesn't throw), so verify by logging the loaded values rather than trusting that the config was parsed.
