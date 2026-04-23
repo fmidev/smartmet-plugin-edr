@@ -36,6 +36,8 @@ Fmi::DateTime y1970(Fmi::Date(1970, 1, 1));
 Fmi::DateTime y2100(Fmi::Date(2100, 1, 1));
 
 Fmi::TimeZonePtr utc("Etc/UTC");
+
+const uint TimeseriesFunctionFlag = 1 << 31;
 }  // anonymous namespace
 
 namespace SmartMet
@@ -502,7 +504,9 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::StartTimeFromData;
         grid_startTime = y1900;  // "19000101T000000";
 
-        if (!masterquery.toptions.endTimeData)
+        if (!masterquery.toptions.endTimeData &&
+            (!masterquery.is_timeseries_query ||
+             masterquery.toptions.mode != TS::TimeSeriesGeneratorOptions::DataTimes))
           gridQuery.mTimesteps = steps;
       }
 
@@ -516,6 +520,10 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
       if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::DataTimes)
       {
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::TimeStepIsData;
+
+        if (masterquery.is_timeseries_query &&
+            masterquery.toptions.startTimeData && masterquery.toptions.endTimeData)
+          gridQuery.mTimesteps = 0;
       }
 
       if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::GraphTimes)
@@ -892,22 +900,28 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
 
       // Agregation intervals:
 
-      if ((paramfunc->functions.innerFunction.exists() ||
-           paramfunc->functions.outerFunction.exists()) &&
-          masterquery.maxAggregationIntervals.find(param.name()) !=
-              masterquery.maxAggregationIntervals.end())
+      if (paramfunc->functions.innerFunction.exists() ||
+          paramfunc->functions.outerFunction.exists())
       {
-        unsigned int aggregationIntervalBehind =
-            masterquery.maxAggregationIntervals.at(param.name()).behind;
-        unsigned int aggregationIntervalAhead =
-            masterquery.maxAggregationIntervals.at(param.name()).ahead;
+        if (masterquery.is_timeseries_query)
+          qParam.mFlags = qParam.mFlags | TimeseriesFunctionFlag;
 
-        if (aggregationIntervalBehind > 0 || aggregationIntervalAhead > 0)
+        if (masterquery.maxAggregationIntervals.find(param.name()) !=
+            masterquery.maxAggregationIntervals.end())
         {
-          qParam.mTimestepsBefore = aggregationIntervalBehind / 60;
-          qParam.mTimestepsAfter = aggregationIntervalAhead / 60;
-          qParam.mTimestepSizeInMinutes = 60;
-          qParam.mFlags = qParam.mFlags | QueryServer::QueryParameter::Flags::AggregationParameter;
+          unsigned int aggregationIntervalBehind =
+              masterquery.maxAggregationIntervals.at(param.name()).behind;
+          unsigned int aggregationIntervalAhead =
+              masterquery.maxAggregationIntervals.at(param.name()).ahead;
+
+          if (aggregationIntervalBehind > 0 || aggregationIntervalAhead > 0)
+          {
+            qParam.mTimestepsBefore = aggregationIntervalBehind / 60;
+            qParam.mTimestepsAfter = aggregationIntervalAhead / 60;
+            qParam.mTimestepSizeInMinutes = 60;
+            qParam.mFlags =
+                qParam.mFlags | QueryServer::QueryParameter::Flags::AggregationParameter;
+          }
         }
       }
 
@@ -1419,6 +1433,10 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
         int tLen = gridQuery->mForecastTimeList.size();
         bool processed = false;
 
+        bool funct = false;
+        if (gridQuery->mQueryParameterList[pid].mFlags & TimeseriesFunctionFlag)
+          funct = true;
+
         if (columns > 0 && rLen <= tLen)
         {
           processed = true;
@@ -1467,7 +1485,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                 {
                   // The parameter value is a string
                   TS::TimedValue tsValue(queryTime, TS::Value(rec->mValueString));
-                  if (columns == 1)
+                  if (columns == 1 && !funct)
                   {
                     // The parameter has only single value in the timestep
                     tsForParameter->emplace_back(tsValue);
@@ -1482,7 +1500,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                 {
                   // The parameter value is numeric
                   TS::TimedValue tsValue(queryTime, TS::Value(rec->mValue));
-                  if (columns == 1)
+                  if (columns == 1 && !funct)
                   {
                     // The parameter has only single value in the timestep
                     tsForParameter->emplace_back(tsValue);
@@ -1499,7 +1517,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                 // The parameter value is missing
 
                 TS::TimedValue tsValue(queryTime, missing_value);
-                if (columns == 1)
+                if (columns == 1 && !funct)
                 {
                   // The parameter has only single value in the timestep
                   tsForParameter->emplace_back(tsValue);
@@ -1512,7 +1530,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
               }
             }
 
-            if (columns > 1)
+            if (columns > 1 || funct)
             {
               T::GridValue val;
               if (gridQuery->mQueryParameterList[pid].mValueList[0]->mValueList.getGridValueByIndex(
