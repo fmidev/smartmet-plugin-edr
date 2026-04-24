@@ -1087,24 +1087,18 @@ License Config::parse_config_license(const std::string &path, const std::string 
 
 void Config::parse_config_licenses()
 {
-  static const std::vector<License> defaultLicenses = {
-      {{"href", "https://en.ilmatieteenlaitos.fi/open-data-licence"},
-       {"hreflang", "en"},
-       {"rel", "license"},
-       {"type", "text/html"},
-       {"title", "FMI Open Data Licence"}},
-      {{"href", "https://creativecommons.org/licenses/by/4.0/"},
-       {"hreflang", "en"},
-       {"rel", "license"},
-       {"type", "text/html"},
-       {"title", "Creative Commons Attribution 4.0 International (CC BY 4.0)"}}};
+  static const License defaultLicense = {{"href", "https://en.ilmatieteenlaitos.fi/open-data-licence"},
+                                         {"hreflang", "en"},
+                                         {"rel", "license"},
+                                         {"title", "FMI Open Data Licence"},
+                                         {"type", "text/html"}};
 
   try
   {
     if (itsConfig.exists("license"))
     {
       if (itsConfig.exists("license.default"))
-        itsProducerLicenses[DEFAULT_LICENSE] = {parse_config_license("license", "default")};
+        itsProducerLicenses[DEFAULT_LICENSE] = parse_config_license("license", "default");
 
       if (itsConfig.exists("license.override"))
       {
@@ -1116,14 +1110,14 @@ void Config::parse_config_licenses()
         for (int i = 0; (i < overriddenLicenses.getLength()); i++)
         {
           std::string producer = overriddenLicenses[i].getName();
-          itsProducerLicenses[producer] = {parse_config_license("license.override", producer)};
+          itsProducerLicenses[producer] = parse_config_license("license.override", producer);
         }
       }
     }
 
     if (itsProducerLicenses.find(DEFAULT_LICENSE) == itsProducerLicenses.end())
     {
-      itsProducerLicenses[DEFAULT_LICENSE] = defaultLicenses;
+      itsProducerLicenses[DEFAULT_LICENSE] = defaultLicense;
     }
   }
   catch (const libconfig::SettingNotFoundException &e)

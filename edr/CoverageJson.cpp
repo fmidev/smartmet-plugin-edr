@@ -1160,23 +1160,32 @@ void parse_instance_link(bool instances_exist,
 
 Json::Value parse_license_links(const ProducerLicenses &licenses, const std::string &producer)
 {
+  static const License ccBy4License = {{"href", "https://creativecommons.org/licenses/by/4.0/"},
+                                       {"hreflang", "en"},
+                                       {"rel", "license"},
+                                       {"title", "Creative Commons Attribution 4.0 International (CC BY 4.0)"},
+                                       {"type", "text/html"}};
   try
   {
+    auto result = Json::Value(Json::ValueType::arrayValue);
+
     auto it = licenses.find(producer);
     if (it == licenses.end())
       it = licenses.find(DEFAULT_LICENSE);
 
-    if (it == licenses.end() || it->second.empty())
-      return Json::Value(Json::ValueType::arrayValue);
-
-    auto result = Json::Value(Json::ValueType::arrayValue);
-    for (const auto &license : it->second)
+    if (it != licenses.end() && !it->second.empty())
     {
       auto link = Json::Value(Json::ValueType::objectValue);
-      for (const auto &field : license)
+      for (const auto &field : it->second)
         link[field.first] = field.second;
       result.append(link);
     }
+
+    auto cc_link = Json::Value(Json::ValueType::objectValue);
+    for (const auto &field : ccBy4License)
+      cc_link[field.first] = field.second;
+    result.append(cc_link);
+
     return result;
   }
   catch (...)
