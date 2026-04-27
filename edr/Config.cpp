@@ -1087,7 +1087,7 @@ License Config::parse_config_license(const std::string &path, const std::string 
 
 void Config::parse_config_licenses()
 {
-  static const License defaultLicense = {{"href", "https://creativecommons.org/licenses/by/4.0/"},
+  static const License defaultLicense = {{"href", "https://en.ilmatieteenlaitos.fi/open-data-licence"},
                                          {"hreflang", "en"},
                                          {"rel", "license"},
                                          {"type", "text/html"}};
