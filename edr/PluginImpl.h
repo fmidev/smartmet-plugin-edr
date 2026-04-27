@@ -21,6 +21,7 @@
 #include <macgyver/TimeZones.h>
 #include <spine/ConfigTools.h>
 #include <spine/HTTP.h>
+#include <spine/Table.h>
 #include <timeseries/TimeSeriesInclude.h>
 #include <map>
 #include <memory>
@@ -83,6 +84,10 @@ class PluginImpl
   const ParameterInfo& getConfigParameterInfo() const { return itsConfigParameterInfo; }
   Fmi::Cache::CacheStatistics getCacheStats() const;
   void grouplocations(Spine::HTTP::Request& theRequest) const;
+
+  std::unique_ptr<Spine::Table> getEDRInternalInformation(
+    Spine::Reactor& theReactor,
+    const Spine::HTTP::Request& request) const;
 
 #ifndef WITHOUT_AVI
   const EDRProducerMetaData& getAviMetaData() const;

@@ -96,6 +96,15 @@ void Plugin::init()
         [this](Spine::Reactor&, const Spine::HTTP::Request&) -> bool { return reload(); },
         "Reloads the EDR plugin configuration");
 
+        // Register admin query handler for EDR internal information
+    itsReactor->addAdminTableRequestHandler(
+        this,
+        "edr:info",
+        AdminRequestAccess::Private,
+        std::bind(&PluginImpl::getEDRInternalInformation, plugin_impl.load(), std::placeholders::_1, std::placeholders::_2),
+        "EDR plugin internal information (request=...)"
+      );
+
     ensureUpdateLoopStarted();
   }
   catch (...)

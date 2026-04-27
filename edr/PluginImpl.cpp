@@ -11,6 +11,7 @@
 #include "UtilityFunctions.h"
 #include <engines/gis/Engine.h>
 #include <fmt/format.h>
+#include <macgyver/StringConversion.h>
 #include <macgyver/Hash.h>
 #include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
@@ -1615,6 +1616,62 @@ Fmi::Cache::CacheStatistics PluginImpl::getCacheStats() const
                             itsTimeSeriesCache->getCacheStats()));
 
   return ret;
+}
+
+std::unique_ptr<Spine::Table> PluginImpl::getEDRInternalInformation(
+  Spine::Reactor& reactor,
+  const Spine::HTTP::Request& request) const
+{
+  std::map
+  <
+    std::string,
+    std::pair<
+      std::function<std::unique_ptr<Spine::Table>(
+        Spine::Reactor& reactor,
+        const Spine::HTTP::Request& request)>,
+      std::string>
+  >
+  info =
+  {
+    {
+      "geometrystorage",
+      {
+        [this](Spine::Reactor& reactor, const Spine::HTTP::Request& request)
+        {
+           return itsGeometryStorage.dumpContents();
+        },
+        "Contents of the geometry storage"
+      }
+    }
+  };
+
+  const std::string request_param = Fmi::ascii_tolower_copy(
+    Spine::optional_string(request.getParameter("request"), "?"));
+
+  const auto ir = info.find(request_param);
+  if (ir != info.end())
+  {
+    try
+    {
+      return ir->second.first(reactor, request);
+    }
+    catch (...)
+    {
+      throw Fmi::Exception::Trace(BCP, "Failed to get internal information for request '" + request_param + "'");
+    }
+  }
+
+  std::unique_ptr<Spine::Table> result = std::make_unique<Spine::Table>();
+  result->setTitle("EDR plugin internal information (request=...)");
+  result->setNames({"name", "description"});
+  int row = 0;
+  for (const auto& item : info)
+  {
+    result->set(row, 0, item.first);
+    result->set(row, 1, item.second.second);
+    row++;
+  }
+  return result;
 }
 
 }  // namespace EDR
