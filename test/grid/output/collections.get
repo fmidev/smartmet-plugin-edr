@@ -11,14 +11,6 @@
 "href" : "https://en.ilmatieteenlaitos.fi/open-data-licence",
 "hreflang" : "en",
 "rel" : "license",
-"title" : "FMI Open Data Licence",
-"type" : "text/html"
-},
-{
-"href" : "https://creativecommons.org/licenses/by/4.0/",
-"hreflang" : "en",
-"rel" : "license",
-"title" : "Creative Commons Attribution 4.0 International (CC BY 4.0)",
 "type" : "text/html"
 }
 ],

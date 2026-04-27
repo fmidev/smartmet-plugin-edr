@@ -1158,35 +1158,23 @@ void parse_instance_link(bool instances_exist,
   }
 }
 
-Json::Value parse_license_links(const ProducerLicenses &licenses, const std::string &producer)
+Json::Value parse_license_link(const ProducerLicenses &licenses, const std::string &producer)
 {
-  static const License ccBy4License = {{"href", "https://creativecommons.org/licenses/by/4.0/"},
-                                       {"hreflang", "en"},
-                                       {"rel", "license"},
-                                       {"title", "Creative Commons Attribution 4.0 International (CC BY 4.0)"},
-                                       {"type", "text/html"}};
   try
   {
-    auto result = Json::Value(Json::ValueType::arrayValue);
+    auto license = licenses.find(producer);
+    if (license == licenses.end())
+      license = licenses.find(DEFAULT_LICENSE);
 
-    auto it = licenses.find(producer);
-    if (it == licenses.end())
-      it = licenses.find(DEFAULT_LICENSE);
+    if ((license == licenses.end()) || license->second.empty())
+      return {};
 
-    if (it != licenses.end() && !it->second.empty())
-    {
-      auto link = Json::Value(Json::ValueType::objectValue);
-      for (const auto &field : it->second)
-        link[field.first] = field.second;
-      result.append(link);
-    }
+    auto license_link = Json::Value(Json::ValueType::objectValue);
 
-    auto cc_link = Json::Value(Json::ValueType::objectValue);
-    for (const auto &field : ccBy4License)
-      cc_link[field.first] = field.second;
-    result.append(cc_link);
+    for (auto const &field : license->second)
+      license_link[field.first] = field.second;
 
-    return result;
+    return license_link;
   }
   catch (...)
   {
@@ -1392,8 +1380,9 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
     link_item["rel"] = Json::Value("self");
     link_item["type"] = Json::Value("application/json");
     links[0] = link_item;
-    for (const auto &license_link : parse_license_links(licenses, edr_query.collection_id))
-      links.append(license_link);
+    auto license = parse_license_link(licenses, edr_query.collection_id);
+    if (!license.isNullOrEmpty())
+      links[1] = license;
 
     result["links"] = links;
 
@@ -1624,8 +1613,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
 
       if (!edr_query.collection_id.empty())
       {
-        for (const auto &license_link : parse_license_links(licenses, producer))
-          links.append(license_link);
+        auto license = parse_license_link(licenses, producer);
+        if (!license.isNullOrEmpty())
+          links.append(license);
       }
 
       value["links"] = links;
@@ -3335,8 +3325,9 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query,
       link["title"] = Json::Value("Collections metadata in JSON");
       auto links = Json::Value(Json::ValueType::arrayValue);
       links[0] = link;
-      for (const auto &license_link : parse_license_links(licenses, DEFAULT_LICENSE))
-        links.append(license_link);
+      auto license = parse_license_link(licenses, DEFAULT_LICENSE);
+      if (!license.isNullOrEmpty())
+        links[1] = license;
       result["links"] = links;
       result["collections"] = edr_metadata;
     }

@@ -1090,7 +1090,6 @@ void Config::parse_config_licenses()
   static const License defaultLicense = {{"href", "https://en.ilmatieteenlaitos.fi/open-data-licence"},
                                          {"hreflang", "en"},
                                          {"rel", "license"},
-                                         {"title", "FMI Open Data Licence"},
                                          {"type", "text/html"}};
 
   try
