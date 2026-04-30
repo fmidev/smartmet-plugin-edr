@@ -1,0 +1,1 @@
+GET /timeseries?endtime=1777421400&format=ascii&lang=fi&numberofstations=10&param=distance,epochtime,fmisid,snowDepth,temperature,windCompass8&precision=double&producer=observations_fmi&starttime=1777420200&fmisid=101317 HTTP/1.0

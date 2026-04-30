@@ -1,3 +1,7 @@
+# Needed data not in test database
+timeseries/non-local/snowDepth-problem-20260430.get
+timeseries/non-local/windCompass-missing-20260430.get
+#
 timeseries/sounding_observations_area_kymenlaakso.get
 timeseries/sounding_observations_default_sounding_type.get
 timeseries/sounding_observations_selected_sounding_type.get
