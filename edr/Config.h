@@ -158,7 +158,7 @@ class Config : private boost::noncopyable
 
   bool itsMetaDataUpdatesDisabled = false;  // disable updates after initial update
   int itsMetaDataUpdateInterval = 30;       // scan interval in seconds
-  bool itsEnableConfigurationPolling = true; // enable automatic config file reload on change
+  bool itsEnableConfigurationPolling = false; // enable automatic config file reload on change
 
   AviCollections itsAviCollections;
   CollectionInfoContainer itsCollectionInfo;
