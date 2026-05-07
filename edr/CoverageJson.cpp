@@ -3171,10 +3171,17 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       all["bbox"] = bbox;
 
       auto properties = Json::Value(Json::ValueType::objectValue);
-      auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
-      auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
-      properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
-                                           Fmi::to_iso_extended_string(end_time) + "Z");
+      // single_time_periods is empty when no rows in avidb_messages match the
+      // collection's filters. Without this guard front()/back() on an empty
+      // vector is undefined behavior and crashes the server (SIGSEGV) on the
+      // /collections/<avi-collection>/locations endpoint.
+      if (!edr_md->temporal_extent.single_time_periods.empty())
+      {
+        auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
+        auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
+        properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
+                                             Fmi::to_iso_extended_string(end_time) + "Z");
+      }
       properties["detail"] = "Id is special location";
       properties["name"] = "Special logical selector representing all collection locations";
       all["properties"] = properties;
