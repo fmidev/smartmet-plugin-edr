@@ -3129,7 +3129,13 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
           //
           auto it = edr_md->stationTemporalExtentMetaData.find(loc.id);
 
-          if (it != edr_md->stationTemporalExtentMetaData.end())
+          // Same UB-on-empty-vector shape as the avi 'all' feature block
+          // below: an entry today is only inserted when the station has at
+          // least one matching message, but defending against an empty
+          // time_periods makes the function robust to future refactors that
+          // might pre-populate the map.
+          if (it != edr_md->stationTemporalExtentMetaData.end() &&
+              !it->second.time_periods.empty())
           {
             start_time = it->second.time_periods.front().start_time;
             end_time = it->second.time_periods.back().end_time;
@@ -3172,10 +3178,17 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       all["bbox"] = bbox;
 
       auto properties = Json::Value(Json::ValueType::objectValue);
-      auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
-      auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
-      properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
-                                           Fmi::to_iso_extended_string(end_time) + "Z");
+      // single_time_periods is empty when no rows in avidb_messages match the
+      // collection's filters. Without this guard front()/back() on an empty
+      // vector is undefined behavior and crashes the server (SIGSEGV) on the
+      // /collections/<avi-collection>/locations endpoint.
+      if (!edr_md->temporal_extent.single_time_periods.empty())
+      {
+        auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
+        auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
+        properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
+                                             Fmi::to_iso_extended_string(end_time) + "Z");
+      }
       properties["detail"] = "Id is special location";
       properties["name"] = "Special logical selector representing all collection locations";
       all["properties"] = properties;
