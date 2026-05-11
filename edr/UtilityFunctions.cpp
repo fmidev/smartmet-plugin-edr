@@ -358,7 +358,7 @@ bool parseRangeListValue(std::string& valueStr,
       {
         // Repeating interval Rn/start/step
 
-        if (toupper(parts[0].front()) != 'R')
+        if (parts[0].empty() || toupper(parts[0].front()) != 'R')
           throw Fmi::Exception(BCP, "");
 
         parts[0].erase(parts[0].begin());

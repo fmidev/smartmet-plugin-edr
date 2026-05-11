@@ -993,10 +993,11 @@ SupportedLocations get_supported_locations(const AviMetaData &amd,
 const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
                                                  const std::string &producer)
 {
-  if (pmd.find(producer) != pmd.end())
+  auto it = pmd.find(producer);
+  if (it != pmd.end() && !it->second.empty())
   {
     // Latest update time is same for all metadata instances of the same producer
-    return pmd.at(producer).front().latest_data_update_time;
+    return it->second.front().latest_data_update_time;
   }
   return NOT_A_DATE_TIME;
 }

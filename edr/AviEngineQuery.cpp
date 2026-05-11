@@ -217,7 +217,8 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     const auto edrMetaData = edrProducerMetaData.find(producer);
     const auto &aviCollection = get_avi_collection(producer, config.getAviCollections());
 
-    if ((edrMetaData == edrProducerMetaData.end()) || aviCollection.getName().empty())
+    if ((edrMetaData == edrProducerMetaData.end()) || edrMetaData->second.empty() ||
+        aviCollection.getName().empty())
       throw Fmi::Exception(BCP, "Internal error: no metadata for producer " + producer, nullptr);
 
     SmartMet::Engine::Avi::QueryOptions queryOptions;
