@@ -2765,7 +2765,7 @@ Json::Value format_output_data_vertical_profile(
   try
   {
     if (outputData.empty())
-      Json::Value();
+      return {};
 
     Json::Value coverageCollection;
 
