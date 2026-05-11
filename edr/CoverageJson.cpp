@@ -3053,9 +3053,10 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     for (const auto &item : metadata)
     {
       const auto &engine_metadata = item.second;
-      if (engine_metadata.find(producer) != engine_metadata.end())
+      auto it = engine_metadata.find(producer);
+      if (it != engine_metadata.end() && !it->second.empty())
       {
-        edr_md = &engine_metadata.at(producer).front();
+        edr_md = &it->second.front();
         break;
       }
     }

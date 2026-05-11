@@ -1554,8 +1554,9 @@ EDRMetaData PluginImpl::getProducerMetaData(const std::string& producer) const
   for (const auto& item : metadata->getMetaData())
   {
     const auto& engine_metadata = item.second;
-    if (engine_metadata.find(producer) != engine_metadata.end())
-      return engine_metadata.at(producer).front();
+    auto it = engine_metadata.find(producer);
+    if (it != engine_metadata.end() && !it->second.empty())
+      return it->second.front();
   }
 
   return empty_emd;
