@@ -539,7 +539,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
     if (it != custom_dim_refs.end())
     {
       standard_name_vocabulary = it->second;
-      if (standard_name_vocabulary.back() == '/')
+      if (!standard_name_vocabulary.empty() && standard_name_vocabulary.back() == '/')
         standard_name_vocabulary.pop_back();
     }
 
