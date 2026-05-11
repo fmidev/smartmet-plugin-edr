@@ -665,6 +665,9 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     feature_collection["parameters"] =
         get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
 
+    if (query_parameters.empty())
+      return feature_collection;
+
     const auto lon_precision = emd.getPrecision("longitude");
     const auto lat_precision = emd.getPrecision("latitude");
     auto level_precision = 0;
@@ -813,6 +816,9 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
     DataPerParameter dpp;
 
     //	  std::cout << "get_output_data_per_parameter" << std::endl;
+
+    if (query_parameters.empty())
+      return dpp;
 
     bool levels_present = !levels.empty();
 
