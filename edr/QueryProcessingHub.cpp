@@ -635,7 +635,9 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       bool process_qengine_query = true;
 #ifndef WITHOUT_AVI
-      std::string producerName = (producerMissing ? "" : masterquery.timeproducers.front().front());
+      std::string producerName;
+      if (!producerMissing && !masterquery.timeproducers.front().empty())
+        producerName = masterquery.timeproducers.front().front();
       if (itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
       {
         itsAviEngineQuery.processAviEngineQuery(
@@ -908,7 +910,9 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
     bool producerMissing = masterquery.timeproducers.empty();
 
 #ifndef WITHOUT_AVI
-    std::string producerName = (producerMissing ? "" : masterquery.timeproducers.front().front());
+    std::string producerName;
+    if (!producerMissing && !masterquery.timeproducers.front().empty())
+      producerName = masterquery.timeproducers.front().front();
     if (itsAviEngineQuery.isAviProducer(producerName))
       return Fmi::bad_hash;
 #endif
