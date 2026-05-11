@@ -516,6 +516,8 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
     feature_collection["parameters"] =
         get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
     auto coordinates = get_coordinates(outputData, query_parameters);
+    if (coordinates.empty())
+      return feature_collection;
     const auto &lon_precision = emd.getPrecision("longitude");
     const auto &lat_precision = emd.getPrecision("latitude");
     feature_collection["bbox"] = get_bbox(coordinates, lon_precision, lat_precision);
