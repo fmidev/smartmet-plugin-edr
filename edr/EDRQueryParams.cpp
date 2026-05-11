@@ -623,7 +623,8 @@ std::string EDRQueryParams::parsePosition(const std::string& coords)
       for (auto& coordinate_item : coordinates)
       {
         boost::algorithm::trim(coordinate_item);
-        if (coordinate_item.front() == '(' && coordinate_item.back() == ')')
+        if (coordinate_item.size() >= 2 && coordinate_item.front() == '(' &&
+            coordinate_item.back() == ')')
           coordinate_item = coordinate_item.substr(1, coordinate_item.length() - 2);
         std::vector<std::string> parts;
         boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
