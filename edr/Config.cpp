@@ -15,6 +15,7 @@
 #include <spine/Convenience.h>
 #include <spine/Exceptions.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <algorithm>
 #include <mutex>
 #include <ogr_geometry.h>
 #include <stdexcept>
@@ -1182,13 +1183,55 @@ Config::Config(const string &configfile)
     if (itsDefaultUrl.back() == '/')
       itsDefaultUrl.pop_back();
 
-    if (itsConfig.lookupValue("timeseries_url", itsTimeSeriesUrl))
+    if (itsConfig.exists("timeseries_url"))
     {
-      Fmi::trim(itsTimeSeriesUrl);
-      if (!itsTimeSeriesUrl.empty() && (itsTimeSeriesUrl.front() != '/'))
-        itsTimeSeriesUrl = "/" + itsTimeSeriesUrl;
-      if (!itsTimeSeriesUrl.empty() && itsTimeSeriesUrl.back() == '/')
-        itsTimeSeriesUrl.pop_back();
+      const libconfig::Setting &setting = itsConfig.lookup("timeseries_url");
+
+      auto canonicalize = [](std::string url) -> std::string
+      {
+        Fmi::trim(url);
+        if (!url.empty() && url.front() != '/')
+          url = "/" + url;
+        if (!url.empty() && url.back() == '/')
+          url.pop_back();
+        return url;
+      };
+
+      auto append_url = [&](std::string url, int sourceLine)
+      {
+        url = canonicalize(std::move(url));
+        if (url.empty())
+          return;
+        if (std::find(itsTimeSeriesUrls.begin(), itsTimeSeriesUrls.end(), url) !=
+            itsTimeSeriesUrls.end())
+          throw Fmi::Exception(BCP,
+                               "Duplicate timeseries_url '" + url +
+                                   "' in EDR configuration file line " +
+                                   Fmi::to_string(sourceLine));
+        itsTimeSeriesUrls.push_back(std::move(url));
+      };
+
+      if (setting.isArray())
+      {
+        for (int i = 0; i < setting.getLength(); ++i)
+        {
+          if (setting[i].getType() != libconfig::Setting::Type::TypeString)
+            throw Fmi::Exception(BCP,
+                                 "timeseries_url array entries must be strings, line " +
+                                     Fmi::to_string(setting[i].getSourceLine()));
+          append_url(static_cast<const char *>(setting[i]), setting[i].getSourceLine());
+        }
+      }
+      else if (setting.getType() == libconfig::Setting::Type::TypeString)
+      {
+        append_url(static_cast<const char *>(setting), setting.getSourceLine());
+      }
+      else
+      {
+        throw Fmi::Exception(BCP,
+                             "timeseries_url must be a string or an array of strings, line " +
+                                 Fmi::to_string(setting.getSourceLine()));
+      }
     }
 
     itsConfig.lookupValue("expires", itsExpirationTime);

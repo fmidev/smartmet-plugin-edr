@@ -12,6 +12,7 @@
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/DistanceParser.h>
 #include <spine/Convenience.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -195,7 +196,12 @@ void CommonQuery::commonInit(const State& state,
 {
   try
   {
-    is_timeseries_query = req.getResource() == config.timeSeriesUrl();
+    {
+      const auto& ts_urls = config.timeSeriesUrls();
+      const auto& resource = req.getResource();
+      is_timeseries_query =
+          std::find(ts_urls.begin(), ts_urls.end(), resource) != ts_urls.end();
+    }
 
     // FMISIDs
     auto name = req.getParameter("fmisid");

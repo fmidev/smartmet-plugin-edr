@@ -73,18 +73,19 @@ void Plugin::init()
             true))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
-    if (!new_impl->itsConfig.timeSeriesUrl().empty())
+    for (const auto& ts_url : new_impl->itsConfig.timeSeriesUrls())
     {
       if (!itsReactor->addContentHandler(
               this,
-              new_impl->itsConfig.timeSeriesUrl(),
+              ts_url,
               [this](Spine::Reactor& theReactor,
                      const Spine::HTTP::Request& theRequest,
                      Spine::HTTP::Response& theResponse)
               { plugin_impl.load()->timeSeriesRequestHandler(theReactor, theRequest, theResponse); },
               {},
               false))
-        throw Fmi::Exception(BCP, "Failed to register timeseries content handler");
+        throw Fmi::Exception(BCP,
+                             "Failed to register timeseries content handler for '" + ts_url + "'");
     }
 
     // Register admin request handler for forced reload (authenticated)
