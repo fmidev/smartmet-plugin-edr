@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.5.11
+Version: 26.5.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri May 22 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.5.22-1.fmi
+- Allow timeseries_url to be an array for multiple URLs
+
 * Mon May 11 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.5.11-1.fmi
 - Fix querying container members without checking there are any
 
