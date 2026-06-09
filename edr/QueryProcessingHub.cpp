@@ -123,6 +123,12 @@ Spine::LocationPtr get_nearest_loc(const CommonQuery& masterquery, const Spine::
       }
     }
 
+    // Reject the nearest location if it is farther than the requested maxdistance.
+    // Without an explicit maxdistance the nearest keyword location is always returned.
+    if (nearest_loc && masterquery.maxdistanceOptionGiven &&
+        distance > masterquery.maxdistance_kilometers())
+      nearest_loc = nullptr;
+
     return nearest_loc;
   }
   catch (...)

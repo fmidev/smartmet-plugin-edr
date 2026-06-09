@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.5.22
+Version: 26.6.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Jun  9 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.9-1.fmi
+- Fix inkeyword location search to honour an explicit maxdistance: the nearest
+  keyword location is no longer returned when it is farther than maxdistance
+
 * Fri May 22 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.5.22-1.fmi
 - Allow timeseries_url to be an array for multiple URLs
 
