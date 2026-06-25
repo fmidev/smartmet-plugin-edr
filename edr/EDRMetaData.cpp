@@ -670,8 +670,6 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     //
     queryOptions.itsMessageTypes.push_back(boost::algorithm::to_upper_copy(message_type));
 
-    queryOptions.itsMessageFormat = TAC_FORMAT;
-
     // From config file avi.period_length (30 days default)
     auto now = Fmi::SecondClock::universal_time();
     auto start_of_period = (now - Fmi::Hours(aviCollection.getPeriodLength() * 24));
@@ -690,8 +688,6 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsMaxMessageStations = -1;
     queryOptions.itsMaxMessageRows = -1;
     queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
-    // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
-    queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
     // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
     //
     // BRAINSTORM-3284: now configurable, defaults to true
@@ -708,37 +704,52 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     //
     queryOptions.itsTimeOptions.itsMessageTimeChecks = false;
 
-    auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
-
+    // Query both TAC and IWXXM so temporal extent is populated for TAC-only
+    // (FMI), IWXXM-only (EE), or mixed deployments.  TAC is queried first;
+    // per-station extents prefer TAC via map::insert (no overwrite on duplicate
+    // key).  The global timestep set accumulates both.  Finnish METAR filtering
+    // is TAC-specific and must not be applied to the IWXXM query.
+    //
     // BRAINSTORM-3320
     //
     // Storing station's temporal extent too, varies e.g. for taf collection
     //
     std::set<Fmi::LocalDateTime> timesteps;
-    std::set<Fmi::LocalDateTime> stationTimesteps;
 
-    for (auto stationId : aviData.itsStationIds)
+    auto processAviData = [&](SmartMet::Engine::Avi::QueryResult &aviData)
     {
-      auto icaoIter = aviData.itsValues[stationId]["icao"].cbegin();
-      auto icao = std::get<std::string>(*icaoIter);
-      auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
-      auto endIter = aviData.itsValues[stationId]["messagetime"].cend();
-
-      while (timeIter != endIter)
+      for (auto stationId : aviData.itsStationIds)
       {
-        Fmi::LocalDateTime timestep = std::get<Fmi::LocalDateTime>(*timeIter);
+        auto icaoIter = aviData.itsValues[stationId]["icao"].cbegin();
+        auto icao = std::get<std::string>(*icaoIter);
+        auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
+        auto endIter = aviData.itsValues[stationId]["messagetime"].cend();
 
-        timesteps.insert(timestep);
-        stationTimesteps.insert(timestep);
+        std::set<Fmi::LocalDateTime> stationTimesteps;
+        while (timeIter != endIter)
+        {
+          Fmi::LocalDateTime timestep = std::get<Fmi::LocalDateTime>(*timeIter);
 
-        timeIter++;
+          timesteps.insert(timestep);
+          stationTimesteps.insert(timestep);
+
+          timeIter++;
+        }
+
+        edrMetaData.stationTemporalExtentMetaData.insert(
+            make_pair(icao, get_temporal_extent(stationTimesteps)));
       }
+    };
 
-      auto temporal_extent = get_temporal_extent(stationTimesteps);
-      edrMetaData.stationTemporalExtentMetaData.insert(make_pair(icao, temporal_extent));
+    queryOptions.itsMessageFormat = TAC_FORMAT;
+    queryOptions.itsFilterMETARs = true;  // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
+    auto tacData = aviEngine.queryStationsAndMessages(queryOptions);
+    processAviData(tacData);
 
-      stationTimesteps.clear();
-    }
+    queryOptions.itsMessageFormat = IWXXM_FORMAT;
+    queryOptions.itsFilterMETARs = false;
+    auto iwxxmData = aviEngine.queryStationsAndMessages(queryOptions);
+    processAviData(iwxxmData);
 
     edrMetaData.temporal_extent = get_temporal_extent(timesteps);
 
