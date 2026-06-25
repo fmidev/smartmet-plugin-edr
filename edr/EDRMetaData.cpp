@@ -716,7 +716,7 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     //
     std::set<Fmi::LocalDateTime> timesteps;
 
-    auto processAviData = [&](SmartMet::Engine::Avi::QueryResult &aviData)
+    auto processAviData = [&](SmartMet::Engine::Avi::StationQueryData &aviData)
     {
       for (auto stationId : aviData.itsStationIds)
       {
