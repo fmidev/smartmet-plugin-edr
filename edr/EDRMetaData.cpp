@@ -742,7 +742,8 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     };
 
     queryOptions.itsMessageFormat = TAC_FORMAT;
-    queryOptions.itsFilterMETARs = true;  // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
+    // itsFilterMETARs defaults to true; the engine gates the LIKE 'METAR%' predicate on the
+    // message type, so it does not incorrectly filter TAF or SIGMET collections.
     auto tacData = aviEngine.queryStationsAndMessages(queryOptions);
     processAviData(tacData);
 
