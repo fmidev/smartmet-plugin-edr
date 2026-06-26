@@ -983,7 +983,7 @@ void PluginImpl::init()
     if (!itsConfig.metaDataUpdatesDisabled())
     {
       itsMetaDataUpdateTask.reset(
-          new Fmi::AsyncTask("EDR: metadata update task", [this]() { metaDataUpdateLoop(); }));
+          new Fmi::AsyncTask("upd-edr-meta", [this]() { metaDataUpdateLoop(); }));
     }
 
     itsReady = true;

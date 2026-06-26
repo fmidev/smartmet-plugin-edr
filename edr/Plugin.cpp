@@ -6,6 +6,7 @@
 
 #include "Plugin.h"
 #include <macgyver/Exception.h>
+#include <macgyver/ThreadName.h>
 #include <spine/Convenience.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMet.h>
@@ -277,8 +278,12 @@ void Plugin::ensureUpdateLoopStarted()
     std::unique_lock<std::mutex> lock(itsUpdateNotifyMutex);
     if (!itsUpdateLoopThread)
     {
-      itsUpdateLoopThread.reset(
-          new std::thread(std::bind(&Plugin::updateLoop, this)));
+      itsUpdateLoopThread.reset(new std::thread(
+          [this]()
+          {
+            Fmi::set_thread_name("upd-edr");
+            updateLoop();
+          }));
     }
   }
 }
