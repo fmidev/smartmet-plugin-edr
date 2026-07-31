@@ -152,15 +152,20 @@ std::string get_wxml_type(const std::string& producer_option,
   }
 }
 
+// The tag suffix distinguishes the endpoint the entity was produced by. The /timeseries
+// endpoint uses "timeseries" so that the ETags stay identical to the ones the standalone
+// timeseries plugin produced for the same request.
+
 bool etag_only(const Spine::HTTP::Request& request,
                Spine::HTTP::Response& response,
-               std::size_t product_hash)
+               std::size_t product_hash,
+               const std::string& tag_suffix = "edr")
 {
   try
   {
     if (product_hash != Fmi::bad_hash)
     {
-      auto etag = fmt::format("\"{:x}-edr\"", product_hash);
+      auto etag = fmt::format("\"{:x}-{}\"", product_hash, tag_suffix);
       response.setHeader("ETag", etag);
 
       // If the product is cacheable and etag was requested, respond with etag only
@@ -651,7 +656,12 @@ void PluginImpl::timeSeriesQuery(const State& state,
 
     if (obj)
     {
+      product_hash = Fmi::hash_value(*obj);
+      if (etag_only(request, response, product_hash, "timeseries"))
+        return;
+
       response.setHeader("X-Duration", timeheader);
+      response.setHeader("X-EDR-Cache", "yes");
       response.setContent(obj);
       return;
     }
@@ -676,6 +686,11 @@ void PluginImpl::timeSeriesQuery(const State& state,
     std::shared_ptr<std::string> result(new std::string());
     std::swap(out, *result);
     response.setHeader("X-Duration", timeheader);
+
+    product_hash = Fmi::hash_value(*result);
+    if (etag_only(request, response, product_hash, "timeseries"))
+      return;
+
     response.setContent(*result);
   }
   catch (...)
