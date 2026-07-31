@@ -638,6 +638,17 @@ void PluginImpl::timeSeriesQuery(const State& state,
                                Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
     boost::algorithm::to_lower(producer_option);
 
+    // At least one of the location specifiers must be set
+
+#ifndef WITHOUT_OBSERVATION
+    if (tsq.fmisids.empty() && tsq.lpnns.empty() && tsq.wmos.empty() && tsq.boundingBox.empty() &&
+        !UtilityFunctions::is_flash_or_mobile_producer(producer_option) &&
+        tsq.loptions->locations().empty())
+#else
+    if (tsq.loptions->locations().empty())
+#endif
+      throw Fmi::Exception(BCP, "No location option given!").disableLogging();
+
     QueryServer::QueryStreamer_sptr queryStreamer;
     std::shared_ptr<Spine::TableFormatter> formatter(
         get_formatter_and_qstreamer(tsq, queryStreamer));
@@ -687,11 +698,22 @@ void PluginImpl::timeSeriesQuery(const State& state,
     std::swap(out, *result);
     response.setHeader("X-Duration", timeheader);
 
-    product_hash = Fmi::hash_value(*result);
-    if (etag_only(request, response, product_hash, "timeseries"))
-      return;
+    if (strcasecmp(tsq.format.c_str(), "FILE") == 0)
+    {
+      std::string filename =
+          "attachement; filename=timeseries_" + std::to_string(getTime()) + ".grib";
+      response.setHeader("Content-type", "application/octet-stream");
+      response.setHeader("Content-Disposition", filename);
+      response.setContent(queryStreamer);
+    }
+    else
+    {
+      product_hash = Fmi::hash_value(*result);
+      if (etag_only(request, response, product_hash, "timeseries"))
+        return;
 
-    response.setContent(*result);
+      response.setContent(*result);
+    }
   }
   catch (...)
   {
