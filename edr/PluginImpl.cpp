@@ -152,6 +152,26 @@ std::string get_wxml_type(const std::string& producer_option,
   }
 }
 
+// Quick check on request limits. The counting limits have TS::RequestLimitMember
+// counterparts and are enforced by the engine query classes, but maxradius has none,
+// so it can only be checked here.
+
+void check_limits(const Spine::TaggedLocationList& locations, const TS::RequestLimits& limits)
+{
+  if (limits.maxradius <= 0)
+    return;
+
+  double maxradius = 0;
+  for (const auto& tloc : locations)
+    if (tloc.loc)
+      maxradius = std::max(maxradius, tloc.loc->radius);
+
+  if (maxradius > limits.maxradius)
+    throw Fmi::Exception(BCP, "Too large radius requested")
+        .addParameter("Radius", Fmi::to_string(maxradius))
+        .addParameter("Limit", Fmi::to_string(limits.maxradius));
+}
+
 // The tag suffix distinguishes the endpoint the entity was produced by. The /timeseries
 // endpoint uses "timeseries" so that the ETags stay identical to the ones the standalone
 // timeseries plugin produced for the same request.
@@ -389,6 +409,9 @@ void PluginImpl::query(const State& state,
       Spine::TaggedLocationList tagged_ll = q.loptions->locations();
       tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
       q.loptions->setLocations(tagged_ll);
+
+      // Radius arrives via the EDR 'within' parameter, encoded into the coords string
+      check_limits(q.loptions->locations(), itsConfig.requestLimits());
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -629,6 +652,8 @@ void PluginImpl::timeSeriesQuery(const State& state,
     Spine::TaggedLocationList tagged_ll = tsq.loptions->locations();
     tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
     tsq.loptions->setLocations(tagged_ll);
+
+    check_limits(tsq.loptions->locations(), itsConfig.requestLimits());
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     data.setPaging(tsq.startrow, tsq.maxresults);
