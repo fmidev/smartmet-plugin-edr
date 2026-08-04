@@ -1266,6 +1266,10 @@ Config::Config(const string &configfile)
     itsRequestLimits.maxlevels = maxlevels;
     itsRequestLimits.maxelements = maxelements;
 
+    // Top level setting, like maxdistance. Unlike the limits above this one has no
+    // TS::RequestLimitMember, so it can only be enforced by the plugin itself.
+    itsConfig.lookupValue("maxradius", itsRequestLimits.maxradius);
+
     // TODO: Remove deprecated settings detection
     using Spine::log_time_str;
     if (itsConfig.exists("cache.memory_bytes"))

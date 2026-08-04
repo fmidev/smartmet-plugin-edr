@@ -152,15 +152,40 @@ std::string get_wxml_type(const std::string& producer_option,
   }
 }
 
+// Quick check on request limits. The counting limits have TS::RequestLimitMember
+// counterparts and are enforced by the engine query classes, but maxradius has none,
+// so it can only be checked here.
+
+void check_limits(const Spine::TaggedLocationList& locations, const TS::RequestLimits& limits)
+{
+  if (limits.maxradius <= 0)
+    return;
+
+  double maxradius = 0;
+  for (const auto& tloc : locations)
+    if (tloc.loc)
+      maxradius = std::max(maxradius, tloc.loc->radius);
+
+  if (maxradius > limits.maxradius)
+    throw Fmi::Exception(BCP, "Too large radius requested")
+        .addParameter("Radius", Fmi::to_string(maxradius))
+        .addParameter("Limit", Fmi::to_string(limits.maxradius));
+}
+
+// The tag suffix distinguishes the endpoint the entity was produced by. The /timeseries
+// endpoint uses "timeseries" so that the ETags stay identical to the ones the standalone
+// timeseries plugin produced for the same request.
+
 bool etag_only(const Spine::HTTP::Request& request,
                Spine::HTTP::Response& response,
-               std::size_t product_hash)
+               std::size_t product_hash,
+               const std::string& tag_suffix = "edr")
 {
   try
   {
     if (product_hash != Fmi::bad_hash)
     {
-      auto etag = fmt::format("\"{:x}-edr\"", product_hash);
+      auto etag = fmt::format("\"{:x}-{}\"", product_hash, tag_suffix);
       response.setHeader("ETag", etag);
 
       // If the product is cacheable and etag was requested, respond with etag only
@@ -384,6 +409,9 @@ void PluginImpl::query(const State& state,
       Spine::TaggedLocationList tagged_ll = q.loptions->locations();
       tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
       q.loptions->setLocations(tagged_ll);
+
+      // Radius arrives via the EDR 'within' parameter, encoded into the coords string
+      check_limits(q.loptions->locations(), itsConfig.requestLimits());
     }
 
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
@@ -625,6 +653,8 @@ void PluginImpl::timeSeriesQuery(const State& state,
     tagged_ll.insert(tagged_ll.end(), locations.begin(), locations.end());
     tsq.loptions->setLocations(tagged_ll);
 
+    check_limits(tsq.loptions->locations(), itsConfig.requestLimits());
+
     high_resolution_clock::time_point t2 = high_resolution_clock::now();
     data.setPaging(tsq.startrow, tsq.maxresults);
 
@@ -632,6 +662,17 @@ void PluginImpl::timeSeriesQuery(const State& state,
         Spine::optional_string(request.getParameter(PRODUCER_PARAM),
                                Spine::optional_string(request.getParameter(STATIONTYPE_PARAM), ""));
     boost::algorithm::to_lower(producer_option);
+
+    // At least one of the location specifiers must be set
+
+#ifndef WITHOUT_OBSERVATION
+    if (tsq.fmisids.empty() && tsq.lpnns.empty() && tsq.wmos.empty() && tsq.boundingBox.empty() &&
+        !UtilityFunctions::is_flash_or_mobile_producer(producer_option) &&
+        tsq.loptions->locations().empty())
+#else
+    if (tsq.loptions->locations().empty())
+#endif
+      throw Fmi::Exception(BCP, "No location option given!").disableLogging();
 
     QueryServer::QueryStreamer_sptr queryStreamer;
     std::shared_ptr<Spine::TableFormatter> formatter(
@@ -651,7 +692,12 @@ void PluginImpl::timeSeriesQuery(const State& state,
 
     if (obj)
     {
+      product_hash = Fmi::hash_value(*obj);
+      if (etag_only(request, response, product_hash, "timeseries"))
+        return;
+
       response.setHeader("X-Duration", timeheader);
+      response.setHeader("X-EDR-Cache", "yes");
       response.setContent(obj);
       return;
     }
@@ -676,7 +722,23 @@ void PluginImpl::timeSeriesQuery(const State& state,
     std::shared_ptr<std::string> result(new std::string());
     std::swap(out, *result);
     response.setHeader("X-Duration", timeheader);
-    response.setContent(*result);
+
+    if (strcasecmp(tsq.format.c_str(), "FILE") == 0)
+    {
+      std::string filename =
+          "attachement; filename=timeseries_" + std::to_string(getTime()) + ".grib";
+      response.setHeader("Content-type", "application/octet-stream");
+      response.setHeader("Content-Disposition", filename);
+      response.setContent(queryStreamer);
+    }
+    else
+    {
+      product_hash = Fmi::hash_value(*result);
+      if (etag_only(request, response, product_hash, "timeseries"))
+        return;
+
+      response.setContent(*result);
+    }
   }
   catch (...)
   {
