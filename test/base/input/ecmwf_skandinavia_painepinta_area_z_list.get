@@ -1,0 +1,2 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/area?coords=POLYGON((23.5+60.0,23.5+62.0,25.0+62.0,25.0+60.0,23.5+60.0))&datetime=200809091200&z=500,850&parameter-name=Temperature HTTP/1.0
+
