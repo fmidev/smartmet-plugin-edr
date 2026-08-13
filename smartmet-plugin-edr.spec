@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.7.17
+Version: 26.8.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Aug 13 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.8.13-1.fmi
+- Fix incorrect std:variant<> use in trajectory and area queries
+- Search always by distance for coordinate queries
+
 * Fri Jul 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.7.17-1.fmi
 - Pointwise observation querydata via the /timeseries endpoint: 'numberofstations' now returns the
   N nearest stations (each with its own distance, station number and name), and station metadata is
