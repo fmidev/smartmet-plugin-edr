@@ -1126,12 +1126,26 @@ void ObsEngineQuery::handleLocationSettings(
       // Note: We do not detect if there is an fmisid for the location since converting
       // the search to be for a fmisid would lose the geoid tag for the location.
 
+      // The observation engine short-circuits the nearest station search when the location
+      // carries an fmisid: it returns that single station and ignores both numberofstations
+      // and maxdistance, without checking that the station belongs to the requested
+      // stationtype or is in use during the requested period. That is intended for place and
+      // geoid requests, where the user effectively named the station. For a coordinate
+      // request geoengine attaches the fmisid of whatever geoname happened to be nearest,
+      // which may well be a station of some other stationtype or one no longer in use, and
+      // the query then returns nothing at all. Hence coordinates are always searched by
+      // distance.
+
+      std::optional<int> station_id;
+      if (loc->type == Spine::Location::Place)
+        station_id = loc->fmisid;
+
       stationSettings.nearest_station_settings.emplace_back(loc->longitude,
                                                             loc->latitude,
                                                             settings.maxdistance,
                                                             settings.numberofstations,
                                                             tloc.tag,
-                                                            loc->fmisid);
+                                                            station_id);
     }
 
     if (!point_location)
