@@ -33,3 +33,6 @@
 
 # Other files
 /.vscode/
+/.claude
+/tmp
+.gdbinit
