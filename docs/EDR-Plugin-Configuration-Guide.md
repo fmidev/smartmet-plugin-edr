@@ -16,7 +16,7 @@ This page describes more indepth EDR API
 - [Parameter info](#parameter-info)
 - [URL, language](#url-language)
 - [Observation period](#observation-period)
-- [Timeseries plugin settings](#timeseries-plugin-settings)
+- [Timeseries interface settings](#timeseries-interface-settings)
 
 
 # Introduction
@@ -267,6 +267,22 @@ Observation database contains observations from very long period. If you want to
 observation_period = 24; // hours
 ```
 
-# Timeseries plugin settings
+# Timeseries interface settings
 
-Since EDR plugin is build on timeseries plugin code base there are some common settings in configuration file, for example precision settings. For more information see timeseries plugin configuration guide: https://github.com/fmidev/smartmet-plugin-timeseries/blob/master/docs/Using-the-Timeseries-API.md#plugin-configuration-file
+Since EDR plugin is built on timeseries plugin code base there are some common settings in configuration file, for example precision settings. These are documented in [Using the Timeseries API](Using-the-Timeseries-API.md#plugin-configuration-file).
+
+In addition the plugin can serve the TimeSeries API itself. The feature is optional and is enabled with the timeseries_url setting:
+
+```
+timeseries_url = "/timeseries";
+```
+
+The value can also be an array of strings, in which case the interface is served at each of the listed paths:
+
+```
+timeseries_url = [ "/timeseries", "/pointforecast" ];
+```
+
+If the setting is missing, the plugin serves the EDR API only. See [Configuration of the Timeseries Interface](Using-the-Timeseries-API.md#configuration-of-the-timeseries-interface) for details.
+
+Note! Precision defaults can be set separately for the two interfaces: the first entry of precision.enabled is the default of EDR requests, and the first entry of the optional precision.enabled_timeseries is the default of timeseries requests. If precision.enabled_timeseries is not defined, precision.enabled is used for both.
