@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/position?coords=POINT(24.9384+60.1699)&datetime=200808051200&parameter-name=Temperature&pretty=0 HTTP/1.0
+

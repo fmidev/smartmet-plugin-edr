@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.8.13
+Version: 26.8.18
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Aug 18 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.8.18-1.fmi
+- JSON output is now really compact when prettyprinting is off. Previously only the
+  indentation was omitted, all line breaks were printed regardless of the setting
+
 * Thu Aug 13 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.8.13-1.fmi
 - Fix incorrect std:variant<> use in trajectory and area queries
 - Search always by distance for coordinate queries
