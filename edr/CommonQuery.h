@@ -86,6 +86,12 @@ class CommonQuery : public ObsQueryParams
   bool levelRange = false;  // Set if querying level/pressure/height range
   bool is_timeseries_query;
 
+  // Grid engine (param,level) request names (Spine::Parameter::originalName()) which returned
+  // no data at all, e.g. a parameter which only has data on some of the levels implied by the
+  // collection's vertical extent. Populated during grid query extraction, used to drop the
+  // corresponding columns from the output parameter list instead of emitting missing values.
+  std::set<std::string> gridParametersWithNoData;
+
   TS::OptionParsers::ParameterOptions poptions;
   MaxAggregationIntervals maxAggregationIntervals;
   Engine::Geonames::WktGeometries wktGeometries;

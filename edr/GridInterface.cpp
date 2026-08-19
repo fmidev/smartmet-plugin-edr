@@ -2158,8 +2158,37 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
             }
             else
             {
-              TS::TimedValue tsValue(queryTime, missing_value);
-              tsForParameter->emplace_back(tsValue);
+              // "level"/"model"/"producer"/"origintime"/"modtime"/"mtime" are matched
+              // case-sensitively by the branches above; a request using different casing (e.g.
+              // "Modtime") leaks through to here instead of its dedicated branch. Keep the
+              // historical behaviour (emit a missing value) for those instead of treating them
+              // as a genuinely absent (parameter,level) combination.
+              const std::string& requestedParam = gridQuery->mQueryParameterList[pid].mParam;
+              const char* metaParameterNames[] = {
+                  "level", "model", "producer", "origintime", "modtime", "mtime", nullptr};
+              bool isMetaParameter = false;
+              for (int m = 0; metaParameterNames[m] != nullptr; m++)
+                if (strcasecmp(requestedParam.c_str(), metaParameterNames[m]) == 0)
+                {
+                  isMetaParameter = true;
+                  break;
+                }
+
+              if (isMetaParameter)
+              {
+                TS::TimedValue tsValue(queryTime, missing_value);
+                tsForParameter->emplace_back(tsValue);
+              }
+              else if (t == 0)
+              {
+                // The requested (parameter,level) combination returned no data at all, e.g. the
+                // level was implied by the collection's vertical extent but the parameter is not
+                // actually defined on it. Do not emit a missing value column for it; instead
+                // record it so the caller can drop it from the requested parameter list, keeping
+                // the output columns and the parameter list in sync.
+                masterquery.gridParametersWithNoData.insert(
+                    gridQuery->mQueryParameterList[pid].mOrigParam);
+              }
             }
             t++;
           }
