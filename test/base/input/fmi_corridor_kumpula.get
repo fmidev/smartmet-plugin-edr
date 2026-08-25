@@ -1,0 +1,1 @@
+GET /edr/collections/fmi/corridor?coords=LINESTRING(24.90+60.15,25.00+60.20,25.10+60.25)&corridor-width=50&width-units=km&datetime=2013-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0

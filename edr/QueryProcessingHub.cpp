@@ -11,6 +11,7 @@
 #include <macgyver/Hash.h>
 #include <timeseries/ParameterKeywords.h>
 #include <timeseries/ParameterTools.h>
+#include <algorithm>
 
 namespace SmartMet
 {
@@ -20,6 +21,29 @@ namespace EDR
 {
 namespace
 {
+// Grid queries expand each requested (parameter,level) pair into its own Spine::Parameter.
+// Some of those combinations may turn out to have no data at all (e.g. a level implied by the
+// collection's vertical extent that the requested parameter is not actually defined on) -
+// GridInterface::extractQueryResult records their request names in
+// query.gridParametersWithNoData instead of emitting a missing value column for them. Drop the
+// same entries here so the parameter list stays in sync with the output columns.
+std::vector<Spine::Parameter> effective_query_parameters(const CommonQuery& query)
+{
+  auto query_parameters = query.poptions.parameters();
+
+  if (query.gridParametersWithNoData.empty())
+    return query_parameters;
+
+  query_parameters.erase(
+      std::remove_if(query_parameters.begin(),
+                     query_parameters.end(),
+                     [&query](const Spine::Parameter& p)
+                     { return query.gridParametersWithNoData.count(p.originalName()) > 0; }),
+      query_parameters.end());
+
+  return query_parameters;
+}
+
 void parameters_hash_value(const Spine::HTTP::Request& request, std::size_t& hash)
 {
   try
@@ -685,6 +709,11 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       // get the latestTimestep from previous query
       latestTimestep = q.latestTimestep;
       startTimeUTC = q.toptions.startTimeUTC;
+      // q is a per-producer-group copy of masterquery (see 'Query q = masterquery' above); grid
+      // queries record (parameter,level) combinations with no data on q, not on masterquery, so
+      // merge them back, otherwise effective_query_parameters() below never sees them.
+      masterquery.gridParametersWithNoData.insert(q.gridParametersWithNoData.begin(),
+                                                   q.gridParametersWithNoData.end());
       ++producer_group;
     }
 
@@ -693,6 +722,32 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 #endif
 
     setPrecisions(emd, masterquery);
+
+    // CoordinateFilter::accept() requires an exact (lon,lat) match against the literal
+    // coordinates given in the request (LINESTRINGZ/ZM/M, MULTIPOINTZ); it only works when the
+    // output points are guaranteed to be those exact coordinates. That guarantee fails for:
+    //  - Corridor: always resolved via a grid-cell buffer expansion (MaskExpand), never the
+    //    literal path vertices.
+    //  - Trajectory against an observation-backed producer: resolved to nearby station
+    //    coordinates (resolveStationsForPath), never the literal path vertices.
+    //  - Trajectory with a non-zero 'step': the path is resampled at 'step'-km intervals
+    //    (get_location_list), producing interpolated coordinates.
+    //  - Position (MULTIPOINTZ) against an observation-backed producer: resolved to the nearest
+    //    station's coordinates (handleLocationSettings), never the literal requested point. The
+    //    "longitude"/"latitude" special parameters report the station's own coordinates
+    //    (SpecialParameters.cpp), not the requested ones.
+    // In all these cases the requested levels/times are already enforced upstream via the
+    // "levels"/"z" query parameters, so skip the filter rather than have it silently empty the
+    // response.
+    const CoordinateFilter emptyCoordinateFilter;
+    const bool skipCoordinateFilterForOutput =
+        edr_query.query_type == EDRQueryType::Corridor ||
+        (edr_query.query_type == EDRQueryType::Trajectory &&
+         (emd.isObsProducer() || masterquery.step != 0)) ||
+        (edr_query.query_type == EDRQueryType::Position && emd.isObsProducer());
+    const CoordinateFilter& coordinateFilterForOutput =
+        (skipCoordinateFilterForOutput ? emptyCoordinateFilter
+                                       : masterquery.coordinateFilter());
 
     if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT ||
         masterquery.output_format == IWXXMZIP_FORMAT)
@@ -713,8 +768,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                           emd,
                                                           edr_query.query_type,
                                                           masterquery.levels,
-                                                          masterquery.coordinateFilter(),
-                                                          masterquery.poptions.parameters(),
+                                                          coordinateFilterForOutput,
+                                                          effective_query_parameters(masterquery),
                                                           producer == SOUNDING_PRODUCER,
                                                           custom_dim_refs,
                                                           edr_query.language);
@@ -726,8 +781,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      emd,
                                                      edr_query.query_type,
                                                      masterquery.levels,
-                                                     masterquery.coordinateFilter(),
-                                                     masterquery.poptions.parameters(),
+                                                     coordinateFilterForOutput,
+                                                     effective_query_parameters(masterquery),
                                                      custom_dim_refs,
                                                      edr_query.language);
       table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));

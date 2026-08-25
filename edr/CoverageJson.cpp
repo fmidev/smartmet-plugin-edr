@@ -239,7 +239,8 @@ Json::Value get_data_queries(const std::string &host,
                              const std::string &default_output_format,
                              bool levels_exist,
                              bool instances_exist,
-                             const std::string &instance_id = "")
+                             const std::string &instance_id = "",
+                             const std::string &level_type = "")
 {
   auto data_queries = Json::Value(Json::ValueType::objectValue);
 
@@ -363,6 +364,30 @@ Json::Value get_data_queries(const std::string &host,
       width_units[0] = Json::Value("km");
       width_units[1] = Json::Value("mi");
       query_info_variables["width-units"] = width_units;
+      if (levels_exist)
+      {
+        query_info_variables["corridor-height"] = Json::Value("Corridor height");
+        auto height_units = Json::Value(Json::ValueType::arrayValue);
+        unsigned int hi = 0;
+        if (boost::algorithm::icontains(level_type, "pressure"))
+        {
+          height_units[hi++] = Json::Value("hPa");
+          height_units[hi++] = Json::Value("mbar");
+          height_units[hi++] = Json::Value("Pa");
+        }
+        else if (boost::algorithm::icontains(level_type, "hybrid"))
+        {
+          height_units[hi++] = Json::Value("1");
+        }
+        else
+        {
+          height_units[hi++] = Json::Value("m");
+          height_units[hi++] = Json::Value("km");
+          height_units[hi++] = Json::Value("mi");
+          height_units[hi++] = Json::Value("ft");
+        }
+        query_info_variables["height-units"] = height_units;
+      }
       query_info_variables["coords"] = Json::Value(
           "Well Known Text LINESTRING value i.e. LINESTRING(24 "
           "61,24.2 61.2,24.3 61.3)");
@@ -1520,7 +1545,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                                   emd.default_output_format,
                                                   !emd.vertical_extent.levels.empty(),
                                                   false,
-                                                  instance_id);
+                                                  instance_id,
+                                                  emd.vertical_extent.level_type);
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
       //	  crs[0] = Json::Value("EPSG:4326");
@@ -1726,7 +1752,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                collection_emd.output_formats,
                                                collection_emd.default_output_format,
                                                !collection_emd.vertical_extent.levels.empty(),
-                                               instances_exist);
+                                               instances_exist,
+                                               "",
+                                               collection_emd.vertical_extent.level_type);
 
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
