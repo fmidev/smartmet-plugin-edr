@@ -10,3 +10,5 @@ timeseries/fmi_iot_observations.get
 timeseries/fmi_iot_observations_selected_stations.get
 timeseries/fmi_iot_observations_uusimaa.get
 timeseries/place_fmisid_lpnn_wmo_wsi_t2m.get
+fmi_corridor_kumpula.get
+fmi_trajectory_kumpula.get

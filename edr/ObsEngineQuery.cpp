@@ -1478,7 +1478,19 @@ void ObsEngineQuery::resolveStationsForPath(
     if (isWkt)
     {
       pGeo = query.wktGeometries.getGeometry(loc_name_original);
-      wktString = Fmi::OGR::exportToWkt(*pGeo);
+      if (loc->radius == 0)
+      {
+        // wktGeometries only buffers the geometry when the request explicitly gave a radius
+        // (e.g. "LINESTRING(...):100" for Corridor, see WktGeometry::geometryFromWkt); a bare
+        // path (Trajectory) is stored unbuffered, so apply the same default fallback radius
+        // used above for the non-WKT case.
+        std::unique_ptr<OGRGeometry> poly(Fmi::OGR::expandGeometry(pGeo, radius));
+        wktString = Fmi::OGR::exportToWkt(*poly);
+      }
+      else
+      {
+        wktString = Fmi::OGR::exportToWkt(*pGeo);
+      }
     }
     else
     {

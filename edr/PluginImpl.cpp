@@ -1186,8 +1186,11 @@ void PluginImpl::updateMetaData(bool initial_phase)
         std::vector<std::string> params;
         itsObservableProperties =
             itsEngines.obsEngine->observablePropertyQuery(params, default_language);
-        for (const auto& prop : *itsObservableProperties)
-          itsObservablePropertiesMap[prop.gmlId] = &prop;
+        // Some database drivers (e.g. SpatiaLite) do not implement observablePropertyQuery
+        // and return a null pointer instead of an empty vector.
+        if (itsObservableProperties)
+          for (const auto& prop : *itsObservableProperties)
+            itsObservablePropertiesMap[prop.gmlId] = &prop;
       }
 
       auto obs_engine_metadata = get_edr_metadata_obs(*itsEngines.obsEngine,

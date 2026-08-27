@@ -1,0 +1,117 @@
+{
+	"coverages" : 
+	[
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2013-08-05T12:00:00Z",
+								24.96131,
+								60.20307
+							]
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						23.9
+					]
+				}
+			}
+		}
+	],
+	"domainType" : "Trajectory",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"x",
+				"y"
+			],
+			"system" : 
+			{
+				"id" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "temperature",
+				"label" : 
+				{
+					"fi" : "temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
+				}
+			}
+		}
+	}
+}

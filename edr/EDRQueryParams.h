@@ -58,7 +58,7 @@ class EDRQueryParams
                                            const std::vector<std::string>& resource_parts);
   std::string parseLocations(const State& state, const std::vector<std::string>& resource_parts);
   std::string parseInstances(const State& state, const std::vector<std::string>& resource_parts);
-  void parseCoords(const std::string& coordinates);
+  void parseCoords(const EDRMetaData& emd, const std::string& coordinates);
   std::string parsePosition(const std::string& coords);
   std::string parseTrajectoryAndCorridor(const std::string& coords);
   void parseLocations(const EDRMetaData& emd, std::string& coords);
