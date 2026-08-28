@@ -2289,67 +2289,58 @@ void set_level_value(const bool &levels_present, const int &level, Json::Value &
   }
 }
 
-void process_values(const std::string & /* parameter_name */,
-                    const std::string &output_name,
-                    const int &parameter_precision,
-                    const int &longitude_precision,
-                    const int &latitude_precision,
-                    const bool &isAviProducer,
-                    const std::vector<time_coord_value> &values,
-                    const bool &levels_present,
-                    const int &level,
-                    Json::Value &coverages)
+// A "point group" is a run of consecutive entries in a per-(parameter,level) values vector
+// that share the same coordinates, i.e. all the timesteps of a single point/station.
+struct point_group
+{
+  std::size_t begin;
+  std::size_t end;
+};
+
+std::vector<point_group> group_by_point(const std::vector<time_coord_value> &values)
+{
+  std::vector<point_group> groups;
+  for (std::size_t i = 0; i < values.size();)
+  {
+    std::size_t j = i;
+    while (j < values.size() && values[j].lon == values[i].lon && values[j].lat == values[i].lat)
+      j++;
+    groups.push_back({i, j});
+    i = j;
+  }
+  return groups;
+}
+
+Json::Value build_point_domain(const std::vector<time_coord_value> &values,
+                               const point_group &group,
+                               const int &longitude_precision,
+                               const int &latitude_precision,
+                               const bool &levels_present,
+                               const int &level)
 {
   try
   {
-    for (const auto &value : values)
-    {
-      auto coverage = Json::Value(Json::ValueType::objectValue);
-      coverage["type"] = Json::Value("Coverage");
-      auto domain = Json::Value(Json::ValueType::objectValue);
-      domain["type"] = Json::Value("Domain");
-      auto domain_axes = Json::Value(Json::ValueType::objectValue);
-      auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
-      domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
-      auto data_type = Json::Value(Json::ValueType::objectValue);
-      domain_axes_x["values"][0] = Json::Value(value.lon, longitude_precision);
-      auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
-      domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
-      domain_axes_y["values"][0] = Json::Value(value.lat, latitude_precision);
-      auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
-      domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
-      domain_axes_t["values"][0] = Json::Value(value.time);
-      domain_axes["x"] = domain_axes_x;
-      domain_axes["y"] = domain_axes_y;
-      domain_axes["t"] = domain_axes_t;
-      set_level_value(levels_present, level, domain_axes);
+    auto domain = Json::Value(Json::ValueType::objectValue);
+    domain["type"] = Json::Value("Domain");
+    auto domain_axes = Json::Value(Json::ValueType::objectValue);
+    auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
+    domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
+    domain_axes_x["values"][0] = Json::Value(values[group.begin].lon, longitude_precision);
+    auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
+    domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
+    domain_axes_y["values"][0] = Json::Value(values[group.begin].lat, latitude_precision);
+    auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
+    domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
+    auto &t_values = domain_axes_t["values"];
+    for (std::size_t k = group.begin; k < group.end; k++)
+      t_values[static_cast<unsigned int>(k - group.begin)] = Json::Value(values[k].time);
+    domain_axes["x"] = domain_axes_x;
+    domain_axes["y"] = domain_axes_y;
+    domain_axes["t"] = domain_axes_t;
+    set_level_value(levels_present, level, domain_axes);
 
-      domain["axes"] = domain_axes;
-      coverage["domain"] = domain;
-
-      auto range_item = Json::Value(Json::ValueType::objectValue);
-      range_item["type"] = Json::Value("NdArray");
-      auto shape = Json::Value(Json::ValueType::arrayValue);
-      shape[0] = Json::Value(1);
-      shape[1] = Json::Value(1);
-      shape[2] = Json::Value(1);
-      if (levels_present)
-        shape[3] = Json::Value(1);
-
-      range_item["shape"] = shape;
-      auto axis_names = Json::Value(Json::ValueType::arrayValue);
-      set_axis_names(levels_present, axis_names);
-
-      range_item["axisNames"] = axis_names;
-      auto parameter_values = Json::Value(Json::ValueType::arrayValue);
-      set_parameter_value(value, parameter_precision, isAviProducer, parameter_values, range_item);
-
-      range_item["values"] = parameter_values;
-      auto ranges = Json::Value(Json::ValueType::objectValue);
-      ranges[output_name] = range_item;
-      coverage["ranges"] = ranges;
-      coverages[coverages.size()] = coverage;
-    }
+    domain["axes"] = domain_axes;
+    return domain;
   }
   catch (...)
   {
@@ -2357,37 +2348,46 @@ void process_values(const std::string & /* parameter_name */,
   }
 }
 
-void process_coverage_collection_point_parameter(const DataPerLevel &dpl,
-                                                 const std::string &parameter_name,
-                                                 const std::string &output_name,
-                                                 const int &parameter_precision,
-                                                 const int &longitude_precision,
-                                                 const int &latitude_precision,
-                                                 bool isAviProducer,
-                                                 bool &levels_present,
-                                                 Json::Value &coverages)
+Json::Value build_point_range(const std::vector<time_coord_value> &values,
+                              const point_group &group,
+                              const int &parameter_precision,
+                              const bool &isAviProducer,
+                              const bool &levels_present)
 {
   try
   {
-    for (const auto &dpl_item : dpl)
+    const auto n_timesteps = static_cast<int>(group.end - group.begin);
+
+    auto range_item = Json::Value(Json::ValueType::objectValue);
+    range_item["type"] = Json::Value("NdArray");
+    auto shape = Json::Value(Json::ValueType::arrayValue);
+    shape[0] = Json::Value(1);
+    shape[1] = Json::Value(1);
+    if (levels_present)
     {
-      int level = dpl_item.first;
-      // Levels present in some item
-      levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
-
-      auto values = dpl_item.second;
-
-      process_values(parameter_name,
-                     output_name,
-                     parameter_precision,
-                     longitude_precision,
-                     latitude_precision,
-                     isAviProducer,
-                     values,
-                     levels_present,
-                     level,
-                     coverages);
+      shape[2] = Json::Value(1);
+      shape[3] = Json::Value(n_timesteps);
     }
+    else
+    {
+      shape[2] = Json::Value(n_timesteps);
+    }
+
+    range_item["shape"] = shape;
+    auto axis_names = Json::Value(Json::ValueType::arrayValue);
+    set_axis_names(levels_present, axis_names);
+
+    range_item["axisNames"] = axis_names;
+    auto parameter_values = Json::Value(Json::ValueType::arrayValue);
+    for (std::size_t k = group.begin; k < group.end; k++)
+    {
+      Json::Value single_value;
+      set_parameter_value(values[k], parameter_precision, isAviProducer, single_value, range_item);
+      parameter_values[static_cast<unsigned int>(k - group.begin)] = single_value[0];
+    }
+
+    range_item["values"] = parameter_values;
+    return range_item;
   }
   catch (...)
   {
@@ -2417,24 +2417,83 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
-    auto output_name = dpn.cbegin();
-    for (const auto &dpp_item : dpp)
-    {
-      const auto &parameter_name = dpp_item.first;
-      const auto &parameter_precision = emd.getPrecision(parameter_name);
-      const auto &dpl = dpp_item.second;
 
-      // Iterate data per level
-      process_coverage_collection_point_parameter(dpl,
-                                                  parameter_name,
-                                                  output_name->second,
-                                                  parameter_precision,
-                                                  longitude_precision,
-                                                  latitude_precision,
-                                                  isAviProducer,
-                                                  levels_present,
-                                                  coverages);
-      output_name++;
+    // Levels that occur for any parameter
+    std::set<double> levels;
+    for (const auto &dpp_item : dpp)
+      for (const auto &dpl_item : dpp_item.second)
+        levels.insert(dpl_item.first);
+
+    for (double level : levels)
+    {
+      // For every parameter that has data at this level, precompute its point groups (runs of
+      // consecutive same-coordinate entries). All parameters share the same underlying station
+      // set and ordering, so the Nth point group of every parameter refers to the same point --
+      // that is what lets us merge them into a single Coverage's "ranges".
+      struct param_level_data
+      {
+        const std::string *output_name;
+        int precision;
+        const std::vector<time_coord_value> *values;
+        std::vector<point_group> groups;
+      };
+
+      std::vector<param_level_data> params_at_level;
+      std::size_t max_points = 0;
+      for (const auto &dpp_item : dpp)
+      {
+        const auto &parameter_name = dpp_item.first;
+        auto lvl_it = dpp_item.second.find(level);
+        if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
+          continue;
+
+        param_level_data pld;
+        pld.output_name = &dpn.at(parameter_name);
+        pld.precision = emd.getPrecision(parameter_name);
+        pld.values = &lvl_it->second;
+        pld.groups = group_by_point(*pld.values);
+        max_points = std::max(max_points, pld.groups.size());
+        params_at_level.push_back(pld);
+      }
+
+      if (params_at_level.empty())
+        continue;
+
+      levels_present = (levels_present || (level != std::numeric_limits<double>::max()));
+
+      for (std::size_t point_idx = 0; point_idx < max_points; point_idx++)
+      {
+        const param_level_data *domain_source = nullptr;
+        for (const auto &pld : params_at_level)
+        {
+          if (point_idx < pld.groups.size())
+          {
+            domain_source = &pld;
+            break;
+          }
+        }
+        if (!domain_source)
+          continue;
+
+        Json::Value coverage = Json::Value(Json::ValueType::objectValue);
+        coverage["type"] = Json::Value("Coverage");
+        coverage["domain"] =
+            build_point_domain(*domain_source->values, domain_source->groups[point_idx],
+                               longitude_precision, latitude_precision, levels_present,
+                               static_cast<int>(level));
+
+        auto ranges = Json::Value(Json::ValueType::objectValue);
+        for (const auto &pld : params_at_level)
+        {
+          if (point_idx >= pld.groups.size())
+            continue;
+          ranges[*pld.output_name] = build_point_range(
+              *pld.values, pld.groups[point_idx], pld.precision, isAviProducer, levels_present);
+        }
+        coverage["ranges"] = ranges;
+
+        coverages[coverages.size()] = coverage;
+      }
     }
 
     coverage_collection =
@@ -2450,77 +2509,77 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
   }
 }
 
-void process_coverage_collection_trajectory_parameter(const DataPerLevel &dpl,
-                                                      const std::string &parameter_name,
-                                                      const int &parameter_precision,
-                                                      const int &longitude_precision,
-                                                      const int &latitude_precision,
-                                                      bool &levels_present,
-                                                      Json::Value &coverages)
+Json::Value build_trajectory_domain(const std::vector<time_coord_value> &values,
+                                    const int &longitude_precision,
+                                    const int &latitude_precision,
+                                    const bool &levels_present,
+                                    const int &level)
 {
   try
   {
-    for (const auto &dpl_item : dpl)
+    auto coverage_domain = Json::Value(Json::ValueType::objectValue);
+    coverage_domain["type"] = Json::Value("Domain");
+
+    auto domain_axes = Json::Value(Json::ValueType::objectValue);
+    auto domain_axes_composite = Json::Value(Json::ValueType::objectValue);
+    domain_axes_composite["dataType"] = Json::Value("tuple");
+    auto domain_axes_coordinates = Json::Value(Json::ValueType::arrayValue);
+    domain_axes_coordinates[0] = Json::Value("t");
+    domain_axes_coordinates[1] = Json::Value("x");
+    domain_axes_coordinates[2] = Json::Value("y");
+    if (levels_present)
+      domain_axes_coordinates[3] = Json::Value("z");
+    domain_axes_composite["coordinates"] = domain_axes_coordinates;
+
+    auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
+    for (unsigned int i = 0; i < values.size(); i++)
     {
-      int level = dpl_item.first;
-      // Levels present in some item
-      levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
-
-      auto values = dpl_item.second;
-      auto data_values = Json::Value(Json::ValueType::arrayValue);
-      auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
-      for (unsigned int i = 0; i < values.size(); i++)
-      {
-        const auto &value = values.at(i);
-        auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
-        time_coord_value[0] = Json::Value(value.time);
-        time_coord_value[1] = Json::Value(value.lon, longitude_precision);
-        time_coord_value[2] = Json::Value(value.lat, latitude_precision);
-        if (levels_present)
-          time_coord_value[3] = Json::Value(level);
-        time_coord_values[i] = time_coord_value;
-        if (value.value)
-          data_values[i] = UtilityFunctions::json_value(*value.value, parameter_precision);
-        else
-          data_values[i] = Json::Value();
-      }
-
-      auto coverage = Json::Value(Json::ValueType::objectValue);
-      coverage["type"] = Json::Value("Coverage");
-      auto coverage_domain = Json::Value(Json::ValueType::objectValue);
-      coverage_domain["type"] = Json::Value("Domain");
-
-      auto domain_axes = Json::Value(Json::ValueType::objectValue);
-      auto domain_axes_composite = Json::Value(Json::ValueType::objectValue);
-      domain_axes_composite["dataType"] = Json::Value("tuple");
-      auto domain_axes_coordinates = Json::Value(Json::ValueType::arrayValue);
-      domain_axes_coordinates[0] = Json::Value("t");
-      domain_axes_coordinates[1] = Json::Value("x");
-      domain_axes_coordinates[2] = Json::Value("y");
+      const auto &value = values.at(i);
+      auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
+      time_coord_value[0] = Json::Value(value.time);
+      time_coord_value[1] = Json::Value(value.lon, longitude_precision);
+      time_coord_value[2] = Json::Value(value.lat, latitude_precision);
       if (levels_present)
-        domain_axes_coordinates[3] = Json::Value("z");
-      domain_axes_composite["coordinates"] = domain_axes_coordinates;
-      domain_axes_composite["values"] = time_coord_values;
-      domain_axes["composite"] = domain_axes_composite;
-      coverage_domain["axes"] = domain_axes;
-
-      auto domain_ranges = Json::Value(Json::ValueType::objectValue);
-      auto domain_parameter = Json::Value(Json::ValueType::objectValue);
-      domain_parameter["type"] = Json::Value("NdArray");
-      domain_parameter["dataType"] = Json::Value("float");
-      auto axis_names = Json::Value(Json::ValueType::arrayValue);
-      axis_names[0] = Json::Value("composite");
-      domain_parameter["axisNames"] = axis_names;
-      auto shape = Json::Value(Json::ValueType::arrayValue);
-      shape[0] = Json::Value(values.size());
-      domain_parameter["shape"] = shape;
-      domain_parameter["values"] = data_values;
-      domain_ranges[parameter_name] = domain_parameter;
-      coverage["domain"] = coverage_domain;
-      coverage["ranges"] = domain_ranges;
-
-      coverages[coverages.size()] = coverage;
+        time_coord_value[3] = Json::Value(level);
+      time_coord_values[i] = time_coord_value;
     }
+    domain_axes_composite["values"] = time_coord_values;
+    domain_axes["composite"] = domain_axes_composite;
+    coverage_domain["axes"] = domain_axes;
+    return coverage_domain;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Json::Value build_trajectory_range(const std::vector<time_coord_value> &values,
+                                   const int &parameter_precision)
+{
+  try
+  {
+    auto domain_parameter = Json::Value(Json::ValueType::objectValue);
+    domain_parameter["type"] = Json::Value("NdArray");
+    domain_parameter["dataType"] = Json::Value("float");
+    auto axis_names = Json::Value(Json::ValueType::arrayValue);
+    axis_names[0] = Json::Value("composite");
+    domain_parameter["axisNames"] = axis_names;
+    auto shape = Json::Value(Json::ValueType::arrayValue);
+    shape[0] = Json::Value(values.size());
+    domain_parameter["shape"] = shape;
+
+    auto data_values = Json::Value(Json::ValueType::arrayValue);
+    for (unsigned int i = 0; i < values.size(); i++)
+    {
+      const auto &value = values.at(i);
+      if (value.value)
+        data_values[i] = UtilityFunctions::json_value(*value.value, parameter_precision);
+      else
+        data_values[i] = Json::Value();
+    }
+    domain_parameter["values"] = data_values;
+    return domain_parameter;
   }
   catch (...)
   {
@@ -2550,22 +2609,49 @@ Json::Value format_coverage_collection_trajectory(
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
-    auto output_name = dpn.cbegin();
-    for (const auto &dpp_item : dpp)
-    {
-      const auto &parameter_name = dpp_item.first;
-      const auto &dpl = dpp_item.second;
-      const auto &parameter_precision = emd.getPrecision(parameter_name);
 
-      process_coverage_collection_trajectory_parameter(dpl,
-                                                       output_name->second,
-                                                       parameter_precision,
-                                                       longitude_precision,
-                                                       latitude_precision,
-                                                       levels_present,
-                                                       coverages);
-      output_name++;
+    // Levels that occur for any parameter
+    std::set<double> levels;
+    for (const auto &dpp_item : dpp)
+      for (const auto &dpl_item : dpp_item.second)
+        levels.insert(dpl_item.first);
+
+    for (double level : levels)
+    {
+      // One Coverage per level, merging every parameter's values into its "ranges" instead of
+      // emitting a separate Coverage (with a duplicated domain) per parameter.
+      const std::vector<time_coord_value> *domain_values = nullptr;
+      auto ranges = Json::Value(Json::ValueType::objectValue);
+
+      for (const auto &dpp_item : dpp)
+      {
+        const auto &parameter_name = dpp_item.first;
+        auto lvl_it = dpp_item.second.find(level);
+        if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
+          continue;
+
+        const auto &values = lvl_it->second;
+        if (!domain_values)
+          domain_values = &values;
+
+        const auto &parameter_precision = emd.getPrecision(parameter_name);
+        ranges[dpn.at(parameter_name)] = build_trajectory_range(values, parameter_precision);
+      }
+
+      if (!domain_values)
+        continue;
+
+      levels_present = (levels_present || (level != std::numeric_limits<double>::max()));
+
+      Json::Value coverage = Json::Value(Json::ValueType::objectValue);
+      coverage["type"] = Json::Value("Coverage");
+      coverage["domain"] = build_trajectory_domain(*domain_values, longitude_precision,
+                                                    latitude_precision, levels_present,
+                                                    static_cast<int>(level));
+      coverage["ranges"] = ranges;
+      coverages[coverages.size()] = coverage;
     }
+
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory",
                                          custom_dim_refs, language);
