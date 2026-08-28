@@ -79,7 +79,7 @@ stop-test-db:
 
 cnf/avi.conf cnf/geonames.conf cnf/gis.conf:
 	$(GEONAMES_HOST_EDIT) $@.in >$@
-	diff -u $@.in $@; true
+	#diff -u $@.in $@; true
 
 dummy:
 
