@@ -1,0 +1,1 @@
+GET /edr/collections/opendata/radius?coords=POINT(24.9384+60.1699)&within=50&within-units=km&datetime=2013-08-04T18:00:00Z/2013-08-04T20:00:00Z&parameter-name=wawa,ws&f=CoverageJSON HTTP/1.0
