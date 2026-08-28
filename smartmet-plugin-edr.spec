@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.8.27
+Version: 26.8.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Aug 28 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.8.28-1.fmi
+- (claude) Improved radius query by storing all timesteps within single coverage. Same effect e.g for position/MULTIPOINT query
+
 * Thu Aug 27 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.8.27-1.fmi
 - (claude) Added corridor-height and height-units parameters to corridor query (BRAINSTORM-2976) and missing locations query scheme to api response (BRAINSTORM-3491). Using default buffering (200m) for obsengine corridor/trajectory wkt queries. Stripping off missing values returned for nonexistent grid data levels/parameters (BRAINSTORM-3481). Fixed crash (empty ptr returned by observablePropertyQuery()) in PluginImpl::updateMetaData when running obsengine Spatialite tests
 
