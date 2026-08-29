@@ -92,20 +92,42 @@ bool is_data_query(const Spine::HTTP::Request& req,
   }
 }
 
+// A client-supplied Host header is reflected into the self-referential URLs in EDR
+// responses, so accept only a plain hostname[:port]. This blocks CRLF/control-character
+// injection (response splitting) and arbitrary markup from a spoofed header.
+static bool is_valid_host(const std::string& host)
+{
+  if (host.empty() || host.size() > 253)
+    return false;
+  for (char c : host)
+  {
+    const bool ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                    (c >= '0' && c <= '9') || c == '.' || c == '-' || c == ':';
+    if (!ok)
+      return false;
+  }
+  return true;
+}
+
 std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::string& base_url)
 {
   try
   {
     auto host_header = theRequest.getHeader("Host");
-    if (!host_header)
+    if (!host_header || !is_valid_host(*host_header))
     {
-      // This should never happen, host header is mandatory in HTTP 1.1
+      // No Host header (mandatory in HTTP/1.1), or a malformed/spoofed one: fall back
+      // to the canonical URL rather than reflecting attacker-controlled input.
       return "http://smartmet.fmi.fi/edr";
     }
 
-    // http/https scheme selection based on 'X-Forwarded-Proto' header
+    // http/https scheme selection based on 'X-Forwarded-Proto' header. That header is
+    // client-controlled, so accept only the two valid scheme values.
     auto host_protocol = theRequest.getProtocol();
-    std::string protocol((host_protocol ? *host_protocol : "http") + "://");
+    std::string scheme = (host_protocol ? *host_protocol : "http");
+    if (scheme != "http" && scheme != "https")
+      scheme = "http";
+    std::string protocol(scheme + "://");
 
     std::string host = *host_header;
 

@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.8.28
+Version: 26.8.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Sat Aug 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.30-1.fmi
+- Security: validate the client Host header (plain hostname[:port]) and the
+  X-Forwarded-Proto scheme (http/https only) before reflecting them into the
+  self-referential URLs in EDR responses, preventing CRLF/markup injection and
+  link poisoning; fall back to the canonical URL on a malformed header.
 * Fri Aug 28 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.8.28-1.fmi
 - (claude) Improved radius query by storing all timesteps within single coverage. Same effect e.g for position/MULTIPOINT query
 
