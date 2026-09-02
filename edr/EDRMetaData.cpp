@@ -9,6 +9,7 @@
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
 #include <engines/querydata/MetaQueryOptions.h>
+#include <newbase/NFmiFastQueryInfo.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -1134,6 +1135,63 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+std::set<std::string> load_locations_qd(const Engine::Querydata::Engine &qEngine,
+                                         SupportedProducerLocations &spl)
+{
+  std::set<std::string> populated;
+  try
+  {
+    for (const auto &producer : qEngine.producers())
+    {
+      try
+      {
+        // Throws if no data is currently loaded for this producer - skip it, do not
+        // abort harvesting for the remaining producers.
+        auto q = qEngine.get(producer);
+        if (!q || q->isGrid())
+          continue;
+
+        auto info = q->info();
+        info->FirstParam();
+        if (info->Area() != nullptr)
+          continue;  // defensive; isGrid() already filtered gridded data
+
+        SupportedLocations sls;
+        for (info->ResetLocation(); info->NextLocation();)
+        {
+          NFmiPoint point = info->LatLon();
+          if (point.X() == kFloatMissing || point.Y() == kFloatMissing)
+            continue;
+          location_info li(Fmi::to_string(info->Location()->GetIdent()),
+                           point.X(),
+                           point.Y(),
+                           latin1_to_utf8(info->Location()->GetName().CharPtr()),
+                           producer);
+          sls[li.id] = li;
+        }
+
+        if (!sls.empty())
+        {
+          // Querydata producers having upper case letters must have lowercase aliases,
+          // matching get_edr_metadata_qd's producer key lookup below.
+          auto key = boost::algorithm::to_lower_copy(producer);
+          spl[key] = sls;
+          populated.insert(key);
+        }
+      }
+      catch (...)
+      {
+        continue;
+      }
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+  return populated;
 }
 
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,

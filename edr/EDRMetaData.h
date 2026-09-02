@@ -189,6 +189,11 @@ void load_locations_avi(const Engine::Avi::Engine& aviEngine,
 const Fmi::DateTime& get_latest_data_update_time(const EDRProducerMetaData& pmd,
                                                  const std::string& producer);
 
+// Harvest real station ids/names/coordinates embedded in nongrid (point) querydata
+// producers, storing them into spl and returning the set of producer keys populated.
+std::set<std::string> load_locations_qd(const Engine::Querydata::Engine& qEngine,
+                                        SupportedProducerLocations& spl);
+
 class EngineMetaData
 {
  public:

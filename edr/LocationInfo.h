@@ -35,6 +35,23 @@ struct location_info
         end_time(station.station_end)
   {
   }
+  // Constructor for stations enumerated directly from nongrid querydata - no
+  // Spine::LocationPtr/Spine::Station available, id/name/coords come straight from
+  // NFmiFastQueryInfo::Location().
+  location_info(std::string station_id,
+               double lon,
+               double lat,
+               std::string station_name,
+               std::string producer)
+      : id(std::move(station_id)),
+        longitude(lon),
+        latitude(lat),
+        name(std::move(station_name)),
+        type("qdstation"),
+        keyword(std::move(producer))
+  {
+  }
+
   location_info() = default;
 
   std::string id;

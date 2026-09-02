@@ -994,11 +994,23 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
 
     const auto& location_info = emd.locations->at(location_id);
 
-    // Currently locationId is either fmisid, geoid or icao code
+    // Currently locationId is fmisid, geoid, ICAO code, or a station id embedded in
+    // nongrid querydata (qdstation)
     if (location_info.type == "ICAO")
       req.addParameter("icao", location_id);
     else if (location_info.type == "fmisid")
       req.addParameter("fmisid", location_id);
+    else if (location_info.type == "qdstation")
+    {
+      // Convert to a Position query at the station's own cached coordinates (byte-identical
+      // to the querydata source), reusing the existing nongrid nearest-station pointQuery()
+      // path in QEngineQuery.cpp - same trick as the location_id == "all" -> Area conversion
+      // above.
+      itsEDRQuery.query_type = EDRQueryType::Position;
+      coords = "POINT(" + Fmi::to_string(location_info.longitude) + " " +
+              Fmi::to_string(location_info.latitude) + ")";
+      parseCoords(emd, coords);
+    }
     else
       req.addParameter("geoid", location_id);
   }

@@ -1392,6 +1392,12 @@ void PluginImpl::updateSupportedLocations()
     }
 #endif
 
+    // Get locations directly embedded in nongrid (point) querydata; these take precedence
+    // over the generic keyword-search fallback below for the producers they cover.
+    // Startup-only, like the rest of this function - not re-run by the periodic metadata
+    // refresh loop, so a producer's station set can go stale without a server restart.
+    auto qd_native_location_producers = load_locations_qd(*itsEngines.qEngine, itsSupportedLocations);
+
     // Get locations using keywords
     auto producer_keywords = itsConfig.getProducerKeywords();
     Locus::QueryOptions opts;
@@ -1399,8 +1405,11 @@ void PluginImpl::updateSupportedLocations()
     for (const auto& item : producer_keywords)
     {
       auto producer = item.first;
-      // Use keywords except for observation producers
+      // Use keywords except for observation producers and producers that already got
+      // their real station list from nongrid querydata above.
       if (obs_producers.find(producer) != obs_producers.end())
+        continue;
+      if (qd_native_location_producers.find(producer) != qd_native_location_producers.end())
         continue;
       Spine::LocationList producer_llist;
       SupportedLocations sls;
