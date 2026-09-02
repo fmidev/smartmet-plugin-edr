@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.8.28
+Version: 26.9.2
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -42,7 +42,7 @@ BuildRequires: smartmet-library-grid-files-devel >= 26.8.27
 BuildRequires: smartmet-library-newbase-devel >= 26.7.18
 BuildRequires: smartmet-library-gis-devel >= 26.8.10
 BuildRequires: smartmet-library-timeseries-devel >= 26.5.5
-BuildRequires: smartmet-engine-avi-devel >= 26.7.9
+BuildRequires: smartmet-engine-avi-devel >= 26.8.31
 BuildRequires: smartmet-engine-geonames-devel >= 26.7.31
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 26.8.26
@@ -64,7 +64,7 @@ Requires: smartmet-library-spine >= 26.8.24
 Requires: smartmet-library-timeseries >= 26.5.5
 Requires: smartmet-library-gis >= 26.8.10
 Requires: smartmet-library-grid-files >= 26.8.27
-Requires: smartmet-engine-avi >= 26.7.9
+Requires: smartmet-engine-avi >= 26.8.31
 Requires: smartmet-engine-geonames >= 26.7.31
 Requires: smartmet-engine-querydata >= 26.8.24
 Requires: smartmet-engine-gis >= 26.8.10
@@ -82,10 +82,10 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-newbase-devel >= 26.7.18
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-test-data >= 26.7.27
+#TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-engine-grid-test >= 26.7.10
 #TestRequires: smartmet-library-gis >= 26.8.10
-#TestRequires: smartmet-engine-avi >= 26.7.9
+#TestRequires: smartmet-engine-avi >= 26.8.31
 #TestRequires: smartmet-engine-geonames >= 26.7.31
 #TestRequires: smartmet-engine-gis >= 26.8.10
 #TestRequires: smartmet-engine-querydata >= 26.8.24
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Sep  2 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.2-1.fmi
+- (claude) Using locations from querydata instead of configured keyword for point querydata producers. Locations are only loaded at startup so changes in locations are currently not taken into account (PAK-9676)
+
 * Fri Aug 28 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.8.28-1.fmi
 - (claude) Improved radius query by storing all timesteps within single coverage. Same effect e.g for position/MULTIPOINT query
 
