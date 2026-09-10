@@ -77,6 +77,28 @@ bool is_wkt_area(const Spine::LocationPtr& loc)
   }
 }
 
+// A MULTIPOINT is resolved into a Path typed location (WktGeometry::locationFromGeometry in the
+// geonames engine types every multi-geometry as a Path), but semantically it is a set of
+// independent points rather than an area. Point (station) querydata rejects area operations, so
+// without recognizing this case a MULTIPOINT query against a point producer returns nothing at
+// all, even though the very same coordinates given via 'latlons' work.
+bool is_multipoint_query(const Spine::TaggedLocation& tloc, const CommonQuery& query)
+{
+  try
+  {
+    if (tloc.loc->type != Spine::Location::Wkt)
+      return false;
+
+    const auto* geom = query.wktGeometries.getGeometry(tloc.loc->name);
+
+    return (geom != nullptr && geom->getGeometryType() == wkbMultiPoint);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 bool is_point_query(const Spine::LocationPtr& loc)
 {
   try
@@ -545,9 +567,11 @@ void QEngineQuery::fetchQEngineValues(const State& state,
 
     query.toptions.setDataTimes(validtimes, qi->isClimatology());
 
-    // No area operations allowed for non-grid data
+    // No area operations allowed for non-grid data. A MULTIPOINT is not an area operation even
+    // though it is typed as a Path, so let it through: areaQuery() resolves it back into the
+    // individual requested points (getLocationListForPath).
     bool isPointQuery = is_point_query(loc);
-    if (!qi->isGrid() && !isPointQuery)
+    if (!qi->isGrid() && !isPointQuery && !is_multipoint_query(tloc, query))
       return;
 
     // std::string country = state.getGeoEngine().countryName(loc->iso2, query.language);
