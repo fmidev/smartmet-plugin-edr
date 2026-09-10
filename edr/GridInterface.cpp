@@ -2174,7 +2174,14 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                   break;
                 }
 
-              if (isMetaParameter)
+              // Dropping a column only works when the consumer of the output data also drops the
+              // parameter from the parameter list (see effective_query_parameters() in
+              // QueryProcessingHub.cpp, used by the CoverageJSON/GeoJSON formatters). The
+              // timeseries output path instead matches output columns against the full requested
+              // parameter list positionally (PostProcessing::fill_table), so dropping a column
+              // there shifts every following parameter's values by one. Keep emitting a missing
+              // value for timeseries queries, which is also their historical behaviour.
+              if (isMetaParameter || masterquery.is_timeseries_query)
               {
                 TS::TimedValue tsValue(queryTime, missing_value);
                 tsForParameter->emplace_back(tsValue);
