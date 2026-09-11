@@ -1,0 +1,1 @@
+GET /timeseries?producer=ecmwf_maailma_piste&starttime=200808041800&timesteps=2&tz=utc&precision=double&wkt=MULTIPOINT(106.69%2010.74,106.662%2010.7592)&param=utctime,lonlat,Temperature,nanmax(Temperature),nanmean(Temperature) HTTP/1.0
