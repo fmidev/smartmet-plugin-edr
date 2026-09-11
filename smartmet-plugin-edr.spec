@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.2
+Version: 26.9.10
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Sep 10 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.9.10-1.fmi
+- (claude) Allow MULTIPOINT queries against point querydata producers
+- (claude) Do not drop grid parameters with no data from timeseries output
+
 * Wed Sep  2 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.2-1.fmi
 - (claude) Using locations from querydata instead of configured keyword for point querydata producers. Locations are only loaded at startup so changes in locations are currently not taken into account (PAK-9676)
 
