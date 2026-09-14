@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5 0 10z" fill="#444"/></marker>
+<style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.dec{fill:#fff8e1;stroke:#b7791f;stroke-width:1.5}.out{fill:#eef7ee;stroke:#2e7d32;stroke-width:1.5}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.arrow{stroke:#444;stroke-width:1.5;fill:none;marker-end:url(#a)}.mono{font-family:DejaVu Sans Mono, monospace;font-size:12px}.note{fill:#a35a00;font-size:12px;font-style:italic}</style></defs>
+<rect width="1000" height="470" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">CoverageJson::formatOutputData(): the domain type follows the shape of the intermediate data</text>
+
+<rect class="box" x="20" y="60" width="960" height="85" rx="6"/><text class="t h" x="30" y="85">TS::OutputData = vector of (location id, vector&lt;TS::TimeSeriesData&gt;)   — one column per parameter: parameter-name…, longitude, latitude[, level]</text>
+<text class="mono" x="30" y="108">TimeSeriesData = variant&lt; TimeSeriesPtr (one point),  TimeSeriesVectorPtr (obs engine: all columns of one station),</text>
+<text class="mono" x="30" y="126">                          TimeSeriesGroupPtr (one series per coordinate) &gt;</text>
+
+<rect class="dec" x="20" y="170" width="290" height="60" rx="6"/><text class="t h" x="30" y="195">column 0 is TimeSeriesVectorPtr?</text><text class="s" x="30" y="215">observation engine result</text>
+<rect class="dec" x="355" y="170" width="290" height="60" rx="6"/><text class="t h" x="365" y="195">any column is TimeSeriesGroupPtr?</text><text class="s" x="365" y="215">several coordinates (area, path, radius, cube)</text>
+<rect class="dec" x="690" y="170" width="290" height="60" rx="6"/><text class="t h" x="700" y="195">column 0 is TimeSeriesPtr</text><text class="s" x="700" y="215">single point</text>
+<path class="arrow" d="M500 145 V170"/><path class="arrow" d="M500 145 C500 160 200 155 165 170"/><path class="arrow" d="M500 145 C500 160 800 155 835 170"/>
+
+<rect class="out" x="20" y="290" width="290" height="70" rx="6"/><text class="t h" x="30" y="315">Coverage · PointSeries</text><text class="s" x="30" y="335">axes x, y, t  (+ z with one level)</text><text class="s" x="30" y="351">levels ≤ 1</text>
+<rect class="out" x="20" y="380" width="290" height="70" rx="6"/><text class="t h" x="30" y="405">CoverageCollection · VerticalProfile</text><text class="s" x="30" y="425">one Coverage per time step, z axis from levels</text><text class="s" x="30" y="441">levels &gt; 1  (soundings use the data's own levels)</text>
+<path class="arrow" d="M100 230 V290"/><path class="arrow" d="M230 230 C230 300 230 340 230 380"/>
+
+<rect class="out" x="355" y="290" width="290" height="70" rx="6"/><text class="t h" x="365" y="315">CoverageCollection · Point</text><text class="s" x="365" y="335">one Coverage per coordinate and level,</text><text class="s" x="365" y="351">all parameters in one ranges object</text>
+<rect class="out" x="355" y="380" width="290" height="70" rx="6"/><text class="t h" x="365" y="405">CoverageCollection · Trajectory</text><text class="s" x="365" y="425">composite axis [t, x, y(, z)] tuples,</text><text class="s" x="365" y="441">one Coverage per level;  Trajectory query type</text>
+<path class="arrow" d="M440 230 V290"/><path class="arrow" d="M560 230 C560 300 560 340 560 380"/>
+
+<rect class="out" x="690" y="290" width="290" height="70" rx="6"/><text class="t h" x="700" y="315">Coverage · PointSeries</text><text class="s" x="700" y="335">levels ≤ 1</text>
+<rect class="out" x="690" y="380" width="290" height="70" rx="6"/><text class="t h" x="700" y="405">CoverageCollection · VerticalProfile</text><text class="s" x="700" y="425">levels &gt; 1</text>
+<path class="arrow" d="M770 230 V290"/><path class="arrow" d="M900 230 C900 300 900 340 900 380"/>
+<text class="note" x="20" y="465">there is no Grid domain type: cube and area results are collections of Point coverages</text>
+</svg>

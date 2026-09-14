@@ -22,6 +22,7 @@ EDR API is served.
 
 - [EDR Plugin Configuration Guide](docs/EDR-Plugin-Configuration-Guide.md)
 - [Using the EDR Plugin](docs/Using-EDR-Plugin.md)
+- [Programmer's tutorial](docs/tutorial.md) — how a request becomes CoverageJSON: URL parsing, translation to TimeSeries options, metadata snapshot, engine dispatch, output formatting
 
 Timeseries interface (optional):
 
