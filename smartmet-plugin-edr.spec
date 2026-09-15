@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.11
+Version: 26.9.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Sep 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.9.15-1.fmi
+- Treat tapsi_qc as a mobile producer as the timeseries plugin does (BRAINSTORM-3008)
+
 * Fri Sep 11 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.9.11-1.fmi
 - (claude) Allow MULTIPOINT queries against point querydata producers
 - (claude) Do not drop grid parameters with no data from timeseries output
