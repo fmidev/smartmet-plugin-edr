@@ -197,7 +197,9 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
       {
         const auto &temporal_extent_period = temporal_extent.time_periods.at(i);
 
-        if ((temporal_extent_period.timestep == 0) || (temporal_extent_period.timesteps == 1))
+        // claude: BRAINSTORM-3498:
+        //
+        if ((temporal_extent_period.timestep == 0) || (temporal_extent_period.timesteps == 0))
           temporal_interval_values[i] =
               Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z");
         else

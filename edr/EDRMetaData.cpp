@@ -170,6 +170,14 @@ bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
     auto last_it = begin_iter;
     int laststep = 0;
     int step = 0;
+
+    // claude: BRAINSTORM-3498:
+    //
+    // Number of PT<laststep>M intervals seen so far in the current run, i.e. one less than
+    // the number of timestamps in the run. This must be the actual repeat count so that
+    // "R<timesteps>/<start_time>/PT<laststep>M" reconstructs exactly [start_time, end_time]
+    // instead of overrunning into the next period.
+    //
     int timesteps = 0;
 
     for (;; it++)
@@ -201,12 +209,13 @@ bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
         first_it = it;
         last_it = it;
         laststep = step;
-        timesteps = 1;
+        timesteps = 0;
       }
       else
       {
         last_it = it;
-        timesteps++;
+        if (it != begin_iter)
+          timesteps++;
       }
     }
 
