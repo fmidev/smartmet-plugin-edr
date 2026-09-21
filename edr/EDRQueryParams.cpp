@@ -49,6 +49,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
     //   cube       coords=wkt|POLYGON&minz=lo&maxz=hi|bbox=bllon,bllat,trlon,trlat&z=lo/hi
     //
     //   locations/LOCID
+    //   locations?locationId=LOCID  (alternative to the path format above)
 
     std::vector<std::string> resParts;
     std::string res = req.getResource();
@@ -81,8 +82,18 @@ bool is_data_query(const Spine::HTTP::Request& req,
 
     resIdx += ((resParts[resIdx + 2] == "instances") ? 4 : 2);
 
-    if ((lastIdx < resIdx) || ((lastIdx == resIdx) && (resParts[resIdx] == "locations")))
+    if (lastIdx < resIdx)
       return false;
+
+    if ((lastIdx == resIdx) && (resParts[resIdx] == "locations"))
+    {
+      // claude: BRAINSTORM-3499:
+      //
+      // 'locations' with no LOCID path part is a listing (metadata) query, unless a
+      // locationId query parameter is given instead - then it's still a data query
+      //
+      return Spine::optional_string(req.getParameter("locationId"), "").empty() == false;
+    }
 
     return true;
   }
@@ -458,8 +469,14 @@ std::string EDRQueryParams::parseLocations(const State& /* state */,
     {
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
-      if (resource_parts.size() > 6)
+      if (resource_parts.size() > 6 && !resource_parts.at(6).empty())
         itsEDRQuery.location_id = resource_parts.at(6);
+      else
+        // claude: BRAINSTORM-3499:
+        //
+        // Alternative to the 'locations/{locationId}' path format: locations?locationId=id
+        //
+        itsEDRQuery.location_id = Spine::optional_string(req.getParameter("locationId"), "");
     }
 
     return {};
@@ -519,8 +536,14 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
     {
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
-      if (resource_parts.size() > 4)
+      if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
         itsEDRQuery.location_id = resource_parts.at(4);
+      else
+        // claude: BRAINSTORM-3499:
+        //
+        // Alternative to the 'locations/{locationId}' path format: locations?locationId=id
+        //
+        itsEDRQuery.location_id = Spine::optional_string(req.getParameter("locationId"), "");
     }
 
     return {};

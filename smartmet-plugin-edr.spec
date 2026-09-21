@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.16
-Release: 3%{?dist}.fmi
+Version: 26.9.21
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Sep 21 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.21-1.fmi
+- Locations query supporting edr 1.1 locations?locationId=id requests too
+
 * Wed Sep 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.9.16-3.fmi
 - Repackaged due to QEngine ABI changes (smartmet-engine-querydata >= 26.9.16-2)
 
