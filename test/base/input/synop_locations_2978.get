@@ -1,0 +1,1 @@
+GET /edr/collections/synop/locations/2978?datetime=2008-11-29T00:00:00Z/2008-11-29T02:00:00Z&parameter-name=Temperature HTTP/1.0

@@ -1,0 +1,1 @@
+GET /edr/collections/kalman/locations/all?parameter-name=temperature&datetime=2016-06-28T18:00:00Z HTTP/1.0

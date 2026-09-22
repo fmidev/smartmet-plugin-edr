@@ -1,6 +1,7 @@
 #include "EDRQueryParams.h"
 #include "EDRDefs.h"
 #include "EDRMetaData.h"
+#include "LonLatDistance.h"
 #include "Plugin.h"
 #include "UtilityFunctions.h"
 #include <engines/observation/Keywords.h>
@@ -8,6 +9,8 @@
 #include <macgyver/StringConversion.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
+#include <algorithm>
+#include <limits>
 #include <string>
 
 namespace SmartMet
@@ -981,27 +984,107 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
     {
       // BRAINSTORM-3288
       //
-      // Convert location "all" query to area query using a small buffer (0.1 degrees)
+      // claude: BRAINSTORM-3499:
       //
-      // Note: removed initial buffering by adding ":1" to the end of the wkt due to crashes in
-      //       gis -engine since it resulted to 1000 degrees instead of meters. The purpose was
-      //       only to pass on the buffering to avi engine query by later extracting the buffering
-      //       value from the wkt and passing it on to avi -engine as maxdistance
+      // 'locations/all' means "every location this collection's own /locations listing
+      // reports" - NOT literally every native grid cell (for a grid-engine-backed collection
+      // that can be hundreds of thousands of points, and building/serializing a response that
+      // size is impractical - confirmed the hard way). Every location_info (regardless of
+      // whether its type is fmisid/ICAO/geoid/qdstation) already carries real lon/lat
+      // (LocationInfo.h), so build one combined MULTIPOINT from all of them and reuse the
+      // existing multi-point Position query path as-is (same as the qdstation branch below,
+      // just for every location at once) - the per-type fmisid/geoid/icao request parameters
+      // were tried first and don't work here: each resolves into its own separate
+      // Spine::TaggedLocation, and CoverageJson's output formatter only keeps the first when
+      // locations arrive as many separate single-point results instead of one combined
+      // multi-point query (confirmed against the already-correct 'pal_skandinavia_multi_point'
+      // test, which goes through this exact combined-query path).
       //
-      itsEDRQuery.query_type = EDRQueryType::Area;
+      if (emd.locations->empty())
+        throw EDRException("No locations found for collection '" + itsEDRQuery.collection_id +
+                           "'");
 
-      auto offset = ((emd.spatial_extent.bbox_xmin > -179.9) ? 0.1 : 0.0);
-      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin - offset) + " ");
-      offset = ((emd.spatial_extent.bbox_ymin > -89.9) ? 0.1 : 0.0);
-      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin - offset) + ",");
-      offset = ((emd.spatial_extent.bbox_xmax < 179.9) ? 0.1 : 0.0);
-      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax + offset) + " ");
-      offset = ((emd.spatial_extent.bbox_ymax < 89.9) ? 0.1 : 0.0);
-      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax + offset) + ",");
+      if (emd.isAviProducer())
+      {
+        // claude: BRAINSTORM-3499:
+        //
+        // AVI engine's Position handler (checkAviEnginePositionQuery) requires a literal
+        // POINT geometry and rejects MULTIPOINT outright - unlike grid/querydata, it doesn't
+        // need the MULTIPOINT/Position trick anyway: its Locations query already natively
+        // accepts many comma-separated icaos in one request (parseICAOCodesAndAviProducer ->
+        // query.icaos -> checkAviEngineLocationQuery's loop), the exact same mechanism the
+        // single-icao branch below already relies on. So just list every icao and keep
+        // query_type as Locations.
+        //
+        std::string icaoList;
+        for (const auto& item : *emd.locations)
+          icaoList += item.first + ",";
+        icaoList.pop_back();
+        req.addParameter("icao", icaoList);
+        return;
+      }
 
-      coords = "POLYGON((" + xmin + ymin + xmax + ymin + xmax + ymax + xmin + ymax + xmin + ymin;
-      coords.pop_back();
-      coords += "))";
+      itsEDRQuery.query_type = EDRQueryType::Position;
+
+      std::string points;
+      double lon_min = std::numeric_limits<double>::max();
+      double lon_max = std::numeric_limits<double>::lowest();
+      double lat_min = std::numeric_limits<double>::max();
+      double lat_max = std::numeric_limits<double>::lowest();
+      bool has_qdstation = false;
+      for (const auto& item : *emd.locations)
+      {
+        const auto& info = item.second;
+        points += Fmi::to_string(info.longitude) + " " + Fmi::to_string(info.latitude) + ",";
+        lon_min = std::min(lon_min, info.longitude);
+        lon_max = std::max(lon_max, info.longitude);
+        lat_min = std::min(lat_min, info.latitude);
+        lat_max = std::max(lat_max, info.latitude);
+        has_qdstation = (has_qdstation || info.type == "qdstation");
+      }
+      points.pop_back();
+      coords = "MULTIPOINT(" + points + ")";
+
+      // claude: BRAINSTORM-3499:
+      //
+      // Point ('qdstation') querydata is only ever queried at its own exact station
+      // coordinates, never interpolated, so the producer for a combined MULTIPOINT query is
+      // chosen by checking whether a single representative point - the envelope centre of the
+      // whole MULTIPOINT geometry, WktGeometry::locationFromGeometry - falls within
+      // 'maxdistance' of an actual station (Repository::contains ->
+      // NFmiFastQueryInfo::IsInside). For a collection whose stations ring a coastline (e.g.
+      // sealevel) that centre falls inland, far from every station, so producer selection fails
+      // with "No data available for 'MULTIPOINT(...)'" before any individual point is even
+      // looked at - even though every point in the MULTIPOINT is itself an exact, valid station
+      // coordinate. Grid/gridded-querydata collections never hit this because any point inside
+      // their bbox is valid data (see df393cf, "Allow MULTIPOINT queries against point
+      // querydata producers", which fixed the equivalent single-collection case and explicitly
+      // left this centre-point limitation for later). Give the centre enough slack to reach the
+      // farthest of this collection's own stations so producer selection succeeds regardless of
+      // where the centre falls; each individual point still resolves to its own exact station
+      // (distance 0) once a producer is chosen, so this cannot pick the wrong station.
+      //
+      // 'maxdistance' is not part of the EDR spec, but CommonQuery::commonInit reads it
+      // unconditionally on any EDR request, so a caller could pass one here too. There is no
+      // legitimate use for that in an "all" query though - it can only accidentally reintroduce
+      // this exact bug (e.g. a caller-supplied maxdistance smaller than what the centre needs) -
+      // so force the computed value rather than merely defaulting it, using setParameter (erase
+      // + insert) rather than addParameter: Spine::HTTP::Request parameters are a multimap and
+      // addParameter would leave both values in place, and commonInit's own
+      // req.getParameter("maxdistance") throws outright if a parameter has more than one value.
+      //
+      if (has_qdstation)
+      {
+        std::pair<double, double> centre((lon_min + lon_max) / 2, (lat_min + lat_max) / 2);
+        double max_km = 0;
+        for (const auto& item : *emd.locations)
+        {
+          const auto& info = item.second;
+          max_km = std::max(
+              max_km, distance_in_kilometers(centre, {info.longitude, info.latitude}));
+        }
+        req.setParameter("maxdistance", Fmi::to_string(max_km + 1.0));
+      }
 
       parseCoords(emd, coords);
 
