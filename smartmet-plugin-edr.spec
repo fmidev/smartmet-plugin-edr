@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.22
+Version: 26.9.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -34,41 +34,41 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.9.16
+BuildRequires: smartmet-library-spine-devel >= 26.9.23
 BuildRequires: smartmet-library-locus-devel >= 26.4.13
-BuildRequires: smartmet-library-macgyver-devel >= 26.9.19
-BuildRequires: smartmet-library-grid-content-devel >= 26.9.16
-BuildRequires: smartmet-library-grid-files-devel >= 26.9.16
-BuildRequires: smartmet-library-newbase-devel >= 26.9.16
-BuildRequires: smartmet-library-gis-devel >= 26.9.16
+BuildRequires: smartmet-library-macgyver-devel >= 26.9.23
+BuildRequires: smartmet-library-grid-content-devel >= 26.9.23
+BuildRequires: smartmet-library-grid-files-devel >= 26.9.23
+BuildRequires: smartmet-library-newbase-devel >= 26.9.23
+BuildRequires: smartmet-library-gis-devel >= 26.9.23
 BuildRequires: smartmet-library-timeseries-devel >= 26.9.16
 BuildRequires: smartmet-engine-avi-devel >= 26.9.19
-BuildRequires: smartmet-engine-geonames-devel >= 26.9.16
+BuildRequires: smartmet-engine-geonames-devel >= 26.9.23
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.9.22
+BuildRequires: smartmet-engine-observation-devel >= 26.9.23
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 26.9.16
-BuildRequires: smartmet-engine-gis-devel >= 26.9.16
-BuildRequires: smartmet-engine-grid-devel >= 26.9.16
+BuildRequires: smartmet-engine-gis-devel >= 26.9.23
+BuildRequires: smartmet-engine-grid-devel >= 26.9.23
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 26.9.22
+#Requires: smartmet-engine-observation >= 26.9.23
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 26.9.16
+Requires: smartmet-library-gis >= 26.9.23
 Requires: smartmet-library-locus >= 26.4.13
-Requires: smartmet-library-macgyver >= 26.9.19
-Requires: smartmet-library-newbase >= 26.9.16
-Requires: smartmet-library-spine >= 26.9.16
+Requires: smartmet-library-macgyver >= 26.9.23
+Requires: smartmet-library-newbase >= 26.9.23
+Requires: smartmet-library-spine >= 26.9.23
 Requires: smartmet-library-timeseries >= 26.9.16
-Requires: smartmet-library-gis >= 26.9.16
-Requires: smartmet-library-grid-files >= 26.9.16
+Requires: smartmet-library-gis >= 26.9.23
+Requires: smartmet-library-grid-files >= 26.9.23
 Requires: smartmet-engine-avi >= 26.9.19
-Requires: smartmet-engine-geonames >= 26.9.16
+Requires: smartmet-engine-geonames >= 26.9.23
 Requires: smartmet-engine-querydata >= 26.9.16
-Requires: smartmet-engine-gis >= 26.9.16
-Requires: smartmet-engine-grid >= 26.9.16
+Requires: smartmet-engine-gis >= 26.9.23
+Requires: smartmet-engine-grid >= 26.9.23
 Requires: smartmet-server >= 26.9.2
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -77,22 +77,22 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.9.16
-#TestRequires: smartmet-library-spine-plugin-test >= 26.9.16
-#TestRequires: smartmet-library-newbase-devel >= 26.9.16
+#TestRequires: smartmet-library-spine >= 26.9.23
+#TestRequires: smartmet-library-spine-plugin-test >= 26.9.23
+#TestRequires: smartmet-library-newbase-devel >= 26.9.23
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
-#TestRequires: smartmet-engine-grid-test >= 26.9.16
-#TestRequires: smartmet-library-gis >= 26.9.16
+#TestRequires: smartmet-engine-grid-test >= 26.9.23
+#TestRequires: smartmet-library-gis >= 26.9.23
 #TestRequires: smartmet-engine-avi >= 26.9.19
-#TestRequires: smartmet-engine-geonames >= 26.9.16
-#TestRequires: smartmet-engine-gis >= 26.9.16
+#TestRequires: smartmet-engine-geonames >= 26.9.23
+#TestRequires: smartmet-engine-gis >= 26.9.23
 #TestRequires: smartmet-engine-querydata >= 26.9.16
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.9.22
+#TestRequires: smartmet-engine-observation >= 26.9.23
 %endif
-#TestRequires: smartmet-engine-grid >= 26.9.16
+#TestRequires: smartmet-engine-grid >= 26.9.23
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
@@ -121,6 +121,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Sep 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.23-1.fmi
+- Repackaged due to base library ABI changes
 * Tue Sep 22 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.22-1.fmi
 - Fixes to localtions/all query; using icao codes for avi collections and MULTIPOINT for gridded data setting (overwriting if given) maxdistance to value calculated from the center point (BRAINSTORM-3499)
 
