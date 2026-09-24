@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.9.24
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,8 +121,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Sat Aug 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.30-2.fmi
+- Security: validate the client Host header (plain hostname[:port]) and the
+  X-Forwarded-Proto scheme (http/https only) before reflecting them into the
+  self-referential URLs in EDR responses, preventing CRLF/markup injection and
+  link poisoning; fall back to the canonical URL on a malformed header.
+
 * Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-1.fmi
 - Fixed grid queries with only data independent parameters (lat, lon, sunrise etc) returning nothing when starttime, endtime or timestep is 'data'
+
 * Wed Sep 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.23-1.fmi
 - Repackaged due to base library ABI changes
 * Tue Sep 22 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.22-1.fmi
