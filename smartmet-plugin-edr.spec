@@ -121,7 +121,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
-* Sat Aug 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.30-2.fmi
+* Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-2.fmi
 - Security: validate the client Host header (plain hostname[:port]) and the
   X-Forwarded-Proto scheme (http/https only) before reflecting them into the
   self-referential URLs in EDR responses, preventing CRLF/markup injection and
