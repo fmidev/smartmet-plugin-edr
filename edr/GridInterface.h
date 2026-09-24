@@ -80,7 +80,14 @@ class GridInterface
                         std::vector<std::vector<T::Coordinate>>& polygonPath,uchar& locationType);
 
       void            prepareQueryTimes(QueryServer::Query& gridQuery,const CommonQuery& masterquery,
-                        const Spine::LocationPtr& loc);
+                        const AreaProducers& areaproducers,const Spine::LocationPtr& loc);
+
+      bool            prepareDataIndependentQueryTimes(QueryServer::Query& gridQuery,
+                        const CommonQuery& masterquery,const AreaProducers& areaproducers,
+                        const Fmi::TimeZonePtr& tz,const Fmi::DateTime& latestTimeUTC);
+
+      TS::TimeSeriesGeneratorOptions::TimeList getGenerationDataTimes(
+                        const QueryServer::Query& gridQuery,const AreaProducers& areaproducers);
 
       void            prepareQueryParameters(QueryServer::Query& gridQuery,const CommonQuery& masterquery,
                         uint mode,int levelId,int geometryId,uchar locationType,bool sameParamAnalysisTime,
