@@ -112,6 +112,7 @@ class Value
  private:
   std::string to_string(bool pretty) const;
   std::string to_string_impl(bool pretty, unsigned int level) const;
+  void append_to_string(std::string &out, bool pretty, unsigned int level) const;
   std::string value() const;
   std::string values_to_string(bool pretty, unsigned int level) const;
   static std::string data_value_vector_to_string(const std::vector<Value> &data_value_vector,
