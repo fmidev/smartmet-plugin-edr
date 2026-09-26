@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.24
-Release: 2%{?dist}.fmi
+Version: 26.9.26
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -38,7 +38,7 @@ BuildRequires: smartmet-library-spine-devel >= 26.9.23
 BuildRequires: smartmet-library-locus-devel >= 26.4.13
 BuildRequires: smartmet-library-macgyver-devel >= 26.9.23
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.23
-BuildRequires: smartmet-library-grid-files-devel >= 26.9.23
+BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
 BuildRequires: smartmet-library-newbase-devel >= 26.9.23
 BuildRequires: smartmet-library-gis-devel >= 26.9.23
 BuildRequires: smartmet-library-timeseries-devel >= 26.9.16
@@ -63,7 +63,7 @@ Requires: smartmet-library-newbase >= 26.9.23
 Requires: smartmet-library-spine >= 26.9.23
 Requires: smartmet-library-timeseries >= 26.9.16
 Requires: smartmet-library-gis >= 26.9.23
-Requires: smartmet-library-grid-files >= 26.9.23
+Requires: smartmet-library-grid-files >= 26.9.26
 Requires: smartmet-engine-avi >= 26.9.19
 Requires: smartmet-engine-geonames >= 26.9.23
 Requires: smartmet-engine-querydata >= 26.9.16
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Sat Sep 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.26-1.fmi
+- Repackaged due to grid-files ABI changes
+
 * Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-2.fmi
 - Security: validate the client Host header (plain hostname[:port]) and the
   X-Forwarded-Proto scheme (http/https only) before reflecting them into the
