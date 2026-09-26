@@ -335,6 +335,10 @@ void QEngineQuery::resolveAreaLocations(CommonQuery& query,
     {
       tloclist.emplace_back(tloc);
     }
+
+    // Check while expanding so that a huge area is rejected before the next one is expanded
+    check_request_limit(
+        itsPlugin.itsConfig.requestLimits(), tloclist.size(), TS::RequestLimitMember::LOCATIONS);
   }
 
   query.loptions->setLocations(tloclist);
