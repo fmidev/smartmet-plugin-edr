@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.24
+Version: 26.9.29
 Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -77,7 +77,7 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.9.23
+#TestRequires: smartmet-library-spine >= 26.9.29
 #TestRequires: smartmet-library-spine-plugin-test >= 26.9.23
 #TestRequires: smartmet-library-newbase-devel >= 26.9.23
 #TestRequires: redis
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Sep 29 2026 Petteri Hintsanen <petteri.hintsanen@fmi.fi> - 26.9.29-1.fmi
+- Security: Optionally hide fmi-apikey from responses.
+
 * Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-2.fmi
 - Security: validate the client Host header (plain hostname[:port]) and the
   X-Forwarded-Proto scheme (http/https only) before reflecting them into the
