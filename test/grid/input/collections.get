@@ -1,1 +1,4 @@
 GET /edr/collections/ HTTP/1.0
+Host: smartmet.fmi.fi
+fmi-apikey: foobar
+omit-fmi-apikey: 1

@@ -149,7 +149,6 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
     std::optional<std::string> apikey;
     try
     {
-      // Deduce apikey for layer filtering
       apikey = Spine::FmiApiKey::getFmiApiKey(theRequest);
     }
     catch (...)
@@ -157,8 +156,10 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
       throw Fmi::Exception::Trace(BCP, "Failed to get apikey from the query");
     }
 
-    if (apikey)
+    if (apikey && Spine::FmiApiKey::shouldReturnApiKey(theRequest))
+    {
       host.append(("/fmi-apikey/" + *apikey));
+    }
 
     return (protocol + host + base_url);
   }

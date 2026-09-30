@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.9.30
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -34,7 +34,7 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.9.29
+BuildRequires: smartmet-library-spine-devel >= 26.9.30
 BuildRequires: smartmet-library-locus-devel >= 26.4.13
 BuildRequires: smartmet-library-macgyver-devel >= 26.9.26
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
@@ -77,7 +77,7 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.9.29
+#TestRequires: smartmet-library-spine >= 26.9.30
 #TestRequires: smartmet-library-spine-plugin-test >= 26.9.29
 #TestRequires: smartmet-library-newbase-devel >= 26.9.24
 #TestRequires: redis
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Tue Sep 30 2026 Petteri Hintsanen <petteri.hintsanen@fmi.fi> - 26.9.30-2.fmi
+- Security: Optionally hide fmi-apikey from responses.
+
 * Wed Sep 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.30-1.fmi
 - Updated license requirements (PAK-3132)
 
