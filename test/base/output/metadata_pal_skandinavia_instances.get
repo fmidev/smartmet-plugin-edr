@@ -7,7 +7,7 @@
 			"type" : "application/json"
 		},
 		{
-			"href" : "https://creativecommons.org/licenses/by/4.0/",
+			"href" : "https://en.ilmatieteenlaitos.fi/open-data-licence",
 			"hreflang" : "en",
 			"rel" : "license",
 			"type" : "text/html"
