@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# Other files
+/.vscode/
+/.claude
+/tmp
+.gdbinit
+/smartmet-plugin-edr.tar.gz

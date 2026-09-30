@@ -1,16 +1,40 @@
-# SmartMet Server
+# smartmet-plugin-edr
 
-[SmartMet Server](https://github.com/fmidev/smartmet-server) is a data and product server for MetOcean data. It
-provides a high capacity and high availability data and product server
-for MetOcean data. The server is written in C++, since 2008 it has
-been in operational use by the Finnish Meteorological Institute FMI.
+Part of [SmartMet Server](https://github.com/fmidev/smartmet-server). See the [SmartMet Server documentation](https://github.com/fmidev/smartmet-server) for a full overview of the ecosystem.
 
-# SmartMet Server EDR plugin
+## Overview
 
-The EDR plugin implements Environmental Data Retrieval (EDR) Application Programming Interface (API) defined by Open Geospatila Consortium (hence OGC EDR-API).
+The EDR plugin implements the [OGC API — Environmental Data Retrieval](https://ogcapi.ogc.org/edr/) standard for SmartMet Server. It provides a standardized REST interface for querying meteorological and environmental data at points, areas, and along trajectories.
 
-Following pages describe how use and configure EDR-plugin.
+In addition to the EDR API the plugin can optionally serve the TimeSeries API of
+the SmartMet Server. The timeseries interface is enabled by defining the
+`timeseries_url` attribute in the plugin configuration file; without it only the
+EDR API is served.
 
-[Using the EDR Plugin](docs/Using-EDR-Plugin.md)
+## Features
 
-[EDR Plugin Configuration Guide](docs/EDR-Plugin-Configuration-Guide.md)
+- OGC API-EDR compliant interface
+- Point, area, corridor, and trajectory queries
+- JSON and CoverageJSON output formats
+- Optional timeseries interface with the query syntax of the TimeSeries plugin
+
+## Documentation
+
+- [EDR Plugin Configuration Guide](docs/EDR-Plugin-Configuration-Guide.md)
+- [Using the EDR Plugin](docs/Using-EDR-Plugin.md)
+- [Programmer's tutorial](docs/tutorial.md) — how a request becomes CoverageJSON: URL parsing, translation to TimeSeries options, metadata snapshot, engine dispatch, output formatting
+- [Grid support (developer notes)](docs/grid-support.md) — how grid engine collections are built and queried
+
+Timeseries interface (optional):
+
+- [Using the Timeseries API](docs/Using-the-Timeseries-API.md)
+- [Example Requests for Observations and Forecasts](docs/Timeseries-Examples.md)
+- [Configuring the Timeseries Interface (Docker)](docs/Timeseries-Configuration-Docker.md)
+
+## License
+
+MIT — see [LICENSE](LICENSE)
+
+## Contributing
+
+Bug reports and pull requests are welcome on [GitHub](../../issues).

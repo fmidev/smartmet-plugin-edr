@@ -301,7 +301,7 @@
 			"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
 			"values" : 
 			[
-				"R100/2008-08-05T03:00:00Z/PT60M"
+				"R99/2008-08-05T03:00:00Z/PT60M"
 			]
 		}
 	},

@@ -1,0 +1,1 @@
+GET /edr/collections/synop/corridor?coords=LINESTRING(24.80+60.10,25.00+60.20,25.20+60.30)&corridor-width=15&width-units=km&datetime=2008-11-29T01:00:00Z&parameter-name=Temperature HTTP/1.0

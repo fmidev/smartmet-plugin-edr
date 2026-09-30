@@ -51,6 +51,84 @@ std::string parse_parameter_name(const std::string &name)
   return parameter_name;
 }
 
+// Grid engine parameters carry the level in the last field of the parameter name
+// (<param>:<producer>[:<geometry>[:<levelid>]][:<level>]) and each level of a parameter is
+// fetched as a separate parameter. The level of such a column can only be told from its name,
+// the separate 'level' column has no per parameter values.
+std::optional<double> parse_parameter_level(const std::string &name, const std::set<int> &levels)
+{
+  auto pos = name.rfind(':');
+  if (pos == std::string::npos || (pos + 1) >= name.size())
+    return {};
+
+  try
+  {
+    auto level = Fmi::stod(name.substr(pos + 1));
+
+    // The name has no level if the last field is something else (e.g. the level type identifier)
+    if (levels.find(static_cast<int>(level)) == levels.end())
+      return {};
+
+    return level;
+  }
+  catch (...)
+  {
+    return {};
+  }
+}
+
+// Data of location independent parameters (e.g. the grid engine 'level' column) is returned as
+// a plain time series even when the other columns of the same query are per coordinate groups.
+// Such a column is handled as a group having data for the first coordinate only.
+TS::TimeSeriesGroupPtr as_timeseries_group(const TS::TimeSeriesData &tsdata)
+{
+  if (const auto *ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+    return *ptr;
+
+  if (const auto *ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
+  {
+    auto tsg = std::make_shared<TS::TimeSeriesGroup>();
+    if (*ptr)
+      tsg->emplace_back(TS::LonLatTimeSeries(TS::LonLat(0, 0), **ptr));
+    return tsg;
+  }
+
+  return nullptr;
+}
+
+// The counterpart of as_timeseries_group: data of a coordinate group is handled as a plain
+// time series by using the data of the first coordinate.
+TS::TimeSeriesPtr as_timeseries(const TS::TimeSeriesData &tsdata)
+{
+  if (const auto *ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
+    return *ptr;
+
+  if (const auto *ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+  {
+    if (!*ptr || (*ptr)->empty())
+      return nullptr;
+
+    return std::make_shared<TS::TimeSeries>((*ptr)->front().timeseries);
+  }
+
+  return nullptr;
+}
+
+// Longitude, latitude and level are queried as the last parameters, thus the columns and the
+// query parameters must be in sync for the coordinates and levels to be taken from the
+// correct columns
+void check_column_count(const std::vector<TS::TimeSeriesData> &outdata,
+                        const std::vector<Spine::Parameter> &query_parameters)
+{
+  if (outdata.size() == query_parameters.size())
+    return;
+
+  Fmi::Exception exception(BCP, "Number of data columns does not match the number of parameters!");
+  exception.addParameter("Columns", Fmi::to_string(outdata.size()));
+  exception.addParameter("Parameters", Fmi::to_string(query_parameters.size()));
+  throw exception;
+}
+
 Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
 {
   Json::Value nullvalue;
@@ -119,7 +197,9 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
       {
         const auto &temporal_extent_period = temporal_extent.time_periods.at(i);
 
-        if ((temporal_extent_period.timestep == 0) || (temporal_extent_period.timesteps == 1))
+        // claude: BRAINSTORM-3498:
+        //
+        if ((temporal_extent_period.timestep == 0) || (temporal_extent_period.timesteps == 0))
           temporal_interval_values[i] =
               Json::Value(Fmi::to_iso_extended_string(temporal_extent_period.start_time) + "Z");
         else
@@ -161,7 +241,8 @@ Json::Value get_data_queries(const std::string &host,
                              const std::string &default_output_format,
                              bool levels_exist,
                              bool instances_exist,
-                             const std::string &instance_id = "")
+                             const std::string &instance_id = "",
+                             const std::string &level_type = "")
 {
   auto data_queries = Json::Value(Json::ValueType::objectValue);
 
@@ -285,6 +366,30 @@ Json::Value get_data_queries(const std::string &host,
       width_units[0] = Json::Value("km");
       width_units[1] = Json::Value("mi");
       query_info_variables["width-units"] = width_units;
+      if (levels_exist)
+      {
+        query_info_variables["corridor-height"] = Json::Value("Corridor height");
+        auto height_units = Json::Value(Json::ValueType::arrayValue);
+        unsigned int hi = 0;
+        if (boost::algorithm::icontains(level_type, "pressure"))
+        {
+          height_units[hi++] = Json::Value("hPa");
+          height_units[hi++] = Json::Value("mbar");
+          height_units[hi++] = Json::Value("Pa");
+        }
+        else if (boost::algorithm::icontains(level_type, "hybrid"))
+        {
+          height_units[hi++] = Json::Value("1");
+        }
+        else
+        {
+          height_units[hi++] = Json::Value("m");
+          height_units[hi++] = Json::Value("km");
+          height_units[hi++] = Json::Value("mi");
+          height_units[hi++] = Json::Value("ft");
+        }
+        query_info_variables["height-units"] = height_units;
+      }
       query_info_variables["coords"] = Json::Value(
           "Well Known Text LINESTRING value i.e. LINESTRING(24 "
           "61,24.2 61.2,24.3 61.3)");
@@ -539,7 +644,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
     if (it != custom_dim_refs.end())
     {
       standard_name_vocabulary = it->second;
-      if (standard_name_vocabulary.back() == '/')
+      if (!standard_name_vocabulary.empty() && standard_name_vocabulary.back() == '/')
         standard_name_vocabulary.pop_back();
     }
 
@@ -1442,7 +1547,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                                   emd.default_output_format,
                                                   !emd.vertical_extent.levels.empty(),
                                                   false,
-                                                  instance_id);
+                                                  instance_id,
+                                                  emd.vertical_extent.level_type);
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
       //	  crs[0] = Json::Value("EPSG:4326");
@@ -1648,7 +1754,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                collection_emd.output_formats,
                                                collection_emd.default_output_format,
                                                !collection_emd.vertical_extent.levels.empty(),
-                                               instances_exist);
+                                               instances_exist,
+                                               "",
+                                               collection_emd.vertical_extent.level_type);
 
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
@@ -1775,10 +1883,12 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
         continue;
 
       auto json_param_object = Json::Value(Json::ValueType::objectValue);
-      auto tsdata = outdata.at(j);
       auto values = Json::Value(Json::ValueType::arrayValue);
 
-      TS::TimeSeriesPtr ts = std::get<TS::TimeSeriesPtr>(tsdata);
+      TS::TimeSeriesPtr ts = as_timeseries(outdata.at(j));
+      if (!ts)
+        continue;
+
       if (i == 0)
       {
         coverage = add_prologue_one_point(level,
@@ -2181,67 +2291,58 @@ void set_level_value(const bool &levels_present, const int &level, Json::Value &
   }
 }
 
-void process_values(const std::string & /* parameter_name */,
-                    const std::string &output_name,
-                    const int &parameter_precision,
-                    const int &longitude_precision,
-                    const int &latitude_precision,
-                    const bool &isAviProducer,
-                    const std::vector<time_coord_value> &values,
-                    const bool &levels_present,
-                    const int &level,
-                    Json::Value &coverages)
+// A "point group" is a run of consecutive entries in a per-(parameter,level) values vector
+// that share the same coordinates, i.e. all the timesteps of a single point/station.
+struct point_group
+{
+  std::size_t begin;
+  std::size_t end;
+};
+
+std::vector<point_group> group_by_point(const std::vector<time_coord_value> &values)
+{
+  std::vector<point_group> groups;
+  for (std::size_t i = 0; i < values.size();)
+  {
+    std::size_t j = i;
+    while (j < values.size() && values[j].lon == values[i].lon && values[j].lat == values[i].lat)
+      j++;
+    groups.push_back({i, j});
+    i = j;
+  }
+  return groups;
+}
+
+Json::Value build_point_domain(const std::vector<time_coord_value> &values,
+                               const point_group &group,
+                               const int &longitude_precision,
+                               const int &latitude_precision,
+                               const bool &levels_present,
+                               const int &level)
 {
   try
   {
-    for (const auto &value : values)
-    {
-      auto coverage = Json::Value(Json::ValueType::objectValue);
-      coverage["type"] = Json::Value("Coverage");
-      auto domain = Json::Value(Json::ValueType::objectValue);
-      domain["type"] = Json::Value("Domain");
-      auto domain_axes = Json::Value(Json::ValueType::objectValue);
-      auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
-      domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
-      auto data_type = Json::Value(Json::ValueType::objectValue);
-      domain_axes_x["values"][0] = Json::Value(value.lon, longitude_precision);
-      auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
-      domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
-      domain_axes_y["values"][0] = Json::Value(value.lat, latitude_precision);
-      auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
-      domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
-      domain_axes_t["values"][0] = Json::Value(value.time);
-      domain_axes["x"] = domain_axes_x;
-      domain_axes["y"] = domain_axes_y;
-      domain_axes["t"] = domain_axes_t;
-      set_level_value(levels_present, level, domain_axes);
+    auto domain = Json::Value(Json::ValueType::objectValue);
+    domain["type"] = Json::Value("Domain");
+    auto domain_axes = Json::Value(Json::ValueType::objectValue);
+    auto domain_axes_x = Json::Value(Json::ValueType::objectValue);
+    domain_axes_x["values"] = Json::Value(Json::ValueType::arrayValue);
+    domain_axes_x["values"][0] = Json::Value(values[group.begin].lon, longitude_precision);
+    auto domain_axes_y = Json::Value(Json::ValueType::objectValue);
+    domain_axes_y["values"] = Json::Value(Json::ValueType::arrayValue);
+    domain_axes_y["values"][0] = Json::Value(values[group.begin].lat, latitude_precision);
+    auto domain_axes_t = Json::Value(Json::ValueType::objectValue);
+    domain_axes_t["values"] = Json::Value(Json::ValueType::arrayValue);
+    auto &t_values = domain_axes_t["values"];
+    for (std::size_t k = group.begin; k < group.end; k++)
+      t_values[static_cast<unsigned int>(k - group.begin)] = Json::Value(values[k].time);
+    domain_axes["x"] = domain_axes_x;
+    domain_axes["y"] = domain_axes_y;
+    domain_axes["t"] = domain_axes_t;
+    set_level_value(levels_present, level, domain_axes);
 
-      domain["axes"] = domain_axes;
-      coverage["domain"] = domain;
-
-      auto range_item = Json::Value(Json::ValueType::objectValue);
-      range_item["type"] = Json::Value("NdArray");
-      auto shape = Json::Value(Json::ValueType::arrayValue);
-      shape[0] = Json::Value(1);
-      shape[1] = Json::Value(1);
-      shape[2] = Json::Value(1);
-      if (levels_present)
-        shape[3] = Json::Value(1);
-
-      range_item["shape"] = shape;
-      auto axis_names = Json::Value(Json::ValueType::arrayValue);
-      set_axis_names(levels_present, axis_names);
-
-      range_item["axisNames"] = axis_names;
-      auto parameter_values = Json::Value(Json::ValueType::arrayValue);
-      set_parameter_value(value, parameter_precision, isAviProducer, parameter_values, range_item);
-
-      range_item["values"] = parameter_values;
-      auto ranges = Json::Value(Json::ValueType::objectValue);
-      ranges[output_name] = range_item;
-      coverage["ranges"] = ranges;
-      coverages[coverages.size()] = coverage;
-    }
+    domain["axes"] = domain_axes;
+    return domain;
   }
   catch (...)
   {
@@ -2249,37 +2350,46 @@ void process_values(const std::string & /* parameter_name */,
   }
 }
 
-void process_coverage_collection_point_parameter(const DataPerLevel &dpl,
-                                                 const std::string &parameter_name,
-                                                 const std::string &output_name,
-                                                 const int &parameter_precision,
-                                                 const int &longitude_precision,
-                                                 const int &latitude_precision,
-                                                 bool isAviProducer,
-                                                 bool &levels_present,
-                                                 Json::Value &coverages)
+Json::Value build_point_range(const std::vector<time_coord_value> &values,
+                              const point_group &group,
+                              const int &parameter_precision,
+                              const bool &isAviProducer,
+                              const bool &levels_present)
 {
   try
   {
-    for (const auto &dpl_item : dpl)
+    const auto n_timesteps = static_cast<int>(group.end - group.begin);
+
+    auto range_item = Json::Value(Json::ValueType::objectValue);
+    range_item["type"] = Json::Value("NdArray");
+    auto shape = Json::Value(Json::ValueType::arrayValue);
+    shape[0] = Json::Value(1);
+    shape[1] = Json::Value(1);
+    if (levels_present)
     {
-      int level = dpl_item.first;
-      // Levels present in some item
-      levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
-
-      auto values = dpl_item.second;
-
-      process_values(parameter_name,
-                     output_name,
-                     parameter_precision,
-                     longitude_precision,
-                     latitude_precision,
-                     isAviProducer,
-                     values,
-                     levels_present,
-                     level,
-                     coverages);
+      shape[2] = Json::Value(1);
+      shape[3] = Json::Value(n_timesteps);
     }
+    else
+    {
+      shape[2] = Json::Value(n_timesteps);
+    }
+
+    range_item["shape"] = shape;
+    auto axis_names = Json::Value(Json::ValueType::arrayValue);
+    set_axis_names(levels_present, axis_names);
+
+    range_item["axisNames"] = axis_names;
+    auto parameter_values = Json::Value(Json::ValueType::arrayValue);
+    for (std::size_t k = group.begin; k < group.end; k++)
+    {
+      Json::Value single_value;
+      set_parameter_value(values[k], parameter_precision, isAviProducer, single_value, range_item);
+      parameter_values[static_cast<unsigned int>(k - group.begin)] = single_value[0];
+    }
+
+    range_item["values"] = parameter_values;
+    return range_item;
   }
   catch (...)
   {
@@ -2309,24 +2419,83 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
-    auto output_name = dpn.cbegin();
-    for (const auto &dpp_item : dpp)
-    {
-      const auto &parameter_name = dpp_item.first;
-      const auto &parameter_precision = emd.getPrecision(parameter_name);
-      const auto &dpl = dpp_item.second;
 
-      // Iterate data per level
-      process_coverage_collection_point_parameter(dpl,
-                                                  parameter_name,
-                                                  output_name->second,
-                                                  parameter_precision,
-                                                  longitude_precision,
-                                                  latitude_precision,
-                                                  isAviProducer,
-                                                  levels_present,
-                                                  coverages);
-      output_name++;
+    // Levels that occur for any parameter
+    std::set<double> levels;
+    for (const auto &dpp_item : dpp)
+      for (const auto &dpl_item : dpp_item.second)
+        levels.insert(dpl_item.first);
+
+    for (double level : levels)
+    {
+      // For every parameter that has data at this level, precompute its point groups (runs of
+      // consecutive same-coordinate entries). All parameters share the same underlying station
+      // set and ordering, so the Nth point group of every parameter refers to the same point --
+      // that is what lets us merge them into a single Coverage's "ranges".
+      struct param_level_data
+      {
+        const std::string *output_name;
+        int precision;
+        const std::vector<time_coord_value> *values;
+        std::vector<point_group> groups;
+      };
+
+      std::vector<param_level_data> params_at_level;
+      std::size_t max_points = 0;
+      for (const auto &dpp_item : dpp)
+      {
+        const auto &parameter_name = dpp_item.first;
+        auto lvl_it = dpp_item.second.find(level);
+        if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
+          continue;
+
+        param_level_data pld;
+        pld.output_name = &dpn.at(parameter_name);
+        pld.precision = emd.getPrecision(parameter_name);
+        pld.values = &lvl_it->second;
+        pld.groups = group_by_point(*pld.values);
+        max_points = std::max(max_points, pld.groups.size());
+        params_at_level.push_back(pld);
+      }
+
+      if (params_at_level.empty())
+        continue;
+
+      levels_present = (levels_present || (level != std::numeric_limits<double>::max()));
+
+      for (std::size_t point_idx = 0; point_idx < max_points; point_idx++)
+      {
+        const param_level_data *domain_source = nullptr;
+        for (const auto &pld : params_at_level)
+        {
+          if (point_idx < pld.groups.size())
+          {
+            domain_source = &pld;
+            break;
+          }
+        }
+        if (!domain_source)
+          continue;
+
+        Json::Value coverage = Json::Value(Json::ValueType::objectValue);
+        coverage["type"] = Json::Value("Coverage");
+        coverage["domain"] =
+            build_point_domain(*domain_source->values, domain_source->groups[point_idx],
+                               longitude_precision, latitude_precision, levels_present,
+                               static_cast<int>(level));
+
+        auto ranges = Json::Value(Json::ValueType::objectValue);
+        for (const auto &pld : params_at_level)
+        {
+          if (point_idx >= pld.groups.size())
+            continue;
+          ranges[*pld.output_name] = build_point_range(
+              *pld.values, pld.groups[point_idx], pld.precision, isAviProducer, levels_present);
+        }
+        coverage["ranges"] = ranges;
+
+        coverages[coverages.size()] = coverage;
+      }
     }
 
     coverage_collection =
@@ -2342,77 +2511,77 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
   }
 }
 
-void process_coverage_collection_trajectory_parameter(const DataPerLevel &dpl,
-                                                      const std::string &parameter_name,
-                                                      const int &parameter_precision,
-                                                      const int &longitude_precision,
-                                                      const int &latitude_precision,
-                                                      bool &levels_present,
-                                                      Json::Value &coverages)
+Json::Value build_trajectory_domain(const std::vector<time_coord_value> &values,
+                                    const int &longitude_precision,
+                                    const int &latitude_precision,
+                                    const bool &levels_present,
+                                    const int &level)
 {
   try
   {
-    for (const auto &dpl_item : dpl)
+    auto coverage_domain = Json::Value(Json::ValueType::objectValue);
+    coverage_domain["type"] = Json::Value("Domain");
+
+    auto domain_axes = Json::Value(Json::ValueType::objectValue);
+    auto domain_axes_composite = Json::Value(Json::ValueType::objectValue);
+    domain_axes_composite["dataType"] = Json::Value("tuple");
+    auto domain_axes_coordinates = Json::Value(Json::ValueType::arrayValue);
+    domain_axes_coordinates[0] = Json::Value("t");
+    domain_axes_coordinates[1] = Json::Value("x");
+    domain_axes_coordinates[2] = Json::Value("y");
+    if (levels_present)
+      domain_axes_coordinates[3] = Json::Value("z");
+    domain_axes_composite["coordinates"] = domain_axes_coordinates;
+
+    auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
+    for (unsigned int i = 0; i < values.size(); i++)
     {
-      int level = dpl_item.first;
-      // Levels present in some item
-      levels_present = (levels_present || (dpl_item.first != std::numeric_limits<double>::max()));
-
-      auto values = dpl_item.second;
-      auto data_values = Json::Value(Json::ValueType::arrayValue);
-      auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
-      for (unsigned int i = 0; i < values.size(); i++)
-      {
-        const auto &value = values.at(i);
-        auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
-        time_coord_value[0] = Json::Value(value.time);
-        time_coord_value[1] = Json::Value(value.lon, longitude_precision);
-        time_coord_value[2] = Json::Value(value.lat, latitude_precision);
-        if (levels_present)
-          time_coord_value[3] = Json::Value(level);
-        time_coord_values[i] = time_coord_value;
-        if (value.value)
-          data_values[i] = UtilityFunctions::json_value(*value.value, parameter_precision);
-        else
-          data_values[i] = Json::Value();
-      }
-
-      auto coverage = Json::Value(Json::ValueType::objectValue);
-      coverage["type"] = Json::Value("Coverage");
-      auto coverage_domain = Json::Value(Json::ValueType::objectValue);
-      coverage_domain["type"] = Json::Value("Domain");
-
-      auto domain_axes = Json::Value(Json::ValueType::objectValue);
-      auto domain_axes_composite = Json::Value(Json::ValueType::objectValue);
-      domain_axes_composite["dataType"] = Json::Value("tuple");
-      auto domain_axes_coordinates = Json::Value(Json::ValueType::arrayValue);
-      domain_axes_coordinates[0] = Json::Value("t");
-      domain_axes_coordinates[1] = Json::Value("x");
-      domain_axes_coordinates[2] = Json::Value("y");
+      const auto &value = values.at(i);
+      auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
+      time_coord_value[0] = Json::Value(value.time);
+      time_coord_value[1] = Json::Value(value.lon, longitude_precision);
+      time_coord_value[2] = Json::Value(value.lat, latitude_precision);
       if (levels_present)
-        domain_axes_coordinates[3] = Json::Value("z");
-      domain_axes_composite["coordinates"] = domain_axes_coordinates;
-      domain_axes_composite["values"] = time_coord_values;
-      domain_axes["composite"] = domain_axes_composite;
-      coverage_domain["axes"] = domain_axes;
-
-      auto domain_ranges = Json::Value(Json::ValueType::objectValue);
-      auto domain_parameter = Json::Value(Json::ValueType::objectValue);
-      domain_parameter["type"] = Json::Value("NdArray");
-      domain_parameter["dataType"] = Json::Value("float");
-      auto axis_names = Json::Value(Json::ValueType::arrayValue);
-      axis_names[0] = Json::Value("composite");
-      domain_parameter["axisNames"] = axis_names;
-      auto shape = Json::Value(Json::ValueType::arrayValue);
-      shape[0] = Json::Value(values.size());
-      domain_parameter["shape"] = shape;
-      domain_parameter["values"] = data_values;
-      domain_ranges[parameter_name] = domain_parameter;
-      coverage["domain"] = coverage_domain;
-      coverage["ranges"] = domain_ranges;
-
-      coverages[coverages.size()] = coverage;
+        time_coord_value[3] = Json::Value(level);
+      time_coord_values[i] = time_coord_value;
     }
+    domain_axes_composite["values"] = time_coord_values;
+    domain_axes["composite"] = domain_axes_composite;
+    coverage_domain["axes"] = domain_axes;
+    return coverage_domain;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+Json::Value build_trajectory_range(const std::vector<time_coord_value> &values,
+                                   const int &parameter_precision)
+{
+  try
+  {
+    auto domain_parameter = Json::Value(Json::ValueType::objectValue);
+    domain_parameter["type"] = Json::Value("NdArray");
+    domain_parameter["dataType"] = Json::Value("float");
+    auto axis_names = Json::Value(Json::ValueType::arrayValue);
+    axis_names[0] = Json::Value("composite");
+    domain_parameter["axisNames"] = axis_names;
+    auto shape = Json::Value(Json::ValueType::arrayValue);
+    shape[0] = Json::Value(values.size());
+    domain_parameter["shape"] = shape;
+
+    auto data_values = Json::Value(Json::ValueType::arrayValue);
+    for (unsigned int i = 0; i < values.size(); i++)
+    {
+      const auto &value = values.at(i);
+      if (value.value)
+        data_values[i] = UtilityFunctions::json_value(*value.value, parameter_precision);
+      else
+        data_values[i] = Json::Value();
+    }
+    domain_parameter["values"] = data_values;
+    return domain_parameter;
   }
   catch (...)
   {
@@ -2442,22 +2611,49 @@ Json::Value format_coverage_collection_trajectory(
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
-    auto output_name = dpn.cbegin();
-    for (const auto &dpp_item : dpp)
-    {
-      const auto &parameter_name = dpp_item.first;
-      const auto &dpl = dpp_item.second;
-      const auto &parameter_precision = emd.getPrecision(parameter_name);
 
-      process_coverage_collection_trajectory_parameter(dpl,
-                                                       output_name->second,
-                                                       parameter_precision,
-                                                       longitude_precision,
-                                                       latitude_precision,
-                                                       levels_present,
-                                                       coverages);
-      output_name++;
+    // Levels that occur for any parameter
+    std::set<double> levels;
+    for (const auto &dpp_item : dpp)
+      for (const auto &dpl_item : dpp_item.second)
+        levels.insert(dpl_item.first);
+
+    for (double level : levels)
+    {
+      // One Coverage per level, merging every parameter's values into its "ranges" instead of
+      // emitting a separate Coverage (with a duplicated domain) per parameter.
+      const std::vector<time_coord_value> *domain_values = nullptr;
+      auto ranges = Json::Value(Json::ValueType::objectValue);
+
+      for (const auto &dpp_item : dpp)
+      {
+        const auto &parameter_name = dpp_item.first;
+        auto lvl_it = dpp_item.second.find(level);
+        if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
+          continue;
+
+        const auto &values = lvl_it->second;
+        if (!domain_values)
+          domain_values = &values;
+
+        const auto &parameter_precision = emd.getPrecision(parameter_name);
+        ranges[dpn.at(parameter_name)] = build_trajectory_range(values, parameter_precision);
+      }
+
+      if (!domain_values)
+        continue;
+
+      levels_present = (levels_present || (level != std::numeric_limits<double>::max()));
+
+      Json::Value coverage = Json::Value(Json::ValueType::objectValue);
+      coverage["type"] = Json::Value("Coverage");
+      coverage["domain"] = build_trajectory_domain(*domain_values, longitude_precision,
+                                                    latitude_precision, levels_present,
+                                                    static_cast<int>(level));
+      coverage["ranges"] = ranges;
+      coverages[coverages.size()] = coverage;
     }
+
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory",
                                          custom_dim_refs, language);
@@ -2480,9 +2676,14 @@ double get_level(const TS::TimeSeriesGroupPtr &tsg_level,
   {
     double level = std::numeric_limits<double>::max();
 
-    if (levels_present)
+    if (levels_present && tsg_level && !tsg_level->empty())
     {
-      const auto &llts_level = tsg_level->at(tsg_index);
+      // Location independent level data has values for the first coordinate only
+      const auto &llts_level = tsg_level->at(tsg_index < tsg_level->size() ? tsg_index : 0);
+
+      if (llts_index >= llts_level.timeseries.size())
+        return level;
+
       const auto &level_value = llts_level.timeseries.at(llts_index);
       if (const auto *ptr = std::get_if<double>(&level_value.value))
       {
@@ -2508,6 +2709,7 @@ void add_time_coord_value(const TS::LonLatTimeSeries &llts_data,
                           const TS::TimeSeriesGroupPtr &tsg_level,
                           const unsigned int tsg_index,
                           const bool &levels_present,
+                          const std::optional<double> &parameter_level,
                           unsigned int &levels_index,
                           const CoordinateFilter &coordinate_filter,
                           DataPerLevel &dpl)
@@ -2525,7 +2727,8 @@ void add_time_coord_value(const TS::LonLatTimeSeries &llts_data,
       tcv.lat = as_double(lat_value.value);
       tcv.time = (Fmi::date_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
 
-      double level = get_level(tsg_level, levels_present, tsg_index, lev_idx);
+      double level = (parameter_level ? *parameter_level
+                                      : get_level(tsg_level, levels_present, tsg_index, lev_idx));
 
       if (data_value.value != TS::None())
         tcv.value = data_value.value;
@@ -2534,7 +2737,7 @@ void add_time_coord_value(const TS::LonLatTimeSeries &llts_data,
       if (accept)
         dpl[level].push_back(tcv);
 
-      if (levels_present)
+      if (levels_present && tsg_level && !tsg_level->empty())
       {
         levels_index++;
         if (levels_index >= tsg_level->size())
@@ -2553,6 +2756,7 @@ DataPerLevel get_data_per_level(const TS::TimeSeriesGroupPtr &tsg_data,
                                 const TS::TimeSeriesGroupPtr &tsg_lat,
                                 const TS::TimeSeriesGroupPtr &tsg_level,
                                 const bool &levels_present,
+                                const std::optional<double> &parameter_level,
                                 const CoordinateFilter &coordinate_filter)
 {
   try
@@ -2560,7 +2764,10 @@ DataPerLevel get_data_per_level(const TS::TimeSeriesGroupPtr &tsg_data,
     DataPerLevel dpl;
 
     unsigned int levels_index = 0;
-    for (unsigned int k = 0; k < tsg_data->size(); k++)
+    // Location independent data has values for the first coordinate only
+    auto coordinate_count = std::min(tsg_data->size(), std::min(tsg_lon->size(), tsg_lat->size()));
+
+    for (unsigned int k = 0; k < coordinate_count; k++)
     {
       const auto &llts_data = tsg_data->at(k);
       const auto &llts_lon = tsg_lon->at(k);
@@ -2572,6 +2779,7 @@ DataPerLevel get_data_per_level(const TS::TimeSeriesGroupPtr &tsg_data,
                            tsg_level,
                            k,
                            levels_present,
+                           parameter_level,
                            levels_index,
                            coordinate_filter,
                            dpl);
@@ -2590,12 +2798,16 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
                             const unsigned int &level_index,
                             const CoordinateFilter &coordinate_filter,
                             const std::vector<Spine::Parameter> &query_parameters,
+                            const std::set<int> &levels,
                             const bool &levels_present,
+                            bool isGridProducer,
                             DataPerParameter &dpp,
                             ParameterNames &dpn)
 {
   try
   {
+    check_column_count(outdata, query_parameters);
+
     for (unsigned int j = 0; j < outdata.size(); j++)
     {
       auto parameter_name = parse_parameter_name(query_parameters[j].name());
@@ -2604,22 +2816,43 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
       if (lon_lat_level_param(parameter_name))
         continue;
 
-      auto tsdata = outdata.at(j);
-      auto tslon = outdata.at(longitude_index);
-      auto tslat = outdata.at(latitude_index);
-      TS::TimeSeriesGroupPtr tsg_data = std::get<TS::TimeSeriesGroupPtr>(tsdata);
-      TS::TimeSeriesGroupPtr tsg_lon = std::get<TS::TimeSeriesGroupPtr>(tslon);
-      TS::TimeSeriesGroupPtr tsg_lat = std::get<TS::TimeSeriesGroupPtr>(tslat);
+      TS::TimeSeriesGroupPtr tsg_data = as_timeseries_group(outdata.at(j));
+      TS::TimeSeriesGroupPtr tsg_lon = as_timeseries_group(outdata.at(longitude_index));
+      TS::TimeSeriesGroupPtr tsg_lat = as_timeseries_group(outdata.at(latitude_index));
+
+      if (!tsg_data || !tsg_lon || !tsg_lat)
+        continue;
+
       TS::TimeSeriesGroupPtr tsg_level = nullptr;
+      std::optional<double> parameter_level;
       if (levels_present)
       {
-        auto tslevel = outdata.at(level_index);
-        tsg_level = std::get<TS::TimeSeriesGroupPtr>(tslevel);
+        // Grid engine fetches each level of a parameter as a separate parameter, the level of
+        // the column is known from the parameter name only
+        if (isGridProducer)
+          parameter_level = parse_parameter_level(query_parameters[j].name(), levels);
+
+        if (!parameter_level)
+          tsg_level = as_timeseries_group(outdata.at(level_index));
       }
 
-      DataPerLevel dpl = get_data_per_level(
-          tsg_data, tsg_lon, tsg_lat, tsg_level, levels_present, coordinate_filter);
-      dpp[parameter_name] = dpl;
+      DataPerLevel dpl = get_data_per_level(tsg_data,
+                                            tsg_lon,
+                                            tsg_lat,
+                                            tsg_level,
+                                            levels_present,
+                                            parameter_level,
+                                            coordinate_filter);
+
+      // Data of a parameter can be collected from several columns (levels of a grid producer
+      // parameter) and from several locations, thus merge instead of replace
+      auto &parameter_data = dpp[parameter_name];
+      for (auto &dpl_item : dpl)
+      {
+        auto &values = parameter_data[dpl_item.first];
+        values.insert(values.end(), dpl_item.second.begin(), dpl_item.second.end());
+      }
+
       dpn[parameter_name] = parse_parameter_name(query_parameters[j].originalName());
     }
   }
@@ -2633,6 +2866,7 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
                                         const std::vector<Spine::Parameter> &query_parameters,
+                                        bool isGridProducer,
                                         ParameterNames &dpn)
 {
   try
@@ -2674,7 +2908,9 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
                              level_index,
                              coordinate_filter,
                              query_parameters,
+                             levels,
                              levels_present,
+                             isGridProducer,
                              dpp,
                              dpn);
     }
@@ -2702,7 +2938,8 @@ Json::Value format_output_data_coverage_collection(
       Json::Value();
 
     ParameterNames dpn;
-    auto dpp = get_data_per_parameter(outputData, levels, coordinate_filter, query_parameters, dpn);
+    auto dpp = get_data_per_parameter(
+        outputData, levels, coordinate_filter, query_parameters, emd.isGridProducer(), dpn);
 
     if (query_type == EDRQueryType::Trajectory)
       return format_coverage_collection_trajectory(
@@ -2735,11 +2972,11 @@ void add_parameter(const std::string &parameter_name,
     for (unsigned int k = 0; k < ts_data->size(); k++)
     {
       const auto &data_value = ts_data->at(k);
-      const auto &level_value = ts_level->at(k);
       add_value(data_value, values_array, data_type_data, data_index, parameter_precision);
-      // All parameters have the same levels
-      if (firstParameter)
-        add_value(level_value, level_values, data_type_level, data_index, level_precision);
+      // All parameters have the same levels. Level data is missing for example when the level
+      // column has values for the first coordinate only (grid producers)
+      if (firstParameter && ts_level && (k < ts_level->size()))
+        add_value(ts_level->at(k), level_values, data_type_level, data_index, level_precision);
       if (parameter_data_type.find(parameter_name) == parameter_data_type.end())
         parameter_data_type[parameter_name] = data_type_data;
       data_index++;
@@ -2765,7 +3002,7 @@ Json::Value format_output_data_vertical_profile(
   try
   {
     if (outputData.empty())
-      Json::Value();
+      return {};
 
     Json::Value coverageCollection;
 
@@ -2778,6 +3015,8 @@ Json::Value format_output_data_vertical_profile(
 
     // Only one position
     const auto &outdata = outputData.front().second;
+
+    check_column_count(outdata, query_parameters);
 
     std::map<std::string, Json::Value> parameter_data_values;
     std::map<std::string, Json::Value> parameter_data_type;
@@ -2798,10 +3037,11 @@ Json::Value format_output_data_vertical_profile(
 
       auto firstParameter = prev_param.empty();
       auto resetDataIndex = ((!firstParameter) && (!isGridProducer));
-      auto tsdata = outdata.at(j);
-      auto tslevel = outdata.at(level_index);
-      TS::TimeSeriesPtr ts_data = std::get<TS::TimeSeriesPtr>(tsdata);
-      TS::TimeSeriesPtr ts_level = std::get<TS::TimeSeriesPtr>(tslevel);
+      TS::TimeSeriesPtr ts_data = as_timeseries(outdata.at(j));
+      TS::TimeSeriesPtr ts_level = as_timeseries(outdata.at(level_index));
+
+      if (!ts_data)
+        continue;
 
       parameter_name = parse_parameter_name(query_parameters[j].originalName());
 
@@ -2863,10 +3103,12 @@ Json::Value format_output_data_vertical_profile(
     auto axis_names = Json::Value(Json::ValueType::arrayValue);
     axis_names[0] = Json::Value("z");
 
-    auto tslon = outdata.at(longitude_index);
-    auto tslat = outdata.at(latitude_index);
-    TS::TimeSeriesPtr ts_lon = std::get<TS::TimeSeriesPtr>(tslon);
-    TS::TimeSeriesPtr ts_lat = std::get<TS::TimeSeriesPtr>(tslat);
+    TS::TimeSeriesPtr ts_lon = as_timeseries(outdata.at(longitude_index));
+    TS::TimeSeriesPtr ts_lat = as_timeseries(outdata.at(latitude_index));
+
+    if (!ts_lon || !ts_lat || ts_lon->empty() || ts_lat->empty())
+      throw Fmi::Exception(BCP, "Coordinate data is missing!");
+
     // Only one position, timestep
     const auto &lon_timed_value = ts_lon->front();
     const auto &lat_timed_value = ts_lat->front();
@@ -3053,9 +3295,10 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
     for (const auto &item : metadata)
     {
       const auto &engine_metadata = item.second;
-      if (engine_metadata.find(producer) != engine_metadata.end())
+      auto it = engine_metadata.find(producer);
+      if (it != engine_metadata.end() && !it->second.empty())
       {
-        edr_md = &engine_metadata.at(producer).front();
+        edr_md = &it->second.front();
         break;
       }
     }
@@ -3128,7 +3371,13 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
           //
           auto it = edr_md->stationTemporalExtentMetaData.find(loc.id);
 
-          if (it != edr_md->stationTemporalExtentMetaData.end())
+          // Same UB-on-empty-vector shape as the avi 'all' feature block
+          // below: an entry today is only inserted when the station has at
+          // least one matching message, but defending against an empty
+          // time_periods makes the function robust to future refactors that
+          // might pre-populate the map.
+          if (it != edr_md->stationTemporalExtentMetaData.end() &&
+              !it->second.time_periods.empty())
           {
             start_time = it->second.time_periods.front().start_time;
             end_time = it->second.time_periods.back().end_time;
@@ -3171,10 +3420,17 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       all["bbox"] = bbox;
 
       auto properties = Json::Value(Json::ValueType::objectValue);
-      auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
-      auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
-      properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
-                                           Fmi::to_iso_extended_string(end_time) + "Z");
+      // single_time_periods is empty when no rows in avidb_messages match the
+      // collection's filters. Without this guard front()/back() on an empty
+      // vector is undefined behavior and crashes the server (SIGSEGV) on the
+      // /collections/<avi-collection>/locations endpoint.
+      if (!edr_md->temporal_extent.single_time_periods.empty())
+      {
+        auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
+        auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
+        properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
+                                             Fmi::to_iso_extended_string(end_time) + "Z");
+      }
       properties["detail"] = "Id is special location";
       properties["name"] = "Special logical selector representing all collection locations";
       all["properties"] = properties;
@@ -3218,25 +3474,6 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
 
     const auto &tsdata_first = outdata_first.at(0);
 
-    if (std::get_if<TS::TimeSeriesPtr>(&tsdata_first))
-    {
-      // Zero or one levels
-      if (levels.size() <= 1)
-      {
-        std::optional<int> level;
-        if (levels.size() == 1)
-          level = *(levels.begin());
-        return format_output_data_one_point(
-            outputData, emd, level, query_parameters, custom_dim_refs, language);
-      }
-
-      // More than one level
-      return format_output_data_vertical_profile(
-          outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels,
-          custom_dim_refs, language);
-      //      return format_output_data_position(outputData, emd, query_parameters);
-    }
-
     if (const auto *ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
     {
       if (outdata_first.size() > 1)
@@ -3266,11 +3503,44 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
           custom_dim_refs, language);
     }
 
-    if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
+    // Data of some of the parameters can be returned as a plain time series even when the query
+    // covers several coordinates (location independent parameters, the 'level' column of grid
+    // producers, ...), thus all the columns must be checked to know whether the result contains
+    // data for several coordinates or not
+    bool coordinate_groups = false;
+    for (const auto &tsdata : outdata_first)
+    {
+      if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+      {
+        coordinate_groups = true;
+        break;
+      }
+    }
+
+    if (coordinate_groups)
     {
       return format_output_data_coverage_collection(
           outputData, emd, levels, coordinate_filter, query_parameters, query_type,
           custom_dim_refs, language);
+    }
+
+    if (std::get_if<TS::TimeSeriesPtr>(&tsdata_first))
+    {
+      // Zero or one levels
+      if (levels.size() <= 1)
+      {
+        std::optional<int> level;
+        if (levels.size() == 1)
+          level = *(levels.begin());
+        return format_output_data_one_point(
+            outputData, emd, level, query_parameters, custom_dim_refs, language);
+      }
+
+      // More than one level
+      return format_output_data_vertical_profile(
+          outputData, emd, levels, coordinate_filter, query_parameters, query_type, useDataLevels,
+          custom_dim_refs, language);
+      //      return format_output_data_position(outputData, emd, query_parameters);
     }
 
     return empty_result;

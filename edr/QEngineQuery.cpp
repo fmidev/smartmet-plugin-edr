@@ -5,6 +5,7 @@
 #include "UtilityFunctions.h"
 #include <macgyver/Exception.h>
 #include <newbase/NFmiIndexMaskTools.h>
+#include <newbase/NFmiLocation.h>
 #include <newbase/NFmiSvgTools.h>
 #include <timeseries/ParameterKeywords.h>
 #include <timeseries/ParameterTools.h>
@@ -69,6 +70,28 @@ bool is_wkt_area(const Spine::LocationPtr& loc)
     }
 
     return false;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// A MULTIPOINT is resolved into a Path typed location (WktGeometry::locationFromGeometry in the
+// geonames engine types every multi-geometry as a Path), but semantically it is a set of
+// independent points rather than an area. Point (station) querydata rejects area operations, so
+// without recognizing this case a MULTIPOINT query against a point producer returns nothing at
+// all, even though the very same coordinates given via 'latlons' work.
+bool is_multipoint_query(const Spine::TaggedLocation& tloc, const CommonQuery& query)
+{
+  try
+  {
+    if (tloc.loc->type != Spine::Location::Wkt)
+      return false;
+
+    const auto* geom = query.wktGeometries.getGeometry(tloc.loc->name);
+
+    return (geom != nullptr && geom->getGeometryType() == wkbMultiPoint);
   }
   catch (...)
   {
@@ -221,7 +244,7 @@ NFmiIndexMask get_area_indexmask(const Spine::TaggedLocation& tloc,
   }
 }
 
-Spine::TaggedLocationList get_tloclist(const Query& query,
+Spine::TaggedLocationList get_tloclist(const CommonQuery& query,
                                        const Spine::TaggedLocation& tloc,
                                        const Spine::LocationPtr& loc,
                                        const Spine::LocationPtr& area_loc,
@@ -253,10 +276,10 @@ Spine::TaggedLocationList get_tloclist(const Query& query,
 
 }  // namespace
 
-QEngineQuery::QEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {}
+QEngineQuery::QEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin) {}
 
 // If query.groupareas is false, find out locations inside area and process them individaually
-void QEngineQuery::resolveAreaLocations(Query& query,
+void QEngineQuery::resolveAreaLocations(CommonQuery& query,
                                         const State& state,
                                         const AreaProducers& areaproducers) const
 {
@@ -312,13 +335,17 @@ void QEngineQuery::resolveAreaLocations(Query& query,
     {
       tloclist.emplace_back(tloc);
     }
+
+    // Check while expanding so that a huge area is rejected before the next one is expanded
+    check_request_limit(
+        itsPlugin.itsConfig.requestLimits(), tloclist.size(), TS::RequestLimitMember::LOCATIONS);
   }
 
   query.loptions->setLocations(tloclist);
 }
 
 void QEngineQuery::processQEngineQuery(const State& state,
-                                       Query& masterquery,
+                                       CommonQuery& masterquery,
                                        TS::OutputData& outputData,
                                        const AreaProducers& areaproducers,
                                        const ProducerDataPeriod& producerDataPeriod) const
@@ -347,7 +374,7 @@ void QEngineQuery::processQEngineQuery(const State& state,
         continue;
       processed_locations.insert(location_id);
 
-      Query q = masterquery;
+      CommonQuery q = masterquery;
       QueryLevelDataCache queryLevelDataCache;
 
       std::vector<TS::TimeSeriesData> tsdatavector;
@@ -411,13 +438,13 @@ void QEngineQuery::processQEngineQuery(const State& state,
 }
 
 void QEngineQuery::fetchQEngineValues(const State& state,
-                                      const Query& query,
+                                      const CommonQuery& query,
                                       const std::string& producer,
                                       const TS::ParameterAndFunctions& paramfunc,
                                       const Spine::TaggedLocation& tloc,
                                       const ProducerDataPeriod& producerDataPeriod,
                                       const Engine::Querydata::Q& qi,
-                                      const NFmiPoint& nearestpoint,
+                                      double maxdist,
                                       int precision,
                                       bool isPointQuery,
                                       bool loadDataLevels,
@@ -445,7 +472,27 @@ void QEngineQuery::fetchQEngineValues(const State& state,
     std::pair<float, std::string> cacheKey(loadDataLevels ? qi->levelValue() : levelValue,
                                            levelType + paramname);
 
-    if (isPointQuery)
+    if (isPointQuery && !qi->isGrid() && query.numberofstations > 1)
+    {
+      // Pointwise (station) querydata with numberofstations>1: return the N nearest stations
+      stationsQuery(query,
+                    producer,
+                    paramfunc,
+                    tloc,
+                    querydata_tlist,
+                    tlist,
+                    cacheKey,
+                    state,
+                    qi,
+                    query.maxdistance_kilometers(),
+                    precision,
+                    loadDataLevels,
+                    pressure,
+                    height,
+                    queryLevelDataCache,
+                    aggregatedData);
+    }
+    else if (isPointQuery)
     {
       pointQuery(query,
                  producer,
@@ -456,7 +503,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                  cacheKey,
                  state,
                  qi,
-                 nearestpoint,
+                 query.maxdistance_kilometers(),
                  precision,
                  loadDataLevels,
                  pressure,
@@ -475,7 +522,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                 cacheKey,
                 state,
                 qi,
-                nearestpoint,
+                query.maxdistance_kilometers(),
                 precision,
                 loadDataLevels,
                 pressure,
@@ -494,7 +541,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                                       const TS::ParameterAndFunctions& paramfunc,
                                       int precision,
                                       const Spine::TaggedLocation& tloc,
-                                      Query& query,
+                                      CommonQuery& query,
                                       const AreaProducers& areaproducers,
                                       const ProducerDataPeriod& producerDataPeriod,
                                       QueryLevelDataCache& queryLevelDataCache,
@@ -524,19 +571,12 @@ void QEngineQuery::fetchQEngineValues(const State& state,
 
     query.toptions.setDataTimes(validtimes, qi->isClimatology());
 
-    // No area operations allowed for non-grid data
+    // No area operations allowed for non-grid data. A MULTIPOINT is not an area operation even
+    // though it is typed as a Path, so let it through: areaQuery() resolves it back into the
+    // individual requested points (getLocationListForPath).
     bool isPointQuery = is_point_query(loc);
-    if (!qi->isGrid() && !isPointQuery)
+    if (!qi->isGrid() && !isPointQuery && !is_multipoint_query(tloc, query))
       return;
-
-    // If we accept nearest valid points, find it now for this location
-    // This is fast if the nearest point is already valid
-    NFmiPoint nearestpoint(kFloatMissing, kFloatMissing);
-    if (query.findnearestvalidpoint)
-    {
-      NFmiPoint latlon(loc->longitude, loc->latitude);
-      nearestpoint = qi->validPoint(latlon, query.maxdistance_kilometers());
-    }
 
     // std::string country = state.getGeoEngine().countryName(loc->iso2, query.language);
 
@@ -588,7 +628,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                            tloc,
                            producerDataPeriod,
                            qi,
-                           nearestpoint,
+                           query.maxdistance_kilometers(),
                            precision,
                            isPointQuery,
                            loadDataLevels,
@@ -610,10 +650,10 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                          tloc,
                          producerDataPeriod,
                          qi,
-                         nearestpoint,
+                         query.maxdistance_kilometers(),
                          precision,
                          isPointQuery,
-                         loadDataLevels,
+                         false,  // loadDataLevels
                          pressure,
                          "pressure:",
                          {},
@@ -631,10 +671,10 @@ void QEngineQuery::fetchQEngineValues(const State& state,
                          tloc,
                          producerDataPeriod,
                          qi,
-                         nearestpoint,
+                         query.maxdistance_kilometers(),
                          precision,
                          isPointQuery,
-                         loadDataLevels,
+                         false,  // loadDataLevels
                          height,
                          "height:",
                          height,
@@ -653,7 +693,7 @@ void QEngineQuery::fetchQEngineValues(const State& state,
 }
 
 TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateQEngineQueryTimes(
-    const Query& query, const std::string& paramname) const
+    const CommonQuery& query, const std::string& paramname) const
 {
   try
   {
@@ -730,7 +770,7 @@ TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateQEngineQueryTimes(
   }
 }
 
-void QEngineQuery::pointQuery(const Query& theQuery,
+void QEngineQuery::pointQuery(const CommonQuery& theQuery,
                               const std::string& theProducer,
                               const TS::ParameterAndFunctions& theParamFunc,
                               const Spine::TaggedLocation& theTLoc,
@@ -739,7 +779,7 @@ void QEngineQuery::pointQuery(const Query& theQuery,
                               const std::pair<float, std::string>& theCacheKey,
                               const State& theState,
                               const Engine::Querydata::Q& theQ,
-                              const NFmiPoint& theNearestPoint,
+                              double theMaxDist,
                               int thePrecision,
                               bool theLoadDataLevels,
                               std::optional<float> thePressure,
@@ -763,22 +803,23 @@ void QEngineQuery::pointQuery(const Query& theQuery,
     {
       querydata_result = theQueryLevelDataCache.itsTimeSeries[theCacheKey];
     }
-    else if (paramname == "fmisid" || paramname == "lpnn" || paramname == "wmo")
+    else if (paramname == "fmisid" && loc->fmisid)
     {
+      // WmoStationNumber, Wmo, RWSID may be obtained from point querydata, hence Q.cpp handles
+      // them. If the location has no fmisid, we try using point querydata station number instead
       querydata_result = std::make_shared<TS::TimeSeries>();
       for (const auto& t : theQueryDataTlist)
-      {
-        if (loc->fmisid && paramname == "fmisid")
-        {
-          querydata_result->emplace_back(TS::TimedValue(t, *(loc->fmisid)));
-        }
-        else
-        {
-          querydata_result->emplace_back(TS::TimedValue(t, TS::None()));
-        }
-      }
+        querydata_result->emplace_back(TS::TimedValue(t, *(loc->fmisid)));
     }
-    else if (UtilityFunctions::is_special_parameter(paramname))
+    else if (paramname == "producer" || paramname == "model")
+    {
+      // Querydata engine has no case for kFmiProducer in dataIndependentValue(),
+      // so handle it here by returning the resolved producer name for every timestep.
+      querydata_result = std::make_shared<TS::TimeSeries>();
+      for (const auto& t : theQueryDataTlist)
+        querydata_result->emplace_back(TS::TimedValue(t, theProducer));
+    }
+    else if (UtilityFunctions::is_special_parameter(paramname) && paramname != "fmisid")
     {
       querydata_result = std::make_shared<TS::TimeSeries>();
       UtilityFunctions::get_special_parameter_values(paramname,
@@ -805,7 +846,7 @@ void QEngineQuery::pointQuery(const Query& theQuery,
                                                           theQuery.outlocale,
                                                           theQuery.timezone,
                                                           theQuery.findnearestvalidpoint,
-                                                          theNearestPoint,
+                                                          theMaxDist,
                                                           theQuery.lastpoint);
 
       // one location, list of local times (no radius -> pointforecast)
@@ -837,7 +878,7 @@ void QEngineQuery::pointQuery(const Query& theQuery,
   }
 }
 
-Spine::LocationList QEngineQuery::getLocationListForPath(const Query& theQuery,
+Spine::LocationList QEngineQuery::getLocationListForPath(const CommonQuery& theQuery,
                                                          const Spine::TaggedLocation& theTLoc,
                                                          const std::string& place,
                                                          const NFmiSvgPath& svgPath,
@@ -887,7 +928,7 @@ Spine::LocationList QEngineQuery::getLocationListForPath(const Query& theQuery,
 }
 
 TS::TimeSeriesGroupPtr QEngineQuery::getQEngineValuesForArea(
-    const Query& theQuery,
+    const CommonQuery& theQuery,
     const std::string& theProducer,
     const TS::ParameterAndFunctions& theParamFunc,
     const Spine::TaggedLocation& theTLoc,
@@ -895,19 +936,34 @@ TS::TimeSeriesGroupPtr QEngineQuery::getQEngineValuesForArea(
     const TS::TimeSeriesGenerator::LocalTimeList& theQueryDataTlist,
     const State& theState,
     const Engine::Querydata::Q& theQ,
-    const NFmiPoint& theNearestPoint,
+    double theMaxDist,
     int thePrecision,
     bool theLoadDataLevels,
     std::optional<float> thePressure,
     std::optional<float> theHeight,
     const std::string& paramname,
-    const Spine::LocationList& llist) const
+    const Spine::LocationList& llist,
+    const std::optional<NFmiPoint>& theDistanceReferencePoint) const
 {
   try
   {
     TS::TimeSeriesGroupPtr querydata_result;
 
-    if (UtilityFunctions::is_special_parameter(paramname))
+    if (paramname == "producer" || paramname == "model")
+    {
+      // Querydata engine has no case for kFmiProducer in dataIndependentValue(),
+      // so handle it here by returning the resolved producer name for every timestep.
+      querydata_result = std::make_shared<TS::TimeSeriesGroup>();
+      for (const auto& location : llist)
+      {
+        TS::TimeSeries ts;
+        for (const auto& t : theQueryDataTlist)
+          ts.emplace_back(TS::TimedValue(t, theProducer));
+        querydata_result->push_back(
+            TS::LonLatTimeSeries(Spine::LonLat(location->longitude, location->latitude), ts));
+      }
+    }
+    else if (UtilityFunctions::is_special_parameter(paramname))
     {
       querydata_result = std::make_shared<TS::TimeSeriesGroup>();
       UtilityFunctions::get_special_parameter_values(paramname,
@@ -936,8 +992,12 @@ TS::TimeSeriesGroupPtr QEngineQuery::getQEngineValuesForArea(
                                                           theQuery.outlocale,
                                                           theQuery.timezone,
                                                           theQuery.findnearestvalidpoint,
-                                                          theNearestPoint,
+                                                          theMaxDist,
                                                           theQuery.lastpoint);
+
+      // When the point query has been expanded into several nearby stations, distance/direction
+      // must be measured from the original query point rather than from each station's own location
+      querydata_param.distanceReferencePoint = theDistanceReferencePoint;
 
       // list of locations, list of local times
       if (theLoadDataLevels)
@@ -1025,7 +1085,7 @@ Spine::LocationList QEngineQuery::getLocationListForArea(const Spine::TaggedLoca
   }
 }
 
-void QEngineQuery::areaQuery(const Query& theQuery,
+void QEngineQuery::areaQuery(const CommonQuery& theQuery,
                              const std::string& theProducer,
                              const TS::ParameterAndFunctions& theParamFunc,
                              const Spine::TaggedLocation& theTLoc,
@@ -1034,7 +1094,7 @@ void QEngineQuery::areaQuery(const Query& theQuery,
                              const std::pair<float, std::string>& theCacheKey,
                              const State& theState,
                              const Engine::Querydata::Q& theQ,
-                             const NFmiPoint& theNearestPoint,
+                             double theMaxDist,
                              int thePrecision,
                              bool theLoadDataLevels,
                              std::optional<float> thePressure,
@@ -1080,7 +1140,7 @@ void QEngineQuery::areaQuery(const Query& theQuery,
                                                    theQueryDataTlist,
                                                    theState,
                                                    theQ,
-                                                   theNearestPoint,
+                                                   theMaxDist,
                                                    thePrecision,
                                                    theLoadDataLevels,
                                                    thePressure,
@@ -1105,7 +1165,7 @@ void QEngineQuery::areaQuery(const Query& theQuery,
                                                    theQueryDataTlist,
                                                    theState,
                                                    theQ,
-                                                   theNearestPoint,
+                                                   theMaxDist,
                                                    thePrecision,
                                                    theLoadDataLevels,
                                                    thePressure,
@@ -1148,8 +1208,141 @@ void QEngineQuery::areaQuery(const Query& theQuery,
   }
 }
 
+Spine::LocationList QEngineQuery::getNearestStationLocations(const Engine::Querydata::Q& theQ,
+                                                             const Spine::LocationPtr& loc,
+                                                             int numberofstations,
+                                                             double theMaxDist)
+{
+  try
+  {
+    Spine::LocationList llist;
+
+    auto qinfo = theQ->info();
+
+    // theMaxDist is in kilometers, NearestLocations expects meters
+    NFmiLocation searchpoint(loc->longitude, loc->latitude);
+    auto nearest = qinfo->NearestLocations(searchpoint, numberofstations, theMaxDist * 1000.0);
+
+    for (const auto& index_distance : nearest)
+    {
+      const int index = index_distance.first;
+      if (!qinfo->LocationIndex(index))
+        continue;
+
+      const NFmiPoint stationlatlon = qinfo->LatLon();
+
+      // Copy the requested location and override coordinates and name with the station's own
+      // values, so that the location dependent parameters (name, longitude, latitude, ...) refer to
+      // the station. The 'distance' and 'direction' parameters are handled separately using the
+      // original query point as the reference (see getQEngineValuesForArea).
+      Spine::Location station(*loc);
+      station.longitude = stationlatlon.X();
+      station.latitude = stationlatlon.Y();
+      station.name = qinfo->Location()->GetName().CharPtr();
+      station.type = Spine::Location::CoordinatePoint;
+      station.radius = 0;
+
+      llist.emplace_back(std::make_shared<Spine::Location>(station));
+    }
+
+    return llist;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void QEngineQuery::stationsQuery(const CommonQuery& theQuery,
+                                 const std::string& theProducer,
+                                 const TS::ParameterAndFunctions& theParamFunc,
+                                 const Spine::TaggedLocation& theTLoc,
+                                 const TS::TimeSeriesGenerator::LocalTimeList& theQueryDataTlist,
+                                 const TS::TimeSeriesGenerator::LocalTimeList& theRequestedTList,
+                                 const std::pair<float, std::string>& theCacheKey,
+                                 const State& theState,
+                                 const Engine::Querydata::Q& theQ,
+                                 double theMaxDist,
+                                 int thePrecision,
+                                 bool theLoadDataLevels,
+                                 std::optional<float> thePressure,
+                                 std::optional<float> theHeight,
+                                 QueryLevelDataCache& theQueryLevelDataCache,
+                                 std::vector<TS::TimeSeriesData>& theAggregatedData) const
+{
+  try
+  {
+    const auto& paramname = theParamFunc.parameter.name();
+
+    NFmiSvgPath svgPath;
+    bool isWkt = false;
+    Spine::LocationPtr loc = resolveLocation(theTLoc, theQuery, svgPath, isWkt);
+
+    TS::TimeSeriesGroupPtr querydata_result;
+
+    if (theQueryLevelDataCache.itsTimeSeriesGroups.find(theCacheKey) !=
+        theQueryLevelDataCache.itsTimeSeriesGroups.end())
+    {
+      querydata_result = theQueryLevelDataCache.itsTimeSeriesGroups[theCacheKey];
+    }
+    else
+    {
+      Spine::LocationList llist =
+          getNearestStationLocations(theQ, loc, theQuery.numberofstations, theMaxDist);
+
+      if (llist.empty())
+        return;
+
+      check_request_limit(
+          itsPlugin.itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
+
+      // Distance and direction are measured from the original query point, not from each station
+      std::optional<NFmiPoint> referencePoint(NFmiPoint(loc->longitude, loc->latitude));
+
+      querydata_result = getQEngineValuesForArea(theQuery,
+                                                 theProducer,
+                                                 theParamFunc,
+                                                 theTLoc,
+                                                 loc,
+                                                 theQueryDataTlist,
+                                                 theState,
+                                                 theQ,
+                                                 theMaxDist,
+                                                 thePrecision,
+                                                 theLoadDataLevels,
+                                                 thePressure,
+                                                 theHeight,
+                                                 paramname,
+                                                 llist,
+                                                 referencePoint);
+
+      if (!querydata_result->empty())
+      {
+        if (theParamFunc.parameter.name() == "x" || theParamFunc.parameter.name() == "y")
+          TS::transform_wgs84_coordinates(
+              theParamFunc.parameter.name(), theQuery.crs, *querydata_result);
+
+        theQueryLevelDataCache.itsTimeSeriesGroups.insert(make_pair(theCacheKey, querydata_result));
+      }
+    }
+
+    if (!querydata_result->empty())
+    {
+      TS::TimeSeriesGroupPtr aggregated_querydata_result =
+          TS::aggregate(querydata_result, theParamFunc.functions, theRequestedTList);
+      aggregated_querydata_result =
+          TS::erase_redundant_timesteps(aggregated_querydata_result, theRequestedTList);
+      theAggregatedData.emplace_back(aggregated_querydata_result);
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 Engine::Querydata::Producer QEngineQuery::selectProducer(const Spine::Location& location,
-                                                         const Query& query,
+                                                         const CommonQuery& query,
                                                          const AreaProducers& areaproducers) const
 {
   try
@@ -1183,7 +1376,7 @@ Engine::Querydata::Producer QEngineQuery::selectProducer(const Spine::Location& 
 }
 
 Spine::LocationPtr QEngineQuery::resolveLocation(const Spine::TaggedLocation& tloc,
-                                                 const Query& query,
+                                                 const CommonQuery& query,
                                                  NFmiSvgPath& svgPath,
                                                  bool& isWkt) const
 {
@@ -1227,7 +1420,7 @@ Spine::LocationPtr QEngineQuery::resolveLocation(const Spine::TaggedLocation& tl
 }
 
 TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateTList(
-    const Query& query,
+    const CommonQuery& query,
     const std::string& producer,
     const ProducerDataPeriod& producerDataPeriod) const
 {

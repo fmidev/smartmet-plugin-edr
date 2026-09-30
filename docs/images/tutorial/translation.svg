@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="470" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5 0 10z" fill="#444"/></marker>
+<style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.arrow{stroke:#444;stroke-width:1.5;fill:none;marker-end:url(#a)}.mono{font-family:DejaVu Sans Mono, monospace;font-size:12px}.k{fill:#1a5276}.note{fill:#a35a00;font-size:12px;font-style:italic}</style></defs>
+<rect width="1000" height="470" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">EDRQueryParams: EDR parameters become TimeSeries-plugin request parameters</text>
+
+<rect class="box" x="20" y="55" width="450" height="345" rx="6"/>
+<text class="t h" x="30" y="80">EDR request</text>
+<text class="mono k" x="30" y="110">/collections/pal_skandinavia/…</text>
+<text class="mono k" x="30" y="135">…/instances/20080805T060000/…</text>
+<text class="mono k" x="30" y="160">radius?coords=POINT(24.9 60.2)&amp;within=20&amp;within-units=km</text>
+<text class="mono k" x="30" y="185">corridor?coords=LINESTRING(…)&amp;corridor-width=50</text>
+<text class="mono k" x="30" y="210">trajectory?coords=LINESTRINGZM(x y 300 1220961600,…)</text>
+<text class="mono k" x="30" y="235">datetime=2008-08-05T09:00Z/2008-08-05T18:00Z</text>
+<text class="mono k" x="30" y="260">datetime absent</text>
+<text class="mono k" x="30" y="285">z=1000,850  |  z=300/700</text>
+<text class="mono k" x="30" y="310">parameter-name=Temperature,Pressure</text>
+<text class="mono k" x="30" y="335">locations/874863   |   locations/EFHK</text>
+<text class="mono k" x="30" y="360">cube?bbox=25,60,26,61</text>
+<text class="mono k" x="30" y="385">crs=OGC:CRS84   (only value accepted)</text>
+
+<rect class="box" x="530" y="55" width="450" height="345" rx="6"/>
+<text class="t h" x="540" y="80">request seen by CommonQuery and the engines</text>
+<text class="mono k" x="540" y="110">producer=pal_skandinavia   (grid: encoded in param)</text>
+<text class="mono k" x="540" y="135">origintime=20080805T060000</text>
+<text class="mono k" x="540" y="160">wkt=POINT(24.9 60.2):20      (radius in km suffix)</text>
+<text class="mono k" x="540" y="185">wkt=LINESTRING(…):50</text>
+<text class="mono k" x="540" y="210">wkt=LINESTRING(x y,…) + CoordinateFilter(z,t per vertex)</text>
+<text class="mono k" x="540" y="235">starttime=…T09:00Z  endtime=…T18:00Z</text>
+<text class="mono k" x="540" y="260">starttime=endtime=metadata time nearest to now</text>
+<text class="mono k" x="540" y="285">levels=1000,850  |  levels=all in range, levelrange=1</text>
+<text class="mono k" x="540" y="310">param=temperature,pressure,longitude,latitude[,level]</text>
+<text class="mono k" x="540" y="335">fmisid= / geoid=   |   icao=EFHK</text>
+<text class="mono k" x="540" y="360">wkt=POLYGON((25 60,26 60,26 61,25 61,25 60))</text>
+<text class="mono k" x="540" y="385">(no transformation; anything else is rejected)</text>
+
+<g class="arrow"><path d="M472 105 H528"/><path d="M472 130 H528"/><path d="M472 155 H528"/><path d="M472 180 H528"/><path d="M472 205 H528"/><path d="M472 230 H528"/><path d="M472 255 H528"/><path d="M472 280 H528"/><path d="M472 305 H528"/><path d="M472 330 H528"/><path d="M472 355 H528"/><path d="M472 380 H528"/></g>
+
+<text class="s" x="20" y="430">Consequence: every TimeSeries option (timestep, tz, precision, maxdistance, interval, aggregation functions such as max_t(temperature:6h),</text>
+<text class="s" x="20" y="448">source=grid) also works on an EDR URL, because CommonQuery parses the rewritten request exactly as the TimeSeries plugin would.</text>
+</svg>

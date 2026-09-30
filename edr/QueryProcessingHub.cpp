@@ -4,13 +4,14 @@
 #include "GridInterface.h"
 #include "LocationTools.h"
 #include "LonLatDistance.h"
-#include "Plugin.h"
+#include "PluginImpl.h"
 #include "PostProcessing.h"
 #include "State.h"
 #include <grid-files/common/GeneralFunctions.h>
 #include <macgyver/Hash.h>
 #include <timeseries/ParameterKeywords.h>
 #include <timeseries/ParameterTools.h>
+#include <algorithm>
 
 namespace SmartMet
 {
@@ -20,6 +21,29 @@ namespace EDR
 {
 namespace
 {
+// Grid queries expand each requested (parameter,level) pair into its own Spine::Parameter.
+// Some of those combinations may turn out to have no data at all (e.g. a level implied by the
+// collection's vertical extent that the requested parameter is not actually defined on) -
+// GridInterface::extractQueryResult records their request names in
+// query.gridParametersWithNoData instead of emitting a missing value column for them. Drop the
+// same entries here so the parameter list stays in sync with the output columns.
+std::vector<Spine::Parameter> effective_query_parameters(const CommonQuery& query)
+{
+  auto query_parameters = query.poptions.parameters();
+
+  if (query.gridParametersWithNoData.empty())
+    return query_parameters;
+
+  query_parameters.erase(
+      std::remove_if(query_parameters.begin(),
+                     query_parameters.end(),
+                     [&query](const Spine::Parameter& p)
+                     { return query.gridParametersWithNoData.count(p.originalName()) > 0; }),
+      query_parameters.end());
+
+  return query_parameters;
+}
+
 void parameters_hash_value(const Spine::HTTP::Request& request, std::size_t& hash)
 {
   try
@@ -42,7 +66,7 @@ void parameters_hash_value(const Spine::HTTP::Request& request, std::size_t& has
 }
 
 #ifndef WITHOUT_OBSERVATION
-bool obs_producers_exists(const Query& masterquery, ObsEngineQuery obsEngineQuery)
+bool obs_producers_exists(const CommonQuery& masterquery, ObsEngineQuery obsEngineQuery)
 {
   try
   {
@@ -63,8 +87,8 @@ bool obs_producers_exists(const Query& masterquery, ObsEngineQuery obsEngineQuer
 }
 #endif
 
-Spine::LocationPtr get_loc(const Query& masterquery,
-                           const Query& q,
+Spine::LocationPtr get_loc(const CommonQuery& masterquery,
+                           const CommonQuery& q,
                            const Spine::TaggedLocation& tloc,
                            const Engine::Geonames::Engine& geoEngine,
                            const Engine::Gis::GeometryStorage& geometryStorage)
@@ -102,7 +126,7 @@ Spine::LocationPtr get_loc(const Query& masterquery,
   }
 }
 
-Spine::LocationPtr get_nearest_loc(const Query& masterquery, const Spine::TaggedLocation& tloc)
+Spine::LocationPtr get_nearest_loc(const CommonQuery& masterquery, const Spine::TaggedLocation& tloc)
 {
   try
   {
@@ -123,6 +147,12 @@ Spine::LocationPtr get_nearest_loc(const Query& masterquery, const Spine::Tagged
       }
     }
 
+    // Reject the nearest location if it is farther than the requested maxdistance.
+    // Without an explicit maxdistance the nearest keyword location is always returned.
+    if (nearest_loc && masterquery.maxdistanceOptionGiven &&
+        distance > masterquery.maxdistance_kilometers())
+      nearest_loc = nullptr;
+
     return nearest_loc;
   }
   catch (...)
@@ -131,7 +161,7 @@ Spine::LocationPtr get_nearest_loc(const Query& masterquery, const Spine::Tagged
   }
 }
 
-Spine::TaggedLocationList get_tloc_list(const Query& masterquery,
+Spine::TaggedLocationList get_tloc_list(const CommonQuery& masterquery,
                                         const Spine::TaggedLocation& tloc,
                                         const Engine::Gis::GeometryStorage& geometryStorage)
 {
@@ -211,7 +241,7 @@ Spine::TaggedLocationList get_tloc_list(const Query& masterquery,
   }
 }
 
-void check_in_keyword_locations(Query& masterquery,
+void check_in_keyword_locations(CommonQuery& masterquery,
                                 const Engine::Gis::GeometryStorage& geometryStorage)
 {
   try
@@ -240,10 +270,10 @@ bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams)
       theParams.begin(),
       theParams.end(),
       [](const Spine::Parameter& param)
-      { return TS::is_location_parameter(param.name()) || param.name() == "plaace"; });
+      { return TS::is_location_parameter(param.name()) || param.name() == "place"; });
 }
 
-void fetch_static_location_values(const Query& query,
+void fetch_static_location_values(const CommonQuery& query,
                                   const Engine::Geonames::Engine& geoEngine,
                                   const Engine::Gis::GeometryStorage& geometryStorage,
                                   Spine::Table& data)
@@ -293,7 +323,7 @@ void fetch_static_location_values(const Query& query,
   }
 }
 
-void check_timestep(const Query& masterquery, const EDRMetaData& emd, const std::string& producer)
+void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, const std::string& producer)
 {
   try
   {
@@ -329,7 +359,7 @@ void check_timestep(const Query& masterquery, const EDRMetaData& emd, const std:
 
 }  // namespace
 
-QueryProcessingHub::QueryProcessingHub(const Plugin& thePlugin)
+QueryProcessingHub::QueryProcessingHub(const PluginImpl& thePlugin)
     : itsQEngineQuery(thePlugin),
       itsObsEngineQuery(thePlugin),
       itsAviEngineQuery(thePlugin),
@@ -380,7 +410,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const Stat
   }
 }
 
-void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const Query& masterquery)
+void QueryProcessingHub::setPrecisions(EDRMetaData& emd, const CommonQuery& masterquery)
 {
   try
   {
@@ -635,7 +665,9 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       bool process_qengine_query = true;
 #ifndef WITHOUT_AVI
-      std::string producerName = (producerMissing ? "" : masterquery.timeproducers.front().front());
+      std::string producerName;
+      if (!producerMissing && !masterquery.timeproducers.front().empty())
+        producerName = masterquery.timeproducers.front().front();
       if (itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
       {
         itsAviEngineQuery.processAviEngineQuery(
@@ -677,6 +709,11 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       // get the latestTimestep from previous query
       latestTimestep = q.latestTimestep;
       startTimeUTC = q.toptions.startTimeUTC;
+      // q is a per-producer-group copy of masterquery (see 'Query q = masterquery' above); grid
+      // queries record (parameter,level) combinations with no data on q, not on masterquery, so
+      // merge them back, otherwise effective_query_parameters() below never sees them.
+      masterquery.gridParametersWithNoData.insert(q.gridParametersWithNoData.begin(),
+                                                   q.gridParametersWithNoData.end());
       ++producer_group;
     }
 
@@ -685,6 +722,32 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 #endif
 
     setPrecisions(emd, masterquery);
+
+    // CoordinateFilter::accept() requires an exact (lon,lat) match against the literal
+    // coordinates given in the request (LINESTRINGZ/ZM/M, MULTIPOINTZ); it only works when the
+    // output points are guaranteed to be those exact coordinates. That guarantee fails for:
+    //  - Corridor: always resolved via a grid-cell buffer expansion (MaskExpand), never the
+    //    literal path vertices.
+    //  - Trajectory against an observation-backed producer: resolved to nearby station
+    //    coordinates (resolveStationsForPath), never the literal path vertices.
+    //  - Trajectory with a non-zero 'step': the path is resampled at 'step'-km intervals
+    //    (get_location_list), producing interpolated coordinates.
+    //  - Position (MULTIPOINTZ) against an observation-backed producer: resolved to the nearest
+    //    station's coordinates (handleLocationSettings), never the literal requested point. The
+    //    "longitude"/"latitude" special parameters report the station's own coordinates
+    //    (SpecialParameters.cpp), not the requested ones.
+    // In all these cases the requested levels/times are already enforced upstream via the
+    // "levels"/"z" query parameters, so skip the filter rather than have it silently empty the
+    // response.
+    const CoordinateFilter emptyCoordinateFilter;
+    const bool skipCoordinateFilterForOutput =
+        edr_query.query_type == EDRQueryType::Corridor ||
+        (edr_query.query_type == EDRQueryType::Trajectory &&
+         (emd.isObsProducer() || masterquery.step != 0)) ||
+        (edr_query.query_type == EDRQueryType::Position && emd.isObsProducer());
+    const CoordinateFilter& coordinateFilterForOutput =
+        (skipCoordinateFilterForOutput ? emptyCoordinateFilter
+                                       : masterquery.coordinateFilter());
 
     if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT ||
         masterquery.output_format == IWXXMZIP_FORMAT)
@@ -705,8 +768,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                           emd,
                                                           edr_query.query_type,
                                                           masterquery.levels,
-                                                          masterquery.coordinateFilter(),
-                                                          masterquery.poptions.parameters(),
+                                                          coordinateFilterForOutput,
+                                                          effective_query_parameters(masterquery),
                                                           producer == SOUNDING_PRODUCER,
                                                           custom_dim_refs,
                                                           edr_query.language);
@@ -718,12 +781,117 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      emd,
                                                      edr_query.query_type,
                                                      masterquery.levels,
-                                                     masterquery.coordinateFilter(),
-                                                     masterquery.poptions.parameters(),
+                                                     coordinateFilterForOutput,
+                                                     effective_query_parameters(masterquery),
                                                      custom_dim_refs,
                                                      edr_query.language);
       table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }
+
+    return {};
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Process a timeseries-style data query (no EDR metadata, no EDR output formatting)
+ */
+// ----------------------------------------------------------------------
+
+std::shared_ptr<std::string> QueryProcessingHub::processQuery(
+    const State& state,
+    Spine::Table& table,
+    TimeSeriesQuery& masterquery,
+    const QueryServer::QueryStreamer_sptr& queryStreamer,
+    std::size_t& product_hash)
+{
+  try
+  {
+    const auto& thePlugin = state.getPlugin();
+    const auto& theEngines = thePlugin.itsEngines;
+
+    check_in_keyword_locations(masterquery, thePlugin.itsGeometryStorage);
+
+    if (is_static_location_query(masterquery.poptions.parameters()))
+    {
+      fetch_static_location_values(
+          masterquery, *theEngines.geoEngine, thePlugin.itsGeometryStorage, table);
+      return {};
+    }
+
+    ProducerDataPeriod producerDataPeriod;
+
+#ifndef WITHOUT_OBSERVATION
+    producerDataPeriod.init(
+        state, *theEngines.qEngine, theEngines.obsEngine.get(), masterquery.timeproducers);
+#else
+    producerDataPeriod.init(state, *theEngines.qEngine, masterquery.timeproducers);
+#endif
+
+    TS::OutputData outputData;
+
+    const bool producerMissing = masterquery.timeproducers.empty();
+    if (producerMissing)
+      masterquery.timeproducers.emplace_back(AreaProducers());
+
+#ifndef WITHOUT_OBSERVATION
+    const ObsParameters obsParameters = itsObsEngineQuery.getObsParameters(masterquery);
+#endif
+
+    Fmi::DateTime latestTimestep = masterquery.latestTimestep;
+    bool startTimeUTC = masterquery.toptions.startTimeUTC;
+
+    std::size_t producer_group = 0;
+    for (const AreaProducers& areaproducers : masterquery.timeproducers)
+    {
+      TimeSeriesQuery q = masterquery;
+      q.timeproducers.clear();
+      q.latestTimestep = latestTimestep;
+
+      if (producer_group != 0)
+        q.toptions.startTimeUTC = startTimeUTC;
+      q.toptions.endTimeUTC = masterquery.toptions.endTimeUTC;
+
+      bool process_qengine_query = true;
+#ifndef WITHOUT_OBSERVATION
+      if (!areaproducers.empty() && thePlugin.itsEngines.obsEngine != nullptr &&
+          itsObsEngineQuery.isObsProducer(areaproducers.front()))
+      {
+        itsObsEngineQuery.processObsEngineQuery(
+            state, q, outputData, areaproducers, producerDataPeriod, obsParameters);
+        process_qengine_query = false;
+      }
+      else
+#endif
+          if (itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
+      {
+        bool processed = itsGridEngineQuery.processGridEngineQuery(
+            state, q, outputData, queryStreamer, areaproducers, producerDataPeriod);
+
+        if (processed)
+        {
+          product_hash = Fmi::bad_hash;
+          process_qengine_query = false;
+        }
+      }
+
+      if (process_qengine_query)
+        itsQEngineQuery.processQEngineQuery(state, q, outputData, areaproducers, producerDataPeriod);
+
+      latestTimestep = q.latestTimestep;
+      startTimeUTC = q.toptions.startTimeUTC;
+      ++producer_group;
+    }
+
+#ifndef WITHOUT_OBSERVATION
+    PostProcessing::fix_precisions(masterquery, obsParameters);
+#endif
+
+    PostProcessing::fill_table(masterquery, outputData, table);
 
     return {};
   }
@@ -803,7 +971,9 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
     bool producerMissing = masterquery.timeproducers.empty();
 
 #ifndef WITHOUT_AVI
-    std::string producerName = (producerMissing ? "" : masterquery.timeproducers.front().front());
+    std::string producerName;
+    if (!producerMissing && !masterquery.timeproducers.front().empty())
+      producerName = masterquery.timeproducers.front().front();
     if (itsAviEngineQuery.isAviProducer(producerName))
       return Fmi::bad_hash;
 #endif

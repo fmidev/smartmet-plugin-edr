@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5 0 10z" fill="#444"/></marker>
+<style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.ts{fill:#eef7ee;stroke:#2e7d32;stroke-width:1.5}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.arrow{stroke:#444;stroke-width:1.5;fill:none;marker-end:url(#a)}.note{fill:#a35a00;font-size:12px;font-style:italic}</style></defs>
+<rect width="1000" height="700" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">An EDR request is rewritten into TimeSeries-plugin vocabulary, then formatted as CoverageJSON</text>
+
+<rect class="box" x="20" y="60" width="440" height="60" rx="6"/><text class="t h" x="30" y="85">GET /edr/collections/pal_skandinavia/position?</text><text class="s" x="30" y="105">coords=POINT(24.9 60.2)&amp;datetime=…&amp;parameter-name=Temperature&amp;f=CoverageJSON</text>
+<rect class="box" x="540" y="60" width="440" height="60" rx="6"/><text class="t h" x="550" y="85">GET /timeseries?  (optional, timeseries_url)</text><text class="s" x="550" y="105">producer=…&amp;wkt=…&amp;starttime=…&amp;param=…&amp;format=json</text>
+
+<rect class="box" x="20" y="160" width="440" height="90" rx="6"/><text class="t h" x="30" y="185">EDRQueryParams  (edr/EDRQueryParams.cpp)</text><text class="s" x="30" y="205">parses the REST path: collection, instance, query type, location id</text><text class="s" x="30" y="221">synthesises producer=, wkt=, starttime=, endtime=, levels=,</text><text class="s" x="30" y="237">origintime=, param=…,longitude,latitude[,level] into its own request copy</text>
+<path class="arrow" d="M240 120 V160"/>
+
+<rect class="ts" x="20" y="290" width="960" height="70" rx="6"/><text class="t h" x="30" y="315">CommonQuery  (edr/CommonQuery.cpp) — the TimeSeries plugin's option parser</text><text class="s" x="30" y="335">locations via Geonames (wkt, fmisid, geoid, icao), TS::parseTimes, parameters + aliases, levels/pressures/heights,</text><text class="s" x="30" y="351">precision, aggregation intervals, tz, maxdistance, source …   Query = EDRQueryParams + CommonQuery;  TimeSeriesQuery = CommonQuery</text>
+<path class="arrow" d="M240 250 V290"/><path class="arrow" d="M760 120 V290"/>
+
+<rect class="ts" x="20" y="400" width="960" height="60" rx="6"/><text class="t h" x="30" y="425">QueryProcessingHub::processQuery  (edr/QueryProcessingHub.cpp)</text><text class="s" x="30" y="445">metadata query? → processMetaDataQuery.   Else dispatch per producer group; results accumulate in TS::OutputData</text>
+<path class="arrow" d="M500 360 V400"/>
+
+<rect class="ts" x="20" y="500" width="220" height="60" rx="6"/><text class="t h" x="30" y="525">QEngineQuery</text><text class="s" x="30" y="545">querydata engine</text>
+<rect class="ts" x="265" y="500" width="220" height="60" rx="6"/><text class="t h" x="275" y="525">GridEngineQuery</text><text class="s" x="275" y="545">grid engine via GridInterface</text>
+<rect class="ts" x="510" y="500" width="220" height="60" rx="6"/><text class="t h" x="520" y="525">ObsEngineQuery</text><text class="s" x="520" y="545">observation engine (stations)</text>
+<rect class="ts" x="755" y="500" width="225" height="60" rx="6"/><text class="t h" x="765" y="525">AviEngineQuery</text><text class="s" x="765" y="545">METAR, TAF, SIGMET</text>
+<path class="arrow" d="M500 460 C500 480 150 480 130 500"/><path class="arrow" d="M500 460 C500 480 380 480 375 500"/><path class="arrow" d="M500 460 C500 480 620 480 620 500"/><path class="arrow" d="M500 460 C500 480 850 480 865 500"/>
+
+<rect class="box" x="20" y="600" width="300" height="70" rx="6"/><text class="t h" x="30" y="625">CoverageJson / GeoJson</text><text class="s" x="30" y="645">edr/CoverageJson.cpp, edr/GeoJson.cpp</text><text class="s" x="30" y="661">TS::OutputData → Json::Value → Table(0,0)</text>
+<rect class="box" x="350" y="600" width="300" height="70" rx="6"/><text class="t h" x="360" y="625">IWXXM / TAC / IWXXMZIP</text><text class="s" x="360" y="645">avi messages concatenated or zipped</text><text class="s" x="360" y="661">QueryProcessingHub::processIWXXMAndTACData</text>
+<rect class="ts" x="680" y="600" width="300" height="70" rx="6"/><text class="t h" x="690" y="625">Spine::TableFormatter</text><text class="s" x="690" y="645">json, ascii, wxml, image, …</text><text class="s" x="690" y="661">/timeseries only (PostProcessing::fill_table)</text>
+<path class="arrow" d="M130 560 C130 580 170 580 170 600"/><path class="arrow" d="M865 560 C865 580 830 580 830 600"/>
+<text class="note" x="20" y="690">green = code shared with the TimeSeries plugin</text>
+</svg>

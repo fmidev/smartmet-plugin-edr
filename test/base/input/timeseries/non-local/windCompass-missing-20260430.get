@@ -1,0 +1,1 @@
+GET /timeseries?endtime=1777320000&format=ascii&lang=en&param=epochtime,temperature,windCompass8,windDirection&precision=double&producer=foreign&starttime=1777287600&fmisid=114617 HTTP/1.0

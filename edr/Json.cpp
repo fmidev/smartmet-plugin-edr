@@ -16,10 +16,7 @@ namespace EDR
 namespace Json
 {
 #define UNINITIALIZED_KEY "__uninitialized__"
-#define COMMA_PLUS_NEWLINE ",\n"
-#define LEFT_ROUND_BRACKET_PLUS_NEWLINE "{\n"
 #define RIGHT_ROUND_BRACKET_PLUS_COMMA "},"
-#define LEFT_SQUARE_BRACKET_PLUS_NEWLINE "[\n"
 #define LEFT_SQUARE_BRACKET "["
 #define RIGHT_SQUARE_BRACKET "]"
 #define NEWLINE "\n"
@@ -49,11 +46,41 @@ std::string value_type_to_string(ValueType type)
 
 namespace
 {
+// Insignificant whitespace is emitted only when pretty printing has been requested. All the
+// helpers below return the compact form when pretty is false.
+
 std::string tabs(bool pretty, unsigned int level)
 {
   if (pretty)
     return std::string(level, '\t');
   return {};
+}
+
+std::string newline(bool pretty)
+{
+  return (pretty ? NEWLINE : "");
+}
+
+// Separator between array elements and between object members
+std::string comma(bool pretty)
+{
+  return (pretty ? ",\n" : ",");
+}
+
+// Separator between an object member name and its value
+std::string name_separator(bool pretty)
+{
+  return (pretty ? " : " : ":");
+}
+
+std::string open_brace(bool pretty)
+{
+  return (pretty ? "{\n" : "{");
+}
+
+std::string open_bracket(bool pretty)
+{
+  return (pretty ? "[\n" : "[");
 }
 
 ValueType get_value_type(const DataValue &dv)
@@ -380,7 +407,7 @@ std::string Value::data_value_vector_to_string(const std::vector<Value> &data_va
     {
       auto new_value = val.data_value.to_string(val.precision);
       if (!value_array.empty() && !new_value.empty())
-        value_array.append(COMMA_PLUS_NEWLINE);
+        value_array.append(comma(pretty));
       value_array.append(tabs(pretty, level + 2) + new_value);
     }
     else
@@ -388,10 +415,11 @@ std::string Value::data_value_vector_to_string(const std::vector<Value> &data_va
       auto new_value = val.to_string_impl(pretty, level + 2);
       if (!value_array.empty() && !new_value.empty())
       {
+        // Objects and arrays begin with a line break of their own when pretty printing
         if (boost::algorithm::starts_with(new_value, NEWLINE))
           value_array.append(",");
         else
-          value_array.append(COMMA_PLUS_NEWLINE);
+          value_array.append(comma(pretty));
       }
       value_array.append(new_value);
     }
@@ -427,16 +455,17 @@ std::string Value::values_to_string(bool pretty, unsigned int level) const
   for (const auto &key : keys)
   {
     const auto &value_obj = values.at(key);
-    std::string value = (tabs(pretty, level + 1) + "\"" + key + "\" : ");
+    std::string value = (tabs(pretty, level + 1) + "\"" + key + "\"" + name_separator(pretty));
     if (!value_obj.data_value_vector.empty())
     {
       auto value_array = data_value_vector_to_string(value_obj.data_value_vector, pretty, level);
 
+      value.append(newline(pretty) + tabs(pretty, level + 1));
       if (boost::algorithm::starts_with(value_array, NEWLINE))
-        value.append(NEWLINE + tabs(pretty, level + 1) + LEFT_SQUARE_BRACKET);
+        value.append(LEFT_SQUARE_BRACKET);
       else
-        value.append(NEWLINE + tabs(pretty, level + 1) + LEFT_SQUARE_BRACKET_PLUS_NEWLINE);
-      value.append(value_array + NEWLINE + tabs(pretty, level + 1) + RIGHT_SQUARE_BRACKET);
+        value.append(open_bracket(pretty));
+      value.append(value_array + newline(pretty) + tabs(pretty, level + 1) + RIGHT_SQUARE_BRACKET);
     }
     else
     {
@@ -446,9 +475,9 @@ std::string Value::values_to_string(bool pretty, unsigned int level) const
         data = "error: data empty";
       value.append(data);
     }
-    if (!result.empty() && !boost::algorithm::ends_with(result, LEFT_ROUND_BRACKET_PLUS_NEWLINE) &&
+    if (!result.empty() && !boost::algorithm::ends_with(result, open_brace(pretty)) &&
         !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) && !value.empty())
-      result.append(COMMA_PLUS_NEWLINE);
+      result.append(comma(pretty));
 
     result.append(value);
   }
@@ -469,9 +498,9 @@ std::string Value::data_value_vector_to_string(bool pretty, unsigned int level) 
       value = dv.to_string(pretty);
     if (!value.empty())
     {
-      if (!ret.empty() && !boost::algorithm::ends_with(ret, LEFT_ROUND_BRACKET_PLUS_NEWLINE) &&
+      if (!ret.empty() && !boost::algorithm::ends_with(ret, open_brace(pretty)) &&
           !boost::algorithm::ends_with(ret, RIGHT_ROUND_BRACKET_PLUS_COMMA))
-        ret.append(COMMA_PLUS_NEWLINE);
+        ret.append(comma(pretty));
       ret.append(tabs(pretty, level + 1) + value);
     }
   }
@@ -479,8 +508,8 @@ std::string Value::data_value_vector_to_string(bool pretty, unsigned int level) 
   if (ret.empty())
     return ret;
 
-  return (tabs(pretty, level) + LEFT_SQUARE_BRACKET_PLUS_NEWLINE + ret + NEWLINE +
-          tabs(pretty, level) + RIGHT_SQUARE_BRACKET);
+  return (tabs(pretty, level) + open_bracket(pretty) + ret + newline(pretty) + tabs(pretty, level) +
+          RIGHT_SQUARE_BRACKET);
 }
 
 std::string Value::to_string_impl(bool pretty, unsigned int level) const
@@ -488,9 +517,8 @@ std::string Value::to_string_impl(bool pretty, unsigned int level) const
   if (valueType == ValueType::arrayValue)
     return data_value_vector_to_string(pretty, level);
 
-  std::string result =
-      (level == 0 ? LEFT_ROUND_BRACKET_PLUS_NEWLINE
-                  : (NEWLINE + tabs(pretty, level) + LEFT_ROUND_BRACKET_PLUS_NEWLINE));
+  std::string result = (level == 0 ? open_brace(pretty)
+                                   : (newline(pretty) + tabs(pretty, level) + open_brace(pretty)));
 
   result.append(values_to_string(pretty, level));
   std::string children_string;
@@ -499,16 +527,17 @@ std::string Value::to_string_impl(bool pretty, unsigned int level) const
     auto child_key = item.first;
     auto child_value = item.second.to_string_impl(pretty, level + 1);
     if (!children_string.empty())
-      children_string.append(COMMA_PLUS_NEWLINE);
-    children_string.append(tabs(pretty, level + 1) + "\"" + child_key + "\" : " + child_value);
+      children_string.append(comma(pretty));
+    children_string.append(tabs(pretty, level + 1) + "\"" + child_key + "\"" +
+                           name_separator(pretty) + child_value);
   }
-  if (!result.empty() && !boost::algorithm::ends_with(result, LEFT_ROUND_BRACKET_PLUS_NEWLINE) &&
+  if (!result.empty() && !boost::algorithm::ends_with(result, open_brace(pretty)) &&
       !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) &&
-      !boost::algorithm::ends_with(result, COMMA_PLUS_NEWLINE) && !children_string.empty())
-    result.append(COMMA_PLUS_NEWLINE);
+      !boost::algorithm::ends_with(result, comma(pretty)) && !children_string.empty())
+    result.append(comma(pretty));
 
   result.append(children_string);
-  result.append(NEWLINE + tabs(pretty, level) + "}");
+  result.append(newline(pretty) + tabs(pretty, level) + "}");
 
   return result;
 }

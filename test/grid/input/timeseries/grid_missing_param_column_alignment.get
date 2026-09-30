@@ -1,0 +1,1 @@
+GET /timeseries?starttime=200808051200&timesteps=3&place=Helsinki&param=time,Temperature,hourlymaximumgust,Precipitation1h,Pressure,RelativeHumidity,WindCompass8,TotalCloudCover&format=json HTTP/1.0

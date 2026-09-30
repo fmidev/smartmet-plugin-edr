@@ -15,6 +15,7 @@
 #include <spine/Convenience.h>
 #include <spine/Exceptions.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <algorithm>
 #include <mutex>
 #include <ogr_geometry.h>
 #include <stdexcept>
@@ -175,31 +176,7 @@ void Config::parse_config_precision(const string &name)
                            "be stored in groups delimited by {}: line " +
                                Fmi::to_string(settings.getSourceLine()));
 
-    Precision prec;
-
-    for (int i = 0; i < settings.getLength(); ++i)
-    {
-      string paramname = settings[i].getName();
-
-      try
-      {
-        int value = settings[i];
-
-        if (paramname == "default")
-          prec.default_precision = value;
-        else
-          prec.parameter_precisions.insert(Precision::Map::value_type(paramname, value));
-      }
-      catch (...)
-      {
-        Spine::Exceptions::handle("EDR plugin");
-      }
-    }
-
-    // This line may crash if prec.parameters is empty
-    // Looks like a bug in g++
-
-    itsPrecisions.insert(Precisions::value_type(name, prec));
+    itsPrecisions.emplace(name, Precision(settings));
   }
   catch (...)
   {
@@ -224,7 +201,7 @@ void Config::parse_config_precisions()
       // Require available precisions in
 
       if (!itsConfig.exists("precision.enabled"))
-        throw Fmi::Exception(BCP, "precision.enabled missing from EDR congiguration file");
+        throw Fmi::Exception(BCP, "precision.enabled missing from EDR configuration file");
 
       libconfig::Setting &enabled = itsConfig.lookup("precision.enabled");
       if (!enabled.isArray())
@@ -245,6 +222,31 @@ void Config::parse_config_precisions()
 
       if (itsPrecisions.empty())
         throw Fmi::Exception(BCP, "No precisions defined in pointforecast precision: datablock!");
+
+      // Optional timeseries-specific override. The first entry becomes the default
+      // precision for timeseries-style requests. Entries not already parsed via
+      // precision.enabled are parsed here too, so groups defined only for the
+      // timeseries case are picked up.
+      if (itsConfig.exists("precision.enabled_timeseries"))
+      {
+        libconfig::Setting &enabled_ts = itsConfig.lookup("precision.enabled_timeseries");
+        if (!enabled_ts.isArray())
+        {
+          throw Fmi::Exception(BCP,
+                               "precision.enabled_timeseries must be an array in "
+                               "EDR configuration file line " +
+                                   Fmi::to_string(enabled_ts.getSourceLine()));
+        }
+
+        for (int i = 0; i < enabled_ts.getLength(); ++i)
+        {
+          const char *name = enabled_ts[i];
+          if (i == 0)
+            itsDefaultTimeSeriesPrecision = name;
+          if (itsPrecisions.find(name) == itsPrecisions.end())
+            parse_config_precision(name);
+        }
+      }
     }
   }
   catch (...)
@@ -1157,6 +1159,7 @@ Config::Config(const string &configfile)
     // Metadata update settings
     itsConfig.lookupValue("metadata_updates_disabled", itsMetaDataUpdatesDisabled);
     itsConfig.lookupValue("metadata_update_interval", itsMetaDataUpdateInterval);
+    itsConfig.lookupValue("enable_configuration_polling", itsEnableConfigurationPolling);
 
     // Obligatory settings
     itsDefaultLocaleName = itsConfig.lookup("locale").c_str();
@@ -1179,6 +1182,58 @@ Config::Config(const string &configfile)
       throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");
     if (itsDefaultUrl.back() == '/')
       itsDefaultUrl.pop_back();
+
+    if (itsConfig.exists("timeseries_url"))
+    {
+      const libconfig::Setting &setting = itsConfig.lookup("timeseries_url");
+
+      auto canonicalize = [](std::string url) -> std::string
+      {
+        Fmi::trim(url);
+        if (!url.empty() && url.front() != '/')
+          url = "/" + url;
+        if (!url.empty() && url.back() == '/')
+          url.pop_back();
+        return url;
+      };
+
+      auto append_url = [&](std::string url, int sourceLine)
+      {
+        url = canonicalize(std::move(url));
+        if (url.empty())
+          return;
+        if (std::find(itsTimeSeriesUrls.begin(), itsTimeSeriesUrls.end(), url) !=
+            itsTimeSeriesUrls.end())
+          throw Fmi::Exception(BCP,
+                               "Duplicate timeseries_url '" + url +
+                                   "' in EDR configuration file line " +
+                                   Fmi::to_string(sourceLine));
+        itsTimeSeriesUrls.push_back(std::move(url));
+      };
+
+      if (setting.isArray())
+      {
+        for (int i = 0; i < setting.getLength(); ++i)
+        {
+          if (setting[i].getType() != libconfig::Setting::Type::TypeString)
+            throw Fmi::Exception(BCP,
+                                 "timeseries_url array entries must be strings, line " +
+                                     Fmi::to_string(setting[i].getSourceLine()));
+          append_url(static_cast<const char *>(setting[i]), setting[i].getSourceLine());
+        }
+      }
+      else if (setting.getType() == libconfig::Setting::Type::TypeString)
+      {
+        append_url(static_cast<const char *>(setting), setting.getSourceLine());
+      }
+      else
+      {
+        throw Fmi::Exception(BCP,
+                             "timeseries_url must be a string or an array of strings, line " +
+                                 Fmi::to_string(setting.getSourceLine()));
+      }
+    }
+
     itsConfig.lookupValue("expires", itsExpirationTime);
     itsConfig.lookupValue("aviengine_disabled", itsAviEngineDisabled);
     itsConfig.lookupValue("observation_disabled", itsObsEngineDisabled);
@@ -1210,6 +1265,10 @@ Config::Config(const string &configfile)
     itsRequestLimits.maxtimes = maxtimes;
     itsRequestLimits.maxlevels = maxlevels;
     itsRequestLimits.maxelements = maxelements;
+
+    // Top level setting, like maxdistance. Unlike the limits above this one has no
+    // TS::RequestLimitMember, so it can only be enforced by the plugin itself.
+    itsConfig.lookupValue("maxradius", itsRequestLimits.maxradius);
 
     // TODO: Remove deprecated settings detection
     using Spine::log_time_str;

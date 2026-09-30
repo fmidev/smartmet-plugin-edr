@@ -24,6 +24,8 @@
 #include <macgyver/TimeZoneFactory.h>
 #include <timeseries/ParameterKeywords.h>
 #include <timeseries/ParameterTools.h>
+#include <timeseries/TimeSeriesGenerator.h>
+#include <timeseries/TimeSeriesUtility.h>
 
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
 
@@ -36,6 +38,8 @@ Fmi::DateTime y1970(Fmi::Date(1970, 1, 1));
 Fmi::DateTime y2100(Fmi::Date(2100, 1, 1));
 
 Fmi::TimeZonePtr utc("Etc/UTC");
+
+const uint TimeseriesFunctionFlag = 1 << 31;
 }  // anonymous namespace
 
 namespace SmartMet
@@ -46,6 +50,20 @@ namespace EDR
 {
 namespace
 {
+// True if none of the parameters needs data values. Location and time parameters such as
+// lat and lon are classified as data derived since for point data they come from the data,
+// but for grids they are calculated from the query coordinates and times.
+bool is_data_independent_query(const TS::OptionParsers::ParameterList& theParams)
+{
+  return std::all_of(theParams.begin(),
+                     theParams.end(),
+                     [](const Spine::Parameter& param)
+                     {
+                       return TS::is_data_independent(param) ||
+                              UtilityFunctions::is_special_parameter(param.name());
+                     });
+}
+
 void erase_redundant_timesteps(TS::TimeSeries& ts, std::set<Fmi::LocalDateTime>& aggregationTimes)
 {
   FUNCTION_TRACE
@@ -108,10 +126,47 @@ TS::TimeSeriesGroupPtr erase_redundant_timesteps(TS::TimeSeriesGroupPtr tsg,
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
 }
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check the size of a grid query result against the request limits
+ *
+ * A grid area or radius query returns every grid point inside the area,
+ * so the number of locations is known only after the query has been
+ * executed. Checking here prevents the result from being expanded into
+ * the output tables.
+ */
+// ----------------------------------------------------------------------
+
+void check_result_limits(const QueryServer::Query& gridQuery,
+                         const TS::OutputData& outputData,
+                         const TS::RequestLimits& limits)
+{
+  if (limits.maxlocations == 0 && limits.maxelements == 0)
+    return;
+
+  std::size_t locations = 0;
+  std::size_t elements = 0;
+  for (const auto& param : gridQuery.mQueryParameterList)
+  {
+    for (const auto& values : param.mValueList)
+    {
+      const std::size_t len = values->mValueList.getLength();
+      locations = std::max(locations, len);
+      elements += len;
+    }
+  }
+
+  TS::check_request_limit(limits, locations, TS::RequestLimitMember::LOCATIONS);
+  TS::check_request_limit(
+      limits, elements + TS::number_of_elements(outputData), TS::RequestLimitMember::ELEMENTS);
+}
 }  // namespace
 
-GridInterface::GridInterface(Engine::Grid::Engine* engine, const Fmi::TimeZones& timezones)
-    : itsGridEngine(engine), itsTimezones(timezones)
+GridInterface::GridInterface(Engine::Grid::Engine* engine,
+                             const Fmi::TimeZones& timezones,
+                             const TS::RequestLimits& requestLimits)
+    : itsGridEngine(engine), itsTimezones(timezones), itsRequestLimits(requestLimits)
 {
   FUNCTION_TRACE
   try
@@ -136,7 +191,7 @@ bool GridInterface::isGridProducer(const std::string& producer)
   }
 }
 
-bool GridInterface::containsGridProducer(const Query& masterquery)
+bool GridInterface::containsGridProducer(const CommonQuery& masterquery)
 {
   FUNCTION_TRACE
   try
@@ -153,7 +208,7 @@ bool GridInterface::containsGridProducer(const Query& masterquery)
   }
 }
 
-bool GridInterface::containsParameterWithGridProducer(const Query& masterquery)
+bool GridInterface::containsParameterWithGridProducer(const CommonQuery& masterquery)
 {
   FUNCTION_TRACE
   try
@@ -239,6 +294,157 @@ void GridInterface::getDataTimes(const AreaProducers& areaproducers,
         }
       }
     }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Valid times of the generations the query would use
+ *
+ * The generations are selected like the QueryServer does it: the requested analysis time,
+ * the newest or the oldest ready generation if so requested, otherwise all ready generations
+ * combined. The first producer with such generations is used.
+ */
+// ----------------------------------------------------------------------
+
+TS::TimeSeriesGeneratorOptions::TimeList GridInterface::getGenerationDataTimes(
+    const QueryServer::Query& gridQuery, const AreaProducers& areaproducers)
+{
+  FUNCTION_TRACE
+  try
+  {
+    // Producer names resolved from the producer aliases, or the requested producers as such
+
+    std::vector<std::string> producerNames(gridQuery.mProducerNameList.begin(),
+                                           gridQuery.mProducerNameList.end());
+    if (producerNames.empty())
+    {
+      for (const auto& producer : areaproducers)
+        itsGridEngine->getProducerNameList(producer, producerNames);
+    }
+
+    auto contentServer = itsGridEngine->getContentServer_sptr();
+
+    for (const auto& producerName : producerNames)
+    {
+      T::ProducerInfo producerInfo;
+      if (!itsGridEngine->getProducerInfoByName(producerName, producerInfo))
+        continue;
+
+      T::GenerationInfoList generationInfoList;
+      if (contentServer->getGenerationInfoListByProducerId(
+              0, producerInfo.mProducerId, generationInfoList) != 0)
+        continue;
+
+      // Selecting the generations. By default the QueryServer combines all generations
+
+      std::vector<T::GenerationInfo*> generations;
+      if (!gridQuery.mAnalysisTime.empty())
+        generations.push_back(
+            generationInfoList.getGenerationInfoByAnalysisTime(gridQuery.mAnalysisTime));
+      else if ((gridQuery.mFlags & QueryServer::Query::Flags::LatestGeneration) != 0)
+        generations.push_back(generationInfoList.getLastGenerationInfoByAnalysisTime(
+            T::GenerationInfo::Status::Ready));
+      else if ((gridQuery.mFlags & QueryServer::Query::Flags::OldestGeneration) != 0)
+        generations.push_back(generationInfoList.getFirstGenerationInfoByAnalysisTime(
+            T::GenerationInfo::Status::Ready));
+      else
+      {
+        for (uint i = 0; i < generationInfoList.getLength(); i++)
+        {
+          auto* generationInfo = generationInfoList.getGenerationInfoByIndex(i);
+          if (generationInfo != nullptr &&
+              generationInfo->mStatus == T::GenerationInfo::Status::Ready)
+            generations.push_back(generationInfo);
+        }
+      }
+
+      std::set<std::string> contentTimeList;
+      for (const auto* generationInfo : generations)
+      {
+        std::set<std::string> generationTimes;
+        if (generationInfo != nullptr &&
+            contentServer->getContentTimeListByGenerationId(
+                0, generationInfo->mGenerationId, generationTimes) == 0)
+          contentTimeList.insert(generationTimes.begin(), generationTimes.end());
+      }
+
+      if (contentTimeList.empty())
+        continue;
+
+      auto times = std::make_shared<std::list<Fmi::DateTime>>();
+      for (const auto& contentTime : contentTimeList)
+        times->push_back(Fmi::date_time::from_time_t(utcTimeToTimeT(contentTime)));
+      return times;
+    }
+
+    return {};
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Operation failed!", nullptr);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set the query times of a data independent query from the producer's data
+ *
+ * With starttime=data, endtime=data or timestep=data the QueryServer derives the times from
+ * the values of the data parameters. If only data independent parameters (lat, lon, sunrise,
+ * elevation etc) are requested there are no such values, and the result would be empty. We
+ * therefore generate the times from the valid times of the producer's generation just like
+ * the querydata path does, and request the parameters at those explicit time steps.
+ *
+ * \return True if the query times were set
+ */
+// ----------------------------------------------------------------------
+
+bool GridInterface::prepareDataIndependentQueryTimes(QueryServer::Query& gridQuery,
+                                                     const CommonQuery& masterquery,
+                                                     const AreaProducers& areaproducers,
+                                                     const Fmi::TimeZonePtr& tz,
+                                                     const Fmi::DateTime& latestTimeUTC)
+{
+  FUNCTION_TRACE
+  try
+  {
+    const auto& toptions = masterquery.toptions;
+
+    if (!toptions.startTimeData && !toptions.endTimeData &&
+        toptions.mode != TS::TimeSeriesGeneratorOptions::DataTimes)
+      return false;
+
+    if (!is_data_independent_query(masterquery.poptions.parameters()))
+      return false;
+
+    auto dataTimes = getGenerationDataTimes(gridQuery, areaproducers);
+    if (!dataTimes)
+      return false;
+
+    auto options = toptions;
+    options.setDataTimes(dataTimes);
+
+    // Skip the times already fetched by the previous producer in a request sequence
+    for (const auto& t : TS::TimeSeriesGenerator::generate(options, tz))
+    {
+      const auto utctime = t.utc_time();
+      if (latestTimeUTC.is_not_a_date_time() || utctime > latestTimeUTC)
+        gridQuery.mForecastTimeList.insert(toTimeT(utctime));
+    }
+
+    gridQuery.mSearchType = QueryServer::Query::SearchType::TimeSteps;
+    if (!gridQuery.mForecastTimeList.empty())
+    {
+      gridQuery.mStartTime = *gridQuery.mForecastTimeList.begin();
+      gridQuery.mEndTime = *gridQuery.mForecastTimeList.rbegin();
+    }
+
+    return true;
   }
   catch (...)
   {
@@ -374,7 +580,8 @@ bool GridInterface::isValidDefaultRequest(
 }
 
 void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
-                                      const Query& masterquery,
+                                      const CommonQuery& masterquery,
+                                      const AreaProducers& areaproducers,
                                       const Spine::LocationPtr& loc)
 {
   FUNCTION_TRACE
@@ -474,6 +681,14 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
     Fmi::LocalDateTime latestTime = mk_ldt(masterquery.latestTimestep, tz, startTimeUTC);
     Fmi::DateTime latestTimeUTC = latestTime.utc_time();
 
+    if (prepareDataIndependentQueryTimes(
+            gridQuery,
+            masterquery,
+            areaproducers,
+            tz,
+            (latestTime != startTime ? latestTimeUTC : Fmi::DateTime::NOT_A_DATE_TIME)))
+      return;
+
     if (latestTime != startTime)
       grid_startTime = latestTime;
 
@@ -502,7 +717,9 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::StartTimeFromData;
         grid_startTime = y1900;  // "19000101T000000";
 
-        if (!masterquery.toptions.endTimeData)
+        if (!masterquery.toptions.endTimeData &&
+            (!masterquery.is_timeseries_query ||
+             masterquery.toptions.mode != TS::TimeSeriesGeneratorOptions::DataTimes))
           gridQuery.mTimesteps = steps;
       }
 
@@ -516,6 +733,10 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
       if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::DataTimes)
       {
         gridQuery.mFlags = gridQuery.mFlags | QueryServer::Query::Flags::TimeStepIsData;
+
+        if (masterquery.is_timeseries_query &&
+            masterquery.toptions.startTimeData && masterquery.toptions.endTimeData)
+          gridQuery.mTimesteps = 0;
       }
 
       if (masterquery.toptions.mode == TS::TimeSeriesGeneratorOptions::GraphTimes)
@@ -627,7 +848,7 @@ void GridInterface::prepareQueryTimes(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareProducer(QueryServer::Query& gridQuery,
-                                    const Query& masterquery,
+                                    const CommonQuery& masterquery,
                                     int origLevelId,
                                     const AreaProducers& areaproducers,
                                     int& levelId,
@@ -667,7 +888,7 @@ void GridInterface::prepareProducer(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareGeneration(QueryServer::Query& gridQuery,
-                                      const Query& masterquery,
+                                      const CommonQuery& masterquery,
                                       bool& sameParamAnalysisTime)
 {
   FUNCTION_TRACE
@@ -754,7 +975,7 @@ bool GridInterface::isBuildInParameter(const char* parameter)
 }
 
 void GridInterface::prepareLocation(QueryServer::Query& gridQuery,
-                                    const Query& masterquery,
+                                    const CommonQuery& masterquery,
                                     const Spine::LocationPtr& loc,
                                     const T::GeometryId_set& geometryIdList,
                                     std::vector<std::vector<T::Coordinate>>& polygonPath,
@@ -817,7 +1038,7 @@ void GridInterface::prepareLocation(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
-                                           const Query& masterquery,
+                                           const CommonQuery& masterquery,
                                            uint mode,
                                            int levelId,
                                            int geometryId,
@@ -892,22 +1113,28 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
 
       // Agregation intervals:
 
-      if ((paramfunc->functions.innerFunction.exists() ||
-           paramfunc->functions.outerFunction.exists()) &&
-          masterquery.maxAggregationIntervals.find(param.name()) !=
-              masterquery.maxAggregationIntervals.end())
+      if (paramfunc->functions.innerFunction.exists() ||
+          paramfunc->functions.outerFunction.exists())
       {
-        unsigned int aggregationIntervalBehind =
-            masterquery.maxAggregationIntervals.at(param.name()).behind;
-        unsigned int aggregationIntervalAhead =
-            masterquery.maxAggregationIntervals.at(param.name()).ahead;
+        if (masterquery.is_timeseries_query)
+          qParam.mFlags = qParam.mFlags | TimeseriesFunctionFlag;
 
-        if (aggregationIntervalBehind > 0 || aggregationIntervalAhead > 0)
+        if (masterquery.maxAggregationIntervals.find(param.name()) !=
+            masterquery.maxAggregationIntervals.end())
         {
-          qParam.mTimestepsBefore = aggregationIntervalBehind / 60;
-          qParam.mTimestepsAfter = aggregationIntervalAhead / 60;
-          qParam.mTimestepSizeInMinutes = 60;
-          qParam.mFlags = qParam.mFlags | QueryServer::QueryParameter::Flags::AggregationParameter;
+          unsigned int aggregationIntervalBehind =
+              masterquery.maxAggregationIntervals.at(param.name()).behind;
+          unsigned int aggregationIntervalAhead =
+              masterquery.maxAggregationIntervals.at(param.name()).ahead;
+
+          if (aggregationIntervalBehind > 0 || aggregationIntervalAhead > 0)
+          {
+            qParam.mTimestepsBefore = aggregationIntervalBehind / 60;
+            qParam.mTimestepsAfter = aggregationIntervalAhead / 60;
+            qParam.mTimestepSizeInMinutes = 60;
+            qParam.mFlags =
+                qParam.mFlags | QueryServer::QueryParameter::Flags::AggregationParameter;
+          }
         }
       }
 
@@ -1053,7 +1280,7 @@ void GridInterface::prepareQueryParameters(QueryServer::Query& gridQuery,
 }
 
 void GridInterface::prepareGridQuery(QueryServer::Query& gridQuery,
-                                     const Query& masterquery,
+                                     const CommonQuery& masterquery,
                                      uint mode,
                                      int origLevelId,
                                      double origLevel,
@@ -1074,7 +1301,7 @@ void GridInterface::prepareGridQuery(QueryServer::Query& gridQuery,
     prepareProducer(gridQuery, masterquery, origLevelId, areaproducers, levelId, geometryId);
     prepareGeneration(gridQuery, masterquery, sameParamAnalysisTime);
     prepareLocation(gridQuery, masterquery, loc, geometryIdList, polygonPath, locationType);
-    prepareQueryTimes(gridQuery, masterquery, loc);
+    prepareQueryTimes(gridQuery, masterquery, areaproducers, loc);
     prepareQueryParameters(gridQuery,
                            masterquery,
                            mode,
@@ -1111,7 +1338,7 @@ int GridInterface::getParameterIndex(QueryServer::Query& gridQuery, const std::s
   }
 }
 
-void GridInterface::findLevelId(Query& masterquery,
+void GridInterface::findLevelId(CommonQuery& masterquery,
                                 const AreaProducers& areaproducers,
                                 int& levelId,
                                 std::string& geometryIdStr)
@@ -1175,7 +1402,7 @@ void GridInterface::findLevelId(Query& masterquery,
   }
 }
 
-void GridInterface::findLevels(Query& masterquery,
+void GridInterface::findLevels(CommonQuery& masterquery,
                                const AreaProducers& areaproducers,
                                uint mode,
                                int& levelId,
@@ -1354,7 +1581,7 @@ void GridInterface::extractCoordinatesAndAggrecationTimes(
 
 void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& gridQuery,
                                        const State& state,
-                                       Query& masterquery,
+                                       CommonQuery& masterquery,
                                        TS::OutputData& outputData,
                                        const QueryServer::QueryStreamer_sptr& /* queryStreamer */,
                                        const AreaProducers& /* areaproducers */,
@@ -1419,6 +1646,10 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
         int tLen = gridQuery->mForecastTimeList.size();
         bool processed = false;
 
+        bool funct = false;
+        if (gridQuery->mQueryParameterList[pid].mFlags & TimeseriesFunctionFlag)
+          funct = true;
+
         if (columns > 0 && rLen <= tLen)
         {
           processed = true;
@@ -1467,7 +1698,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                 {
                   // The parameter value is a string
                   TS::TimedValue tsValue(queryTime, TS::Value(rec->mValueString));
-                  if (columns == 1)
+                  if (columns == 1 && !funct)
                   {
                     // The parameter has only single value in the timestep
                     tsForParameter->emplace_back(tsValue);
@@ -1482,7 +1713,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                 {
                   // The parameter value is numeric
                   TS::TimedValue tsValue(queryTime, TS::Value(rec->mValue));
-                  if (columns == 1)
+                  if (columns == 1 && !funct)
                   {
                     // The parameter has only single value in the timestep
                     tsForParameter->emplace_back(tsValue);
@@ -1499,7 +1730,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                 // The parameter value is missing
 
                 TS::TimedValue tsValue(queryTime, missing_value);
-                if (columns == 1)
+                if (columns == 1 && !funct)
                 {
                   // The parameter has only single value in the timestep
                   tsForParameter->emplace_back(tsValue);
@@ -1512,7 +1743,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
               }
             }
 
-            if (columns > 1)
+            if (columns > 1 || funct)
             {
               T::GridValue val;
               if (gridQuery->mQueryParameterList[pid].mValueList[0]->mValueList.getGridValueByIndex(
@@ -2140,8 +2371,44 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
             }
             else
             {
-              TS::TimedValue tsValue(queryTime, missing_value);
-              tsForParameter->emplace_back(tsValue);
+              // "level"/"model"/"producer"/"origintime"/"modtime"/"mtime" are matched
+              // case-sensitively by the branches above; a request using different casing (e.g.
+              // "Modtime") leaks through to here instead of its dedicated branch. Keep the
+              // historical behaviour (emit a missing value) for those instead of treating them
+              // as a genuinely absent (parameter,level) combination.
+              const std::string& requestedParam = gridQuery->mQueryParameterList[pid].mParam;
+              const char* metaParameterNames[] = {
+                  "level", "model", "producer", "origintime", "modtime", "mtime", nullptr};
+              bool isMetaParameter = false;
+              for (int m = 0; metaParameterNames[m] != nullptr; m++)
+                if (strcasecmp(requestedParam.c_str(), metaParameterNames[m]) == 0)
+                {
+                  isMetaParameter = true;
+                  break;
+                }
+
+              // Dropping a column only works when the consumer of the output data also drops the
+              // parameter from the parameter list (see effective_query_parameters() in
+              // QueryProcessingHub.cpp, used by the CoverageJSON/GeoJSON formatters). The
+              // timeseries output path instead matches output columns against the full requested
+              // parameter list positionally (PostProcessing::fill_table), so dropping a column
+              // there shifts every following parameter's values by one. Keep emitting a missing
+              // value for timeseries queries, which is also their historical behaviour.
+              if (isMetaParameter || masterquery.is_timeseries_query)
+              {
+                TS::TimedValue tsValue(queryTime, missing_value);
+                tsForParameter->emplace_back(tsValue);
+              }
+              else if (t == 0)
+              {
+                // The requested (parameter,level) combination returned no data at all, e.g. the
+                // level was implied by the collection's vertical extent but the parameter is not
+                // actually defined on it. Do not emit a missing value column for it; instead
+                // record it so the caller can drop it from the requested parameter list, keeping
+                // the output columns and the parameter list in sync.
+                masterquery.gridParametersWithNoData.insert(
+                    gridQuery->mQueryParameterList[pid].mOrigParam);
+              }
             }
             t++;
           }
@@ -2183,7 +2450,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
 }
 
 void GridInterface::processGridQuery(const State& state,
-                                     Query& masterquery,
+                                     CommonQuery& masterquery,
                                      TS::OutputData& outputData,
                                      const QueryServer::QueryStreamer_sptr& queryStreamer,
                                      const AreaProducers& areaproducers,
@@ -2262,6 +2529,8 @@ void GridInterface::processGridQuery(const State& state,
         std::shared_ptr<QueryServer::Query> gridQuery =
             itsGridEngine->executeQuery(originalGridQuery);
 
+        check_result_limits(*gridQuery, outputData, itsRequestLimits);
+
         if (queryStreamer != nullptr)
         {
           queryStreamer->init(0, itsGridEngine->getQueryServer_sptr());
@@ -2281,10 +2550,14 @@ void GridInterface::processGridQuery(const State& state,
                            qLevelId,
                            level);
 
-        // Since each level is fetched as a separate parameter (not by setting level id in loop),
-        // loop only once
+        if (!masterquery.is_timeseries_query)
+        {
+          // EDR only: must not be used for timeseries queries
+          // Since each level is fetched as a separate parameter (not by setting level id in loop),
+          // loop only once
 
-        break;
+          break;
+        }
       }
     }
   }

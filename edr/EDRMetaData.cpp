@@ -9,6 +9,7 @@
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
 #include <engines/querydata/MetaQueryOptions.h>
+#include <newbase/NFmiFastQueryInfo.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -169,6 +170,14 @@ bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
     auto last_it = begin_iter;
     int laststep = 0;
     int step = 0;
+
+    // claude: BRAINSTORM-3498:
+    //
+    // Number of PT<laststep>M intervals seen so far in the current run, i.e. one less than
+    // the number of timestamps in the run. This must be the actual repeat count so that
+    // "R<timesteps>/<start_time>/PT<laststep>M" reconstructs exactly [start_time, end_time]
+    // instead of overrunning into the next period.
+    //
     int timesteps = 0;
 
     for (;; it++)
@@ -200,12 +209,13 @@ bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
         first_it = it;
         last_it = it;
         laststep = step;
-        timesteps = 1;
+        timesteps = 0;
       }
       else
       {
         last_it = it;
-        timesteps++;
+        if (it != begin_iter)
+          timesteps++;
       }
     }
 
@@ -670,8 +680,6 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     //
     queryOptions.itsMessageTypes.push_back(boost::algorithm::to_upper_copy(message_type));
 
-    queryOptions.itsMessageFormat = TAC_FORMAT;
-
     // From config file avi.period_length (30 days default)
     auto now = Fmi::SecondClock::universal_time();
     auto start_of_period = (now - Fmi::Hours(aviCollection.getPeriodLength() * 24));
@@ -690,8 +698,6 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     queryOptions.itsMaxMessageStations = -1;
     queryOptions.itsMaxMessageRows = -1;
     queryOptions.itsTimeOptions.itsQueryValidRangeMessages = true;
-    // Finnish TAC METAR filtering (ignore messages not starting with 'METAR')
-    queryOptions.itsFilterMETARs = (queryOptions.itsMessageFormat == TAC_FORMAT);
     // Finnish SPECIs are ignored (https://jira.fmi.fi/browse/BRAINSTORM-2472)
     //
     // BRAINSTORM-3284: now configurable, defaults to true
@@ -708,37 +714,53 @@ void getAviTemporalExtent(const Engine::Avi::Engine &aviEngine,
     //
     queryOptions.itsTimeOptions.itsMessageTimeChecks = false;
 
-    auto aviData = aviEngine.queryStationsAndMessages(queryOptions);
-
+    // Query both TAC and IWXXM so temporal extent is populated for TAC-only
+    // (FMI), IWXXM-only (EE), or mixed deployments.  TAC is queried first;
+    // per-station extents prefer TAC via map::insert (no overwrite on duplicate
+    // key).  The global timestep set accumulates both.  Finnish METAR filtering
+    // is TAC-specific and must not be applied to the IWXXM query.
+    //
     // BRAINSTORM-3320
     //
     // Storing station's temporal extent too, varies e.g. for taf collection
     //
     std::set<Fmi::LocalDateTime> timesteps;
-    std::set<Fmi::LocalDateTime> stationTimesteps;
 
-    for (auto stationId : aviData.itsStationIds)
+    auto processAviData = [&](SmartMet::Engine::Avi::StationQueryData &aviData)
     {
-      auto icaoIter = aviData.itsValues[stationId]["icao"].cbegin();
-      auto icao = std::get<std::string>(*icaoIter);
-      auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
-      auto endIter = aviData.itsValues[stationId]["messagetime"].cend();
-
-      while (timeIter != endIter)
+      for (auto stationId : aviData.itsStationIds)
       {
-        Fmi::LocalDateTime timestep = std::get<Fmi::LocalDateTime>(*timeIter);
+        auto icaoIter = aviData.itsValues[stationId]["icao"].cbegin();
+        auto icao = std::get<std::string>(*icaoIter);
+        auto timeIter = aviData.itsValues[stationId]["messagetime"].cbegin();
+        auto endIter = aviData.itsValues[stationId]["messagetime"].cend();
 
-        timesteps.insert(timestep);
-        stationTimesteps.insert(timestep);
+        std::set<Fmi::LocalDateTime> stationTimesteps;
+        while (timeIter != endIter)
+        {
+          Fmi::LocalDateTime timestep = std::get<Fmi::LocalDateTime>(*timeIter);
 
-        timeIter++;
+          timesteps.insert(timestep);
+          stationTimesteps.insert(timestep);
+
+          timeIter++;
+        }
+
+        edrMetaData.stationTemporalExtentMetaData.insert(
+            make_pair(icao, get_temporal_extent(stationTimesteps)));
       }
+    };
 
-      auto temporal_extent = get_temporal_extent(stationTimesteps);
-      edrMetaData.stationTemporalExtentMetaData.insert(make_pair(icao, temporal_extent));
+    queryOptions.itsMessageFormat = TAC_FORMAT;
+    // itsFilterMETARs defaults to true; the engine gates the LIKE 'METAR%' predicate on the
+    // message type, so it does not incorrectly filter TAF or SIGMET collections.
+    auto tacData = aviEngine.queryStationsAndMessages(queryOptions);
+    processAviData(tacData);
 
-      stationTimesteps.clear();
-    }
+    queryOptions.itsMessageFormat = IWXXM_FORMAT;
+    queryOptions.itsFilterMETARs = false;
+    auto iwxxmData = aviEngine.queryStationsAndMessages(queryOptions);
+    processAviData(iwxxmData);
 
     edrMetaData.temporal_extent = get_temporal_extent(timesteps);
 
@@ -993,10 +1015,11 @@ SupportedLocations get_supported_locations(const AviMetaData &amd,
 const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
                                                  const std::string &producer)
 {
-  if (pmd.find(producer) != pmd.end())
+  auto it = pmd.find(producer);
+  if (it != pmd.end() && !it->second.empty())
   {
     // Latest update time is same for all metadata instances of the same producer
-    return pmd.at(producer).front().latest_data_update_time;
+    return it->second.front().latest_data_update_time;
   }
   return NOT_A_DATE_TIME;
 }
@@ -1121,6 +1144,63 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+std::set<std::string> load_locations_qd(const Engine::Querydata::Engine &qEngine,
+                                         SupportedProducerLocations &spl)
+{
+  std::set<std::string> populated;
+  try
+  {
+    for (const auto &producer : qEngine.producers())
+    {
+      try
+      {
+        // Throws if no data is currently loaded for this producer - skip it, do not
+        // abort harvesting for the remaining producers.
+        auto q = qEngine.get(producer);
+        if (!q || q->isGrid())
+          continue;
+
+        auto info = q->info();
+        info->FirstParam();
+        if (info->Area() != nullptr)
+          continue;  // defensive; isGrid() already filtered gridded data
+
+        SupportedLocations sls;
+        for (info->ResetLocation(); info->NextLocation();)
+        {
+          NFmiPoint point = info->LatLon();
+          if (point.X() == kFloatMissing || point.Y() == kFloatMissing)
+            continue;
+          location_info li(Fmi::to_string(info->Location()->GetIdent()),
+                           point.X(),
+                           point.Y(),
+                           latin1_to_utf8(info->Location()->GetName().CharPtr()),
+                           producer);
+          sls[li.id] = li;
+        }
+
+        if (!sls.empty())
+        {
+          // Querydata producers having upper case letters must have lowercase aliases,
+          // matching get_edr_metadata_qd's producer key lookup below.
+          auto key = boost::algorithm::to_lower_copy(producer);
+          spl[key] = sls;
+          populated.insert(key);
+        }
+      }
+      catch (...)
+      {
+        continue;
+      }
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+  return populated;
 }
 
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,

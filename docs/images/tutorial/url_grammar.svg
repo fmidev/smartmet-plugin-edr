@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="450" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.meta{fill:#eef7ee;stroke:#2e7d32;stroke-width:1.5}.data{fill:#fff3e0;stroke:#e08a00;stroke-width:1.5}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.mono{font-family:DejaVu Sans Mono, monospace;font-size:13px}.k{fill:#1a5276}</style></defs>
+<rect width="1000" height="450" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">URL grammar: what EDRQueryParams recognises after the configured base url</text>
+
+<rect class="meta" x="20" y="55" width="960" height="150" rx="6"/>
+<text class="t h" x="30" y="78">Metadata queries → EDRQueryId, answered from the metadata snapshot</text>
+<text class="mono k" x="30" y="105">/edr                                    </text><text class="s" x="420" y="105">landing page, /edr/api, /edr/conformance: static templates (tmpl/*.json)</text>
+<text class="mono k" x="30" y="128">/edr/collections                        </text><text class="s" x="420" y="128">AllCollections</text>
+<text class="mono k" x="30" y="151">/edr/collections/{coll}                 </text><text class="s" x="420" y="151">SpecifiedCollection (most recent instance)</text>
+<text class="mono k" x="30" y="174">/edr/collections/{coll}/instances[/{id}]</text><text class="s" x="420" y="174">instances = origin times; not for observation or avi collections</text>
+<text class="mono k" x="30" y="197">/edr/collections/{coll}/locations       </text><text class="s" x="420" y="197">GeoJSON FeatureCollection of known locations (stations, keyword places, ICAO)</text>
+
+<rect class="data" x="20" y="225" width="960" height="205" rx="6"/>
+<text class="t h" x="30" y="248">Data queries → EDRQueryType, dispatched to an engine</text>
+<text class="mono k" x="30" y="275">/edr/collections/{coll}[/instances/{id}]/{type}?coords=…&amp;datetime=…&amp;parameter-name=…&amp;z=…&amp;f=…</text>
+<text class="mono k" x="30" y="298">/edr/collections/{coll}[/instances/{id}]/locations/{locId}?datetime=…&amp;parameter-name=…</text>
+<text class="s h" x="30" y="325">type</text><text class="s h" x="110" y="325">coords</text><text class="s h" x="330" y="325">extra parameters</text>
+<text class="s" x="30" y="343">position</text><text class="s" x="110" y="343">POINT, MULTIPOINT, MULTIPOINTZ</text>
+<text class="s" x="30" y="359">radius</text><text class="s" x="110" y="359">POINT, MULTIPOINT</text><text class="s" x="330" y="359">within, within-units={km|mi}</text>
+<text class="s" x="30" y="375">area</text><text class="s" x="110" y="375">POLYGON, MULTIPOLYGON</text><text class="s" x="330" y="375">z</text>
+<text class="s" x="30" y="391">cube</text><text class="s" x="110" y="391">bbox=minx,miny[,minz],maxx,maxy[,maxz]</text><text class="s" x="330" y="391">z, or the bbox z range</text>
+<text class="s" x="520" y="343">trajectory</text><text class="s" x="600" y="343">LINESTRING, LINESTRINGZ, LINESTRINGM, LINESTRINGZM</text>
+<text class="s" x="520" y="359">corridor</text><text class="s" x="600" y="359">LINESTRING[Z|M|ZM] + corridor-width, width-units,</text>
+<text class="s" x="600" y="375">corridor-height, height-units</text>
+<text class="s" x="30" y="415">Z = level per vertex, M = epoch seconds per vertex.  Collection ids are lowercased; a dot in the id marks a grid collection.</text>
+</svg>

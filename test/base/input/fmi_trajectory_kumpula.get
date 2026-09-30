@@ -1,0 +1,1 @@
+GET /edr/collections/fmi/trajectory?coords=LINESTRING(24.80+60.10,24.96251+60.20367,25.20+60.30)&datetime=2013-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0

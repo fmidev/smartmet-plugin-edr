@@ -36,13 +36,13 @@ namespace Plugin
 {
 namespace EDR
 {
-class Plugin;
+class PluginImpl;
 
 class State
 {
  public:
-  // We always construct with the plugin only
-  explicit State(const Plugin& thePlugin);
+  // We always construct with the plugin impl only
+  explicit State(const PluginImpl& thePlugin);
   ~State() = default;
   State() = delete;
   State(const State& other) = delete;
@@ -61,7 +61,7 @@ class State
   const Engine::Avi::Engine* getAviEngine() const;
   const EDRProducerMetaData& getAviMetaData() const;
 #endif
-  const Plugin& getPlugin() const;
+  const PluginImpl& getPlugin() const;
 
   const Fmi::TimeZones& getTimeZones() const;
   // The fixed time during the query may also be overridden
@@ -80,7 +80,7 @@ class State
   bool pretty() const { return itsPretty; }
 
  private:
-  const Plugin& itsPlugin;
+  const PluginImpl& itsPlugin;
   Fmi::DateTime itsTime;
 
   // Querydata caches - always make the same choice for same locations and producers

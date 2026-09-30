@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia?pretty=0 HTTP/1.0
+

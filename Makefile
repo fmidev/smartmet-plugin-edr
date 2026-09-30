@@ -24,6 +24,7 @@ LIBS += $(PREFIX_LDFLAGS) \
         -lsmartmet-gis \
 	-lsmartmet-macgyver \
 	-lsmartmet-grid-content \
+	-lsmartmet-grid-files \
 	-lboost_thread \
 	-lboost_iostreams \
 	$(REQUIRED_LIBS) \

@@ -1,0 +1,4 @@
+{
+  "title" : "An error occurred",
+  "detail" : "Query parameter 'corridor-height' is not supported for collection 'metar': it has no vertical extent"
+}

@@ -249,7 +249,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
     if (it != custom_dim_refs.end())
     {
       standard_name_vocabulary = it->second;
-      if (standard_name_vocabulary.back() == '/')
+      if (!standard_name_vocabulary.empty() && standard_name_vocabulary.back() == '/')
         standard_name_vocabulary.pop_back();
     }
 
@@ -516,6 +516,8 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
     feature_collection["parameters"] =
         get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
     auto coordinates = get_coordinates(outputData, query_parameters);
+    if (coordinates.empty())
+      return feature_collection;
     const auto &lon_precision = emd.getPrecision("longitude");
     const auto &lat_precision = emd.getPrecision("latitude");
     feature_collection["bbox"] = get_bbox(coordinates, lon_precision, lat_precision);
@@ -662,6 +664,9 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     feature_collection["type"] = Json::Value("FeatureCollection");
     feature_collection["parameters"] =
         get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
+
+    if (query_parameters.empty())
+      return feature_collection;
 
     const auto lon_precision = emd.getPrecision("longitude");
     const auto lat_precision = emd.getPrecision("latitude");
@@ -811,6 +816,9 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
     DataPerParameter dpp;
 
     //	  std::cout << "get_output_data_per_parameter" << std::endl;
+
+    if (query_parameters.empty())
+      return dpp;
 
     bool levels_present = !levels.empty();
 

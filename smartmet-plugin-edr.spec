@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.4.16
+Version: 26.9.26
 Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -34,64 +34,65 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.3.13
-BuildRequires: smartmet-library-locus-devel >= 26.2.4
-BuildRequires: smartmet-library-macgyver-devel >= 26.2.4
-BuildRequires: smartmet-library-grid-content-devel >= 26.3.18
-BuildRequires: smartmet-library-grid-files-devel >= 26.3.18
-BuildRequires: smartmet-library-newbase-devel >= 26.2.4
-BuildRequires: smartmet-library-gis-devel >= 26.2.5
-BuildRequires: smartmet-library-timeseries-devel >= 26.2.4
-BuildRequires: smartmet-engine-avi-devel >= 26.2.4
-BuildRequires: smartmet-engine-geonames-devel >= 26.3.10
+BuildRequires: smartmet-library-spine-devel >= 26.9.26
+BuildRequires: smartmet-library-locus-devel >= 26.4.13
+BuildRequires: smartmet-library-macgyver-devel >= 26.9.26-2
+BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
+BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
+BuildRequires: smartmet-library-newbase-devel >= 26.9.23
+BuildRequires: smartmet-library-gis-devel >= 26.9.26
+BuildRequires: smartmet-library-timeseries-devel >= 26.9.16
+BuildRequires: smartmet-engine-avi-devel >= 26.9.19
+BuildRequires: smartmet-engine-geonames-devel >= 26.9.26
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.2.4
+BuildRequires: smartmet-engine-observation-devel >= 26.9.23
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 26.2.4
-BuildRequires: smartmet-engine-gis-devel >= 26.2.4
-BuildRequires: smartmet-engine-grid-devel >= 26.3.18
+BuildRequires: smartmet-engine-querydata-devel >= 26.9.16
+BuildRequires: smartmet-engine-gis-devel >= 26.9.23
+BuildRequires: smartmet-engine-grid-devel >= 26.9.26
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 26.2.4
+#Requires: smartmet-engine-observation >= 26.9.23
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 26.2.5
-Requires: smartmet-library-locus >= 26.2.4
-Requires: smartmet-library-macgyver >= 26.2.4
-Requires: smartmet-library-newbase >= 26.2.4
-Requires: smartmet-library-spine >= 26.3.13
-Requires: smartmet-library-timeseries >= 26.2.4
-Requires: smartmet-library-gis >= 26.2.5
-Requires: smartmet-library-grid-files >= 26.3.18
-Requires: smartmet-engine-avi >= 26.2.4
-Requires: smartmet-engine-geonames >= 26.3.10
-Requires: smartmet-engine-querydata >= 26.2.4
-Requires: smartmet-engine-gis >= 26.2.4
-Requires: smartmet-engine-grid >= 26.3.18
-Requires: smartmet-server >= 26.3.9
+Requires: smartmet-library-gis >= 26.9.26
+Requires: smartmet-library-locus >= 26.4.13
+Requires: smartmet-library-macgyver >= 26.9.26-2
+Requires: smartmet-library-newbase >= 26.9.23
+Requires: smartmet-library-spine >= 26.9.26
+Requires: smartmet-library-timeseries >= 26.9.16
+Requires: smartmet-library-gis >= 26.9.26
+Requires: smartmet-library-grid-files >= 26.9.26
+Requires: smartmet-engine-avi >= 26.9.19
+Requires: smartmet-engine-geonames >= 26.9.26
+Requires: smartmet-engine-querydata >= 26.9.16
+Requires: smartmet-engine-gis >= 26.9.23
+Requires: smartmet-engine-grid >= 26.9.26
+Requires: smartmet-server >= 26.9.2
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
-#TestRequires: smartmet-utils-devel >= 26.2.4
-#TestRequires: smartmet-library-spine-plugin-test >= 26.3.13
-#TestRequires: smartmet-library-newbase-devel >= 26.2.4
+#TestRequires: smartmet-utils-devel >= 26.9.3
+#TestRequires: smartmet-library-spine >= 26.9.26
+#TestRequires: smartmet-library-spine-plugin-test >= 26.9.26
+#TestRequires: smartmet-library-newbase-devel >= 26.9.23
 #TestRequires: redis
-#TestRequires: smartmet-test-db >= 26.2.17
-#TestRequires: smartmet-test-data >= 25.8.13
-#TestRequires: smartmet-engine-grid-test >= 26.3.18
-#TestRequires: smartmet-library-gis >= 26.2.5
-#TestRequires: smartmet-engine-avi >= 26.2.4
-#TestRequires: smartmet-engine-geonames >= 26.3.10
-#TestRequires: smartmet-engine-gis >= 26.2.4
-#TestRequires: smartmet-engine-querydata >= 26.2.4
+#TestRequires: smartmet-test-db >= 26.5.8
+#TestRequires: smartmet-test-data >= 26.8.26
+#TestRequires: smartmet-engine-grid-test >= 26.9.26
+#TestRequires: smartmet-library-gis >= 26.9.26
+#TestRequires: smartmet-engine-avi >= 26.9.19
+#TestRequires: smartmet-engine-geonames >= 26.9.26
+#TestRequires: smartmet-engine-gis >= 26.9.23
+#TestRequires: smartmet-engine-querydata >= 26.9.16
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.2.4
+#TestRequires: smartmet-engine-observation >= 26.9.23
 %endif
-#TestRequires: smartmet-engine-grid >= 26.3.18
+#TestRequires: smartmet-engine-grid >= 26.9.26
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
@@ -120,8 +121,115 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Sat Sep 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.26-2.fmi
+- Enforce maxlocations when expanding areas into grid points (groupareas=0)
+- Enforce maxlocations and maxelements on grid engine query results
+- Fixed bounding box radius expansion on grid data to use meters instead of kilometers
+
+* Sat Sep 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.26-1.fmi
+- Repackaged due to grid-files ABI changes
+- Require the 26.9.26 releases of the SmartMet dependencies
+
+* Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-2.fmi
+- Security: validate the client Host header (plain hostname[:port]) and the
+  X-Forwarded-Proto scheme (http/https only) before reflecting them into the
+  self-referential URLs in EDR responses, preventing CRLF/markup injection and
+  link poisoning; fall back to the canonical URL on a malformed header.
+
+* Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-1.fmi
+- Fixed grid queries with only data independent parameters (lat, lon, sunrise etc) returning nothing when starttime, endtime or timestep is 'data'
+
+* Wed Sep 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.23-1.fmi
+- Repackaged due to base library ABI changes
+* Tue Sep 22 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.22-1.fmi
+- Fixes to localtions/all query; using icao codes for avi collections and MULTIPOINT for gridded data setting (overwriting if given) maxdistance to value calculated from the center point (BRAINSTORM-3499)
+
+* Mon Sep 21 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.21-1.fmi
+- Locations query supporting edr 1.1 locations?locationId=id requests too
+
+* Wed Sep 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.9.16-3.fmi
+- Repackaged due to QEngine ABI changes (smartmet-engine-querydata >= 26.9.16)
+
+* Wed Sep 16 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.16-2.fmi
+- Fix to temporal extent repeating interval count, it was too large by 1
+
+* Wed Sep 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.9.16-1.fmi
+- Repackaged due to Fmi::Cache::Cache locking changes
+
+* Fri Sep 11 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.9.11-1.fmi
+- (claude) Allow MULTIPOINT queries against point querydata producers
+- (claude) Do not drop grid parameters with no data from timeseries output
+
+* Wed Sep  2 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.2-1.fmi
+- (claude) Using locations from querydata instead of configured keyword for point querydata producers. Locations are only loaded at startup so changes in locations are currently not taken into account (PAK-9676)
+
+* Fri Aug 28 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.8.28-1.fmi
+- (claude) Improved radius query by storing all timesteps within single coverage. Same effect e.g for position/MULTIPOINT query
+
+* Thu Aug 27 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.8.27-1.fmi
+- (claude) Added corridor-height and height-units parameters to corridor query (BRAINSTORM-2976) and missing locations query scheme to api response (BRAINSTORM-3491). Using default buffering (200m) for obsengine corridor/trajectory wkt queries. Stripping off missing values returned for nonexistent grid data levels/parameters (BRAINSTORM-3481). Fixed crash (empty ptr returned by observablePropertyQuery()) in PluginImpl::updateMetaData when running obsengine Spatialite tests
+
+* Wed Aug 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.26-1.fmi
+- Repackaged due to qengine changes
+
+* Tue Aug 18 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.8.18-1.fmi
+- JSON output is now really compact when prettyprinting is off. Previously only the
+  indentation was omitted, all line breaks were printed regardless of the setting
+
+* Thu Aug 13 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.8.13-1.fmi
+- Fix incorrect std:variant<> use in trajectory and area queries
+- Search always by distance for coordinate queries
+
+* Fri Jul 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.7.17-1.fmi
+- Pointwise observation querydata via the /timeseries endpoint: 'numberofstations' now returns the
+  N nearest stations (each with its own distance, station number and name), and station metadata is
+  reported for the correct nearest station instead of an arbitrary one
+
+* Wed Jul  8 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.7.8-1.fmi
+- Use ETagFilter for If-Match and If-None-Match conditional requests
+
+* Fri Jun 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.6.26-1.fmi
+- Thread naming: Named the metadata update task and the update-loop thread
+
+* Thu Jun 25 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.25-1.fmi
+- Query both TAC and IWXXM AVI messages, TAC was hardcoded
+
+* Wed Jun 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.24-1.fmi
+- Mass rebuild
+
+* Mon Jun 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.15-1.fmi
+- Repackaged due to ABI changes
+
+* Tue Jun  9 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.9-1.fmi
+- Fix inkeyword location search to honour an explicit maxdistance: the nearest
+  keyword location is no longer returned when it is farther than maxdistance
+
+* Fri May 22 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.5.22-1.fmi
+- Allow timeseries_url to be an array for multiple URLs
+
+* Mon May 11 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.5.11-1.fmi
+- Fix querying container members without checking there are any
+
+* Tue May  5 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.5.5-1.fmi
+- Added geometry storage dumpContents method
+
+* Tue Apr 28 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.28-1.fmi
+- Link explicitly against smartmet-library-grid-files (was relying on transitive linking)
+
+* Fri Apr 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.24-1.fmi
+- Repackaged due to API changes
+
+* Fri Apr 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.17-1.fmi
+- Repackaged due to grid-files API changes
+
 * Thu Apr 16 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.4.16-2.fmi
 - Accept upcoming configuration changes after adding timeseries query support
+
+* Wed Apr 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.15-1.fmi
+- Fix tz=local timezone handling for foreign observation stations
+- Support separate optional default precision for timeseries queries
+- Adapt to querydata engine ValidPoints removal
+- Automatic removal of duplicate parameters from queries
 
 * Wed Mar 18 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.3.18-2.fmi
 - Added support for multiple content sources

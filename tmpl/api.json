@@ -1423,6 +1423,124 @@
                                     }
                                   }
                                 }
+                              },
+                              "locations": {
+                                "type": "object",
+                                "properties": {
+                                  "link": {
+                                    "type": "object",
+                                    "required": [
+                                      "href",
+                                      "rel"
+                                    ],
+                                    "properties": {
+                                      "href": {
+                                        "type": "string"
+                                      },
+                                      "rel": {
+                                        "type": "string"
+                                      },
+                                      "type": {
+                                        "type": "string"
+                                      },
+                                      "hreflang": {
+                                        "type": "string"
+                                      },
+                                      "title": {
+                                        "type": "string"
+                                      },
+                                      "length": {
+                                        "type": "integer"
+                                      },
+                                      "templated": {
+                                        "type": "boolean"
+                                      },
+                                      "variables": {
+                                        "description": "Any extra metadata information that is specific to individual data queries",
+                                        "type": "object",
+                                        "properties": {
+                                          "title": {
+                                            "description": "Title of the query. To be displayed in UI",
+                                            "type": "string"
+                                          },
+                                          "description": {
+                                            "description": "Description of the query",
+                                            "type": "string"
+                                          },
+                                          "query_type": {
+                                            "description": "Type of EDR query",
+                                            "type": "string",
+                                            "enum": [
+                                              "position",
+                                              "radius",
+                                              "area",
+                                              "cube",
+                                              "trajectory",
+                                              "corridor",
+                                              "items",
+                                              "locations",
+                                              "instances"
+                                            ],
+                                            "example": "trajectory"
+                                          },
+                                          "within_units": {
+                                            "description": "Radius units supported by this query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "width_units": {
+                                            "description": "Horizontal distance units supported by the query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "height_units": {
+                                            "description": "Vertical distance units supported by the query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "output_formats": {
+                                            "description": "Supported output formats (valid values for the `f` parameter)",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "default_output_format": {
+                                            "description": "Output format used when the `f` parameter is not specified",
+                                            "type": "string"
+                                          },
+                                          "crs_details": {
+                                            "description": "Coordinate reference systems supported by the query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "crs",
+                                                "wkt"
+                                              ],
+                                              "properties": {
+                                                "name": {
+                                                  "description": "Name of the coordinate reference system.\nTo be used as a value for the `crs` query parameter",
+                                                  "type": "string"
+                                                },
+                                                "wkt": {
+                                                  "description": "Well Known Text representation of the coordinate reference system",
+                                                  "type": "string"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
                               }
                             }
                           },
@@ -2516,6 +2634,124 @@
                           }
                         },
                         "corridor": {
+                          "type": "object",
+                          "properties": {
+                            "link": {
+                              "type": "object",
+                              "required": [
+                                "href",
+                                "rel"
+                              ],
+                              "properties": {
+                                "href": {
+                                  "type": "string"
+                                },
+                                "rel": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "type": "string"
+                                },
+                                "hreflang": {
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "length": {
+                                  "type": "integer"
+                                },
+                                "templated": {
+                                  "type": "boolean"
+                                },
+                                "variables": {
+                                  "description": "Any extra metadata information that is specific to individual data queries",
+                                  "type": "object",
+                                  "properties": {
+                                    "title": {
+                                      "description": "Title of the query. To be displayed in UI",
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "description": "Description of the query",
+                                      "type": "string"
+                                    },
+                                    "query_type": {
+                                      "description": "Type of EDR query",
+                                      "type": "string",
+                                      "enum": [
+                                        "position",
+                                        "radius",
+                                        "area",
+                                        "cube",
+                                        "trajectory",
+                                        "corridor",
+                                        "items",
+                                        "locations",
+                                        "instances"
+                                      ],
+                                      "example": "trajectory"
+                                    },
+                                    "within_units": {
+                                      "description": "Radius units supported by this query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "width_units": {
+                                      "description": "Horizontal distance units supported by the query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "height_units": {
+                                      "description": "Vertical distance units supported by the query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "output_formats": {
+                                      "description": "Supported output formats (valid values for the `f` parameter)",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "default_output_format": {
+                                      "description": "Output format used when the `f` parameter is not specified",
+                                      "type": "string"
+                                    },
+                                    "crs_details": {
+                                      "description": "Coordinate reference systems supported by the query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "crs",
+                                          "wkt"
+                                        ],
+                                        "properties": {
+                                          "name": {
+                                            "description": "Name of the coordinate reference system.\nTo be used as a value for the `crs` query parameter",
+                                            "type": "string"
+                                          },
+                                          "wkt": {
+                                            "description": "Well Known Text representation of the coordinate reference system",
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "locations": {
                           "type": "object",
                           "properties": {
                             "link": {
@@ -3844,7 +4080,16 @@
           {
             "name": "corridor-width",
             "in": "query",
-            "description": "Width of the corridor and the units of the width value.\n\nSyntax: `corridor-width={width}/{units}`\n\nThe `{width}` value represents the whole width of the corridor where\nthe trajectory supplied in the `coords` parameter is the centre\npoint of the corridor.\n\nFor example, `corridor-width=100/m`\n\nwould be a request for a corridor 100m wide with the `coords` parameter values being the centre point of the requested corridor, \nthe request would be for data values 50m either side of the trajectory coordinates defined in the `coords` parameter. \n\nThe width units supported by the collection will be provided in the API metadata responses.\n",
+            "description": "Width of the corridor around the trajectory defined in `coords`.\n\nThe trajectory is the centre line of the corridor: data within `corridor-width`/2 either side of it (in the units given by `width-units`) is included.\n\nFor example, `corridor-width=100&width-units=m` requests a corridor 100m wide, i.e. 50m either side of the trajectory.\n\nThe width units supported by the collection are listed in the API metadata responses.\n",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "width-units",
+            "in": "query",
+            "description": "Distance units for the `corridor-width` parameter.\n\nUnits supported by the collection are listed in the API metadata responses (`data_queries.corridor.variables.width-units`).\n",
             "required": true,
             "schema": {
               "type": "string"
@@ -3853,8 +4098,17 @@
           {
             "name": "corridor-height",
             "in": "query",
-            "description": "Height of the corridor and the units of the height value.\n\nSyntax: `corridor-height={height}/{units}`\n\nThe `{height}` value represents the whole height of the corridor where\nthe trajectory supplied in the `coords` parameter is the centre\npoint of the corridor.\n\nFor example, `corridor-height=100/m`\n\nwould be a request for a corridor 100m high with the `coords` parameter values being the centre point of the requested corridor, \nthe request would be for data values 50m either side of the trajectory coordinates defined in the `coords` parameter. \n\nThe height units supported by the collection will be provided in the API metadata responses.\n",
-            "required": true,
+            "description": "Height (vertical extent) of the corridor, centred on the trajectory's own z-coordinate (if `coords` is 3D, i.e. LINESTRINGZ/LINESTRINGZM) or on the `z` parameter (if `coords` is 2D).\n\nData within `corridor-height`/2 either side of the centre level (in the units given by `height-units`) is included.\n\nFor example, `corridor-height=100&height-units=m` requests a corridor 100m tall, i.e. 50m either side of the centre level.\n\nOptional; if given, `height-units` must also be given. The height units supported by the collection are listed in the API metadata responses.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "height-units",
+            "in": "query",
+            "description": "Vertical units for the `corridor-height` parameter.\n\nValid units depend on the collection's vertical extent (pressure levels: `hPa`, `mbar`, `Pa`; hybrid/model levels: `1`; height/altitude/depth levels: `m`, `km`, `mi`, `ft`) and are listed in the API metadata responses (`data_queries.corridor.variables.height-units`).\n\nRequired if `corridor-height` is given.\n",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5103,6 +5357,124 @@
                                     }
                                   }
                                 }
+                              },
+                              "locations": {
+                                "type": "object",
+                                "properties": {
+                                  "link": {
+                                    "type": "object",
+                                    "required": [
+                                      "href",
+                                      "rel"
+                                    ],
+                                    "properties": {
+                                      "href": {
+                                        "type": "string"
+                                      },
+                                      "rel": {
+                                        "type": "string"
+                                      },
+                                      "type": {
+                                        "type": "string"
+                                      },
+                                      "hreflang": {
+                                        "type": "string"
+                                      },
+                                      "title": {
+                                        "type": "string"
+                                      },
+                                      "length": {
+                                        "type": "integer"
+                                      },
+                                      "templated": {
+                                        "type": "boolean"
+                                      },
+                                      "variables": {
+                                        "description": "Any extra metadata information that is specific to individual data queries",
+                                        "type": "object",
+                                        "properties": {
+                                          "title": {
+                                            "description": "Title of the query. To be displayed in UI",
+                                            "type": "string"
+                                          },
+                                          "description": {
+                                            "description": "Description of the query",
+                                            "type": "string"
+                                          },
+                                          "query_type": {
+                                            "description": "Type of EDR query",
+                                            "type": "string",
+                                            "enum": [
+                                              "position",
+                                              "radius",
+                                              "area",
+                                              "cube",
+                                              "trajectory",
+                                              "corridor",
+                                              "items",
+                                              "locations",
+                                              "instances"
+                                            ],
+                                            "example": "trajectory"
+                                          },
+                                          "within_units": {
+                                            "description": "Radius units supported by this query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "width_units": {
+                                            "description": "Horizontal distance units supported by the query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "height_units": {
+                                            "description": "Vertical distance units supported by the query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "output_formats": {
+                                            "description": "Supported output formats (valid values for the `f` parameter)",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "default_output_format": {
+                                            "description": "Output format used when the `f` parameter is not specified",
+                                            "type": "string"
+                                          },
+                                          "crs_details": {
+                                            "description": "Coordinate reference systems supported by the query",
+                                            "type": "array",
+                                            "items": {
+                                              "type": "object",
+                                              "required": [
+                                                "crs",
+                                                "wkt"
+                                              ],
+                                              "properties": {
+                                                "name": {
+                                                  "description": "Name of the coordinate reference system.\nTo be used as a value for the `crs` query parameter",
+                                                  "type": "string"
+                                                },
+                                                "wkt": {
+                                                  "description": "Well Known Text representation of the coordinate reference system",
+                                                  "type": "string"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
                               }
                             }
                           },
@@ -6216,6 +6588,124 @@
                           }
                         },
                         "corridor": {
+                          "type": "object",
+                          "properties": {
+                            "link": {
+                              "type": "object",
+                              "required": [
+                                "href",
+                                "rel"
+                              ],
+                              "properties": {
+                                "href": {
+                                  "type": "string"
+                                },
+                                "rel": {
+                                  "type": "string"
+                                },
+                                "type": {
+                                  "type": "string"
+                                },
+                                "hreflang": {
+                                  "type": "string"
+                                },
+                                "title": {
+                                  "type": "string"
+                                },
+                                "length": {
+                                  "type": "integer"
+                                },
+                                "templated": {
+                                  "type": "boolean"
+                                },
+                                "variables": {
+                                  "description": "Any extra metadata information that is specific to individual data queries",
+                                  "type": "object",
+                                  "properties": {
+                                    "title": {
+                                      "description": "Title of the query. To be displayed in UI",
+                                      "type": "string"
+                                    },
+                                    "description": {
+                                      "description": "Description of the query",
+                                      "type": "string"
+                                    },
+                                    "query_type": {
+                                      "description": "Type of EDR query",
+                                      "type": "string",
+                                      "enum": [
+                                        "position",
+                                        "radius",
+                                        "area",
+                                        "cube",
+                                        "trajectory",
+                                        "corridor",
+                                        "items",
+                                        "locations",
+                                        "instances"
+                                      ],
+                                      "example": "trajectory"
+                                    },
+                                    "within_units": {
+                                      "description": "Radius units supported by this query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "width_units": {
+                                      "description": "Horizontal distance units supported by the query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "height_units": {
+                                      "description": "Vertical distance units supported by the query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "output_formats": {
+                                      "description": "Supported output formats (valid values for the `f` parameter)",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "default_output_format": {
+                                      "description": "Output format used when the `f` parameter is not specified",
+                                      "type": "string"
+                                    },
+                                    "crs_details": {
+                                      "description": "Coordinate reference systems supported by the query",
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "required": [
+                                          "crs",
+                                          "wkt"
+                                        ],
+                                        "properties": {
+                                          "name": {
+                                            "description": "Name of the coordinate reference system.\nTo be used as a value for the `crs` query parameter",
+                                            "type": "string"
+                                          },
+                                          "wkt": {
+                                            "description": "Well Known Text representation of the coordinate reference system",
+                                            "type": "string"
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "locations": {
                           "type": "object",
                           "properties": {
                             "link": {
@@ -7643,7 +8133,16 @@
           {
             "name": "corridor-width",
             "in": "query",
-            "description": "Width of the corridor and the units of the width value.\n\nSyntax: `corridor-width={width}/{units}`\n\nThe `{width}` value represents the whole width of the corridor where\nthe trajectory supplied in the `coords` parameter is the centre\npoint of the corridor.\n\nFor example, `corridor-width=100/m`\n\nwould be a request for a corridor 100m wide with the `coords` parameter values being the centre point of the requested corridor, \nthe request would be for data values 50m either side of the trajectory coordinates defined in the `coords` parameter. \n\nThe width units supported by the collection will be provided in the API metadata responses.\n",
+            "description": "Width of the corridor around the trajectory defined in `coords`.\n\nThe trajectory is the centre line of the corridor: data within `corridor-width`/2 either side of it (in the units given by `width-units`) is included.\n\nFor example, `corridor-width=100&width-units=m` requests a corridor 100m wide, i.e. 50m either side of the trajectory.\n\nThe width units supported by the collection are listed in the API metadata responses.\n",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "width-units",
+            "in": "query",
+            "description": "Distance units for the `corridor-width` parameter.\n\nUnits supported by the collection are listed in the API metadata responses (`data_queries.corridor.variables.width-units`).\n",
             "required": true,
             "schema": {
               "type": "string"
@@ -7652,8 +8151,17 @@
           {
             "name": "corridor-height",
             "in": "query",
-            "description": "Height of the corridor and the units of the height value.\n\nSyntax: `corridor-height={height}/{units}`\n\nThe `{height}` value represents the whole height of the corridor where\nthe trajectory supplied in the `coords` parameter is the centre\npoint of the corridor.\n\nFor example, `corridor-height=100/m`\n\nwould be a request for a corridor 100m high with the `coords` parameter values being the centre point of the requested corridor, \nthe request would be for data values 50m either side of the trajectory coordinates defined in the `coords` parameter. \n\nThe height units supported by the collection will be provided in the API metadata responses.\n",
-            "required": true,
+            "description": "Height (vertical extent) of the corridor, centred on the trajectory's own z-coordinate (if `coords` is 3D, i.e. LINESTRINGZ/LINESTRINGZM) or on the `z` parameter (if `coords` is 2D).\n\nData within `corridor-height`/2 either side of the centre level (in the units given by `height-units`) is included.\n\nFor example, `corridor-height=100&height-units=m` requests a corridor 100m tall, i.e. 50m either side of the centre level.\n\nOptional; if given, `height-units` must also be given. The height units supported by the collection are listed in the API metadata responses.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "height-units",
+            "in": "query",
+            "description": "Vertical units for the `corridor-height` parameter.\n\nValid units depend on the collection's vertical extent (pressure levels: `hPa`, `mbar`, `Pa`; hybrid/model levels: `1`; height/altitude/depth levels: `m`, `km`, `mi`, `ft`) and are listed in the API metadata responses (`data_queries.corridor.variables.height-units`).\n\nRequired if `corridor-height` is given.\n",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -7801,6 +8309,614 @@
             "name": "instanceId",
             "in": "path",
             "description": "Identifier of the instance to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP headers"
+          }
+        }
+      }
+    },
+    "/collections/{collectionId}/locations": {
+      "get": {
+        "tags": [
+          "Collection Data"
+        ],
+        "summary": "Retrieve list of locations available for {collectionId} collection",
+        "operationId": "get_locations_from_collection",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GeoJSON FeatureCollection listing the locations (points) at which data can be retrieved for this collection via `/locations/{locationId}`."
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Requested data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error occured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "head_locations_from_collection",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP headers"
+          }
+        }
+      }
+    },
+    "/collections/{collectionId}/locations/{locationId}": {
+      "get": {
+        "tags": [
+          "Collection Data"
+        ],
+        "summary": "Retrieve data from {collectionId} collection for a location",
+        "operationId": "get_locations_data_from_collection",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "Identifier of the location to retrieve data from.\nValid identifiers are listed in the collection's/instance's metadata (as GeoJSON Feature `id` in the `/locations` listing).\n",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "z",
+            "in": "query",
+            "description": "Vertical coordinate(s) to retrieve data for. The following expressions are possible:\n- Single cordinate. For example `z=850`.\n- Enumeration of coordinates `z=z1,z2,z3,...`. For example `z=1000,300,850,500`.\n- Interval of coordinates. Four types of intervals are possible:\n  - Bounded `z=minz/maxz`. For example `z=1000/850`.\n  - Unbounded bottom `z=../maxz`. For example `z=../500`.\n  - Unbounded top `z=minz/..`. For example `z=850/..`.\n  - Unbounded `z=../..`.\n\n  Intervala are closed (include limit coordinates).\n  Coordinates are compared by their altitude, not numerically,\n  i.e. `minz` must be below `maxz` (in case of isobaric coordinates 1000 < 850, for example).\n\n- Arithmetic sequence `R<count>/<start>/<step>`.\n  For example `z=R5/1000/-100` represents 1000,900,800,700,600 \n\nVertical extent (available vertical coordinates) is described by the collection's/instance's metadata.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "datetime",
+            "in": "query",
+            "description": "Time coordinate(s) to retrieve data for. The following expressions are possible:\n- Single cordinate. For example `datetime=2020-02-11T08:15:30`.\n- Enumeration of coordinates `datetime=t1,t2,t3,...`.\n  For example `datetime=2020-02-11T00:00:00,2020-02-11T06:00:00,2020-02-11T12:00:00`.\n- Interval of coordinates. Four types of intervals are possible:\n  - Bounded `datetime=mint/maxt`. For example `datetime=2020-02-11T00:00:00/2020-02-11T12:00:00`.\n  - Unbounded bottom `datetime=../maxt`. For example `datetime=../2020-02-11T12:00:00`.\n  - Unbounded top `datetime=mint/..`. For example `datetime=2020-02-11T00:00:00/..`.\n  - Unbounded `datetime=../..`.\n\n  Intervals are closed (include limit coordinates).\n\n- Arithmetic sequence `R<count>/<start>/<step>`.\n  For example, `R25/2020-07-06T00:00:00/PT1H` represents sequence 2020-07-06T00:00:00,2020-07-06T01:00:00,...,2020-07-07T00:00:00\n\nCoordinates are expressed in ISO8601 format.\nTemporal extent (available time coordinates) is described by the collection's/instance's metadata.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "form"
+          },
+          {
+            "name": "parameter-name",
+            "in": "query",
+            "description": "A comma-delimited list of parameters to retrieve data for.\n\nParameters are referred to by their identifiers.\nValid parameter identifiers are listed in the collection's/instance's metadata.\n",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "style": "form",
+            "explode": false
+          },
+          {
+            "name": "crs",
+            "in": "query",
+            "description": "Identifier of the coordinate reference system (CRS) to return data in.\n\nValid identifiers are listed in the collection's/instance's metadata.\n\nIf not supplied, CRS will default to native coordinate system of data\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "f",
+            "in": "query",
+            "description": "Identifier of the output format to return the response in.\n\nValid identifers are listed in the collection's/instance's metadata.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data subset in requested format"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Requested data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error occured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "head_locations_data_from_collection",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "Identifier of the location to retrieve data from.\nValid identifiers are listed in the collection's/instance's metadata (as GeoJSON Feature `id` in the `/locations` listing).\n",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP headers"
+          }
+        }
+      }
+    },
+    "/collections/{collectionId}/instances/{instanceId}/locations": {
+      "get": {
+        "tags": [
+          "Instance Data"
+        ],
+        "summary": "Retrieve list of locations available for {instanceId} instance",
+        "operationId": "get_locations_from_instance",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "path",
+            "description": "Identifier of the instance to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GeoJSON FeatureCollection listing the locations (points) at which data can be retrieved for this instance via `/locations/{locationId}`."
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Requested data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error occured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "head_locations_from_instance",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "path",
+            "description": "Identifier of the instance to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP headers"
+          }
+        }
+      }
+    },
+    "/collections/{collectionId}/instances/{instanceId}/locations/{locationId}": {
+      "get": {
+        "tags": [
+          "Instance Data"
+        ],
+        "summary": "Retrieve data from {instanceId} instance for a location",
+        "operationId": "get_locations_data_from_instance",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "path",
+            "description": "Identifier of the instance to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "Identifier of the location to retrieve data from.\nValid identifiers are listed in the collection's/instance's metadata (as GeoJSON Feature `id` in the `/locations` listing).\n",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "z",
+            "in": "query",
+            "description": "Vertical coordinate(s) to retrieve data for. The following expressions are possible:\n- Single cordinate. For example `z=850`.\n- Enumeration of coordinates `z=z1,z2,z3,...`. For example `z=1000,300,850,500`.\n- Interval of coordinates. Four types of intervals are possible:\n  - Bounded `z=minz/maxz`. For example `z=1000/850`.\n  - Unbounded bottom `z=../maxz`. For example `z=../500`.\n  - Unbounded top `z=minz/..`. For example `z=850/..`.\n  - Unbounded `z=../..`.\n\n  Intervala are closed (include limit coordinates).\n  Coordinates are compared by their altitude, not numerically,\n  i.e. `minz` must be below `maxz` (in case of isobaric coordinates 1000 < 850, for example).\n\n- Arithmetic sequence `R<count>/<start>/<step>`.\n  For example `z=R5/1000/-100` represents 1000,900,800,700,600 \n\nVertical extent (available vertical coordinates) is described by the collection's/instance's metadata.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "datetime",
+            "in": "query",
+            "description": "Time coordinate(s) to retrieve data for. The following expressions are possible:\n- Single cordinate. For example `datetime=2020-02-11T08:15:30`.\n- Enumeration of coordinates `datetime=t1,t2,t3,...`.\n  For example `datetime=2020-02-11T00:00:00,2020-02-11T06:00:00,2020-02-11T12:00:00`.\n- Interval of coordinates. Four types of intervals are possible:\n  - Bounded `datetime=mint/maxt`. For example `datetime=2020-02-11T00:00:00/2020-02-11T12:00:00`.\n  - Unbounded bottom `datetime=../maxt`. For example `datetime=../2020-02-11T12:00:00`.\n  - Unbounded top `datetime=mint/..`. For example `datetime=2020-02-11T00:00:00/..`.\n  - Unbounded `datetime=../..`.\n\n  Intervals are closed (include limit coordinates).\n\n- Arithmetic sequence `R<count>/<start>/<step>`.\n  For example, `R25/2020-07-06T00:00:00/PT1H` represents sequence 2020-07-06T00:00:00,2020-07-06T01:00:00,...,2020-07-07T00:00:00\n\nCoordinates are expressed in ISO8601 format.\nTemporal extent (available time coordinates) is described by the collection's/instance's metadata.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "style": "form"
+          },
+          {
+            "name": "parameter-name",
+            "in": "query",
+            "description": "A comma-delimited list of parameters to retrieve data for.\n\nParameters are referred to by their identifiers.\nValid parameter identifiers are listed in the collection's/instance's metadata.\n",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "style": "form",
+            "explode": false
+          },
+          {
+            "name": "crs",
+            "in": "query",
+            "description": "Identifier of the coordinate reference system (CRS) to return data in.\n\nValid identifiers are listed in the collection's/instance's metadata.\n\nIf not supplied, CRS will default to native coordinate system of data\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "f",
+            "in": "query",
+            "description": "Identifier of the output format to return the response in.\n\nValid identifers are listed in the collection's/instance's metadata.\n",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data subset in requested format"
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Requested data not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error occured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "code"
+                  ],
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "example": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "head": {
+        "operationId": "head_locations_data_from_instance",
+        "parameters": [
+          {
+            "name": "collectionId",
+            "in": "path",
+            "description": "Identifier of the collection to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "in": "path",
+            "description": "Identifier of the instance to retrieve data from.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "path",
+            "description": "Identifier of the location to retrieve data from.\nValid identifiers are listed in the collection's/instance's metadata (as GeoJSON Feature `id` in the `/locations` listing).\n",
             "required": true,
             "schema": {
               "type": "string"

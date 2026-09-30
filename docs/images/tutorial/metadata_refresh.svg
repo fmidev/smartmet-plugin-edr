@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5 0 10z" fill="#444"/></marker>
+<style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.once{fill:#fff3e0;stroke:#e08a00;stroke-width:1.5}.snap{fill:#eef7ee;stroke:#2e7d32;stroke-width:1.5}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.arrow{stroke:#444;stroke-width:1.5;fill:none;marker-end:url(#a)}.note{fill:#a35a00;font-size:12px;font-style:italic}</style></defs>
+<rect width="1000" height="520" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">Metadata: built per engine, published as an immutable snapshot, refreshed by one thread</text>
+
+<rect class="box" x="20" y="60" width="200" height="90" rx="6"/><text class="t h" x="30" y="85">Querydata engine</text><text class="s" x="30" y="105">producers, origin times,</text><text class="s" x="30" y="121">valid times, levels, bbox,</text><text class="s" x="30" y="137">parameters</text>
+<rect class="box" x="240" y="60" width="200" height="90" rx="6"/><text class="t h" x="250" y="85">Grid engine</text><text class="s" x="250" y="105">producer.geometry.levelid</text><text class="s" x="250" y="121">collections, levels in Pa,</text><text class="s" x="250" y="137">titles from engine</text>
+<rect class="box" x="460" y="60" width="200" height="90" rx="6"/><text class="t h" x="470" y="85">Observation engine</text><text class="s" x="470" y="105">station types, measurands,</text><text class="s" x="470" y="121">period = last</text><text class="s" x="470" y="137">observation_period hours</text>
+<rect class="box" x="680" y="60" width="200" height="90" rx="6"/><text class="t h" x="690" y="85">Avi engine</text><text class="s" x="690" y="105">configured collections,</text><text class="s" x="690" y="121">stations by country/bbox/icao,</text><text class="s" x="690" y="137">message times queried</text>
+
+<rect class="box" x="20" y="200" width="860" height="60" rx="6"/><text class="t h" x="30" y="225">get_edr_metadata_qd / _grid / _obs / _avi   (edr/EDRMetaData.cpp)</text><text class="s" x="30" y="245">→ EDRProducerMetaData = map&lt;collection, vector&lt;EDRMetaData&gt;&gt;   one EDRMetaData per origin time = one EDR instance</text>
+<path class="arrow" d="M120 150 V200"/><path class="arrow" d="M340 150 V200"/><path class="arrow" d="M560 150 V200"/><path class="arrow" d="M780 150 V200"/>
+
+<rect class="snap" x="20" y="300" width="560" height="80" rx="6"/><text class="t h" x="30" y="325">EngineMetaData snapshot</text><text class="s" x="30" y="345">removeDuplicates(): same name in several engines → querydata &gt; grid &gt; observation &gt; avi</text><text class="s" x="30" y="361">itsMetaData.store(snapshot)   — Fmi::AtomicSharedPtr, readers load() a consistent view</text>
+<path class="arrow" d="M300 260 V300"/>
+
+<rect class="box" x="620" y="300" width="260" height="80" rx="6"/><text class="t h" x="630" y="325">metaDataUpdateLoop thread</text><text class="s" x="630" y="345">sleep metadata_update_interval (30 s)</text><text class="s" x="630" y="361">updateMetaData(false) → new snapshot</text>
+<path class="arrow" d="M620 340 H585"/>
+
+<rect class="once" x="20" y="420" width="860" height="80" rx="6"/><text class="t h" x="30" y="445">Done once at PluginImpl::init() only</text><text class="s" x="30" y="465">updateSupportedLocations(): stations, keyword places from Geonames, avi stations.   updateParameterInfo(): parameter_info from the config file.</text>
+<text class="note" x="30" y="485">a new station or a changed parameter_info block needs edr:reload or a restart; only extents and parameter lists refresh periodically</text>
+</svg>

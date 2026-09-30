@@ -106,7 +106,7 @@ bool is_wkt_point(const Spine::LocationPtr& loc)
   }
 }
 
-TS::TimeSeriesGenerator::LocalTimeList get_all_timesteps(const Query& query,
+TS::TimeSeriesGenerator::LocalTimeList get_all_timesteps(const CommonQuery& query,
                                                          const TS::TimeSeries& ts,
                                                          const Fmi::TimeZonePtr& tz)
 {
@@ -144,7 +144,7 @@ TS::TimeSeriesGenerator::LocalTimeList get_all_timesteps(const Query& query,
   }
 }
 
-Spine::LocationPtr get_loc(const Query& query,
+Spine::LocationPtr get_loc(const CommonQuery& query,
                            const State& state,
                            const std::string& producer,
                            int fmisid)
@@ -195,7 +195,7 @@ std::vector<Fmi::LocalDateTime> get_actual_timesteps(const TS::TimeSeries& ts)
 }
 
 void resolve_parameter_settings(const ObsParameters& obsParameters,
-                                const Query& query,
+                                const CommonQuery& query,
                                 const std::string& producer,
                                 Engine::Observation::Settings& settings,
                                 unsigned int& aggregationIntervalBehind,
@@ -253,7 +253,7 @@ void resolve_parameter_settings(const ObsParameters& obsParameters,
 void resolve_time_settings(const std::string& producer,
                            const ProducerDataPeriod& producerDataPeriod,
                            const Fmi::DateTime& now,
-                           Query& query,
+                           CommonQuery& query,
                            unsigned int aggregationIntervalBehind,
                            unsigned int aggregationIntervalAhead,
                            Engine::Observation::Settings& settings,
@@ -373,11 +373,11 @@ void fill_missing_location_params(TS::TimeSeries& ts)
 
 }  // namespace
 
-ObsEngineQuery::ObsEngineQuery(const Plugin& thePlugin) : itsPlugin(thePlugin) {}
+ObsEngineQuery::ObsEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin) {}
 
 #ifndef WITHOUT_OBSERVATION
 void ObsEngineQuery::processObsEngineQuery(const State& state,
-                                           Query& query,
+                                           CommonQuery& query,
                                            TS::OutputData& outputData,
                                            const AreaProducers& areaproducers,
                                            const ProducerDataPeriod& producerDataPeriod,
@@ -457,7 +457,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForPlaces(
     const State& state,
     const std::string& producer,
     const Spine::LocationPtr& loc,
-    const Query& query,
+    const CommonQuery& query,
     const ObsParameters& obsParameters,
     const TS::TimeSeriesVectorPtr& observation_result,
     const std::vector<Fmi::LocalDateTime>& timestep_vector,
@@ -605,7 +605,7 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
                                                    const std::string& producer,
                                                    const ObsParameters& obsParameters,
                                                    Engine::Observation::Settings& settings,
-                                                   Query& query,
+                                                   CommonQuery& query,
                                                    TS::OutputData& outputData) const
 {
   try
@@ -630,10 +630,9 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       // fetches results for all location and all parameters
       observation_result = itsPlugin.itsEngines.obsEngine->values(settings, tmpoptions);
     }
-#ifdef MYDEBYG
+#ifdef MYDEBUG
     std::cout << "observation_result for places: " << *observation_result << std::endl;
 #endif
-
     if (observation_result->empty())
       return;
 
@@ -649,6 +648,10 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       query.toptions.timeStep = 0;
     }
 
+    // Always generate the default tlist — it is needed by timeseries_by_fmisid for
+    // add_missing_timesteps.  When useStationTimezone is set, the per-station loop
+    // will generate an overriding station_tlist in each station's own timezone for
+    // aggregation.
     if (!query.toptions.all())
       tlist = itsPlugin.itsTimeSeriesCache->generate(query.toptions, tz);
 
@@ -660,6 +663,12 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
         (query.toptions.all() || UtilityFunctions::is_flash_producer(producer) ||
          UtilityFunctions::is_mobile_producer(producer) || producer == SYKE_PRODUCER);
 
+    // Cache the last resolved timezone to avoid repeated exclusive-lock cache lookups
+    // when consecutive stations share the same timezone (the common case).
+    std::string prev_timezone;
+    Fmi::TimeZonePtr prev_tz;
+    TS::TimeSeriesGeneratorCache::TimeList prev_tlist;
+
     // iterate locations
     for (const auto& observation_result_location : observation_result_by_location)
     {
@@ -668,6 +677,24 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
 
       // Get location
       Spine::LocationPtr loc = get_loc(query, state, producer, fmisid);
+
+      // When tz=local, resolve the station's actual timezone for timestep generation.
+      auto station_tz = tz;
+      TS::TimeSeriesGeneratorCache::TimeList station_tlist = tlist;
+      if (query.useStationTimezone && loc)
+      {
+        if (loc->timezone != prev_timezone)
+        {
+          prev_timezone = loc->timezone;
+          prev_tz = itsPlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(
+              loc->timezone);
+          if (!query.toptions.all())
+            prev_tlist = itsPlugin.itsTimeSeriesCache->generate(query.toptions, prev_tz);
+        }
+        station_tz = prev_tz;
+        station_tlist = prev_tlist;
+      }
+
       // Actual timesteps
       std::vector<Fmi::LocalDateTime> timestep_vector =
           get_actual_timesteps(observation_result->at(0));
@@ -688,12 +715,12 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       if (acceptAllTimesteps)
       {
         if (!observation_result->empty())
-          agg_times_full = get_all_timesteps(query, observation_result->front(), tz);
+          agg_times_full = get_all_timesteps(query, observation_result->front(), station_tz);
         agg_times = &agg_times_full;
       }
       else
       {
-        agg_times = tlist.get();
+        agg_times = station_tlist.get();
       }
 
       auto aggregated_observation_result = doAggregationForPlaces(
@@ -794,7 +821,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
     const ObsParameters& obsParameters,
     const TS::TimeSeriesVector* tsv_observation_result,
     const std::vector<Fmi::LocalDateTime>& ts_vector,
-    const Query& query) const
+    const CommonQuery& query) const
 {
   try
   {
@@ -877,7 +904,7 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
                                                  const ObsParameters& obsParameters,
                                                  const std::string& areaName,
                                                  Engine::Observation::Settings& settings,
-                                                 Query& query,
+                                                 CommonQuery& query,
                                                  TS::OutputData& outputData) const
 {
   try
@@ -1075,7 +1102,7 @@ bool ObsEngineQuery::isObsProducer(const std::string& producer) const
 }
 
 void ObsEngineQuery::handleLocationSettings(
-    const Query& query,
+    const CommonQuery& query,
     const std::string& producer,
     const Spine::TaggedLocation& tloc,
     Engine::Observation::Settings& settings,
@@ -1099,12 +1126,26 @@ void ObsEngineQuery::handleLocationSettings(
       // Note: We do not detect if there is an fmisid for the location since converting
       // the search to be for a fmisid would lose the geoid tag for the location.
 
+      // The observation engine short-circuits the nearest station search when the location
+      // carries an fmisid: it returns that single station and ignores both numberofstations
+      // and maxdistance, without checking that the station belongs to the requested
+      // stationtype or is in use during the requested period. That is intended for place and
+      // geoid requests, where the user effectively named the station. For a coordinate
+      // request geoengine attaches the fmisid of whatever geoname happened to be nearest,
+      // which may well be a station of some other stationtype or one no longer in use, and
+      // the query then returns nothing at all. Hence coordinates are always searched by
+      // distance.
+
+      std::optional<int> station_id;
+      if (loc->type == Spine::Location::Place)
+        station_id = loc->fmisid;
+
       stationSettings.nearest_station_settings.emplace_back(loc->longitude,
                                                             loc->latitude,
                                                             settings.maxdistance,
                                                             settings.numberofstations,
                                                             tloc.tag,
-                                                            loc->fmisid);
+                                                            station_id);
     }
 
     if (!point_location)
@@ -1129,7 +1170,7 @@ void ObsEngineQuery::getObsSettings(std::vector<SettingsInfo>& settingsVector,
                                     const ProducerDataPeriod& producerDataPeriod,
                                     const Fmi::DateTime& now,
                                     const ObsParameters& obsParameters,
-                                    Query& query) const
+                                    CommonQuery& query) const
 {
   try
   {
@@ -1181,6 +1222,12 @@ void ObsEngineQuery::getObsSettings(std::vector<SettingsInfo>& settingsVector,
     // FMISIDs
     for (auto fmisid : query.fmisids)
       stationSettings.fmisids.push_back(fmisid);
+    // RWSIDs
+    for (auto rwsid : query.rwsids)
+      stationSettings.rwsids.push_back(rwsid);
+    // WSIs
+    for (const auto& wsi : query.wsis)
+      stationSettings.wsis.push_back(wsi);
 
     // Bounding box
     if (!query.boundingBox.empty() && UtilityFunctions::is_flash_producer(producer))
@@ -1231,7 +1278,7 @@ void ObsEngineQuery::getObsSettings(std::vector<SettingsInfo>& settingsVector,
 
 void ObsEngineQuery::getCommonObsSettings(Engine::Observation::Settings& settings,
                                           const std::string& producer,
-                                          Query& query) const
+                                          CommonQuery& query) const
 {
   try
   {
@@ -1245,11 +1292,17 @@ void ObsEngineQuery::getCommonObsSettings(Engine::Observation::Settings& setting
     // Below are listed optional settings, defaults are set while constructing an ObsEngine::Oracle
     // instance.
 
-    // TODO Because timezone="localtime" functions differently in observation,
-    // force default timezone to be Europe/Helsinki. This must be fixed when obsplugin is obsoleted
-    if (query.timezone == "localtime")
-      query.timezone = "Europe/Helsinki";
-    settings.timezone = (query.timezone == LOCALTIME_PARAM ? UTC_PARAM : query.timezone);
+    // When tz=local, timestep generation must be done per-station using each station's
+    // actual timezone.  Use the server's system timezone as the default for interpreting
+    // start/end times and obs engine queries.  The per-station loop in
+    // fetchObsEngineValuesForPlaces will override with each station's own timezone
+    // for aggregation.
+    if (query.timezone == LOCALTIME_PARAM)
+    {
+      query.useStationTimezone = true;
+      query.timezone = date::current_zone()->name();
+    }
+    settings.timezone = query.timezone;
 
     settings.format = query.format;
     settings.stationtype = producer;
@@ -1283,7 +1336,7 @@ void ObsEngineQuery::getCommonObsSettings(Engine::Observation::Settings& setting
 
 bool ObsEngineQuery::resolveAreaStations(const Spine::LocationPtr& location,
                                          const std::string& producer,
-                                         const Query& query,
+                                         const CommonQuery& query,
                                          Engine::Observation::Settings& settings,
                                          std::string& name) const
 {
@@ -1410,7 +1463,7 @@ void ObsEngineQuery::resolveStationsForPath(
     const Spine::LocationPtr& loc,
     const std::string& loc_name_original,
     const std::string& loc_name,
-    const Query& query,
+    const CommonQuery& query,
     const Engine::Observation::Settings& settings,
     bool isWkt,
     std::string& wktString,
@@ -1425,7 +1478,19 @@ void ObsEngineQuery::resolveStationsForPath(
     if (isWkt)
     {
       pGeo = query.wktGeometries.getGeometry(loc_name_original);
-      wktString = Fmi::OGR::exportToWkt(*pGeo);
+      if (loc->radius == 0)
+      {
+        // wktGeometries only buffers the geometry when the request explicitly gave a radius
+        // (e.g. "LINESTRING(...):100" for Corridor, see WktGeometry::geometryFromWkt); a bare
+        // path (Trajectory) is stored unbuffered, so apply the same default fallback radius
+        // used above for the non-WKT case.
+        std::unique_ptr<OGRGeometry> poly(Fmi::OGR::expandGeometry(pGeo, radius));
+        wktString = Fmi::OGR::exportToWkt(*poly);
+      }
+      else
+      {
+        wktString = Fmi::OGR::exportToWkt(*pGeo);
+      }
     }
     else
     {
@@ -1480,7 +1545,7 @@ void ObsEngineQuery::resolveStationsForArea(
     const Spine::LocationPtr& loc,
     const std::string& loc_name_original,
     const std::string& loc_name,
-    const Query& query,
+    const CommonQuery& query,
     const Engine::Observation::Settings& settings,
     bool isWkt,
     std::string& wktString,
@@ -1534,7 +1599,7 @@ void ObsEngineQuery::resolveStationsForBBox(
     const Spine::LocationPtr& loc,
     const std::string& /* loc_name_original */,
     const std::string& loc_name,
-    const Query& /* query */,
+    const CommonQuery& /* query */,
     const Engine::Observation::Settings& settings,
     bool /* isWkt */,
     std::string& wktString,
@@ -1616,7 +1681,7 @@ void ObsEngineQuery::resolveStationsForCoordinatePointWithRadius(
     const Spine::LocationPtr& loc,
     const std::string& loc_name_original,
     const std::string& loc_name,
-    const Query& query,
+    const CommonQuery& query,
     const Engine::Observation::Settings& settings,
     bool isWkt,
     std::string& wktString,
@@ -1661,7 +1726,7 @@ void ObsEngineQuery::resolveStationsForCoordinatePointWithRadius(
   }
 }
 
-std::vector<ObsParameter> ObsEngineQuery::getObsParameters(const Query& query) const
+std::vector<ObsParameter> ObsEngineQuery::getObsParameters(const CommonQuery& query) const
 {
   try
   {

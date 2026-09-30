@@ -1,6 +1,7 @@
 #include "EDRQueryParams.h"
 #include "EDRDefs.h"
 #include "EDRMetaData.h"
+#include "LonLatDistance.h"
 #include "Plugin.h"
 #include "UtilityFunctions.h"
 #include <engines/observation/Keywords.h>
@@ -8,6 +9,8 @@
 #include <macgyver/StringConversion.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
+#include <algorithm>
+#include <limits>
 #include <string>
 
 namespace SmartMet
@@ -49,6 +52,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
     //   cube       coords=wkt|POLYGON&minz=lo&maxz=hi|bbox=bllon,bllat,trlon,trlat&z=lo/hi
     //
     //   locations/LOCID
+    //   locations?locationId=LOCID  (alternative to the path format above)
 
     std::vector<std::string> resParts;
     std::string res = req.getResource();
@@ -81,8 +85,18 @@ bool is_data_query(const Spine::HTTP::Request& req,
 
     resIdx += ((resParts[resIdx + 2] == "instances") ? 4 : 2);
 
-    if ((lastIdx < resIdx) || ((lastIdx == resIdx) && (resParts[resIdx] == "locations")))
+    if (lastIdx < resIdx)
       return false;
+
+    if ((lastIdx == resIdx) && (resParts[resIdx] == "locations"))
+    {
+      // claude: BRAINSTORM-3499:
+      //
+      // 'locations' with no LOCID path part is a listing (metadata) query, unless a
+      // locationId query parameter is given instead - then it's still a data query
+      //
+      return Spine::optional_string(req.getParameter("locationId"), "").empty() == false;
+    }
 
     return true;
   }
@@ -92,20 +106,42 @@ bool is_data_query(const Spine::HTTP::Request& req,
   }
 }
 
+// A client-supplied Host header is reflected into the self-referential URLs in EDR
+// responses, so accept only a plain hostname[:port]. This blocks CRLF/control-character
+// injection (response splitting) and arbitrary markup from a spoofed header.
+static bool is_valid_host(const std::string& host)
+{
+  if (host.empty() || host.size() > 253)
+    return false;
+  for (char c : host)
+  {
+    const bool ok = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                    (c >= '0' && c <= '9') || c == '.' || c == '-' || c == ':';
+    if (!ok)
+      return false;
+  }
+  return true;
+}
+
 std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::string& base_url)
 {
   try
   {
     auto host_header = theRequest.getHeader("Host");
-    if (!host_header)
+    if (!host_header || !is_valid_host(*host_header))
     {
-      // This should never happen, host header is mandatory in HTTP 1.1
+      // No Host header (mandatory in HTTP/1.1), or a malformed/spoofed one: fall back
+      // to the canonical URL rather than reflecting attacker-controlled input.
       return "http://smartmet.fmi.fi/edr";
     }
 
-    // http/https scheme selection based on 'X-Forwarded-Proto' header
+    // http/https scheme selection based on 'X-Forwarded-Proto' header. That header is
+    // client-controlled, so accept only the two valid scheme values.
     auto host_protocol = theRequest.getProtocol();
-    std::string protocol((host_protocol ? *host_protocol : "http") + "://");
+    std::string scheme = (host_protocol ? *host_protocol : "http");
+    if (scheme != "http" && scheme != "https")
+      scheme = "http";
+    std::string protocol(scheme + "://");
 
     std::string host = *host_header;
 
@@ -348,7 +384,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
     auto coords = Spine::optional_string(req.getParameter("coords"), "");
     if (!coords.empty())
     {
-      parseCoords(coords);
+      parseCoords(emd, coords);
     }
     else if (itsEDRQuery.query_type == EDRQueryType::Locations)
     {
@@ -458,8 +494,14 @@ std::string EDRQueryParams::parseLocations(const State& /* state */,
     {
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
-      if (resource_parts.size() > 6)
+      if (resource_parts.size() > 6 && !resource_parts.at(6).empty())
         itsEDRQuery.location_id = resource_parts.at(6);
+      else
+        // claude: BRAINSTORM-3499:
+        //
+        // Alternative to the 'locations/{locationId}' path format: locations?locationId=id
+        //
+        itsEDRQuery.location_id = Spine::optional_string(req.getParameter("locationId"), "");
     }
 
     return {};
@@ -519,8 +561,14 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
     {
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionLocations;
 
-      if (resource_parts.size() > 4)
+      if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
         itsEDRQuery.location_id = resource_parts.at(4);
+      else
+        // claude: BRAINSTORM-3499:
+        //
+        // Alternative to the 'locations/{locationId}' path format: locations?locationId=id
+        //
+        itsEDRQuery.location_id = Spine::optional_string(req.getParameter("locationId"), "");
     }
 
     return {};
@@ -623,7 +671,8 @@ std::string EDRQueryParams::parsePosition(const std::string& coords)
       for (auto& coordinate_item : coordinates)
       {
         boost::algorithm::trim(coordinate_item);
-        if (coordinate_item.front() == '(' && coordinate_item.back() == ')')
+        if (coordinate_item.size() >= 2 && coordinate_item.front() == '(' &&
+            coordinate_item.back() == ')')
           coordinate_item = coordinate_item.substr(1, coordinate_item.length() - 2);
         std::vector<std::string> parts;
         boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
@@ -735,7 +784,7 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
   }
 }
 
-void EDRQueryParams::parseCoords(const std::string& coordinates)
+void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coordinates)
 {
   try
   {
@@ -790,6 +839,137 @@ void EDRQueryParams::parseCoords(const std::string& coordinates)
       UtilityFunctions::parseRangeListValue(z, zIsRange, zLo, zHi);
     }
 
+    if (itsEDRQuery.query_type == EDRQueryType::Corridor)
+    {
+      // EDR corridor-height + height-units
+      auto corridor_height = Spine::optional_string(req.getParameter("corridor-height"), "");
+      auto height_units = Spine::optional_string(req.getParameter("height-units"), "");
+
+      if (!corridor_height.empty() || !height_units.empty())
+      {
+        if (corridor_height.empty() || height_units.empty())
+          throw EDRException(
+              "Query parameter 'corridor-height' and 'height-units' must both be defined for "
+              "Corridor query");
+
+        // AVI collections (METAR/TAC/IWXXM reports) have no vertical extent at all - the
+        // engine never filters by level/z - so silently accepting corridor-height here would
+        // just discard it without effect. Reject explicitly instead of pretending it did
+        // something.
+        if (emd.isAviProducer())
+          throw EDRException(
+              "Query parameter 'corridor-height' is not supported for collection '" +
+              itsEDRQuery.collection_id + "': it has no vertical extent");
+
+        auto height = Fmi::stod(corridor_height);
+
+        // Normalize corridor-height into the unit the collection's own vertical levels use.
+        // Pressure and hybrid/model levels are known, documented special cases:
+        // - Pressure: querydata/observation producers report levels in hPa (newbase
+        //   "PressureLevel" convention) while grid-engine producers (collection ids containing
+        //   '.') report them in Pa (GRIB "PRESSURE" convention) - see EDRMetaData.cpp's
+        //   get_edr_metadata_qd/get_edr_metadata_grid. Convert automatically so hPa/Pa/mbar can
+        //   be used interchangeably regardless of which engine backs the collection.
+        // - Hybrid/model levels ("HybridLevel"/"HYBRID") are dimensionless model level indices,
+        //   not a physical unit - EDR represents this with unit "1", and no conversion applies.
+        // Other level types (height, depth, ...) have no known unit convention difference across
+        // engines, so metric units are only range-checked, not converted, matching prior
+        // behaviour.
+        bool grid_producer = (itsEDRQuery.collection_id.find('.') != std::string::npos);
+        const auto& level_type = emd.vertical_extent.level_type;
+        bool is_pressure_level = boost::algorithm::icontains(level_type, "pressure");
+        bool is_hybrid_level = boost::algorithm::icontains(level_type, "hybrid");
+
+        if (height_units == "hPa" || height_units == "mbar")
+        {
+          if (!is_pressure_level)
+            throw EDRException("Query parameter 'height-units' value '" + height_units +
+                               "' is not valid for collection '" + itsEDRQuery.collection_id +
+                               "': its vertical extent is not a pressure level");
+          if (grid_producer)
+            height *= 100.0;  // hPa/mbar -> Pa
+        }
+        else if (height_units == "Pa")
+        {
+          if (!is_pressure_level)
+            throw EDRException("Query parameter 'height-units' value '" + height_units +
+                               "' is not valid for collection '" + itsEDRQuery.collection_id +
+                               "': its vertical extent is not a pressure level");
+          if (!grid_producer)
+            height /= 100.0;  // Pa -> hPa
+        }
+        else if (height_units == "1")
+        {
+          if (!is_hybrid_level)
+            throw EDRException("Query parameter 'height-units' value '1' is not valid for "
+                               "collection '" + itsEDRQuery.collection_id +
+                               "': its vertical extent is not a hybrid/model level");
+          // Dimensionless model level index - used as-is, no conversion.
+        }
+        else if (height_units == "m" || height_units == "km" || height_units == "mi" ||
+                 height_units == "ft")
+        {
+          if (is_pressure_level)
+            throw EDRException("Query parameter 'height-units' value '" + height_units +
+                               "' is not valid for collection '" + itsEDRQuery.collection_id +
+                               "': its vertical extent is a pressure level, use 'hPa', 'mbar' "
+                               "or 'Pa' instead");
+          if (is_hybrid_level)
+            throw EDRException("Query parameter 'height-units' value '" + height_units +
+                               "' is not valid for collection '" + itsEDRQuery.collection_id +
+                               "': its vertical extent is a hybrid/model level, use '1' instead");
+          if (height_units == "km")
+            height *= 1000.0;
+          else if (height_units == "mi")
+            height *= 1609.34;
+          else if (height_units == "ft")
+            height *= 0.3048;
+        }
+        else
+          throw EDRException(
+              "Invalid height-units option '" + height_units +
+              "' used, supported units: 'hPa', 'mbar', 'Pa' for pressure levels, '1' for "
+              "hybrid/model levels, 'm', 'km', 'mi', 'ft' for height/altitude/depth levels");
+
+        // The corridor's centre level comes from the path's own Z coordinates
+        // (LINESTRINGZ/LINESTRINGZM); if the path is 2D an explicit 'z' level must be given
+        // instead to act as the centre of the height band
+        auto levels = itsCoordinateFilter.getLevels();
+        std::string centre_lo;
+        std::string centre_hi;
+        if (!levels.empty())
+        {
+          std::vector<std::string> level_list;
+          boost::algorithm::split(level_list, levels, boost::algorithm::is_any_of(","));
+          centre_lo = level_list.front();
+          centre_hi = level_list.back();
+        }
+        else
+        {
+          auto z = Spine::optional_string(req.getParameter("z"), "");
+          if (z.empty())
+            throw EDRException(
+                "Query parameter 'corridor-height' requires 3D coords "
+                "(LINESTRINGZ/LINESTRINGZM) or an explicit 'z' query parameter to define the "
+                "centre level of the corridor");
+
+          // 'z' may be a single value, a list, a range (lo/hi) or a repeating interval
+          // (Rn/start/step); take the min/max of whatever it expands to as the centre band's
+          // extremes, same as the 3D-path branch above does with the path's own levels.
+          bool zIsRange = false;
+          if (!UtilityFunctions::parseRangeListValue(z, zIsRange, centre_lo, centre_hi))
+            throw EDRException("Invalid 'z' query parameter '" + z + "'");
+          if (centre_hi.empty())
+            centre_hi = centre_lo;
+        }
+
+        auto zLo = Fmi::stod(centre_lo) - height / 2;
+        auto zHi = Fmi::stod(centre_hi) + height / 2;
+        req.removeParameter("z");
+        req.addParameter("z", Fmi::to_string(zLo) + "/" + Fmi::to_string(zHi));
+      }
+    }
+
     auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
     if (!crs.empty() && crs != "OGC:CRS84" && crs != "CRS:84")
       throw EDRException("Invalid crs: " + crs + ". Only OGC:CRS84 is supported");
@@ -826,29 +1006,109 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
     {
       // BRAINSTORM-3288
       //
-      // Convert location "all" query to area query using a small buffer (0.1 degrees)
+      // claude: BRAINSTORM-3499:
       //
-      // Note: removed initial buffering by adding ":1" to the end of the wkt due to crashes in
-      //       gis -engine since it resulted to 1000 degrees instead of meters. The purpose was
-      //       only to pass on the buffering to avi engine query by later extracting the buffering
-      //       value from the wkt and passing it on to avi -engine as maxdistance
+      // 'locations/all' means "every location this collection's own /locations listing
+      // reports" - NOT literally every native grid cell (for a grid-engine-backed collection
+      // that can be hundreds of thousands of points, and building/serializing a response that
+      // size is impractical - confirmed the hard way). Every location_info (regardless of
+      // whether its type is fmisid/ICAO/geoid/qdstation) already carries real lon/lat
+      // (LocationInfo.h), so build one combined MULTIPOINT from all of them and reuse the
+      // existing multi-point Position query path as-is (same as the qdstation branch below,
+      // just for every location at once) - the per-type fmisid/geoid/icao request parameters
+      // were tried first and don't work here: each resolves into its own separate
+      // Spine::TaggedLocation, and CoverageJson's output formatter only keeps the first when
+      // locations arrive as many separate single-point results instead of one combined
+      // multi-point query (confirmed against the already-correct 'pal_skandinavia_multi_point'
+      // test, which goes through this exact combined-query path).
       //
-      itsEDRQuery.query_type = EDRQueryType::Area;
+      if (emd.locations->empty())
+        throw EDRException("No locations found for collection '" + itsEDRQuery.collection_id +
+                           "'");
 
-      auto offset = ((emd.spatial_extent.bbox_xmin > -179.9) ? 0.1 : 0.0);
-      auto xmin(Fmi::to_string(emd.spatial_extent.bbox_xmin - offset) + " ");
-      offset = ((emd.spatial_extent.bbox_ymin > -89.9) ? 0.1 : 0.0);
-      auto ymin(Fmi::to_string(emd.spatial_extent.bbox_ymin - offset) + ",");
-      offset = ((emd.spatial_extent.bbox_xmax < 179.9) ? 0.1 : 0.0);
-      auto xmax(Fmi::to_string(emd.spatial_extent.bbox_xmax + offset) + " ");
-      offset = ((emd.spatial_extent.bbox_ymax < 89.9) ? 0.1 : 0.0);
-      auto ymax(Fmi::to_string(emd.spatial_extent.bbox_ymax + offset) + ",");
+      if (emd.isAviProducer())
+      {
+        // claude: BRAINSTORM-3499:
+        //
+        // AVI engine's Position handler (checkAviEnginePositionQuery) requires a literal
+        // POINT geometry and rejects MULTIPOINT outright - unlike grid/querydata, it doesn't
+        // need the MULTIPOINT/Position trick anyway: its Locations query already natively
+        // accepts many comma-separated icaos in one request (parseICAOCodesAndAviProducer ->
+        // query.icaos -> checkAviEngineLocationQuery's loop), the exact same mechanism the
+        // single-icao branch below already relies on. So just list every icao and keep
+        // query_type as Locations.
+        //
+        std::string icaoList;
+        for (const auto& item : *emd.locations)
+          icaoList += item.first + ",";
+        icaoList.pop_back();
+        req.addParameter("icao", icaoList);
+        return;
+      }
 
-      coords = "POLYGON((" + xmin + ymin + xmax + ymin + xmax + ymax + xmin + ymax + xmin + ymin;
-      coords.pop_back();
-      coords += "))";
+      itsEDRQuery.query_type = EDRQueryType::Position;
 
-      parseCoords(coords);
+      std::string points;
+      double lon_min = std::numeric_limits<double>::max();
+      double lon_max = std::numeric_limits<double>::lowest();
+      double lat_min = std::numeric_limits<double>::max();
+      double lat_max = std::numeric_limits<double>::lowest();
+      bool has_qdstation = false;
+      for (const auto& item : *emd.locations)
+      {
+        const auto& info = item.second;
+        points += Fmi::to_string(info.longitude) + " " + Fmi::to_string(info.latitude) + ",";
+        lon_min = std::min(lon_min, info.longitude);
+        lon_max = std::max(lon_max, info.longitude);
+        lat_min = std::min(lat_min, info.latitude);
+        lat_max = std::max(lat_max, info.latitude);
+        has_qdstation = (has_qdstation || info.type == "qdstation");
+      }
+      points.pop_back();
+      coords = "MULTIPOINT(" + points + ")";
+
+      // claude: BRAINSTORM-3499:
+      //
+      // Point ('qdstation') querydata is only ever queried at its own exact station
+      // coordinates, never interpolated, so the producer for a combined MULTIPOINT query is
+      // chosen by checking whether a single representative point - the envelope centre of the
+      // whole MULTIPOINT geometry, WktGeometry::locationFromGeometry - falls within
+      // 'maxdistance' of an actual station (Repository::contains ->
+      // NFmiFastQueryInfo::IsInside). For a collection whose stations ring a coastline (e.g.
+      // sealevel) that centre falls inland, far from every station, so producer selection fails
+      // with "No data available for 'MULTIPOINT(...)'" before any individual point is even
+      // looked at - even though every point in the MULTIPOINT is itself an exact, valid station
+      // coordinate. Grid/gridded-querydata collections never hit this because any point inside
+      // their bbox is valid data (see df393cf, "Allow MULTIPOINT queries against point
+      // querydata producers", which fixed the equivalent single-collection case and explicitly
+      // left this centre-point limitation for later). Give the centre enough slack to reach the
+      // farthest of this collection's own stations so producer selection succeeds regardless of
+      // where the centre falls; each individual point still resolves to its own exact station
+      // (distance 0) once a producer is chosen, so this cannot pick the wrong station.
+      //
+      // 'maxdistance' is not part of the EDR spec, but CommonQuery::commonInit reads it
+      // unconditionally on any EDR request, so a caller could pass one here too. There is no
+      // legitimate use for that in an "all" query though - it can only accidentally reintroduce
+      // this exact bug (e.g. a caller-supplied maxdistance smaller than what the centre needs) -
+      // so force the computed value rather than merely defaulting it, using setParameter (erase
+      // + insert) rather than addParameter: Spine::HTTP::Request parameters are a multimap and
+      // addParameter would leave both values in place, and commonInit's own
+      // req.getParameter("maxdistance") throws outright if a parameter has more than one value.
+      //
+      if (has_qdstation)
+      {
+        std::pair<double, double> centre((lon_min + lon_max) / 2, (lat_min + lat_max) / 2);
+        double max_km = 0;
+        for (const auto& item : *emd.locations)
+        {
+          const auto& info = item.second;
+          max_km = std::max(
+              max_km, distance_in_kilometers(centre, {info.longitude, info.latitude}));
+        }
+        req.setParameter("maxdistance", Fmi::to_string(max_km + 1.0));
+      }
+
+      parseCoords(emd, coords);
 
       return;
     }
@@ -862,11 +1122,23 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
 
     const auto& location_info = emd.locations->at(location_id);
 
-    // Currently locationId is either fmisid, geoid or icao code
+    // Currently locationId is fmisid, geoid, ICAO code, or a station id embedded in
+    // nongrid querydata (qdstation)
     if (location_info.type == "ICAO")
       req.addParameter("icao", location_id);
     else if (location_info.type == "fmisid")
       req.addParameter("fmisid", location_id);
+    else if (location_info.type == "qdstation")
+    {
+      // Convert to a Position query at the station's own cached coordinates (byte-identical
+      // to the querydata source), reusing the existing nongrid nearest-station pointQuery()
+      // path in QEngineQuery.cpp - same trick as the location_id == "all" -> Area conversion
+      // above.
+      itsEDRQuery.query_type = EDRQueryType::Position;
+      coords = "POINT(" + Fmi::to_string(location_info.longitude) + " " +
+              Fmi::to_string(location_info.latitude) + ")";
+      parseCoords(emd, coords);
+    }
     else
       req.addParameter("geoid", location_id);
   }
@@ -1282,6 +1554,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
 
     std::string zLo;
     std::string zHi;
+    bool zWasRange = false;
     if (UtilityFunctions::parseRangeListValue(z, range, zLo, zHi))
     {
       if (range)
@@ -1289,6 +1562,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
         min_level = Fmi::stod(zLo);
         max_level = Fmi::stod(zHi);
         z.clear();
+        zWasRange = true;
       }
     }
     else
@@ -1342,6 +1616,14 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
         z.append(level);
       }
     }
+
+    if (zWasRange && z.empty())
+      throw EDRException(
+          "Query parameter 'z' (range " + Fmi::to_string(min_level) + "-" +
+          Fmi::to_string(max_level) + ") did not match any vertical level of collection '" +
+          itsEDRQuery.collection_id +
+          "'. Check that 'z' (and for Corridor queries, 'corridor-height'/'height-units') use "
+          "the same vertical unit as the collection's vertical extent.");
 
     if (!z.empty())
       req.addParameter(zParameter, z);

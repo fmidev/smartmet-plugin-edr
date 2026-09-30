@@ -22,7 +22,7 @@ namespace
  */
 // ----------------------------------------------------------------------
 
-void update_latest_timestep(Query& query, const TS::TimeSeriesVectorPtr& tsv)
+void update_latest_timestep(CommonQuery& query, const TS::TimeSeriesVectorPtr& tsv)
 {
   try
   {
@@ -54,7 +54,7 @@ void update_latest_timestep(Query& query, const TS::TimeSeriesVectorPtr& tsv)
  */
 // ----------------------------------------------------------------------
 
-void update_latest_timestep(Query& query, const TS::TimeSeries& ts)
+void update_latest_timestep(CommonQuery& query, const TS::TimeSeries& ts)
 {
   try
   {
@@ -80,7 +80,7 @@ void update_latest_timestep(Query& query, const TS::TimeSeries& ts)
  */
 // ----------------------------------------------------------------------
 
-void update_latest_timestep(Query& query, const TS::TimeSeriesGroup& tsg)
+void update_latest_timestep(CommonQuery& query, const TS::TimeSeriesGroup& tsg)
 {
   try
   {
@@ -177,7 +177,7 @@ void add_data_to_table(const TS::OptionParsers::ParameterList& paramlist,
  */
 // ----------------------------------------------------------------------
 
-void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query& query, TS::OutputData& outputData)
+void store_data(TS::TimeSeriesVectorPtr aggregatedData, CommonQuery& query, TS::OutputData& outputData)
 {
   try
   {
@@ -202,7 +202,7 @@ void store_data(TS::TimeSeriesVectorPtr aggregatedData, Query& query, TS::Output
 // ----------------------------------------------------------------------
 
 void store_data(std::vector<TS::TimeSeriesData>& aggregatedData,
-                Query& query,
+                CommonQuery& query,
                 TS::OutputData& outputData)
 {
   try
@@ -256,7 +256,7 @@ void store_data(std::vector<TS::TimeSeriesData>& aggregatedData,
 // ----------------------------------------------------------------------
 
 // fills the table with data
-void fill_table(Query& query, TS::OutputData& outputData, Spine::Table& table)
+void fill_table(CommonQuery& query, TS::OutputData& outputData, Spine::Table& table)
 {
   try
   {
@@ -294,7 +294,7 @@ void fill_table(Query& query, TS::OutputData& outputData, Spine::Table& table)
  */
 // ----------------------------------------------------------------------
 
-void fix_precisions(Query& masterquery, const ObsParameters& obsParameters)
+void fix_precisions(CommonQuery& masterquery, const ObsParameters& obsParameters)
 {
   try
   {
