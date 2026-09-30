@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.29
+Version: 26.9.30
 Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -34,42 +34,42 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.9.23
+BuildRequires: smartmet-library-spine-devel >= 26.9.30
 BuildRequires: smartmet-library-locus-devel >= 26.4.13
-BuildRequires: smartmet-library-macgyver-devel >= 26.9.23
-BuildRequires: smartmet-library-grid-content-devel >= 26.9.23
-BuildRequires: smartmet-library-grid-files-devel >= 26.9.23
-BuildRequires: smartmet-library-newbase-devel >= 26.9.23
-BuildRequires: smartmet-library-gis-devel >= 26.9.23
-BuildRequires: smartmet-library-timeseries-devel >= 26.9.16
-BuildRequires: smartmet-engine-avi-devel >= 26.9.19
-BuildRequires: smartmet-engine-geonames-devel >= 26.9.23
+BuildRequires: smartmet-library-macgyver-devel >= 26.9.26
+BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
+BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
+BuildRequires: smartmet-library-newbase-devel >= 26.9.24
+BuildRequires: smartmet-library-gis-devel >= 26.9.26
+BuildRequires: smartmet-library-timeseries-devel >= 26.9.26
+BuildRequires: smartmet-engine-avi-devel >= 26.9.24
+BuildRequires: smartmet-engine-geonames-devel >= 26.9.26
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.9.23
+BuildRequires: smartmet-engine-observation-devel >= 26.9.30
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 26.9.16
-BuildRequires: smartmet-engine-gis-devel >= 26.9.23
-BuildRequires: smartmet-engine-grid-devel >= 26.9.23
+BuildRequires: smartmet-engine-querydata-devel >= 26.9.23
+BuildRequires: smartmet-engine-gis-devel >= 26.9.26
+BuildRequires: smartmet-engine-grid-devel >= 26.9.26
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 26.9.23
+#Requires: smartmet-engine-observation >= 26.9.30
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 26.9.23
+Requires: smartmet-library-gis >= 26.9.26
 Requires: smartmet-library-locus >= 26.4.13
-Requires: smartmet-library-macgyver >= 26.9.23
-Requires: smartmet-library-newbase >= 26.9.23
-Requires: smartmet-library-spine >= 26.9.23
-Requires: smartmet-library-timeseries >= 26.9.16
-Requires: smartmet-library-gis >= 26.9.23
-Requires: smartmet-library-grid-files >= 26.9.23
-Requires: smartmet-engine-avi >= 26.9.19
-Requires: smartmet-engine-geonames >= 26.9.23
-Requires: smartmet-engine-querydata >= 26.9.16
-Requires: smartmet-engine-gis >= 26.9.23
-Requires: smartmet-engine-grid >= 26.9.23
-Requires: smartmet-server >= 26.9.2
+Requires: smartmet-library-macgyver >= 26.9.26
+Requires: smartmet-library-newbase >= 26.9.24
+Requires: smartmet-library-spine >= 26.9.29
+Requires: smartmet-library-timeseries >= 26.9.26
+Requires: smartmet-library-gis >= 26.9.26
+Requires: smartmet-library-grid-files >= 26.9.26
+Requires: smartmet-engine-avi >= 26.9.24
+Requires: smartmet-engine-geonames >= 26.9.26
+Requires: smartmet-engine-querydata >= 26.9.23
+Requires: smartmet-engine-gis >= 26.9.26
+Requires: smartmet-engine-grid >= 26.9.26
+Requires: smartmet-server >= 26.9.29
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -77,22 +77,22 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.9.29
-#TestRequires: smartmet-library-spine-plugin-test >= 26.9.23
-#TestRequires: smartmet-library-newbase-devel >= 26.9.23
+#TestRequires: smartmet-library-spine >= 26.9.30
+#TestRequires: smartmet-library-spine-plugin-test >= 26.9.29
+#TestRequires: smartmet-library-newbase-devel >= 26.9.24
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
-#TestRequires: smartmet-engine-grid-test >= 26.9.23
-#TestRequires: smartmet-library-gis >= 26.9.23
-#TestRequires: smartmet-engine-avi >= 26.9.19
-#TestRequires: smartmet-engine-geonames >= 26.9.23
-#TestRequires: smartmet-engine-gis >= 26.9.23
-#TestRequires: smartmet-engine-querydata >= 26.9.16
+#TestRequires: smartmet-engine-grid-test >= 26.9.26
+#TestRequires: smartmet-library-gis >= 26.9.26
+#TestRequires: smartmet-engine-avi >= 26.9.24
+#TestRequires: smartmet-engine-geonames >= 26.9.26
+#TestRequires: smartmet-engine-gis >= 26.9.26
+#TestRequires: smartmet-engine-querydata >= 26.9.23
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.9.23
+#TestRequires: smartmet-engine-observation >= 26.9.30
 %endif
-#TestRequires: smartmet-engine-grid >= 26.9.23
+#TestRequires: smartmet-engine-grid >= 26.9.26
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
@@ -121,8 +121,20 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
-* Tue Sep 29 2026 Petteri Hintsanen <petteri.hintsanen@fmi.fi> - 26.9.29-1.fmi
+* Tue Sep 30 2026 Petteri Hintsanen <petteri.hintsanen@fmi.fi> - 26.9.30-2.fmi
 - Security: Optionally hide fmi-apikey from responses.
+
+* Wed Sep 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.30-1.fmi
+- Updated license requirements (PAK-3132)
+
+* Sat Sep 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.26-2.fmi
+- Enforce maxlocations when expanding areas into grid points (groupareas=0)
+- Enforce maxlocations and maxelements on grid engine query results
+- Fixed bounding box radius expansion on grid data to use meters instead of kilometers
+
+* Sat Sep 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.26-1.fmi
+- Repackaged due to grid-files ABI changes
+- Require the 26.9.26 releases of the SmartMet dependencies
 
 * Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-2.fmi
 - Security: validate the client Host header (plain hostname[:port]) and the
@@ -142,7 +154,7 @@ rm -rf $RPM_BUILD_ROOT
 - Locations query supporting edr 1.1 locations?locationId=id requests too
 
 * Wed Sep 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.9.16-3.fmi
-- Repackaged due to QEngine ABI changes (smartmet-engine-querydata >= 26.9.16)
+- Repackaged due to QEngine ABI changes (smartmet-engine-querydata >= 26.9.23)
 
 * Wed Sep 16 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.9.16-2.fmi
 - Fix to temporal extent repeating interval count, it was too large by 1

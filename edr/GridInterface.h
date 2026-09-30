@@ -15,6 +15,7 @@
 #include <grid-files/common/AdditionalParameters.h>
 #include <grid-files/grid/Typedefs.h>
 #include <macgyver/TimeZones.h>
+#include <timeseries/RequestLimits.h>
 #include <timeseries/TimeSeriesInclude.h>
 
 namespace SmartMet
@@ -27,7 +28,9 @@ namespace EDR
 class GridInterface
 {
   public:
-                      GridInterface(Engine::Grid::Engine* engine, const Fmi::TimeZones& timezones);
+                      GridInterface(Engine::Grid::Engine* engine,
+                                    const Fmi::TimeZones& timezones,
+                                    const TS::RequestLimits& requestLimits);
                       GridInterface() = delete;
                       GridInterface(const GridInterface& other) = delete;
                       GridInterface(GridInterface&& other) = delete;
@@ -100,6 +103,7 @@ class GridInterface
 
       Engine::Grid::Engine* itsGridEngine;
       const Fmi::TimeZones& itsTimezones;
+      const TS::RequestLimits& itsRequestLimits;
 
 };  // class GridInterface
 
