@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.9.30
-Release: 2%{?dist}.fmi
+Version: 26.10.2
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -36,12 +36,12 @@ BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 26.9.30
 BuildRequires: smartmet-library-locus-devel >= 26.4.13
-BuildRequires: smartmet-library-macgyver-devel >= 26.9.26
+BuildRequires: smartmet-library-macgyver-devel >= 26.10.2
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
 BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
 BuildRequires: smartmet-library-newbase-devel >= 26.9.24
 BuildRequires: smartmet-library-gis-devel >= 26.9.26
-BuildRequires: smartmet-library-timeseries-devel >= 26.9.26
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.2
 BuildRequires: smartmet-engine-avi-devel >= 26.9.24
 BuildRequires: smartmet-engine-geonames-devel >= 26.9.26
 %if %{with observation}
@@ -58,10 +58,10 @@ Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 26.9.26
 Requires: smartmet-library-locus >= 26.4.13
-Requires: smartmet-library-macgyver >= 26.9.26
+Requires: smartmet-library-macgyver >= 26.10.2
 Requires: smartmet-library-newbase >= 26.9.24
 Requires: smartmet-library-spine >= 26.9.29
-Requires: smartmet-library-timeseries >= 26.9.26
+Requires: smartmet-library-timeseries >= 26.10.2
 Requires: smartmet-library-gis >= 26.9.26
 Requires: smartmet-library-grid-files >= 26.9.26
 Requires: smartmet-engine-avi >= 26.9.24
@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 02 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.2-1.fmi
+- Rebuilt against macgyver 26.10.2 where Fmi::Cache::Cache uses CLOCK eviction instead of LRU.
+  CLOCK is faster than LRU since a cache hit only takes a shared lock (ABI change)
+
 * Tue Sep 30 2026 Petteri Hintsanen <petteri.hintsanen@fmi.fi> - 26.9.30-2.fmi
 - Security: Optionally hide fmi-apikey from responses.
 
