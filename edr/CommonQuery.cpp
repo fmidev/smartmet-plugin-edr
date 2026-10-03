@@ -487,7 +487,7 @@ void CommonQuery::parse_precision(const Spine::HTTP::Request& req, const Config&
 
     for (const TS::OptionParsers::ParameterList::value_type& p : poptions.parameters())
     {
-      const std::string param_name(p.name());
+      const std::string& param_name(p.name());
       precisions.push_back(prec.get_precision(param_name, is_timeseries_query));
     }
   }

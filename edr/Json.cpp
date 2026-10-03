@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <set>
+#include <string_view>
 
 namespace SmartMet
 {
@@ -408,7 +409,8 @@ std::string Value::data_value_vector_to_string(const std::vector<Value> &data_va
       auto new_value = val.data_value.to_string(val.precision);
       if (!value_array.empty() && !new_value.empty())
         value_array.append(comma(pretty));
-      value_array.append(tabs(pretty, level + 2) + new_value);
+      value_array.append(tabs(pretty, level + 2));
+      value_array.append(new_value);
     }
     else
     {
@@ -455,31 +457,42 @@ std::string Value::values_to_string(bool pretty, unsigned int level) const
   for (const auto &key : keys)
   {
     const auto &value_obj = values.at(key);
-    std::string value = (tabs(pretty, level + 1) + "\"" + key + "\"" + name_separator(pretty));
+
+    // The member text is never empty (it always contains the key), so the separator can be
+    // decided before the member is appended directly to the result
+    if (!result.empty() && !boost::algorithm::ends_with(result, open_brace(pretty)) &&
+        !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA))
+      result.append(comma(pretty));
+
+    result.append(tabs(pretty, level + 1));
+    result.append("\"");
+    result.append(key);
+    result.append("\"");
+    result.append(name_separator(pretty));
+
     if (!value_obj.data_value_vector.empty())
     {
       auto value_array = data_value_vector_to_string(value_obj.data_value_vector, pretty, level);
 
-      value.append(newline(pretty) + tabs(pretty, level + 1));
+      result.append(newline(pretty));
+      result.append(tabs(pretty, level + 1));
       if (boost::algorithm::starts_with(value_array, NEWLINE))
-        value.append(LEFT_SQUARE_BRACKET);
+        result.append(LEFT_SQUARE_BRACKET);
       else
-        value.append(open_bracket(pretty));
-      value.append(value_array + newline(pretty) + tabs(pretty, level + 1) + RIGHT_SQUARE_BRACKET);
+        result.append(open_bracket(pretty));
+      result.append(value_array);
+      result.append(newline(pretty));
+      result.append(tabs(pretty, level + 1));
+      result.append(RIGHT_SQUARE_BRACKET);
     }
     else
     {
-      DataValue dv = value_obj.data_value;
-      std::string data = data_value_to_string(dv, value_obj.precision);
+      std::string data = data_value_to_string(value_obj.data_value, value_obj.precision);
       if (data.empty())
-        data = "error: data empty";
-      value.append(data);
+        result.append("error: data empty");
+      else
+        result.append(data);
     }
-    if (!result.empty() && !boost::algorithm::ends_with(result, open_brace(pretty)) &&
-        !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) && !value.empty())
-      result.append(comma(pretty));
-
-    result.append(value);
   }
 
   return result;
@@ -501,45 +514,81 @@ std::string Value::data_value_vector_to_string(bool pretty, unsigned int level) 
       if (!ret.empty() && !boost::algorithm::ends_with(ret, open_brace(pretty)) &&
           !boost::algorithm::ends_with(ret, RIGHT_ROUND_BRACKET_PLUS_COMMA))
         ret.append(comma(pretty));
-      ret.append(tabs(pretty, level + 1) + value);
+      ret.append(tabs(pretty, level + 1));
+      ret.append(value);
     }
   }
 
   if (ret.empty())
     return ret;
 
-  return (tabs(pretty, level) + open_bracket(pretty) + ret + newline(pretty) + tabs(pretty, level) +
-          RIGHT_SQUARE_BRACKET);
+  std::string result = tabs(pretty, level);
+  result.reserve(result.size() + ret.size() + 8 + 2 * level);
+  result.append(open_bracket(pretty));
+  result.append(ret);
+  result.append(newline(pretty));
+  result.append(tabs(pretty, level));
+  result.append(RIGHT_SQUARE_BRACKET);
+  return result;
 }
 
 std::string Value::to_string_impl(bool pretty, unsigned int level) const
 {
+  std::string result;
+  append_to_string(result, pretty, level);
+  return result;
+}
+
+// Appends the serialized value to the output so that nested objects are written directly into
+// one buffer instead of being built as temporaries and copied into each parent level.
+void Value::append_to_string(std::string &out, bool pretty, unsigned int level) const
+{
   if (valueType == ValueType::arrayValue)
-    return data_value_vector_to_string(pretty, level);
+  {
+    out.append(data_value_vector_to_string(pretty, level));
+    return;
+  }
 
-  std::string result = (level == 0 ? open_brace(pretty)
-                                   : (newline(pretty) + tabs(pretty, level) + open_brace(pretty)));
+  const std::size_t start = out.size();
 
-  result.append(values_to_string(pretty, level));
-  std::string children_string;
+  if (level == 0)
+    out.append(open_brace(pretty));
+  else
+  {
+    out.append(newline(pretty));
+    out.append(tabs(pretty, level));
+    out.append(open_brace(pretty));
+  }
+
+  out.append(values_to_string(pretty, level));
+
+  // The separator test must only look at what this object has written so far
+  if (!children.empty())
+  {
+    const std::string_view result(out.data() + start, out.size() - start);
+    if (!result.empty() && !boost::algorithm::ends_with(result, open_brace(pretty)) &&
+        !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) &&
+        !boost::algorithm::ends_with(result, comma(pretty)))
+      out.append(comma(pretty));
+  }
+
+  bool first = true;
   for (const auto &item : children)
   {
-    auto child_key = item.first;
-    auto child_value = item.second.to_string_impl(pretty, level + 1);
-    if (!children_string.empty())
-      children_string.append(comma(pretty));
-    children_string.append(tabs(pretty, level + 1) + "\"" + child_key + "\"" +
-                           name_separator(pretty) + child_value);
+    if (!first)
+      out.append(comma(pretty));
+    first = false;
+    out.append(tabs(pretty, level + 1));
+    out.append("\"");
+    out.append(item.first);
+    out.append("\"");
+    out.append(name_separator(pretty));
+    item.second.append_to_string(out, pretty, level + 1);
   }
-  if (!result.empty() && !boost::algorithm::ends_with(result, open_brace(pretty)) &&
-      !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA) &&
-      !boost::algorithm::ends_with(result, comma(pretty)) && !children_string.empty())
-    result.append(comma(pretty));
 
-  result.append(children_string);
-  result.append(newline(pretty) + tabs(pretty, level) + "}");
-
-  return result;
+  out.append(newline(pretty));
+  out.append(tabs(pretty, level));
+  out.append("}");
 }
 
 std::string Value::to_string(bool pretty) const

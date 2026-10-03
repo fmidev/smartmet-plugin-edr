@@ -220,9 +220,8 @@ bool GridInterface::containsParameterWithGridProducer(const CommonQuery& masterq
       Spine::Parameter param = paramfunc.parameter;
       // printf("PARAM %s\n",param.name().c_str());
 
-      const uint len = param.name().length();
-      char buf[len + 1];
-      strcpy(buf, param.name().c_str());
+      std::string buf = param.name();
+      const uint len = buf.length();
       for (uint t = 0; t < len; t++)
       {
         for (uint c = 0; c < 12; c++)
@@ -237,7 +236,7 @@ bool GridInterface::containsParameterWithGridProducer(const CommonQuery& masterq
 
       std::vector<std::string> partList;
 
-      splitString(buf, ':', partList);
+      splitString(buf.c_str(), ':', partList);
       for (const auto& producer : partList)
       {
         // printf("  -- PRODUCER [%s]\n",producer.c_str());
