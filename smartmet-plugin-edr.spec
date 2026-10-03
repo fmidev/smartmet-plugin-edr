@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.2
+Version: 26.10.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -34,20 +34,20 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.9.30
-BuildRequires: smartmet-library-locus-devel >= 26.4.13
-BuildRequires: smartmet-library-macgyver-devel >= 26.10.2
+BuildRequires: smartmet-library-spine-devel >= 26.10.3
+BuildRequires: smartmet-library-locus-devel >= 26.10.3
+BuildRequires: smartmet-library-macgyver-devel >= 26.10.3
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
 BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
-BuildRequires: smartmet-library-newbase-devel >= 26.9.24
-BuildRequires: smartmet-library-gis-devel >= 26.9.26
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.2
-BuildRequires: smartmet-engine-avi-devel >= 26.9.24
-BuildRequires: smartmet-engine-geonames-devel >= 26.9.26
+BuildRequires: smartmet-library-newbase-devel >= 26.10.3
+BuildRequires: smartmet-library-gis-devel >= 26.10.3
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.3
+BuildRequires: smartmet-engine-avi-devel >= 26.10.3
+BuildRequires: smartmet-engine-geonames-devel >= 26.10.3
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.9.30
+BuildRequires: smartmet-engine-observation-devel >= 26.10.3
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 26.9.23
+BuildRequires: smartmet-engine-querydata-devel >= 26.10.3
 BuildRequires: smartmet-engine-gis-devel >= 26.9.26
 BuildRequires: smartmet-engine-grid-devel >= 26.9.26
 # obsengine can be disabled in configuration: not included intentionally
@@ -56,17 +56,17 @@ BuildRequires: smartmet-engine-grid-devel >= 26.9.26
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 26.9.26
-Requires: smartmet-library-locus >= 26.4.13
-Requires: smartmet-library-macgyver >= 26.10.2
-Requires: smartmet-library-newbase >= 26.9.24
-Requires: smartmet-library-spine >= 26.9.29
-Requires: smartmet-library-timeseries >= 26.10.2
-Requires: smartmet-library-gis >= 26.9.26
+Requires: smartmet-library-gis >= 26.10.3
+Requires: smartmet-library-locus >= 26.10.3
+Requires: smartmet-library-macgyver >= 26.10.3
+Requires: smartmet-library-newbase >= 26.10.3
+Requires: smartmet-library-spine >= 26.10.3
+Requires: smartmet-library-timeseries >= 26.10.3
+Requires: smartmet-library-gis >= 26.10.3
 Requires: smartmet-library-grid-files >= 26.9.26
-Requires: smartmet-engine-avi >= 26.9.24
-Requires: smartmet-engine-geonames >= 26.9.26
-Requires: smartmet-engine-querydata >= 26.9.23
+Requires: smartmet-engine-avi >= 26.10.3
+Requires: smartmet-engine-geonames >= 26.10.3
+Requires: smartmet-engine-querydata >= 26.10.3
 Requires: smartmet-engine-gis >= 26.9.26
 Requires: smartmet-engine-grid >= 26.9.26
 Requires: smartmet-server >= 26.9.29
@@ -77,20 +77,20 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.9.30
+#TestRequires: smartmet-library-spine >= 26.10.3
 #TestRequires: smartmet-library-spine-plugin-test >= 26.9.29
-#TestRequires: smartmet-library-newbase-devel >= 26.9.24
+#TestRequires: smartmet-library-newbase-devel >= 26.10.3
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-engine-grid-test >= 26.9.26
-#TestRequires: smartmet-library-gis >= 26.9.26
-#TestRequires: smartmet-engine-avi >= 26.9.24
-#TestRequires: smartmet-engine-geonames >= 26.9.26
+#TestRequires: smartmet-library-gis >= 26.10.3
+#TestRequires: smartmet-engine-avi >= 26.10.3
+#TestRequires: smartmet-engine-geonames >= 26.10.3
 #TestRequires: smartmet-engine-gis >= 26.9.26
-#TestRequires: smartmet-engine-querydata >= 26.9.23
+#TestRequires: smartmet-engine-querydata >= 26.10.3
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.9.30
+#TestRequires: smartmet-engine-observation >= 26.10.3
 %endif
 #TestRequires: smartmet-engine-grid >= 26.9.26
 #TestRequires: gdal312-libs
@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Sat Oct 03 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.3-1.fmi
+- Serialize JSON into one buffer instead of copying each subtree
+- Copy the parameter name to a std::string instead of a stack array
+
 * Fri Oct 02 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.2-1.fmi
 - Rebuilt against macgyver 26.10.2 where Fmi::Cache::Cache uses CLOCK eviction instead of LRU.
   CLOCK is faster than LRU since a cache hit only takes a shared lock (ABI change)
