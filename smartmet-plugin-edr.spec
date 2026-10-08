@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.4
+Version: 26.10.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-1.fmi
+- Observation station locations include the WIGOS Station Identifier (BRAINSTORM-2887)
+
 * Sun Oct 04 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.4-1.fmi
 - Treat tapsi_qc as a mobile producer as the timeseries plugin does (BRAINSTORM-3008)
 

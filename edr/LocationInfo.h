@@ -32,7 +32,8 @@ struct location_info
         name(station.formal_name_fi),
         type("fmisid"),
         start_time(station.station_start),
-        end_time(station.station_end)
+        end_time(station.station_end),
+        wsi(station.wsi)
   {
   }
   // Constructor for stations enumerated directly from nongrid querydata - no
@@ -62,6 +63,7 @@ struct location_info
   Fmi::DateTime start_time = Fmi::DateTime::NOT_A_DATE_TIME;
   Fmi::DateTime end_time = Fmi::DateTime::NOT_A_DATE_TIME;
   std::string keyword;  // Keyword used to get this location
+  std::string wsi;      // WIGOS Station Identifier of an observation station, if any
 };
 
 using SupportedLocations = std::map<std::string, location_info>;  // id -> details
