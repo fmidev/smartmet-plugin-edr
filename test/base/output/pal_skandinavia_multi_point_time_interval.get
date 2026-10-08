@@ -136,7 +136,7 @@
 			}
 		}
 	],
-	"domainType" : "Point",
+	"domainType" : "PointSeries",
 	"referencing" : 
 	[
 		{
