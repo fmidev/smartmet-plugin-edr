@@ -285,8 +285,9 @@ bool is_external_producer(const std::string &producer)
 {
   try
   {
+    // The same mobile and external producers as in the observation engine
     return (producer == "netatmo" || producer == "roadcloud" || producer == "teconer" ||
-            producer == "fmi_iot");
+            producer == "fmi_iot" || producer == "tapsi_qc");
   }
   catch (...)
   {
