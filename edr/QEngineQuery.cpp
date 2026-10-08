@@ -406,11 +406,15 @@ void QEngineQuery::processQEngineQuery(const State& state,
         // reset to original start time for each new location
         q.toptions.startTime = old_start_time;
 
-        // every parameter starts from the same row
-        if (q.toptions.endTime > data_period_endtime.local_time() &&
-            !data_period_endtime.is_not_a_date_time() && !isClimatologyProducer)
+        // every parameter starts from the same row. The end time is in UTC or in local
+        // time depending on the request, compare it in the same time
+        if (!data_period_endtime.is_not_a_date_time() && !isClimatologyProducer)
         {
-          q.toptions.endTime = data_period_endtime.local_time();
+          const auto data_endtime =
+              (q.toptions.endTimeUTC ? data_period_endtime.utc_time()
+                                     : data_period_endtime.local_time());
+          if (q.toptions.endTime > data_endtime)
+            q.toptions.endTime = data_endtime;
         }
         fetchQEngineValues(state,
                            paramfunc,
@@ -1362,12 +1366,29 @@ Engine::Querydata::Producer QEngineQuery::selectProducer(const Spine::Location& 
     }
 
     // Allow listed producers only
-    return itsPlugin.itsEngines.qEngine->find(areaproducers,
-                                              location.longitude,
-                                              location.latitude,
-                                              query.maxdistance_kilometers(),
-                                              use_data_max_distance,
-                                              query.leveltype);
+    auto producer = itsPlugin.itsEngines.qEngine->find(areaproducers,
+                                                       location.longitude,
+                                                       location.latitude,
+                                                       query.maxdistance_kilometers(),
+                                                       use_data_max_distance,
+                                                       query.leveltype);
+
+    // An area is represented by its center point, which may well be outside the data even
+    // though the area overlaps it (e.g. a polygon much larger than the data area). The
+    // producer (collection) was requested explicitly, so use it and let the value extraction
+    // decide which points have data.
+
+    if (producer.empty() &&
+        (location.type == Spine::Location::Wkt || location.type == Spine::Location::Area ||
+         location.type == Spine::Location::Path ||
+         location.type == Spine::Location::BoundingBox))
+    {
+      for (const auto& areaproducer : areaproducers)
+        if (itsPlugin.itsEngines.qEngine->hasProducer(areaproducer))
+          return areaproducer;
+    }
+
+    return producer;
   }
   catch (...)
   {
