@@ -1,0 +1,122 @@
+{
+	"bbox" : 
+	[
+		24.93840,
+		60.16990,
+		25.66530,
+		60.39320
+	],
+	"features" : 
+	[
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.66530,
+					60.39320
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1005,
+					1005
+				],
+				"temperature" : 
+				[
+					15.7,
+					15.7
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.93840,
+					60.16990
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1004,
+					1004
+				],
+				"temperature" : 
+				[
+					14.9,
+					14.5
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		}
+	],
+	"parameters" : 
+	[
+		{
+			"id" : "Temperature",
+			"label" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
+				}
+			}
+		},
+		{
+			"id" : "Pressure",
+			"label" : "Pressure",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Pintapaine"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Pressure",
+				"label" : 
+				{
+					"fi" : "Pressure"
+				}
+			}
+		}
+	],
+	"type" : "FeatureCollection"
+}
