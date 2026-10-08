@@ -103,6 +103,7 @@ class PluginImpl
   void metaDataUpdateLoop();
   void updateMetaData(bool initial_phase);
   void updateSupportedLocations();
+  void updateQueryDataLocations();
   void updateParameterInfo();
   void checkNewDataAndNotify(const std::shared_ptr<EngineMetaData>& new_emd) const;
   std::map<std::string, Fmi::DateTime> getNotificationTimes(SourceEngine source_engine,

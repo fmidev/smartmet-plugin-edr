@@ -4,6 +4,7 @@
 #include <spine/Location.h>
 #include <spine/Station.h>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace SmartMet
@@ -65,8 +66,10 @@ struct location_info
 };
 
 using SupportedLocations = std::map<std::string, location_info>;  // id -> details
-using SupportedProducerLocations =
-    std::map<std::string, SupportedLocations>;  // producer -> locations
+// Shared so that published metadata can keep a producer's locations alive while the
+// locations are refreshed (producer -> locations)
+using SupportedLocationsPtr = std::shared_ptr<const SupportedLocations>;
+using SupportedProducerLocations = std::map<std::string, SupportedLocationsPtr>;
 
 }  // namespace EDR
 }  // namespace Plugin

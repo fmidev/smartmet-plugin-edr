@@ -109,7 +109,7 @@ struct EDRMetaData
   std::set<std::string> data_queries;    // Supported data_queries, defined in config file
   std::set<std::string> output_formats;  // Supported output_formats, defined in config file
   std::string default_output_format;     // Default output format, defined in config file
-  const SupportedLocations* locations = nullptr;    // Supported locations, default keyword synop_fi
+  SupportedLocationsPtr locations;    // Supported locations, default keyword synop_fi
                                                     // can be overwritten in configuration file
   const ParameterInfo* parameter_info = nullptr;    // Info about parameters from config file
   const CollectionInfo* collection_info = nullptr;  // Info about collections from config file
