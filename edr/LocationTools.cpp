@@ -249,7 +249,9 @@ Spine::LocationList get_location_list(const NFmiSvgPath& thePath,
                                                                         locFirst->latitude,
                                                                         locFirst->timezone,
                                                                         locFirst->population,
-                                                                        locFirst->elevation));
+                                                                        locFirst->elevation,
+                                                                        locFirst->dem,
+                                                                        locFirst->covertype));
 
         theTimezone = loc->timezone;
         locationList.push_back(loc);
@@ -479,7 +481,9 @@ std::unique_ptr<Spine::Location> get_coordinate_location(double lon,
                                                              loc->latitude,
                                                              loc->timezone,
                                                              loc->population,
-                                                             loc->elevation));
+                                                             loc->elevation,
+                                                             loc->dem,
+                                                             loc->covertype));
 
     return ret;
   }
