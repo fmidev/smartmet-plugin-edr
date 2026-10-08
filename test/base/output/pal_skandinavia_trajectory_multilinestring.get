@@ -1,0 +1,4 @@
+{
+  "title" : "An error occurred",
+  "detail" : "Trajectory and corridor coords must be a LINESTRING, LINESTRINGZ, LINESTRINGM or LINESTRINGZM: MULTILINESTRING((24.1 61.1,25.2 62.2),(26.3 63.3,27.4 64.4))"
+}

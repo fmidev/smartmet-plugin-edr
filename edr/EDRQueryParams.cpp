@@ -705,7 +705,18 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
     boost::algorithm::to_upper(wkt);
     boost::algorithm::trim(wkt);
     auto geometry_name = wkt.substr(0, wkt.find('('));
-    boost::algorithm::trim(geometry_name);
+    // "LINESTRING Z" is equivalent to "LINESTRINGZ"
+    boost::algorithm::erase_all(geometry_name, " ");
+
+    // OGC API EDR defines trajectories and corridors as single LINESTRINGs. Other
+    // geometries would otherwise be relabelled as an invalid LINESTRING below.
+    if (geometry_name != "LINESTRING" && geometry_name != "LINESTRINGZ" &&
+        geometry_name != "LINESTRINGM" && geometry_name != "LINESTRINGZM")
+      throw EDRException(
+          "Trajectory and corridor coords must be a LINESTRING, LINESTRINGZ, LINESTRINGM or "
+          "LINESTRINGZM: " +
+          coords);
+
     auto len = (wkt.rfind(')') - wkt.find('(') - 1);
     auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
     auto radius = wkt.substr(wkt.rfind(')') + 1);
