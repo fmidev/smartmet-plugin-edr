@@ -1455,6 +1455,27 @@ void PluginImpl::updateParameterInfo()
 
     const auto& lconfig = itsConfig.config();
 
+    // Metadata parameter names are lowercase, but the settings may use any case
+    // (e.g. RadiationLw), and libconfig lookups are case sensitive
+
+    std::map<std::string, std::string> config_parameter_names;  // lowercase -> setting name
+    if (lconfig.exists("parameter_info"))
+    {
+      const auto& settings = lconfig.lookup("parameter_info");
+      if (!settings.isGroup())
+        throw Fmi::Exception(BCP, "Configuration file error. parameter_info must be an object");
+
+      for (int i = 0; i < settings.getLength(); i++)
+      {
+        std::string name = settings[i].getName();
+        if (!config_parameter_names.emplace(Fmi::ascii_tolower_copy(name), name).second)
+          throw Fmi::Exception(BCP,
+                               "Configuration file error. parameter_info has several settings "
+                               "for parameter " +
+                                   name);
+      }
+    }
+
     for (const auto& pname : parameter_names)
     {
       if (pname.empty())
@@ -1462,7 +1483,10 @@ void PluginImpl::updateParameterInfo()
 
       parameter_info_config pinfo;
 
-      auto pname_key = ("parameter_info." + pname);
+      auto config_name = config_parameter_names.find(pname);
+      auto pname_key =
+          ("parameter_info." +
+           (config_name != config_parameter_names.end() ? config_name->second : pname));
       if (lconfig.exists(pname_key))
       {
         // Description

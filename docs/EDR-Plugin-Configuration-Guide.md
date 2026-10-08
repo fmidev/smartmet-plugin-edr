@@ -220,7 +220,7 @@ collection_info:
 
 Parameter info presented in metadata is gathered from both from engine and configuration file. Configuration file is prioritized: If parameter info is defined in configuration file it is used, otherwise parameter information from engine is used. 
 
-Parameter info in configuration file is defined as follows:
+Parameter info in configuration file is defined as follows. Parameter names are matched case-insensitively, so for example `RadiationLW` and `radiationlw` refer to the same parameter; a name may be given only once.
 
 ```
 parameter_info:
