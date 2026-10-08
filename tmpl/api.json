@@ -3131,6 +3131,24 @@
             }
           },
           {
+            "name": "within",
+            "in": "query",
+            "description": "SmartMet extension: the maximum distance of the station or point data location used for the position. Requires `within-units`.",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "within-units",
+            "in": "query",
+            "description": "Distance units for the `within` parameter, `km` or `mi`.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "z",
             "in": "query",
             "description": "Vertical coordinate(s) to retrieve data for. The following expressions are possible:\n- Single cordinate. For example `z=850`.\n- Enumeration of coordinates `z=z1,z2,z3,...`. For example `z=1000,300,850,500`.\n- Interval of coordinates. Four types of intervals are possible:\n  - Bounded `z=minz/maxz`. For example `z=1000/850`.\n  - Unbounded bottom `z=../maxz`. For example `z=../500`.\n  - Unbounded top `z=minz/..`. For example `z=850/..`.\n  - Unbounded `z=../..`.\n\n  Intervala are closed (include limit coordinates).\n  Coordinates are compared by their altitude, not numerically,\n  i.e. `minz` must be below `maxz` (in case of isobaric coordinates 1000 < 850, for example).\n\n- Arithmetic sequence `R<count>/<start>/<step>`.\n  For example `z=R5/1000/-100` represents 1000,900,800,700,600 \n\nVertical extent (available vertical coordinates) is described by the collection's/instance's metadata.\n",
@@ -7098,6 +7116,24 @@
             "in": "query",
             "description": "Locations(s) to retrive data for. Defined by a Well Known Text string:\n\n- Single location: `coords=POINT(x y)`\n- List of locations: `coords=MULTIPOINT((x1 y1),(x2 y2),(x3 y3), ...)`\n\nSee <http://portal.opengeospatial.org/files/?artifact_id=25355> and \n<https://en.wikipedia.org/wiki/Well-known_text_representation_of_geometry>\n\n`x` and `y` are coordinates in the coordinate system defined by the `crs` parameter.\nIf the `crs` parameter is not specified, dataset's native CRS is assumed.\n\nExamples:\n- `coords=POINT(0 51.48)`\n- `coords=MULTIPOINT((38.9 -77),(48.85 2.35),(39.92 116.38))`\n",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "within",
+            "in": "query",
+            "description": "SmartMet extension: the maximum distance of the station or point data location used for the position. Requires `within-units`.",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "within-units",
+            "in": "query",
+            "description": "Distance units for the `within` parameter, `km` or `mi`.",
+            "required": false,
             "schema": {
               "type": "string"
             }
