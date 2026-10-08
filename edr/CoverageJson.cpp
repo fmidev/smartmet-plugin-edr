@@ -3395,7 +3395,9 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
           end_time = edr_md->temporal_extent.time_periods.back().end_time;
         if (end_time.is_not_a_date_time())
           end_time = edr_md->temporal_extent.time_periods.back().start_time;
-        if (end_time > now)
+        // Station periods of observations may extend to the future; forecast data does,
+        // and its extent must not be cut at the time of the request
+        if ((edr_md->isObsProducer() || edr_md->isAviProducer()) && end_time > now)
           end_time = now;
 
         properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
