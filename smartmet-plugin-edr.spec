@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.8
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Oct 08 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.8-2.fmi
+- Gridded collections list only the locations inside the data area (BRAINSTORM-3269)
+
 * Thu Oct 08 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.8-1.fmi
 - Refresh the locations of point querydata collections in the metadata update loop (BRAINSTORM-3514)
 
