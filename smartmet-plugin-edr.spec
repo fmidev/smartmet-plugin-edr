@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.9
-Release: 4%{?dist}.fmi
+Release: 5%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-5.fmi
+- Area queries accept only POLYGON and MULTIPOLYGON coords (BRAINSTORM-2928)
+- Empty 204 responses carry no ETag, so the frontend no longer caches them (BRAINSTORM-3332)
+- Treat tapsi_qc as an external producer like the observation engine does (BRAINSTORM-3294)
+- GeoJSON features are moved instead of copied into the output document (BRAINSTORM-3483)
+- GeoJSON output has one feature per point with all parameters as properties (BRAINSTORM-3083)
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-4.fmi
 - Trajectory and corridor queries accept MULTILINESTRING coords, optionally with Z, M or ZM values (BRAINSTORM-3483)
 - Each segment of a MULTILINESTRING trajectory is a separate Trajectory coverage (BRAINSTORM-3483)
