@@ -1121,6 +1121,7 @@ void PluginImpl::metaDataUpdateLoop()
       {
         // update metadata every N seconds
         boost::this_thread::sleep_for(boost::chrono::seconds(itsConfig.metaDataUpdateInterval()));
+        updateQueryDataLocations();
         updateMetaData(false);
       }
       catch (...)
@@ -1387,15 +1388,15 @@ void PluginImpl::updateSupportedLocations()
           sls[li.id] = li;
         }
         if (!sls.empty())
-          itsSupportedLocations[producer] = sls;
+          itsSupportedLocations[producer] =
+              std::make_shared<const SupportedLocations>(std::move(sls));
       }
     }
 #endif
 
     // Get locations directly embedded in nongrid (point) querydata; these take precedence
-    // over the generic keyword-search fallback below for the producers they cover.
-    // Startup-only, like the rest of this function - not re-run by the periodic metadata
-    // refresh loop, so a producer's station set can go stale without a server restart.
+    // over the generic keyword-search fallback below for the producers they cover. The
+    // metadata update loop refreshes them, see updateQueryDataLocations().
     auto qd_native_location_producers = load_locations_qd(*itsEngines.qEngine, itsSupportedLocations);
 
     // Get locations using keywords
@@ -1423,7 +1424,8 @@ void PluginImpl::updateSupportedLocations()
         }
       }
       if (!sls.empty())
-        itsSupportedLocations[producer] = sls;
+        itsSupportedLocations[producer] =
+            std::make_shared<const SupportedLocations>(std::move(sls));
     }
 
     // For avi producers locations/stations are loaded from avidb
@@ -1437,6 +1439,30 @@ void PluginImpl::updateSupportedLocations()
                          collection_info_container);
     }
 #endif
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Refresh the locations of nongrid (point) querydata producers
+ *
+ * The station set of point querydata may change while the server is running.
+ * Called by the metadata update loop before the metadata is rebuilt. The old
+ * location lists stay alive for as long as the published metadata uses them.
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::updateQueryDataLocations()
+{
+  try
+  {
+    SupportedProducerLocations qd_locations;
+    for (const auto& producer : load_locations_qd(*itsEngines.qEngine, qd_locations))
+      itsSupportedLocations[producer] = qd_locations[producer];
   }
   catch (...)
   {

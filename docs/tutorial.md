@@ -231,7 +231,10 @@ Two things are built **only at init**: the location lists (`updateSupportedLocat
 which reads observation stations, station lists embedded in point querydata, Geonames
 keyword searches and avi stations) and the configured parameter info
 (`updateParameterInfo`). A new station or an edited `parameter_info` block therefore
-needs `edr:reload` or a restart.
+needs `edr:reload` or a restart. The exception is the station lists embedded in point
+querydata, which the update loop reloads before each metadata rebuild
+(`updateQueryDataLocations`). The location lists are shared pointers, so a snapshot
+being served keeps its lists alive while new ones are published.
 
 ### 5.4 Rendering
 
@@ -560,8 +563,8 @@ test/grid/input/grid_painepinta_area_levels.get                 dotted grid coll
   fails only if none remain.
 - The request parameter `level` is renamed `custom_level` for the MetOcean profile;
   vertical selection must use `z`.
-- Locations and `parameter_info` are read once at init; only extents and parameter
-  lists refresh periodically. Avi refresh runs full message-time queries every interval.
+- Locations (except those of point querydata) and `parameter_info` are read once at
+  init; extents, parameter lists and point querydata locations refresh periodically. Avi refresh runs full message-time queries every interval.
 - The observation data period used for time generation is hard-coded to the last 24
   hours; `observation_period` only trims the advertised extent.
 - `WITHOUT_OBSERVATION` is selectable through the RPM spec, `WITHOUT_AVI` is not, and

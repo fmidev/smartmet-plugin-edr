@@ -1125,7 +1125,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 
       auto producer_key = (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = &spl.at(producer_key);
+        producer_emd.locations = spl.at(producer_key);
       epmd[qmdproducer].push_back(producer_emd);
       // Update latest data update time
       if (latest_update_times.find(qmdproducer) == latest_update_times.end() ||
@@ -1186,7 +1186,7 @@ std::set<std::string> load_locations_qd(const Engine::Querydata::Engine &qEngine
           // Querydata producers having upper case letters must have lowercase aliases,
           // matching get_edr_metadata_qd's producer key lookup below.
           auto key = boost::algorithm::to_lower_copy(producer);
-          spl[key] = sls;
+          spl[key] = std::make_shared<const SupportedLocations>(std::move(sls));
           populated.insert(key);
         }
       }
@@ -1324,7 +1324,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       auto producer_key =
           (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = &spl.at(producer_key);
+        producer_emd.locations = spl.at(producer_key);
 
       epmd[producerId].push_back(producer_emd);
       // Update latest data update time
@@ -1499,7 +1499,7 @@ EDRProducerMetaData get_edr_metadata_obs(
       producer_emd.default_output_format = get_default_output_format(producer, defs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = &spl.at(producer_key);
+        producer_emd.locations = spl.at(producer_key);
 
       epmd[producer].push_back(producer_emd);
     }
@@ -1582,7 +1582,7 @@ EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
       edrMetaData.default_output_format = get_default_output_format(producer, defs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-        edrMetaData.locations = &spl.at(producer_key);
+        edrMetaData.locations = spl.at(producer_key);
 
       if (!edrMetaData.temporal_extent.time_periods.empty())
         edrMetaData.latest_data_update_time =
@@ -1612,7 +1612,7 @@ void load_locations_avi(const Engine::Avi::Engine &aviEngine,
     {
       SupportedLocations sls = get_supported_locations(amd, aviCollections);
 
-      spl[amd.getProducer()] = sls;
+      spl[amd.getProducer()] = std::make_shared<const SupportedLocations>(std::move(sls));
     }
   }
   catch (...)
