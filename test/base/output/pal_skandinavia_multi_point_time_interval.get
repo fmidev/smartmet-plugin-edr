@@ -43,16 +43,16 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
 					[
+						7,
 						1,
-						1,
-						7
+						1
 					],
 					"type" : "NdArray",
 					"values" : 
@@ -110,16 +110,16 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
 					[
+						7,
 						1,
-						1,
-						7
+						1
 					],
 					"type" : "NdArray",
 					"values" : 

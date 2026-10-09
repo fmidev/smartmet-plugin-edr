@@ -1560,6 +1560,11 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       crs[0] = Json::Value("OGC:CRS84");
       instance["crs"] = crs;
 
+      auto output_formats = Json::Value(Json::ValueType::arrayValue);
+      for (const auto &f : emd.output_formats)
+        output_formats.append(Json::Value(f));
+      instance["output_formats"] = output_formats;
+
       // Custom dimensions
       auto custom_dims = Json::Value(Json::ValueType::arrayValue);
 
@@ -1916,18 +1921,20 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
             get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
         json_param_object["type"] = Json::Value("NdArray");
         auto axis_names = Json::Value(Json::ValueType::arrayValue);
-        axis_names[0] = Json::Value("t");
-        axis_names[1] = Json::Value("x");
-        axis_names[2] = Json::Value("y");
-        if (level)
-          axis_names[3] = Json::Value("z");
-        json_param_object["axisNames"] = axis_names;
+        // CoverageJSON recommends the axis order t, z, y, x
         auto shape = Json::Value(Json::ValueType::arrayValue);
-        shape[0] = Json::Value(ts->size());
-        shape[1] = Json::Value(coordinates.size());
-        shape[2] = Json::Value(coordinates.size());
+        axis_names.append(Json::Value("t"));
+        shape.append(Json::Value(ts->size()));
         if (level)
-          shape[3] = Json::Value(1);
+        {
+          axis_names.append(Json::Value("z"));
+          shape.append(Json::Value(1));
+        }
+        axis_names.append(Json::Value("y"));
+        shape.append(Json::Value(1));
+        axis_names.append(Json::Value("x"));
+        shape.append(Json::Value(1));
+        json_param_object["axisNames"] = axis_names;
         json_param_object["shape"] = shape;
       }
 
@@ -2243,16 +2250,18 @@ void set_axis_names(const bool &levels_present, Json::Value &axis_names)
 {
   try
   {
-    axis_names[0] = Json::Value("x");
-    axis_names[1] = Json::Value("y");
+    // CoverageJSON recommends the axis order t, z, y, x
+    axis_names[0] = Json::Value("t");
     if (levels_present)
     {
-      axis_names[2] = Json::Value("z");
-      axis_names[3] = Json::Value("t");
+      axis_names[1] = Json::Value("z");
+      axis_names[2] = Json::Value("y");
+      axis_names[3] = Json::Value("x");
     }
     else
     {
-      axis_names[2] = Json::Value("t");
+      axis_names[1] = Json::Value("y");
+      axis_names[2] = Json::Value("x");
     }
   }
   catch (...)
@@ -2376,17 +2385,11 @@ Json::Value build_point_range(const std::vector<time_coord_value> &values,
     auto range_item = Json::Value(Json::ValueType::objectValue);
     range_item["type"] = Json::Value("NdArray");
     auto shape = Json::Value(Json::ValueType::arrayValue);
-    shape[0] = Json::Value(1);
+    shape[0] = Json::Value(n_timesteps);
     shape[1] = Json::Value(1);
+    shape[2] = Json::Value(1);
     if (levels_present)
-    {
-      shape[2] = Json::Value(1);
-      shape[3] = Json::Value(n_timesteps);
-    }
-    else
-    {
-      shape[2] = Json::Value(n_timesteps);
-    }
+      shape[3] = Json::Value(1);
 
     range_item["shape"] = std::move(shape);
     auto axis_names = Json::Value(Json::ValueType::arrayValue);
@@ -3337,8 +3340,8 @@ Json::Value format_output_data_vertical_profile(
       auto ranges = Json::Value(Json::ValueType::objectValue);
       auto domain = Json::Value(Json::ValueType::objectValue);
 
+      // The domain type is given by the coverage collection
       domain["type"] = Json::Value("Domain");
-      domain["domainType"] = Json::Value("VerticalProfile");
 
       domain["axes"] = Json::Value(Json::ValueType::objectValue);
       domain["axes"]["x"] = Json::Value(Json::ValueType::objectValue);

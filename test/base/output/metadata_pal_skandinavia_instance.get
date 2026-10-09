@@ -54,6 +54,11 @@ Content-Type: application/json
 			"type" : "application/vnd.cov+json"
 		}
 	],
+	"output_formats" : 
+	[
+		"CoverageJSON",
+		"GeoJSON"
+	],
 	"crs" : 
 	[
 		"OGC:CRS84"

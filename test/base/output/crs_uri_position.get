@@ -101,8 +101,8 @@ Content-Type: application/vnd.cov+json
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "float",
 			"shape" : 

@@ -5,7 +5,6 @@
 			"type" : "Coverage",
 			"domain" : 
 			{
-				"domainType" : "VerticalProfile",
 				"type" : "Domain",
 				"axes" : 
 				{

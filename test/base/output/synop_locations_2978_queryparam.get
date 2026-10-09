@@ -100,8 +100,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "float",
 			"shape" : 

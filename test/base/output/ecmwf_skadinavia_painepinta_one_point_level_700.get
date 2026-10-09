@@ -119,9 +119,9 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
+				"z",
 				"y",
-				"z"
+				"x"
 			],
 			"dataType" : "float",
 			"shape" : 
