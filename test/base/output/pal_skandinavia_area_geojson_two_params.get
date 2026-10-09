@@ -1,0 +1,242 @@
+{
+	"bbox" : 
+	[
+		24.17909,
+		61.04415,
+		24.48103,
+		61.46053
+	],
+	"features" : 
+	[
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.22033,
+					61.32507
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1007,
+					1007
+				],
+				"temperature" : 
+				[
+					16.1,
+					16.7
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.24126,
+					61.46053
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1007,
+					1007
+				],
+				"temperature" : 
+				[
+					16.0,
+					16.6
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.48103,
+					61.17940
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1006,
+					1007
+				],
+				"temperature" : 
+				[
+					16.1,
+					16.6
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.19961,
+					61.18969
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1006,
+					1007
+				],
+				"temperature" : 
+				[
+					16.1,
+					16.6
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.17909,
+					61.05439
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1006,
+					1006
+				],
+				"temperature" : 
+				[
+					16.1,
+					16.5
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.45914,
+					61.04415
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1006,
+					1006
+				],
+				"temperature" : 
+				[
+					16.1,
+					16.5
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z",
+					"2008-08-05T10:00:00Z"
+				]
+			}
+		}
+	],
+	"parameters" : 
+	[
+		{
+			"id" : "Temperature",
+			"label" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
+				}
+			}
+		},
+		{
+			"id" : "Pressure",
+			"label" : "Pressure",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Pintapaine"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Pressure",
+				"label" : 
+				{
+					"fi" : "Pressure"
+				}
+			}
+		}
+	],
+	"type" : "FeatureCollection"
+}

@@ -50,6 +50,71 @@ std::size_t hash_value(const coordinate_xyz &coord)
   return ret;
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Collects one feature per point with all parameters as properties
+ *
+ * The output is formatted one parameter at a time, but all parameters of the
+ * same point and times belong to the same feature (BRAINSTORM-3083).
+ */
+// ----------------------------------------------------------------------
+
+class PointFeatures
+{
+ public:
+  // The JSON values are taken by value so that callers can move them in
+  void add(const coordinate_xyz &coord,
+           const std::vector<std::string> &times,
+           Json::Value geometry,
+           Json::Value time_values,
+           const std::string &parameter_name,
+           Json::Value parameter_values)
+  {
+    auto key = hash_value(coord);
+    for (const auto &t : times)
+      Fmi::hash_combine(key, Fmi::hash_value(t));
+
+    auto pos = itsIndexes.find(key);
+    if (pos == itsIndexes.end())
+    {
+      pos = itsIndexes.emplace(key, itsEntries.size()).first;
+      itsEntries.push_back(Entry{std::move(geometry), std::move(time_values), {}});
+    }
+    itsEntries[pos->second].parameters.emplace_back(parameter_name, std::move(parameter_values));
+  }
+
+  // Moves the collected features to the output, leaving this object empty
+  void moveTo(Json::Value &features)
+  {
+    for (auto &entry : itsEntries)
+    {
+      auto properties = Json::Value(Json::ValueType::objectValue);
+      for (auto &parameter : entry.parameters)
+        properties[parameter.first] = std::move(parameter.second);
+      properties["time"] = std::move(entry.time_values);
+
+      auto feature = Json::Value(Json::ValueType::objectValue);
+      feature["type"] = Json::Value("Feature");
+      feature["geometry"] = std::move(entry.geometry);
+      feature["properties"] = std::move(properties);
+      features[features.size()] = std::move(feature);
+    }
+    itsEntries.clear();
+    itsIndexes.clear();
+  }
+
+ private:
+  struct Entry
+  {
+    Json::Value geometry;
+    Json::Value time_values;
+    std::vector<std::pair<std::string, Json::Value>> parameters;
+  };
+
+  std::vector<Entry> itsEntries;
+  std::map<std::size_t, std::size_t> itsIndexes;  // point and times -> entry
+};
+
 double as_double(const TS::Value &value)
 {
   return value.as_double();
@@ -527,7 +592,10 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
     point_coordinates[1] = Json::Value(lonlat.lat, lat_precision);
     auto point_geometry = Json::Value(Json::ValueType::objectValue);
     point_geometry["type"] = Json::Value("Point");
-    point_geometry["coordinates"] = point_coordinates;
+    point_geometry["coordinates"] = std::move(point_coordinates);
+
+    PointFeatures point_features;
+    const coordinate_xyz point(lonlat.lon, lonlat.lat, std::nullopt);
 
     for (const auto &tmp : outputData)
     {
@@ -536,8 +604,6 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
       // iterate columns (parameters)
       for (unsigned int j = 0; j < outdata.size(); j++)
       {
-        auto feature = Json::Value(Json::ValueType::objectValue);
-        feature["type"] = Json::Value("Feature");
         auto parameter_name = query_parameters[j].name();
         const auto &parameter_precision = emd.getPrecision(parameter_name);
         boost::algorithm::to_lower(parameter_name);
@@ -548,25 +614,28 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
         TS::TimeSeriesPtr ts = std::get<TS::TimeSeriesPtr>(tsdata);
         auto parameter_values = Json::Value(Json::ValueType::arrayValue);
         auto time_values = Json::Value(Json::ValueType::arrayValue);
+        std::vector<std::string> times;
         for (unsigned int k = 0; k < ts->size(); k++)
         {
           const auto &timed_value = ts->at(k);
           add_value(timed_value, parameter_values, k, parameter_precision);
-          add_value(timed_value, time_values, k, parameter_precision);
-          time_values[k] = Json::Value(
-              Fmi::date_time::to_iso_extended_string(timed_value.time.utc_time()) + "Z");
+          times.push_back(Fmi::date_time::to_iso_extended_string(timed_value.time.utc_time()) +
+                          "Z");
+          time_values[k] = Json::Value(times.back());
         }
-        auto properties = Json::Value(Json::ValueType::objectValue);
         parameter_name = parse_parameter_name(query_parameters[j].originalName());
-        properties[parameter_name] = parameter_values;
-        properties["time"] = time_values;
-        feature["properties"] = properties;
-        feature["geometry"] = point_geometry;
-        features[features.size()] = feature;
+        point_features.add(point,
+                           times,
+                           point_geometry,
+                           std::move(time_values),
+                           parameter_name,
+                           std::move(parameter_values));
       }
     }
 
-    feature_collection["features"] = features;
+    point_features.moveTo(features);
+
+    feature_collection["features"] = std::move(features);
 
     return feature_collection;
   }
@@ -576,7 +645,7 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
   }
 }
 
-void add_position_features(Json::Value &features,
+void add_position_features(PointFeatures &point_features,
                            const TS::TimeSeriesPtr &ts_data,
                            const TS::TimeSeriesPtr &ts_lon,
                            const TS::TimeSeriesPtr &ts_lat,
@@ -590,7 +659,7 @@ void add_position_features(Json::Value &features,
   try
   {
     std::map<size_t, coordinate_xyz> coordinates;
-    std::map<size_t, std::vector<Json::Value>> timesteps_per_coordinate;
+    std::map<size_t, std::vector<std::string>> timesteps_per_coordinate;
     std::map<size_t, std::vector<Json::Value>> parameter_values_per_coordinate;
     for (unsigned int k = 0; k < ts_data->size(); k++)
     {
@@ -601,9 +670,8 @@ void add_position_features(Json::Value &features,
         level_value = to_int(ts_level->at(k));
       coordinate_xyz coord(lon_value, lat_value, level_value);
       auto key = hash_value(coord);
-      auto timestep =
-          Json::Value(Fmi::date_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
-      timesteps_per_coordinate[key].push_back(timestep);
+      timesteps_per_coordinate[key].push_back(
+          Fmi::date_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
       parameter_values_per_coordinate[key].push_back(
           UtilityFunctions::json_value(ts_data->at(k).value, parameter_precision));
       coordinates[key] = coord;
@@ -613,8 +681,6 @@ void add_position_features(Json::Value &features,
     {
       auto key = item.first;
       const auto &coord = item.second;
-      auto feature = Json::Value(Json::ValueType::objectValue);
-      feature["type"] = Json::Value("Feature");
       auto point_coordinates = Json::Value(Json::ValueType::arrayValue);
       point_coordinates[0] = Json::Value(coord.x, lon_precision);
       point_coordinates[1] = Json::Value(coord.y, lat_precision);
@@ -622,8 +688,7 @@ void add_position_features(Json::Value &features,
         point_coordinates[2] = Json::Value(*coord.z, level_precision);
       auto point_geometry = Json::Value(Json::ValueType::objectValue);
       point_geometry["type"] = Json::Value("Point");
-      point_geometry["coordinates"] = point_coordinates;
-      feature["geometry"] = point_geometry;
+      point_geometry["coordinates"] = std::move(point_coordinates);
 
       auto parameter_values = Json::Value(Json::ValueType::arrayValue);
       auto time_values = Json::Value(Json::ValueType::arrayValue);
@@ -632,15 +697,16 @@ void add_position_features(Json::Value &features,
       const auto &values = parameter_values_per_coordinate.at(key);
       for (unsigned int k = 0; k < timesteps.size(); k++)
       {
-        time_values[time_values.size()] = timesteps.at(k);
+        time_values[time_values.size()] = Json::Value(timesteps.at(k));
         parameter_values[parameter_values.size()] = values.at(k);
       }
 
-      auto properties = Json::Value(Json::ValueType::objectValue);
-      properties[parameter_name] = parameter_values;
-      properties["time"] = time_values;
-      feature["properties"] = properties;
-      features[features.size()] = feature;
+      point_features.add(coord,
+                         timesteps,
+                         std::move(point_geometry),
+                         std::move(time_values),
+                         parameter_name,
+                         std::move(parameter_values));
     }
   }
   catch (...)
@@ -689,6 +755,8 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
       longitude_index = query_parameters.size() - 2;
     }
 
+    PointFeatures point_features;
+
     for (const auto &output : outputData)
     {
       const auto &outdata = output.second;
@@ -715,7 +783,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
           ts_level = std::get<TS::TimeSeriesPtr>(tslevel);
         }
 
-        add_position_features(features,
+        add_position_features(point_features,
                               ts_data,
                               ts_lon,
                               ts_lat,
@@ -728,7 +796,8 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
       }
     }
 
-    feature_collection["features"] = features;
+    point_features.moveTo(features);
+    feature_collection["features"] = std::move(features);
 
     return feature_collection;
   }
@@ -892,7 +961,7 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
   }
 }
 
-void add_collection_level_features(Json::Value &features,
+void add_collection_level_features(PointFeatures &point_features,
                                    const std::vector<time_coord_value> &time_coord_values,
                                    const std::string &parameter_name,
                                    int parameter_precision,
@@ -915,9 +984,6 @@ void add_collection_level_features(Json::Value &features,
       coordinates[key] = coord;
     }
 
-    auto parameter_values = Json::Value(Json::ValueType::arrayValue);
-    auto time_values = Json::Value(Json::ValueType::arrayValue);
-
     for (const auto &item : coordinates)
     {
       auto key = item.first;
@@ -925,16 +991,18 @@ void add_collection_level_features(Json::Value &features,
       const auto &timeseries = timestamps_per_coordinate.at(key);
       const auto &values = values_per_coordinate.at(key);
 
+      // New arrays for each point, a point may have fewer times than the previous one
+      auto parameter_values = Json::Value(Json::ValueType::arrayValue);
+      auto time_values = Json::Value(Json::ValueType::arrayValue);
+
       for (unsigned int i = 0; i < timeseries.size(); i++)
       {
         time_values[i] = Json::Value(timeseries.at(i));
         Json::Value parameter_value;
         if (values.at(i))
           parameter_value = UtilityFunctions::json_value(*values.at(i), parameter_precision);
-        parameter_values[i] = parameter_value;
+        parameter_values[i] = std::move(parameter_value);
       }
-      auto feature = Json::Value(Json::ValueType::objectValue);
-      feature["type"] = Json::Value("Feature");
       auto point_coordinates = Json::Value(Json::ValueType::arrayValue);
       point_coordinates[0] = Json::Value(coord.x, lon_precision);
       point_coordinates[1] = Json::Value(coord.y, lat_precision);
@@ -942,13 +1010,14 @@ void add_collection_level_features(Json::Value &features,
         point_coordinates[2] = Json::Value(*coord.z, level_precision);
       auto point_geometry = Json::Value(Json::ValueType::objectValue);
       point_geometry["type"] = Json::Value("Point");
-      point_geometry["coordinates"] = point_coordinates;
-      feature["geometry"] = point_geometry;
-      auto properties = Json::Value(Json::ValueType::objectValue);
-      properties[parameter_name] = parameter_values;
-      properties["time"] = time_values;
-      feature["properties"] = properties;
-      features[features.size()] = feature;
+      point_geometry["coordinates"] = std::move(point_coordinates);
+
+      point_features.add(coord,
+                         timeseries,
+                         std::move(point_geometry),
+                         std::move(time_values),
+                         parameter_name,
+                         std::move(parameter_values));
     }
   }
   catch (...)
@@ -991,6 +1060,7 @@ Json::Value format_output_data_feature_collection(
         get_data_per_parameter(outputData, emd, levels, coordinate_filter, query_parameters, dpn);
 
     auto features = Json::Value(Json::ValueType::arrayValue);
+    PointFeatures point_features;
     auto output_name = dpn.cbegin();
     for (const auto &item : dpp)
     {
@@ -1013,7 +1083,7 @@ Json::Value format_output_data_feature_collection(
           bbox_ymax = std::max(bbox_ymax, coord.y);
         }
 
-        add_collection_level_features(features,
+        add_collection_level_features(point_features,
                                       time_coord_values,
                                       output_name->second,
                                       parameter_precision,
@@ -1025,6 +1095,8 @@ Json::Value format_output_data_feature_collection(
       output_name++;
     }
 
+    point_features.moveTo(features);
+
     if (features.size() > 0)
     {
       Json::Value bbox = Json::Value(Json::ValueType::arrayValue);
@@ -1034,7 +1106,7 @@ Json::Value format_output_data_feature_collection(
       bbox[3] = Json::Value(bbox_ymax, lat_precision);
       feature_collection["bbox"] = bbox;
     }
-    feature_collection["features"] = features;
+    feature_collection["features"] = std::move(features);
 
     return feature_collection;
   }
