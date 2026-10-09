@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.9
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
+- Refresh the locations of point querydata collections in the metadata update loop (BRAINSTORM-3514)
+- Match parameter_info setting names case-insensitively (BRAINSTORM-3352)
+- Locations of forecast collections report the data end time, not the request time (BRAINSTORM-3322)
+- Gridded collections list only the locations inside the data area (BRAINSTORM-3269)
+- MULTIPOINT position queries over a time range report domainType PointSeries (BRAINSTORM-3273)
+- Position queries accept within and within-units to limit the distance of the station used (BRAINSTORM-2883)
+- Observation station locations include the WIGOS Station Identifier (BRAINSTORM-2887)
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-1.fmi
 - Faster JSON output: values are moved instead of copied into the documents and serialized into a single buffer (BRAINSTORM-3483)
 
