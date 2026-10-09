@@ -2577,6 +2577,42 @@ Json::Value build_trajectory_domain(const std::vector<time_coord_value> &values,
   }
 }
 
+// Domain of a trajectory whose positions have levels of their own (LINESTRINGZ/ZM)
+Json::Value build_trajectory_domain(const std::vector<std::pair<double, time_coord_value>> &values,
+                                    const int &longitude_precision,
+                                    const int &latitude_precision)
+{
+  auto coverage_domain = Json::Value(Json::ValueType::objectValue);
+  coverage_domain["type"] = Json::Value("Domain");
+
+  auto domain_axes_composite = Json::Value(Json::ValueType::objectValue);
+  domain_axes_composite["dataType"] = Json::Value("tuple");
+  auto domain_axes_coordinates = Json::Value(Json::ValueType::arrayValue);
+  domain_axes_coordinates[0] = Json::Value("t");
+  domain_axes_coordinates[1] = Json::Value("x");
+  domain_axes_coordinates[2] = Json::Value("y");
+  domain_axes_coordinates[3] = Json::Value("z");
+  domain_axes_composite["coordinates"] = domain_axes_coordinates;
+
+  auto time_coord_values = Json::Value(Json::ValueType::arrayValue);
+  for (unsigned int i = 0; i < values.size(); i++)
+  {
+    const auto &value = values[i].second;
+    auto time_coord_value = Json::Value(Json::ValueType::arrayValue);
+    time_coord_value[0] = Json::Value(value.time);
+    time_coord_value[1] = Json::Value(value.lon, longitude_precision);
+    time_coord_value[2] = Json::Value(value.lat, latitude_precision);
+    time_coord_value[3] = Json::Value(static_cast<int>(values[i].first));
+    time_coord_values[i] = time_coord_value;
+  }
+  domain_axes_composite["values"] = time_coord_values;
+
+  auto domain_axes = Json::Value(Json::ValueType::objectValue);
+  domain_axes["composite"] = domain_axes_composite;
+  coverage_domain["axes"] = domain_axes;
+  return coverage_domain;
+}
+
 Json::Value build_trajectory_range(const std::vector<time_coord_value> &values,
                                    const int &parameter_precision)
 {
@@ -2614,7 +2650,8 @@ Json::Value build_trajectory_range(const std::vector<time_coord_value> &values,
 bool append_trajectory_coverages(Json::Value &coverages,
                                  const DataPerParameter &dpp,
                                  const ParameterNames &dpn,
-                                 const EDRMetaData &emd)
+                                 const EDRMetaData &emd,
+                                 const CoordinateFilter &coordinate_filter)
 {
   const auto &longitude_precision = emd.getPrecision("longitude");
   const auto &latitude_precision = emd.getPrecision("latitude");
@@ -2626,6 +2663,86 @@ bool append_trajectory_coverages(Json::Value &coverages,
   for (const auto &dpp_item : dpp)
     for (const auto &dpl_item : dpp_item.second)
       levels.insert(dpl_item.first);
+
+  std::set<double> nonempty_levels;
+  for (const auto &dpp_item : dpp)
+    for (const auto &dpl_item : dpp_item.second)
+      if (!dpl_item.second.empty())
+        nonempty_levels.insert(dpl_item.first);
+
+  // A trajectory whose positions have levels of their own (LINESTRINGZ/ZM) is split into
+  // one level per position. Output it as one trajectory with z in the composite axis.
+  // The requested coordinates give the order of the positions along the path.
+  if (nonempty_levels.size() > 1 &&
+      nonempty_levels.find(std::numeric_limits<double>::max()) == nonempty_levels.end() &&
+      !coordinate_filter.isEmpty())
+  {
+    using LevelValue = std::pair<double, time_coord_value>;
+    auto key = [&coordinate_filter](const LevelValue &v)
+    {
+      return std::make_tuple(coordinate_filter.position(v.second.lon, v.second.lat),
+                             v.second.time);
+    };
+
+    bool single_level_positions = true;
+    std::map<std::string, std::vector<LevelValue>> merged;  // parameter -> values
+    for (const auto &dpp_item : dpp)
+    {
+      auto &values = merged[dpp_item.first];
+      for (const auto &dpl_item : dpp_item.second)
+        for (const auto &tcv : dpl_item.second)
+        {
+          values.emplace_back(dpl_item.first, tcv);
+          if (!coordinate_filter.position(tcv.lon, tcv.lat))
+            single_level_positions = false;
+        }
+      std::stable_sort(values.begin(),
+                       values.end(),
+                       [&key](const LevelValue &a, const LevelValue &b) { return key(a) < key(b); });
+    }
+
+    // Each position must occur on one level only, and all parameters must have the same
+    // positions
+    single_level_positions = (single_level_positions && !merged.empty());
+    const std::vector<LevelValue> *domain_values = nullptr;
+    for (const auto &item : merged)
+    {
+      const auto &values = item.second;
+      for (std::size_t i = 1; i < values.size() && single_level_positions; i++)
+        single_level_positions = (key(values[i - 1]) != key(values[i]));
+      if (!domain_values)
+        domain_values = &values;
+      else if (single_level_positions)
+        single_level_positions = std::equal(
+            values.begin(),
+            values.end(),
+            domain_values->begin(),
+            domain_values->end(),
+            [&key](const LevelValue &a, const LevelValue &b)
+            { return key(a) == key(b) && a.first == b.first; });
+    }
+
+    if (single_level_positions && domain_values && !domain_values->empty())
+    {
+      auto ranges = Json::Value(Json::ValueType::objectValue);
+      for (const auto &item : merged)
+      {
+        std::vector<time_coord_value> values;
+        for (const auto &v : item.second)
+          values.push_back(v.second);
+        ranges[dpn.at(item.first)] =
+            build_trajectory_range(values, emd.getPrecision(item.first));
+      }
+
+      Json::Value coverage = Json::Value(Json::ValueType::objectValue);
+      coverage["type"] = Json::Value("Coverage");
+      coverage["domain"] =
+          build_trajectory_domain(*domain_values, longitude_precision, latitude_precision);
+      coverage["ranges"] = std::move(ranges);
+      coverages[coverages.size()] = std::move(coverage);
+      return true;
+    }
+  }
 
   for (double level : levels)
   {
@@ -2670,6 +2787,7 @@ bool append_trajectory_coverages(Json::Value &coverages,
 Json::Value format_coverage_collection_trajectory(
     const std::vector<std::pair<DataPerParameter, ParameterNames>> &trajectories,
     const EDRMetaData &emd,
+    const CoordinateFilter &coordinate_filter,
     const std::vector<Spine::Parameter> &query_parameters,
     const CustomDimReferences &custom_dim_refs,
     const std::string &language)
@@ -2689,8 +2807,11 @@ Json::Value format_coverage_collection_trajectory(
 
     for (const auto &trajectory : trajectories)
       if (!trajectory.first.empty())
-        levels_present = (append_trajectory_coverages(
-                              coverages, trajectory.first, trajectory.second, emd) ||
+        levels_present = (append_trajectory_coverages(coverages,
+                                                      trajectory.first,
+                                                      trajectory.second,
+                                                      emd,
+                                                      coordinate_filter) ||
                           levels_present);
 
     coverage_collection =
@@ -2977,7 +3098,7 @@ Json::Value format_output_data_coverage_collection(
   try
   {
     if (outputData.empty())
-      Json::Value();
+      return {};
 
     if (query_type == EDRQueryType::Trajectory)
     {
@@ -2996,7 +3117,7 @@ Json::Value format_output_data_coverage_collection(
         trajectories.emplace_back(std::move(location_dpp), std::move(location_dpn));
       }
       return format_coverage_collection_trajectory(
-          trajectories, emd, query_parameters, custom_dim_refs, language);
+          trajectories, emd, coordinate_filter, query_parameters, custom_dim_refs, language);
     }
 
     ParameterNames dpn;

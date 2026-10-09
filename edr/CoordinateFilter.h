@@ -2,6 +2,7 @@
 
 #include <macgyver/DateTime.h>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -19,6 +20,10 @@ class CoordinateFilter
   void add(double longitude, double latitude, double level, const Fmi::DateTime &timestep);
   bool accept(double longitude, double latitude, double level, const Fmi::DateTime &timestep) const;
   bool isEmpty() const;
+
+  // Position of the coordinate in the order the coordinates were added (e.g. the position
+  // along the requested trajectory), or nothing if the coordinate was not added
+  std::optional<std::size_t> position(double longitude, double latitude) const;
   std::string getLevels() const;
   std::string getDatetime() const;
 
@@ -32,6 +37,9 @@ class CoordinateFilter
   AllowedLevels itsAllowedLevels;
   AllowedTimesteps itsAllowedTimesteps;
   AllowedLevelsTimesteps itsAllowedLevelsTimesteps;
+  std::map<LonLat, std::size_t> itsPositions;
+
+  void addPosition(const LonLat &lonlat);
 };
 
 }  // namespace EDR

@@ -1,6 +1,7 @@
 #include "CoordinateFilter.h"
 #include <macgyver/DateTime.h>
 #include <macgyver/StringConversion.h>
+#include <cmath>
 
 namespace SmartMet
 {
@@ -57,18 +58,37 @@ void get_time_interval(const CoordinateFilter::AllowedLevelsTimesteps &timesteps
   }
 }
 
+// Coordinates are compared with a tolerance since the output coordinates may have been
+// stored with a lower precision (e.g. as floats) than the requested coordinates
+template <typename Map>
+typename Map::const_iterator find_coordinate(const Map &map, const CoordinateFilter::LonLat &lonlat)
+{
+  auto it = map.find(lonlat);
+  if (it != map.end())
+    return it;
+
+  const double tolerance = 1e-5;
+  for (it = map.begin(); it != map.end(); ++it)
+    if (std::abs(it->first.first - lonlat.first) < tolerance &&
+        std::abs(it->first.second - lonlat.second) < tolerance)
+      return it;
+  return map.end();
+}
+
 }  // namespace
 
 void CoordinateFilter::add(double longitude, double latitude, double level)
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedLevels[lonlat].insert(level);
+  addPosition(lonlat);
 }
 
 void CoordinateFilter::add(double longitude, double latitude, const Fmi::DateTime &timestep)
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedTimesteps[lonlat].insert(timestep);
+  addPosition(lonlat);
 }
 
 void CoordinateFilter::add(double longitude,
@@ -78,6 +98,21 @@ void CoordinateFilter::add(double longitude,
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedLevelsTimesteps[lonlat].insert(std::make_pair(level, timestep));
+  addPosition(lonlat);
+}
+
+void CoordinateFilter::addPosition(const LonLat &lonlat)
+{
+  // The first occurrence of a coordinate decides
+  itsPositions.insert(std::make_pair(lonlat, itsPositions.size()));
+}
+
+std::optional<std::size_t> CoordinateFilter::position(double longitude, double latitude) const
+{
+  auto it = find_coordinate(itsPositions, LonLat(longitude, latitude));
+  if (it == itsPositions.end())
+    return {};
+  return it->second;
 }
 
 bool CoordinateFilter::isEmpty() const
@@ -150,10 +185,11 @@ bool CoordinateFilter::accept(double longitude,
 
   if (!itsAllowedLevelsTimesteps.empty())
   {
-    if (itsAllowedLevelsTimesteps.find(lonlat) == itsAllowedLevelsTimesteps.end())
+    auto it = find_coordinate(itsAllowedLevelsTimesteps, lonlat);
+    if (it == itsAllowedLevelsTimesteps.end())
       return false;
 
-    const auto &level_time_pairs = itsAllowedLevelsTimesteps.at(lonlat);
+    const auto &level_time_pairs = it->second;
 
     for (const auto &item : level_time_pairs)
     {
@@ -163,19 +199,21 @@ bool CoordinateFilter::accept(double longitude,
   }
   else if (!itsAllowedLevels.empty())
   {
-    if (itsAllowedLevels.find(lonlat) == itsAllowedLevels.end())
+    auto it = find_coordinate(itsAllowedLevels, lonlat);
+    if (it == itsAllowedLevels.end())
       return false;
 
-    const auto &levels = itsAllowedLevels.at(lonlat);
+    const auto &levels = it->second;
 
     return (levels.find(level) != levels.end());
   }
   else if (!itsAllowedTimesteps.empty())
   {
-    if (itsAllowedTimesteps.find(lonlat) == itsAllowedTimesteps.end())
+    auto it = find_coordinate(itsAllowedTimesteps, lonlat);
+    if (it == itsAllowedTimesteps.end())
       return false;
 
-    const auto &timesteps = itsAllowedTimesteps.at(lonlat);
+    const auto &timesteps = it->second;
 
     return (timesteps.find(timestep) != timesteps.end());
   }
