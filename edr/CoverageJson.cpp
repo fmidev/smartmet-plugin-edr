@@ -3349,6 +3349,9 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       if (!loc.keyword.empty())
         detail_string.append(" from " + loc.keyword);
       properties["detail"] = Json::Value(detail_string);
+      // As in the locations example of the OGC API EDR specification
+      if (!loc.wsi.empty())
+        properties["WIGOS Station Identifier"] = Json::Value(loc.wsi);
       if (!edr_md->temporal_extent.time_periods.empty())
       {
         Fmi::DateTime start_time;

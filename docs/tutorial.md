@@ -250,7 +250,9 @@ origin time a title of the form `Origintime: ... Starttime: ... Endtime: ...`, a
 `instances` link only appears when a collection has more than one origin time.
 
 `/locations` renders a GeoJSON FeatureCollection with one feature per known location,
-including its temporal validity where available. For avi collections the special id
+including its temporal validity where available. Observation stations with a WIGOS
+Station Identifier have it in the property `WIGOS Station Identifier`, named as in the
+locations example of the OGC API EDR specification. For avi collections the special id
 `all` becomes an area query over the collection's bounding box.
 
 ---
