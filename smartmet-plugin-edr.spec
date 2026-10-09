@@ -79,7 +79,6 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
 #TestRequires: smartmet-library-spine >= 26.10.3
 #TestRequires: smartmet-library-spine-plugin-test >= 26.10.9
-#TestRequires: smartmet-engine-querydata >= 26.10.9
 #TestRequires: smartmet-library-newbase-devel >= 26.10.8
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -89,7 +88,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-avi >= 26.10.3
 #TestRequires: smartmet-engine-geonames >= 26.10.3
 #TestRequires: smartmet-engine-gis >= 26.9.26
-#TestRequires: smartmet-engine-querydata >= 26.10.3
+#TestRequires: smartmet-engine-querydata >= 26.10.9
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 26.10.3
 %endif
