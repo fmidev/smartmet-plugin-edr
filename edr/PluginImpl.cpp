@@ -1653,9 +1653,9 @@ void PluginImpl::updateParameterInfo()
           throw Fmi::Exception(BCP, unit_label_key + " setting is required");
         lconfig.lookupValue(pname_key + ".unit.symbol.value", pinfo.unit_symbol_value);
         lconfig.lookupValue(pname_key + ".unit.symbol.type", pinfo.unit_symbol_type);
-        if (pinfo.unit_symbol_value.empty() || pinfo.unit_symbol_type.empty())
-          throw Fmi::Exception(
-              BCP, pname_key + " unit.symbol value and unit.symbol.type settings are required");
+        lconfig.lookupValue(pname_key + ".unit.id", pinfo.unit_id);
+        if (pinfo.unit_symbol_value.empty())
+          throw Fmi::Exception(BCP, pname_key + " unit.symbol.value setting is required");
         // metocean; standard name
         lconfig.lookupValue(pname_key + ".standard_name", pinfo.metocean.standard_name);
         // metocean; level

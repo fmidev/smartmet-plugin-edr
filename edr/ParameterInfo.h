@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Json.h"
 #include "ProducerParameters.h"
 #include <macgyver/StringConversion.h>
 #include <spine/Location.h>
@@ -26,6 +27,7 @@ struct parameter_info_config
   std::map<std::string, std::string> observed_property_label;  // language code -> label
   std::string unit_symbol_value;
   std::string unit_symbol_type;
+  std::string unit_id;
   std::string label;
   metocean_config metocean;
 };
@@ -37,8 +39,12 @@ struct parameter_info
   std::string observed_property_label;
   std::string unit_symbol_value;
   std::string unit_symbol_type;
+  std::string unit_id;
   std::string label;
   metocean_config metocean;
+
+  // CoverageJSON/EDR unit object, the label is an i18n object unless the language is empty
+  Json::Value unit(const std::string &unit_label, const std::string &language) const;
 };
 
 class ParameterInfo : public std::map<std::string,

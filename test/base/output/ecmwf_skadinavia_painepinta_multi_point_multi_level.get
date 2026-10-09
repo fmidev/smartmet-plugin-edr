@@ -260,14 +260,15 @@
 			},
 			"unit" : 
 			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
 				"label" : 
 				{
 					"fi" : "Celsius"
 				},
 				"symbol" : 
 				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"type" : "http://www.opengis.net/def/uom/UCUM/",
+					"value" : "Cel"
 				}
 			}
 		}

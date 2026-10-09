@@ -709,21 +709,8 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
       lang_desc[lang] = Json::Value(desc);
       parameter["description"] = lang_desc;
     }
-    if ((! pinfo.unit_symbol_value.empty()) && (! pinfo.unit_symbol_type.empty()))
-    {
-      parameter["unit"] = Json::Value(Json::ValueType::objectValue);
-      if (language.empty())
-        parameter["unit"]["label"] = Json::Value(unit_label);
-      else
-      {
-        auto lang_label = Json::Value(Json::ValueType::objectValue);
-        lang_label[lang] = Json::Value(unit_label);
-        parameter["unit"]["label"] = lang_label;
-      }
-      parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
-      parameter["unit"]["symbol"]["value"] = Json::Value(pinfo.unit_symbol_value);
-      parameter["unit"]["symbol"]["type"] = Json::Value(pinfo.unit_symbol_type);
-    }
+    if (!pinfo.unit_symbol_value.empty())
+      parameter["unit"] = pinfo.unit(unit_label, language.empty() ? std::string() : lang);
     if (language.empty())
       parameter["label"] = Json::Value(label);
     else

@@ -370,25 +370,14 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       // QEngine returns parameter description in finnish and skandinavian
       // characters cause problems metoffice test interface uses description
       // field -> set parameter name to description field
-      auto lang_desc = Json::Value(Json::ValueType::objectValue);
-      lang_desc[language] = Json::Value(desc);
-      parameter["description"] = lang_desc;
-      if ((! pinfo.unit_symbol_value.empty()) && (! pinfo.unit_symbol_type.empty()))
-      {
-        parameter["unit"] = Json::Value(Json::ValueType::objectValue);
-        auto lang_label = Json::Value(Json::ValueType::objectValue);
-        lang_label[language] = Json::Value(unit_label);
-        parameter["unit"]["label"] = lang_label;
-        parameter["unit"]["symbol"] = Json::Value(Json::ValueType::objectValue);
-        parameter["unit"]["symbol"]["value"] = Json::Value(pinfo.unit_symbol_value);
-        parameter["unit"]["symbol"]["type"] = Json::Value(pinfo.unit_symbol_type);
-      }
+      // OGC API-EDR /req/edr/rc-parameters: labels and descriptions are plain strings
+      parameter["description"] = Json::Value(desc);
+      if (!pinfo.unit_symbol_value.empty())
+        parameter["unit"] = pinfo.unit(unit_label, "");
       parameter["label"] = Json::Value(label);
       parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
       parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
-      auto lang_label = Json::Value(Json::ValueType::objectValue);
-      lang_label[language] = Json::Value(observed_property_label);
-      parameter["observedProperty"]["label"] = lang_label;
+      parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
 
       if (! standard_name.empty())
       {

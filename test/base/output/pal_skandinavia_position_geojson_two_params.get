@@ -61,48 +61,39 @@
 	[
 		{
 			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
 			"label" : "Temperature",
 			"type" : "Parameter",
-			"description" : 
-			{
-				"fi" : "Ilman lämpötila"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Temperature",
-				"label" : 
-				{
-					"fi" : "Temperature"
-				}
+				"label" : "Temperature"
 			},
 			"unit" : 
 			{
-				"label" : 
-				{
-					"fi" : "Celsius"
-				},
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : "Celsius",
 				"symbol" : 
 				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"type" : "http://www.opengis.net/def/uom/UCUM/",
+					"value" : "Cel"
 				}
 			}
 		},
 		{
 			"id" : "Pressure",
+			"description" : "Pintapaine",
 			"label" : "Pressure",
 			"type" : "Parameter",
-			"description" : 
-			{
-				"fi" : "Pintapaine"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Pressure",
-				"label" : 
-				{
-					"fi" : "Pressure"
-				}
+				"label" : "Pressure"
+			},
+			"unit" : 
+			{
+				"label" : "hehtopascal",
+				"symbol" : "hPa"
 			}
 		}
 	],

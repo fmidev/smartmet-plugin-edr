@@ -57,30 +57,22 @@ Content-Type: application/geo+json
 	[
 		{
 			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
 			"label" : "Temperature",
 			"type" : "Parameter",
-			"description" : 
-			{
-				"fi" : "Ilman lämpötila"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Temperature",
-				"label" : 
-				{
-					"fi" : "Temperature"
-				}
+				"label" : "Temperature"
 			},
 			"unit" : 
 			{
-				"label" : 
-				{
-					"fi" : "Celsius"
-				},
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : "Celsius",
 				"symbol" : 
 				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"type" : "http://www.opengis.net/def/uom/UCUM/",
+					"value" : "Cel"
 				}
 			}
 		}

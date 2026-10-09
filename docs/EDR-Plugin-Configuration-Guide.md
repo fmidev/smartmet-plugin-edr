@@ -234,6 +234,7 @@ parameter_info:
 		};
 		unit:
 		{
+			id = "http://codes.wmo.int/common/unit/_degC";
 			label:
 			{
 				en = "Celsius";
@@ -241,14 +242,20 @@ parameter_info:
 			};
 			symbol:
 			{
-				value = "˚C";
-				type = "http://codes.wmo.int/common/unit/_degC";
+				value = "Cel";
+				type = "http://www.opengis.net/def/uom/UCUM/";
 			};
 		};
 	};
 	...
 };
 ```
+
+The unit settings follow the CoverageJSON unit object: `label` is required, as is `symbol.value`.
+`symbol.type` names the unit serialization scheme of the symbol, for example
+`http://www.opengis.net/def/uom/UCUM/` for UCUM (whose symbol for degrees Celsius is `Cel`); without
+it the symbol is output as a plain string such as `°C`. The optional `id` identifies the unit
+itself, for example with a WMO code registry URI.
 
 # URL, language
 

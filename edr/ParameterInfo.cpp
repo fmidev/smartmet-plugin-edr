@@ -7,6 +7,31 @@ namespace Plugin
 {
 namespace EDR
 {
+Json::Value parameter_info::unit(const std::string &unit_label, const std::string &language) const
+{
+  auto ret = Json::Value(Json::ValueType::objectValue);
+  if (!unit_id.empty())
+    ret["id"] = Json::Value(unit_id);
+  if (language.empty())
+    ret["label"] = Json::Value(unit_label);
+  else
+  {
+    auto lang_label = Json::Value(Json::ValueType::objectValue);
+    lang_label[language] = Json::Value(unit_label);
+    ret["label"] = lang_label;
+  }
+  // The symbol is a plain string unless the unit serialization scheme is known
+  if (unit_symbol_type.empty())
+    ret["symbol"] = Json::Value(unit_symbol_value);
+  else
+  {
+    ret["symbol"] = Json::Value(Json::ValueType::objectValue);
+    ret["symbol"]["value"] = Json::Value(unit_symbol_value);
+    ret["symbol"]["type"] = Json::Value(unit_symbol_type);
+  }
+  return ret;
+}
+
 parameter_info ParameterInfo::get_parameter_info(const std::string &pname,
                                                  const std::string &language) const
 {
@@ -32,6 +57,7 @@ parameter_info ParameterInfo::get_parameter_info(const std::string &pname,
       ret.unit_symbol_value = pinfo.unit_symbol_value;
     if (!pinfo.unit_symbol_type.empty())
       ret.unit_symbol_type = pinfo.unit_symbol_type;
+    ret.unit_id = pinfo.unit_id;
   }
 
   return ret;
