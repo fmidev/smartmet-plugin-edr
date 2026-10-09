@@ -9,6 +9,7 @@
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
 #include <engines/querydata/MetaQueryOptions.h>
+#include <grid-files/identification/GridDef.h>
 #include <newbase/NFmiFastQueryInfo.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
@@ -20,6 +21,7 @@
 #include <engines/observation/ObservableProperty.h>
 #endif
 #include <algorithm>
+#include <functional>
 
 namespace SmartMet
 {
@@ -979,6 +981,29 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
   }
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Select the locations inside the data area
+ *
+ * Keyword based locations (e.g. synop_fi) are shared by the collections, but
+ * a collection should list only the locations it has data for, matching the
+ * spatial extent it reports.
+ */
+// ----------------------------------------------------------------------
+
+SupportedLocationsPtr locations_inside(const SupportedLocationsPtr &locations,
+                                       const std::function<bool(double, double)> &inside)
+{
+  auto ret = std::make_shared<SupportedLocations>();
+  for (const auto &item : *locations)
+    if (inside(item.second.longitude, item.second.latitude))
+      ret->insert(item);
+
+  if (ret->size() == locations->size())
+    return locations;
+  return ret;
+}
+
 SupportedLocations get_supported_locations(const AviMetaData &amd,
                                            const AviCollections & /* aviCollections */)
 
@@ -1062,6 +1087,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       return epmd;
 
     std::map<std::string, Fmi::DateTime> latest_update_times;
+    std::map<std::string, SupportedLocationsPtr> producer_locations;
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
@@ -1125,7 +1151,28 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 
       auto producer_key = (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = spl.at(producer_key);
+      {
+        // Gridded data lists only the locations inside the grid. The area of a producer
+        // is the same for all instances, check it once.
+        auto pos = producer_locations.find(qmdproducer);
+        if (pos == producer_locations.end())
+        {
+          auto locations = spl.at(producer_key);
+          try
+          {
+            auto q = qEngine.get(qmd.producer);
+            if (q && q->isGrid())
+              locations = locations_inside(
+                  locations, [&q](double lon, double lat) { return q->isInside(lon, lat, 0); });
+          }
+          catch (...)
+          {
+            // Data may have been removed since the metadata was fetched
+          }
+          pos = producer_locations.emplace(qmdproducer, locations).first;
+        }
+        producer_emd.locations = pos->second;
+      }
       epmd[qmdproducer].push_back(producer_emd);
       // Update latest data update time
       if (latest_update_times.find(qmdproducer) == latest_update_times.end() ||
@@ -1216,6 +1263,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
   try
   {
     EDRProducerMetaData epmd;
+    std::map<std::string, SupportedLocationsPtr> producer_locations;
 
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
@@ -1324,7 +1372,30 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       auto producer_key =
           (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
-        producer_emd.locations = spl.at(producer_key);
+      {
+        // Grid data lists only the locations inside the grid. The geometry of a collection
+        // is the same for all instances, check it once.
+        auto pos = producer_locations.find(producerId);
+        if (pos == producer_locations.end())
+        {
+          auto inside_grid = [&gmd](double lon, double lat)
+          {
+            uint cols = 0;
+            uint rows = 0;
+            double grid_i = 0;
+            double grid_j = 0;
+            return (Identification::gridDef.getGridDimensionsByGeometryId(
+                        gmd.geometryId, cols, rows) &&
+                    Identification::gridDef.getGridPointByGeometryIdAndLatLonCoordinates(
+                        gmd.geometryId, lat, lon, grid_i, grid_j) &&
+                    grid_i >= 0 && grid_j >= 0 && grid_i <= cols - 1 && grid_j <= rows - 1);
+          };
+          pos = producer_locations
+                    .emplace(producerId, locations_inside(spl.at(producer_key), inside_grid))
+                    .first;
+        }
+        producer_emd.locations = pos->second;
+      }
 
       epmd[producerId].push_back(producer_emd);
       // Update latest data update time

@@ -1,0 +1,253 @@
+{
+	"features" : 
+	[
+		{
+			"id" : "-104796",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.6203,
+					60.9747
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is geoid from synop_fi",
+				"name" : "Lahti Sopenkorpi"
+			}
+		},
+		{
+			"id" : "100683",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.5492,
+					60.3037
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Kilpilahti"
+			}
+		},
+		{
+			"id" : "100971",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.9446,
+					60.1752
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Kaisaniemi"
+			}
+		},
+		{
+			"id" : "100996",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.9754,
+					60.1051
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Harmaja"
+			}
+		},
+		{
+			"id" : "101004",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.9613,
+					60.2031
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Kumpula"
+			}
+		},
+		{
+			"id" : "101007",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.9446,
+					60.1717
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Rautatientori"
+			}
+		},
+		{
+			"id" : "101022",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.5986,
+					59.9852
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Kalbådagrund"
+			}
+		},
+		{
+			"id" : "101023",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.6255,
+					60.2038
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Emäsalo"
+			}
+		},
+		{
+			"id" : "101028",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.6073,
+					60.3917
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Harabacka"
+			}
+		},
+		{
+			"id" : "101029",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.2227,
+					60.1245
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Eestiluoto"
+			}
+		},
+		{
+			"id" : "101152",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.6309,
+					60.9621
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Laune"
+			}
+		},
+		{
+			"id" : "103794",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.1931,
+					60.6278
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Hirvihaara"
+			}
+		},
+		{
+			"id" : "151028",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.1959,
+					60.2087
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2017-05-12T01:00:00Z/2017-05-12T03:00:00Z",
+				"detail" : "Id is fmisid from synop_fi",
+				"name" : "Vuosaari satama"
+			}
+		}
+	],
+	"type" : "FeatureCollection"
+}
