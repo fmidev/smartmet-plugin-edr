@@ -278,6 +278,19 @@ data such as observations.
 /collections/pal_skandinavia/area?coords=POLYGON((24 60,25 60,25 61,24 60))&parameter-name=Temperature&resolution-x=5&resolution-y=4
 ```
 
+## Items of aviation collections
+
+Aviation message collections (for example METAR and TAF) can offer their messages as items
+when `items` is enabled in the collection's data queries. `/collections/{collectionId}/items`
+returns a GeoJSON feature collection of the messages; each feature has the station or area
+geometry and the properties `datetime` (message time), `icao` and `message` (TAC). The
+items are selected by `datetime` (message time, by default the temporal extent of the
+collection) and `bbox` (`minlon,minlat,maxlon,maxlat`), and are paged with `limit` (default 10,
+at most 10000) and `offset`. The response contains `numberMatched`, `numberReturned` and
+`next`/`prev` links. A single message is available as `/collections/{collectionId}/items/{itemId}`,
+where the item id has the form `ICAO_messagetime_messageid`, for example
+`EFHK_20151121T115000Z_35927633`.
+
 ## POST requests
 
 Data queries may also be sent with HTTP POST using a form encoded body

@@ -145,6 +145,8 @@ rm -rf $RPM_BUILD_ROOT
   - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
     bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates
     are reprojected to it
+  - Items query for aviation collections: messages as GeoJSON features with datetime and
+    bbox filtering and paging, single messages by item id
   - /conformance declares EDR 1.2
 - The API documents are no longer cached per Host header
 

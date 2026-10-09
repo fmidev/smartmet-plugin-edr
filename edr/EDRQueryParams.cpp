@@ -417,6 +417,12 @@ EDRQueryParams::EDRQueryParams(const State& state,
 
     EDRMetaData emd = state.getProducerMetaData(itsEDRQuery.collection_id);
 
+    if (itsEDRQuery.query_id == EDRQueryId::SpecifiedCollectionItems)
+    {
+      parseItemsQuery(emd, config);
+      return;
+    }
+
     // Allow missing vertical extent when processing cube query for non grid source data
     // (e.g. observations, surface querydata and aviation messages; BRAINSTORM-2827)
 
@@ -695,6 +701,14 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
 
     if (itsEDRQuery.query_type == EDRQueryType::InvalidQueryType)
       return resource_parts.at(3);
+
+    if (itsEDRQuery.query_type == EDRQueryType::Items)
+    {
+      itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionItems;
+      if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
+        itsEDRQuery.item_id = resource_parts.at(4);
+      return {};
+    }
 
     if (itsEDRQuery.query_type == EDRQueryType::Locations)
     {
@@ -1656,6 +1670,39 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
     // The grid is queried as interpolated positions
     itsEDRQuery.grid = grid;
     itsEDRQuery.query_type = EDRQueryType::Position;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void EDRQueryParams::parseItemsQuery(const EDRMetaData& emd, const Config& config)
+{
+  try
+  {
+    // OGC API-EDR items: the messages of aviation collections are the items
+    const auto& queries = config.getSupportedDataQueries(itsEDRQuery.collection_id);
+    if (!emd.isAviProducer() || queries.find("items") == queries.end())
+      throw EDRNotFound("Collection '" + itsEDRQuery.collection_id + "' has no items");
+
+    itsEDRQuery.bbox = Spine::optional_string(req.getParameter("bbox"), "");
+    itsEDRQuery.datetime = Spine::optional_string(req.getParameter("datetime"), "");
+
+    auto crs = Spine::optional_string(req.getParameter("crs"), "");
+    if (!is_crs84(crs))
+      throw EDRException("Invalid crs: " + crs + ". Items are available in OGC:CRS84 only");
+
+    auto f = Spine::optional_string(req.getParameter("f"), GEO_JSON_FORMAT);
+    if (!boost::algorithm::iequals(f, GEO_JSON_FORMAT))
+      throw EDRException("Invalid output format '" + f + "', items are available as GeoJSON");
+
+    // OGC API Features: 10 items by default
+    parseLimitAndOffset();
+    if (!itsEDRQuery.limit)
+      itsEDRQuery.limit = 10;
+
+    mime_type = "application/geo+json";
   }
   catch (...)
   {

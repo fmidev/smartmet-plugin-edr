@@ -1,0 +1,1 @@
+GET /edr/collections/metar/items?bbox=24,60,26,61&datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z HTTP/1.0

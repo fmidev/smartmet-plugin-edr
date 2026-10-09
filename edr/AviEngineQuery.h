@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Json.h"
 #include "PluginImpl.h"
 #include <engines/avi/Engine.h>
 
@@ -29,6 +30,11 @@ class AviEngineQuery
                              TS::OutputData &outputData) const;
 
   bool isAviProducer(const std::string &producer) const;
+
+  // OGC API-EDR items query of an aviation collection: the messages as GeoJSON features
+  Json::Value processItemsQuery(const Config &config,
+                                const State &state,
+                                const EDRQuery &edr_query) const;
 
 #endif
 

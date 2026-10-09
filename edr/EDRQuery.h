@@ -46,6 +46,7 @@ enum class EDRQueryId
   SpecifiedCollectionAllInstances,
   SpecifiedCollectionSpecifiedInstance,
   SpecifiedCollectionLocations,
+  SpecifiedCollectionItems,
   DataQuery,
   APIQuery
 };
@@ -71,6 +72,9 @@ struct EDRQuery
   std::string collection_id;
   std::string instance_id;
   std::string location_id;
+  std::string item_id;
+  std::string bbox;      // items query filter
+  std::string datetime;  // items query filter
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;

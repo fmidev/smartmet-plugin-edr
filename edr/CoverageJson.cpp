@@ -308,6 +308,30 @@ Json::Value get_data_queries(const std::string &host,
     //      query_info_link["templated"] = Json::Value(true);
 
     std::string query_type_string;
+    if (query_type == EDRQueryType::Items)
+    {
+      // Items (aviation messages) are GeoJSON features in CRS84
+      query_info_link["title"] = Json::Value("Items query");
+      query_info_link["href"] =
+          Json::Value((host + "/collections/" + producer + instance_str + "/items"));
+      query_info_link["type"] = Json::Value("application/geo+json");
+      query_info_variables["title"] = Json::Value("Items query");
+      query_info_variables["description"] = Json::Value("Messages of the collection");
+      query_info_variables["query_type"] = Json::Value("items");
+      query_info_link["variables"] = query_info_variables;
+      query_info["link"] = query_info_link;
+      data_queries["items"] = query_info;
+      if (query_links)
+      {
+        auto query_link = Json::Value(Json::ValueType::objectValue);
+        query_link["href"] = query_info_link["href"];
+        query_link["rel"] = Json::Value("items");
+        query_link["type"] = Json::Value("application/geo+json");
+        query_link["title"] = Json::Value("Items query");
+        query_links->append(query_link);
+      }
+      continue;
+    }
     if (query_type == EDRQueryType::Position)
     {
       query_info_link["title"] = Json::Value("Position query");

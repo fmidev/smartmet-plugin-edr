@@ -72,6 +72,7 @@ class EDRQueryParams
   void parseDateTime(const State& state, const std::string& producer, const EDRMetaData& emd);
   void parseDateTimeList(const std::string& datetime);
   void parseLimitAndOffset();
+  void parseItemsQuery(const EDRMetaData& emd, const Config& config);
   void parseResolution(const EDRMetaData& emd, const Config& config);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,

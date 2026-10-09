@@ -553,6 +553,15 @@ std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const Stat
           state.getPlugin().itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
       table.set(0, 0, result);
     }
+#ifndef WITHOUT_AVI
+    else if (edr_query.query_id == EDRQueryId::SpecifiedCollectionItems)
+    {
+      AviEngineQuery aviEngineQuery(state.getPlugin());
+      auto result =
+          aviEngineQuery.processItemsQuery(state.getPlugin().itsConfig, state, edr_query);
+      table.set(0, 0, result.toStyledString(state.pretty()));
+    }
+#endif
     else
     {
       auto result = processMetaDataQuery(state, edr_query);
@@ -1152,6 +1161,10 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
 
     // The output format may have been selected with the Accept header
     Fmi::hash_combine(hash, Fmi::hash_value(masterquery.output_format));
+
+    // Items (aviation messages) change continuously, they are not cached
+    if (masterquery.edrQuery().query_id == EDRQueryId::SpecifiedCollectionItems)
+      return Fmi::bad_hash;
 
     if (masterquery.isEDRMetaDataQuery())
     {

@@ -1,0 +1,110 @@
+Status: 200
+Content-Type: application/geo+json
+
+{
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=3&datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=3&offset=3&datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z",
+			"rel" : "next",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"features" : 
+	[
+		{
+			"id" : "EFTU_20151121T110000Z_35927633",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFTU_20151121T110000Z_35927633",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					22.2792,
+					60.5157
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:00:00Z",
+				"icao" : "EFTU",
+				"message" : "SPECI EFTU 211100Z AUTO 31010KT 9999 -RASN BKN005/// OVC014/// 01/01 Q0986 R08/29//95="
+			}
+		},
+		{
+			"id" : "EFJY_20151121T110500Z_35929472",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFJY_20151121T110500Z_35929472",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.6753,
+					62.4023
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:05:00Z",
+				"icao" : "EFJY",
+				"message" : "SPECI EFJY 211105Z AUTO 05005KT 3200 -SN OVC006 00/00 Q0983="
+			}
+		},
+		{
+			"id" : "EFTU_20151121T110500Z_35929487",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFTU_20151121T110500Z_35929487",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					22.2792,
+					60.5157
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:05:00Z",
+				"icao" : "EFTU",
+				"message" : "SPECI EFTU 211105Z AUTO 31010KT 9999 -RASN BKN005/// OVC007/// 01/01 Q0986 R08/29//95="
+			}
+		}
+	],
+	"numberMatched" : 70,
+	"numberReturned" : 3,
+	"type" : "FeatureCollection"
+}

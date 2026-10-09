@@ -1,0 +1,112 @@
+{
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=3&offset=3&datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=3&offset=6&datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z",
+			"rel" : "next",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=3&datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z",
+			"rel" : "prev",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"features" : 
+	[
+		{
+			"id" : "EFPO_20151121T111000Z_35930936",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFPO_20151121T111000Z_35930936",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					21.7879,
+					61.4672
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:10:00Z",
+				"icao" : "EFPO",
+				"message" : "SPECI EFPO 211110Z AUTO 30005KT 9999 BKN011/// OVC023/// 01/M01 Q0985="
+			}
+		},
+		{
+			"id" : "EFVA_20151121T111000Z_35930937",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFVA_20151121T111000Z_35930937",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					21.7546,
+					63.0586
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:10:00Z",
+				"icao" : "EFVA",
+				"message" : "SPECI EFVA 211110Z AUTO 03008KT 2200 -SN BKN006/// OVC011/// M00/M00 Q0986 R16/690195="
+			}
+		},
+		{
+			"id" : "EFPO_20151121T111500Z_35931724",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFPO_20151121T111500Z_35931724",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					21.7879,
+					61.4672
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:15:00Z",
+				"icao" : "EFPO",
+				"message" : "SPECI EFPO 211115Z AUTO 31005KT 9999 BKN011/// BKN023/// OVC026/// 01/M01 Q0985="
+			}
+		}
+	],
+	"numberMatched" : 70,
+	"numberReturned" : 3,
+	"type" : "FeatureCollection"
+}
