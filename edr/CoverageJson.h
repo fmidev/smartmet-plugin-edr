@@ -3,6 +3,7 @@
 #include "EDRQuery.h"
 // #include <json/json.h>
 #include "Json.h"
+#include "Links.h"
 #include <spine/Parameter.h>
 #include <timeseries/TimeSeriesInclude.h>
 
@@ -44,7 +45,8 @@ Json::Value formatCorridorOutputData(const TS::OutputData &outputData,
 Json::Value parseEDRMetaData(const EDRQuery &edr_query,
                              const EngineMetaData &emd,
                              const ProducerLicenses &licenses,
-                             const CustomDimReferences &custom_dim_refs);
+                             const CustomDimReferences &custom_dim_refs,
+                             Links *response_links = nullptr);
 Json::Value reportError(int code, const std::string &description);
 
 }  // namespace CoverageJson

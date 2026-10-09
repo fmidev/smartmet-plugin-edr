@@ -3,6 +3,7 @@
 #include "EDRException.h"
 #include "UtilityFunctions.h"
 #include <macgyver/TimeParser.h>
+#include <spine/HTTP.h>
 #include <tuple>
 
 using namespace boost::algorithm;
@@ -470,7 +471,8 @@ Json::Value item_feature(const AviItem &item,
 
 Json::Value AviEngineQuery::processItemsQuery(const Config &config,
                                               const State &state,
-                                              const EDRQuery &edr_query) const
+                                              const EDRQuery &edr_query,
+                                              Links *response_links) const
 {
   try
   {
@@ -617,11 +619,11 @@ Json::Value AviEngineQuery::processItemsQuery(const Config &config,
       if (items.empty())
         throw EDRNotFound("Item '" + edr_query.item_id + "' not found");
       auto feature = item_feature(items.front(), emd, collection_url);
-      auto link = Json::Value(Json::ValueType::objectValue);
-      link["href"] = Json::Value(collection_url);
-      link["rel"] = Json::Value("collection");
-      link["type"] = Json::Value("application/json");
-      feature["links"].append(link);
+      Links links{{collection_url + "/items/" + items.front().id, "self", "application/geo+json"},
+                  {collection_url, "collection", "application/json"}};
+      feature["links"] = links_json(links);
+      if (response_links)
+        *response_links = links;
       return feature;
     }
 
@@ -640,36 +642,30 @@ Json::Value AviEngineQuery::processItemsQuery(const Config &config,
       if (offset > 0)
         url += "&offset=" + Fmi::to_string(offset);
       if (!edr_query.bbox.empty())
-        url += "&bbox=" + edr_query.bbox;
+        url += "&bbox=" + Spine::HTTP::urlencode(edr_query.bbox);
       if (!edr_query.datetime.empty())
-        url += "&datetime=" + edr_query.datetime;
+        url += "&datetime=" + Spine::HTTP::urlencode(edr_query.datetime);
       return url;
     };
-    auto make_link = [](const std::string &url, const std::string &rel, const std::string &type)
-    {
-      auto link = Json::Value(Json::ValueType::objectValue);
-      link["href"] = Json::Value(url);
-      link["rel"] = Json::Value(rel);
-      link["type"] = Json::Value(type);
-      return link;
-    };
 
-    auto links = Json::Value(Json::ValueType::arrayValue);
-    links.append(make_link(href(first), "self", "application/geo+json"));
+    Links links;
+    links.push_back({href(first), "self", "application/geo+json"});
     if (first + count < matched)
-      links.append(make_link(href(first + count), "next", "application/geo+json"));
+      links.push_back({href(first + count), "next", "application/geo+json"});
     if (first > 0)
-      links.append(make_link(href(first > *edr_query.limit ? first - *edr_query.limit : 0),
-                             "prev",
-                             "application/geo+json"));
-    links.append(make_link(collection_url, "collection", "application/json"));
+      links.push_back({href(first > *edr_query.limit ? first - *edr_query.limit : 0),
+                       "prev",
+                       "application/geo+json"});
+    links.push_back({collection_url, "collection", "application/json"});
+    if (response_links)
+      *response_links = links;
 
     auto result = Json::Value(Json::ValueType::objectValue);
     result["type"] = Json::Value("FeatureCollection");
     result["features"] = features;
     result["numberMatched"] = Json::Value(matched);
     result["numberReturned"] = Json::Value(count);
-    result["links"] = links;
+    result["links"] = links_json(links);
     return result;
   }
   catch (...)

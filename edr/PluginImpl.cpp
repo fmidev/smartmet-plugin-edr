@@ -513,6 +513,15 @@ void PluginImpl::query(const State& state,
     // If obj is not nullptr it is from cache
     obj = qph.processQuery(state, data, q, queryStreamer, product_hash);
 
+    // OGC API-EDR recommendation 11: the links of the response also as Link headers. Data
+    // responses link to the request in each output format and to the collection, paged
+    // listings to the other pages. CoverageJSON, TAC and IWXXM have no links in the body.
+    const Links links = (q.isEDRMetaDataQuery()
+                             ? q.responseLinks
+                             : QueryProcessingHub::dataQueryLinks(q.edrQuery(), q.output_format));
+    if (!links.empty())
+      response.setHeader("Link", link_header(links));
+
     if (obj)
     {
       product_hash = Fmi::hash_value(*obj);

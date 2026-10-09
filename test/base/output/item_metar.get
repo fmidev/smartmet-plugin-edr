@@ -1,5 +1,6 @@
 Status: 200
 Content-Type: application/geo+json
+Link: <http://smartmet.fmi.fi/edr/collections/metar/items/EFTU_20151121T110000Z_35927633>; rel="self"; type="application/geo+json", <http://smartmet.fmi.fi/edr/collections/metar>; rel="collection"; type="application/json"
 
 {
 	"id" : "EFTU_20151121T110000Z_35927633",

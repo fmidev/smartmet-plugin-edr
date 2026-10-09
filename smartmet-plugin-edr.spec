@@ -144,6 +144,7 @@ rm -rf $RPM_BUILD_ROOT
     the path and return Trajectory or Section coverages
   - resolution-z interpolates cube and corridor data vertically (querydata pressure and
     height levels)
+  - Link headers for data responses, the paged locations listing and items
   - Data queries may be sent with form encoded POST
   - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
     bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Json.h"
+#include "Links.h"
 #include "PluginImpl.h"
 #include <engines/avi/Engine.h>
 
@@ -34,7 +35,8 @@ class AviEngineQuery
   // OGC API-EDR items query of an aviation collection: the messages as GeoJSON features
   Json::Value processItemsQuery(const Config &config,
                                 const State &state,
-                                const EDRQuery &edr_query) const;
+                                const EDRQuery &edr_query,
+                                Links *response_links = nullptr) const;
 
 #endif
 

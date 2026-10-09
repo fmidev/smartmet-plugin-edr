@@ -2,7 +2,7 @@
 	"links" : 
 	[
 		{
-			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=10&bbox=24,60,26,61&datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z",
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=10&bbox=24%2C60%2C26%2C61&datetime=2015-11-21T11%3A00%3A00Z%2F2015-11-21T12%3A00%3A00Z",
 			"rel" : "self",
 			"type" : "application/geo+json"
 		},

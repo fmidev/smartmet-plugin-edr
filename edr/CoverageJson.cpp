@@ -3486,7 +3486,10 @@ Json::Value format_output_data_vertical_profile(
 }
 
 // Adds numberMatched, numberReturned and the paging links of the locations listing
-void page_locations(const EDRQuery &edr_query, Json::Value &features, Json::Value &result)
+void page_locations(const EDRQuery &edr_query,
+                    Json::Value &features,
+                    Json::Value &result,
+                    Links *response_links)
 {
   const auto matched = features.size();
   const auto first = std::min(edr_query.offset, matched);
@@ -3517,33 +3520,29 @@ void page_locations(const EDRQuery &edr_query, Json::Value &features, Json::Valu
       ret += sep + "offset=" + Fmi::to_string(offset);
     return ret;
   };
-  auto make_link = [](const std::string &url, const std::string &rel, const std::string &type)
-  {
-    auto link = Json::Value(Json::ValueType::objectValue);
-    link["href"] = Json::Value(url);
-    link["rel"] = Json::Value(rel);
-    link["type"] = Json::Value(type);
-    return link;
-  };
 
-  auto links = Json::Value(Json::ValueType::arrayValue);
-  links.append(make_link(href(first), "self", "application/geo+json"));
+  Links links;
+  links.push_back({href(first), "self", "application/geo+json"});
   if (edr_query.limit && first + count < matched)
-    links.append(make_link(href(first + count), "next", "application/geo+json"));
+    links.push_back({href(first + count), "next", "application/geo+json"});
   if (edr_query.limit && first > 0)
-    links.append(make_link(href(first > *edr_query.limit ? first - *edr_query.limit : 0),
-                           "prev",
-                           "application/geo+json"));
-  links.append(make_link(edr_query.host + "/collections/" + edr_query.collection_id,
-                         "collection",
-                         "application/json"));
+    links.push_back({href(first > *edr_query.limit ? first - *edr_query.limit : 0),
+                     "prev",
+                     "application/geo+json"});
+  links.push_back(
+      {edr_query.host + "/collections/" + edr_query.collection_id, "collection", "application/json"});
 
-  result["links"] = links;
+  result["links"] = links_json(links);
   result["numberMatched"] = Json::Value(matched);
   result["numberReturned"] = Json::Value(count);
+
+  if (response_links)
+    *response_links = links;
 }
 
-Json::Value parse_locations(const EDRQuery &edr_query, const EngineMetaData &emd)
+Json::Value parse_locations(const EDRQuery &edr_query,
+                            const EngineMetaData &emd,
+                            Links *response_links)
 {
   const std::string &producer = edr_query.collection_id;
 
@@ -3704,7 +3703,7 @@ Json::Value parse_locations(const EDRQuery &edr_query, const EngineMetaData &emd
       features[features.size()] = all;
     }
 
-    page_locations(edr_query, features, result);
+    page_locations(edr_query, features, result, response_links);
     result["features"] = features;
 
     return result;
@@ -4169,14 +4168,15 @@ Json::Value reportError(int code, const std::string &description)
 Json::Value parseEDRMetaData(const EDRQuery &edr_query,
                              const EngineMetaData &emd,
                              const ProducerLicenses &licenses,
-                             const CustomDimReferences &custom_dim_refs)
+                             const CustomDimReferences &custom_dim_refs,
+                             Links *response_links)
 {
   try
   {
     const std::string &producer = edr_query.collection_id;
 
     if (edr_query.query_id == EDRQueryId::SpecifiedCollectionLocations)
-      return parse_locations(edr_query, emd);
+      return parse_locations(edr_query, emd, response_links);
 
     Json::Value result;
 

@@ -316,6 +316,15 @@ where the item id has the form `ICAO_messagetime_messageid`, for example
 Data queries may also be sent with HTTP POST using a form encoded body
 (`Content-Type: application/x-www-form-urlencoded`) containing the same query parameters.
 
+## Link headers
+
+Data query responses carry an HTTP `Link` header (RFC 8288) with the same request in each
+output format of the collection (`self` and `alternate`) and the `collection`. This is the
+only way to get these links for formats without links in the body, such as CoverageJSON, TAC
+and IWXXM. The paged locations listing and the items responses list `self`, `next`, `prev`
+and `collection` links both in the body and in the `Link` header. Collection metadata
+responses have their (many) links in the body only.
+
 ## Errors
 
 Errors are reported with an `application/problem+json` body containing `title`, `status` and

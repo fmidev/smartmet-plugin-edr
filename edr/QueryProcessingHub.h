@@ -26,6 +26,10 @@ namespace EDR
 class QueryProcessingHub
 {
  public:
+  // Links of a data query response: the request itself, the request in the other output
+  // formats and the collection
+  static Links dataQueryLinks(const EDRQuery& edr_query, const std::string& output_format);
+
   QueryProcessingHub(const PluginImpl& thePlugin);
 
   std::shared_ptr<std::string> processQuery(const State& state,
@@ -47,9 +51,11 @@ class QueryProcessingHub
   const std::string& getZipFileName() const { return zipFileName; }
 
  private:
-  static Json::Value processMetaDataQuery(const State& state, const EDRQuery& edr_query);
+  static Json::Value processMetaDataQuery(const State& state,
+                                          const EDRQuery& edr_query,
+                                          Links* response_links = nullptr);
   static std::shared_ptr<std::string> processMetaDataQuery(const State& state,
-                                                           const Query& masterquery,
+                                                           Query& masterquery,
                                                            Spine::Table& table);
 
   static void setPrecisions(EDRMetaData& emd, const CommonQuery& masterquery);

@@ -1,2 +1,2 @@
 GET /edr/collections/synop/locations?limit=3&offset=2 HTTP/1.0
-X-Test-Headers: Content-Type
+X-Test-Headers: Content-Type,Link

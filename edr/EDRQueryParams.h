@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "CoordinateFilter.h"
 #include "EDRQuery.h"
+#include "Links.h"
 #include "State.h"
 #include <macgyver/DateTime.h>
 #include <spine/HTTP.h>
@@ -30,6 +31,9 @@ class EDRQueryParams
   // Times listed in the datetime parameter (a list or a repeating interval), the output
   // is limited to these times. Empty if the datetime is a single time or an interval.
   const std::set<Fmi::DateTime>& dateTimeList() const { return itsDateTimeList; }
+
+  // Links of the response for the Link header, collected while processing the request
+  Links responseLinks;
 
   std::vector<std::string> icaos;
   std::string requestWKT;
