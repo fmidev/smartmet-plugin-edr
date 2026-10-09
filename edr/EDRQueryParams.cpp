@@ -12,8 +12,11 @@
 #include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
+#include <fmt/format.h>
+#include <ogr_geometry.h>
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <string>
 
 namespace SmartMet
@@ -508,6 +511,9 @@ EDRQueryParams::EDRQueryParams(const State& state,
              (itsEDRQuery.query_type == EDRQueryType::Trajectory) ||
              (itsEDRQuery.query_type == EDRQueryType::Corridor))
       throw EDRException("Missing coords option!");
+
+    // resolution-x and resolution-y for area and cube queries
+    parseResolution(emd, config);
 
     // EDR datetime
     parseDateTime(state, itsEDRQuery.collection_id, emd);
@@ -1505,6 +1511,123 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
 
     req.addParameter("starttime", datetime);
     req.addParameter("endtime", datetime);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& config)
+{
+  try
+  {
+    auto opt_x = req.getParameter("resolution-x");
+    auto opt_y = req.getParameter("resolution-y");
+    if (!opt_x && !opt_y)
+      return;
+
+    if (itsEDRQuery.query_type != EDRQueryType::Area &&
+        itsEDRQuery.query_type != EDRQueryType::Cube)
+      throw EDRException(
+          "Query parameters 'resolution-x' and 'resolution-y' are supported only for area and "
+          "cube queries");
+
+    // OGC API-EDR: the number of positions along the axis including the minimum and the
+    // maximum, 0 means the native resolution of the data
+    const std::size_t max_positions = 1000;
+    auto parse = [max_positions](const std::optional<std::string>& value, const char* name)
+    {
+      if (!value)
+        throw EDRException(std::string("Query parameter '") + name +
+                           "' is required with resolution-x/resolution-y");
+      try
+      {
+        std::size_t pos = 0;
+        auto n = std::stol(*value, &pos);
+        if (pos == value->size() && (n == 0 || (n >= 2 && n <= long(max_positions))))
+          return static_cast<std::size_t>(n);
+      }
+      catch (...)
+      {
+      }
+      throw EDRException(std::string("Invalid '") + name + "' value '" + *value +
+                         "', valid values are 0 for the native resolution and 2-" +
+                         Fmi::to_string(max_positions) +
+                         " for the number of positions including the minimum and maximum");
+    };
+
+    auto nx = parse(opt_x, "resolution-x");
+    auto ny = parse(opt_y, "resolution-y");
+
+    if (nx == 0 && ny == 0)
+      return;
+    if (nx == 0 || ny == 0)
+      throw EDRException(
+          "Query parameters 'resolution-x' and 'resolution-y' must both be 0 (native "
+          "resolution) or both positive");
+
+    // Interpolation to a regular grid is possible for gridded data only
+    bool point_data = (emd.isObsProducer() || emd.isAviProducer());
+    if (emd.locations)
+      for (const auto& item : *emd.locations)
+        point_data = (point_data || item.second.type == "qdstation");
+    if (point_data)
+      throw EDRException("Collection '" + itsEDRQuery.collection_id +
+                         "' contains point data, resolution-x and resolution-y can be used "
+                         "with gridded data only");
+
+    const auto& limits = config.requestLimits();
+    const std::size_t max_points = (limits.maxlocations > 0 ? limits.maxlocations : 250000);
+    if (nx * ny > max_points)
+      throw EDRTooLarge("Too many grid positions " + Fmi::to_string(nx * ny) +
+                        " requested with resolution-x and resolution-y, the maximum is " +
+                        Fmi::to_string(max_points));
+
+    auto wkt = Spine::optional_string(req.getParameter("wkt"), "");
+    OGRGeometry* geom = nullptr;
+    if (OGRGeometryFactory::createFromWkt(wkt.c_str(), nullptr, &geom) != OGRERR_NONE || !geom)
+      throw EDRException("Failed to parse the area of the query: " + wkt);
+    std::unique_ptr<OGRGeometry> geometry(geom);
+
+    OGREnvelope envelope;
+    geometry->getEnvelope(&envelope);
+
+    EDRGrid grid;
+    grid.nx = nx;
+    grid.ny = ny;
+    grid.x0 = envelope.MinX;
+    grid.x1 = envelope.MaxX;
+    grid.y0 = envelope.MinY;
+    grid.y1 = envelope.MaxY;
+
+    // Positions inside the area (cube positions are always inside the bounding box)
+    std::string points;
+    for (std::size_t j = 0; j < ny; j++)
+      for (std::size_t i = 0; i < nx; i++)
+      {
+        const auto x = grid.x(i);
+        const auto y = grid.y(j);
+        if (itsEDRQuery.query_type == EDRQueryType::Area)
+        {
+          OGRPoint point(x, y);
+          if (!geometry->Intersects(&point))
+            continue;
+        }
+        if (!points.empty())
+          points += ',';
+        points += fmt::format("({} {})", x, y);
+      }
+
+    if (points.empty())
+      throw EDRException("No positions of the requested grid are inside the area");
+
+    req.removeParameter("wkt");
+    req.addParameter("wkt", "MULTIPOINT(" + points + ")");
+
+    // The grid is queried as interpolated positions
+    itsEDRQuery.grid = grid;
+    itsEDRQuery.query_type = EDRQueryType::Position;
   }
   catch (...)
   {

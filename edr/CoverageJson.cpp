@@ -3682,6 +3682,162 @@ Json::Value parse_locations(const EDRQuery &edr_query, const EngineMetaData &emd
 
 }  // namespace
 
+Json::Value formatGridOutputData(const TS::OutputData &outputData,
+                                 const EDRMetaData &emd,
+                                 const EDRGrid &grid,
+                                 const std::set<int> &levels,
+                                 const std::vector<Spine::Parameter> &query_parameters,
+                                 const CustomDimReferences &custom_dim_refs,
+                                 const std::string &language)
+{
+  try
+  {
+    const CoordinateFilter no_filter;
+    ParameterNames dpn;
+    auto dpp = get_data_per_parameter(
+        outputData, levels, no_filter, query_parameters, emd.isGridProducer(), dpn);
+    if (dpp.empty())
+      return {};
+
+    // The times and levels of all parameters
+    std::set<std::string> time_set;
+    std::set<double> level_set;
+    for (const auto &dpp_item : dpp)
+      for (const auto &dpl_item : dpp_item.second)
+      {
+        if (dpl_item.first != std::numeric_limits<double>::max())
+          level_set.insert(dpl_item.first);
+        for (const auto &tcv : dpl_item.second)
+          time_set.insert(tcv.time);
+      }
+    const std::vector<std::string> times(time_set.begin(), time_set.end());
+    const std::vector<double> zs(level_set.begin(), level_set.end());
+    const bool has_z = !zs.empty();
+    const std::size_t nt = times.size();
+    const std::size_t nz = (has_z ? zs.size() : 1);
+    const std::size_t nxy = grid.nx * grid.ny;
+
+    // Use the collection prologue for the parameters and the referencing
+    auto prologue = add_prologue_coverage_collection(
+        emd, query_parameters, has_z, "Grid", custom_dim_refs, language);
+
+    auto domain = Json::Value(Json::ValueType::objectValue);
+    domain["type"] = Json::Value("Domain");
+    domain["domainType"] = Json::Value("Grid");
+    auto axes = Json::Value(Json::ValueType::objectValue);
+    const auto longitude_precision = emd.getPrecision("longitude");
+    const auto latitude_precision = emd.getPrecision("latitude");
+    axes["x"] = Json::Value(Json::ValueType::objectValue);
+    axes["x"]["start"] = Json::Value(grid.x0, longitude_precision);
+    axes["x"]["stop"] = Json::Value(grid.x1, longitude_precision);
+    axes["x"]["num"] = Json::Value(grid.nx);
+    axes["y"] = Json::Value(Json::ValueType::objectValue);
+    axes["y"]["start"] = Json::Value(grid.y0, latitude_precision);
+    axes["y"]["stop"] = Json::Value(grid.y1, latitude_precision);
+    axes["y"]["num"] = Json::Value(grid.ny);
+    axes["t"] = Json::Value(Json::ValueType::objectValue);
+    axes["t"]["values"] = Json::Value(Json::ValueType::arrayValue);
+    for (const auto &t : times)
+      axes["t"]["values"].append(Json::Value(t));
+    if (has_z)
+    {
+      axes["z"] = Json::Value(Json::ValueType::objectValue);
+      axes["z"]["values"] = Json::Value(Json::ValueType::arrayValue);
+      for (auto z : zs)
+        axes["z"]["values"].append(Json::Value(z, 0));
+    }
+    domain["axes"] = axes;
+    domain["referencing"] = prologue["referencing"];
+
+    // Grid index of a position, the positions are the requested grid positions
+    const double dx = (grid.x1 - grid.x0) / double(grid.nx - 1);
+    const double dy = (grid.y1 - grid.y0) / double(grid.ny - 1);
+    auto grid_index = [&](double lon, double lat) -> std::optional<std::size_t>
+    {
+      const double fi = (dx != 0 ? (lon - grid.x0) / dx : 0);
+      const double fj = (dy != 0 ? (lat - grid.y0) / dy : 0);
+      const auto i = std::lround(fi);
+      const auto j = std::lround(fj);
+      if (i < 0 || j < 0 || i >= long(grid.nx) || j >= long(grid.ny) ||
+          std::abs(fi - double(i)) > 0.01 || std::abs(fj - double(j)) > 0.01)
+        return {};
+      return std::size_t(j) * grid.nx + std::size_t(i);
+    };
+
+    auto ranges = Json::Value(Json::ValueType::objectValue);
+    for (const auto &dpp_item : dpp)
+    {
+      const auto &parameter_name = dpp_item.first;
+      const auto precision = emd.getPrecision(parameter_name);
+
+      // t, z, y, x in row-major order
+      std::vector<std::optional<TS::Value>> values(nt * nz * nxy);
+      for (const auto &dpl_item : dpp_item.second)
+      {
+        std::size_t k = 0;
+        if (has_z)
+        {
+          auto it = std::lower_bound(zs.begin(), zs.end(), dpl_item.first);
+          if (it == zs.end() || *it != dpl_item.first)
+            continue;
+          k = std::size_t(it - zs.begin());
+        }
+        for (const auto &tcv : dpl_item.second)
+        {
+          auto pos = grid_index(tcv.lon, tcv.lat);
+          if (!pos)
+            continue;
+          auto t = std::size_t(std::lower_bound(times.begin(), times.end(), tcv.time) -
+                               times.begin());
+          values[(t * nz + k) * nxy + *pos] = tcv.value;
+        }
+      }
+
+      auto range = Json::Value(Json::ValueType::objectValue);
+      range["type"] = Json::Value("NdArray");
+      range["dataType"] = Json::Value("float");
+      auto axis_names = Json::Value(Json::ValueType::arrayValue);
+      auto shape = Json::Value(Json::ValueType::arrayValue);
+      axis_names.append(Json::Value("t"));
+      shape.append(Json::Value(nt));
+      if (has_z)
+      {
+        axis_names.append(Json::Value("z"));
+        shape.append(Json::Value(nz));
+      }
+      axis_names.append(Json::Value("y"));
+      shape.append(Json::Value(grid.ny));
+      axis_names.append(Json::Value("x"));
+      shape.append(Json::Value(grid.nx));
+      range["axisNames"] = axis_names;
+      range["shape"] = shape;
+
+      auto data_values = Json::Value(Json::ValueType::arrayValue);
+      for (std::size_t n = 0; n < values.size(); n++)
+      {
+        const auto &value = values[n];
+        if (value && (std::holds_alternative<double>(*value) || std::holds_alternative<int>(*value)))
+          data_values[n] = UtilityFunctions::json_value(*value, precision);
+        else
+          data_values[n] = Json::Value();
+      }
+      range["values"] = data_values;
+      ranges[dpn.at(parameter_name)] = range;
+    }
+
+    auto coverage = Json::Value(Json::ValueType::objectValue);
+    coverage["type"] = Json::Value("Coverage");
+    coverage["domain"] = domain;
+    coverage["parameters"] = prologue["parameters"];
+    coverage["ranges"] = ranges;
+    return coverage;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 Json::Value formatOutputData(const TS::OutputData &outputData,
                              const EDRMetaData &emd,
                              EDRQueryType query_type,

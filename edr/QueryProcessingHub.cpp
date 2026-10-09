@@ -851,6 +851,18 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       processIWXXMAndTACData(thePlugin.itsConfig, outputData, masterquery, table);
     }
+    else if (masterquery.output_format == COVERAGE_JSON_FORMAT && edr_query.grid.active())
+    {
+      Json::Value result =
+          CoverageJson::formatGridOutputData(outputData,
+                                             emd,
+                                             edr_query.grid,
+                                             masterquery.levels,
+                                             effective_query_parameters(masterquery),
+                                             custom_dim_refs,
+                                             edr_query.language);
+      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
+    }
     else if (masterquery.output_format == COVERAGE_JSON_FORMAT)
     {
       Json::Value result = CoverageJson::formatOutputData(outputData,

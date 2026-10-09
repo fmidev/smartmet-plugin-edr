@@ -250,6 +250,21 @@ format is selected with the HTTP `Accept` header, for example
 format is used. If none of the accepted media types is available, the response is
 406 Not Acceptable.
 
+## Parameters resolution-x and resolution-y
+
+Area and cube queries on gridded collections can return the data on a regular
+longitude/latitude grid. `resolution-x` and `resolution-y` give the number of positions along
+the axis including the minimum and the maximum of the bounding box of the area (2-1000). The
+data is interpolated to the grid positions, and the CoverageJSON output is a single coverage
+with a `Grid` domain whose axes are `t`, `z` (if the collection has levels), `y` and `x`.
+Positions outside an area polygon have null values. The value 0 for both parameters means
+the native resolution, which is also the default. The parameters are not available for point
+data such as observations.
+
+```
+/collections/pal_skandinavia/area?coords=POLYGON((24 60,25 60,25 61,24 60))&parameter-name=Temperature&resolution-x=5&resolution-y=4
+```
+
 ## Errors
 
 Errors are reported with an `application/problem+json` body containing `title`, `status` and

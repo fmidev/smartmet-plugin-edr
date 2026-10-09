@@ -49,6 +49,21 @@ enum class EDRQueryId
   APIQuery
 };
 
+// A regular longitude/latitude grid requested with resolution-x and resolution-y
+struct EDRGrid
+{
+  std::size_t nx = 0;  // number of positions along x including the minimum and maximum
+  std::size_t ny = 0;
+  double x0 = 0;
+  double x1 = 0;
+  double y0 = 0;
+  double y1 = 0;
+
+  bool active() const { return nx > 0 && ny > 0; }
+  double x(std::size_t i) const { return x0 + (x1 - x0) * double(i) / double(nx - 1); }
+  double y(std::size_t j) const { return y0 + (y1 - y0) * double(j) / double(ny - 1); }
+};
+
 struct EDRQuery
 {
   std::string host;
@@ -58,6 +73,8 @@ struct EDRQuery
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;
+  // Area and cube queries on a regular grid (resolution-x, resolution-y)
+  EDRGrid grid;
   // Paging of the locations listing (OGC API-EDR limit parameter), no limit by default
   std::optional<std::size_t> limit;
   std::size_t offset = 0;

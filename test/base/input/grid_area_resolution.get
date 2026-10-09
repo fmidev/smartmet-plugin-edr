@@ -1,0 +1,1 @@
+GET /edr/collections/pal_skandinavia/area?coords=POLYGON((24+60,25+60,25+61,24+60))&datetime=2008-08-05T12:00:00Z/2008-08-05T13:00:00Z&parameter-name=Temperature,Pressure&resolution-x=5&resolution-y=4 HTTP/1.0

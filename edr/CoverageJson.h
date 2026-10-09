@@ -24,6 +24,14 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
                              const CustomDimReferences &custom_dim_refs,
                              const std::string &language);
 
+// Area and cube queries with resolution-x and resolution-y: a Coverage with a Grid domain
+Json::Value formatGridOutputData(const TS::OutputData &outputData,
+                                 const EDRMetaData &emd,
+                                 const EDRGrid &grid,
+                                 const std::set<int> &levels,
+                                 const std::vector<Spine::Parameter> &query_parameters,
+                                 const CustomDimReferences &custom_dim_refs,
+                                 const std::string &language);
 Json::Value parseEDRMetaData(const EDRQuery &edr_query,
                              const EngineMetaData &emd,
                              const ProducerLicenses &licenses,
