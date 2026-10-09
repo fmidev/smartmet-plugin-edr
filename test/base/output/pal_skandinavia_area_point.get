@@ -1,0 +1,4 @@
+{
+  "title" : "An error occurred",
+  "detail" : "Area query coords must be a POLYGON or MULTIPOLYGON"
+}

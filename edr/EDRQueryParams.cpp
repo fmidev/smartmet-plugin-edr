@@ -882,7 +882,15 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
     }
 
     auto wkt = coords;
-    if (itsEDRQuery.query_type == EDRQueryType::Position)
+    if (itsEDRQuery.query_type == EDRQueryType::Area)
+    {
+      // OGC API EDR: the area is a POLYGON; a MULTIPOLYGON is accepted too (e.g. islands)
+      auto geometry_type = boost::algorithm::to_upper_copy(boost::algorithm::trim_copy(coords));
+      if (!boost::algorithm::starts_with(geometry_type, "POLYGON") &&
+          !boost::algorithm::starts_with(geometry_type, "MULTIPOLYGON"))
+        throw EDRException("Area query coords must be a POLYGON or MULTIPOLYGON");
+    }
+    else if (itsEDRQuery.query_type == EDRQueryType::Position)
       wkt = parsePosition(coords);
     else if (itsEDRQuery.query_type == EDRQueryType::Trajectory ||
              itsEDRQuery.query_type == EDRQueryType::Corridor)
