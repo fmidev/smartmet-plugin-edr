@@ -1,4 +1,6 @@
 #include "EDRQueryParams.h"
+#include "EDRException.h"
+#include "VerticalReference.h"
 #include "EDRDefs.h"
 #include "EDRMetaData.h"
 #include "LonLatDistance.h"
@@ -7,6 +9,7 @@
 #include <engines/observation/Keywords.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/StringConversion.h>
+#include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <algorithm>
@@ -19,7 +22,6 @@ namespace Plugin
 {
 namespace EDR
 {
-#define EDRException(description) Fmi::Exception(BCP, description)
 
 namespace
 {
@@ -73,7 +75,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
     }
 
     if (resIdx == 0)
-      throw EDRException("URI has no 'collections' part");
+      throw EDRNotFound("URI has no 'collections' part");
 
     if ((numParts > 0) && (resParts[numParts - 1].empty()))
       numParts--;
@@ -167,6 +169,24 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
   {
     throw Fmi::Exception::Trace(BCP, "Resolving host failed!");
   }
+}
+
+// Identifiers accepted for WGS84 longitude/latitude
+bool is_crs84(const std::string& crs)
+{
+  static const std::set<std::string> aliases{
+      "",
+      "OGC:CRS84",
+      "CRS:84",
+      "CRS84",
+      "[OGC:CRS84]",
+      "urn:ogc:def:crs:OGC:1.3:CRS84",
+      "urn:ogc:def:crs:OGC::CRS84",
+      "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+      "https://www.opengis.net/def/crs/OGC/1.3/CRS84",
+      "http://www.opengis.net/def/crs/OGC/0/CRS84",
+      "https://www.opengis.net/def/crs/OGC/0/CRS84"};
+  return aliases.find(crs) != aliases.end();
 }
 
 std::string utcDateTime(const Fmi::DateTime& datetime)
@@ -356,7 +376,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
       auto data_query_list = boost::algorithm::join(supportedDataQueries, ",");
       auto requested_query_type =
           (!invalid_query_type.empty() ? invalid_query_type : to_string(itsEDRQuery.query_type));
-      throw EDRException("Invalid query type '" + requested_query_type +
+      throw EDRNotFound("Invalid query type '" + requested_query_type +
                          "'. The following queries are supported for collection " +
                          itsEDRQuery.collection_id + ": " + data_query_list);
     }
@@ -381,6 +401,11 @@ EDRQueryParams::EDRQueryParams(const State& state,
     if (!grid_producer)
       req.addParameter("producer", itsEDRQuery.collection_id);
 
+    // OGC API-EDR: crs must be one of the CRSs listed in the collection metadata
+    auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
+    if (!is_crs84(crs))
+      throw EDRException("Invalid crs: " + crs + ". Only OGC:CRS84 is supported");
+
     // If query_type is position, radius, trajectory -> coords is required
     auto coords = Spine::optional_string(req.getParameter("coords"), "");
     if (!coords.empty())
@@ -393,7 +418,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
     }
     else if (itsEDRQuery.query_type == EDRQueryType::Cube)
     {
-      parseCube();
+      parseCube(emd);
     }
     else if ((itsEDRQuery.query_type == EDRQueryType::Position) ||
              (itsEDRQuery.query_type == EDRQueryType::Radius) ||
@@ -435,7 +460,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
     }
 
     if (output_format == COVERAGE_JSON_FORMAT)
-      mime_type = "application/prs.coverage+json";
+      mime_type = COVERAGE_JSON_MIME_TYPE;
     else if (output_format == GEO_JSON_FORMAT)
       mime_type = "application/geo+json";
 
@@ -522,7 +547,7 @@ std::string EDRQueryParams::parseInstances(const State& state,
     itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;
 
     if (!state.getPlugin().isValidInstance(itsEDRQuery.collection_id, itsEDRQuery.instance_id))
-      throw EDRException("Instance id '" + itsEDRQuery.instance_id + "' is not valid");
+      throw EDRNotFound("Instance id '" + itsEDRQuery.instance_id + "' is not valid");
 
     if (resource_parts.size() > 5 && !resource_parts.at(5).empty())
       return parseLocations(state, resource_parts);
@@ -546,7 +571,7 @@ std::string EDRQueryParams::parseResourceParts3AndBeyond(
     {
       auto epmd = state.getProducerMetaData(resource_parts.at(2));
       if (!epmd.sourceHasInstances())
-        throw EDRException("Collection '" + resource_parts.at(2) + "' does not have instances!");
+        throw EDRNotFound("Collection '" + resource_parts.at(2) + "' does not have instances!");
 
       itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionAllInstances;
       if (resource_parts.size() > 4 && !resource_parts.at(4).empty())
@@ -590,7 +615,7 @@ std::string EDRQueryParams::parseResourceParts2AndBeyond(
     itsEDRQuery.collection_id = boost::algorithm::to_lower_copy(resource_parts.at(2));
 
     if (!state.isValidCollection(itsEDRQuery.collection_id))
-      throw EDRException(("Collection '" + itsEDRQuery.collection_id + "' not found"));
+      throw EDRNotFound(("Collection '" + itsEDRQuery.collection_id + "' not found"));
 
     itsEDRQuery.query_id = EDRQueryId::SpecifiedCollection;
 
@@ -621,7 +646,7 @@ std::string EDRQueryParams::parseEDRQuery(const State& state,
 
     auto pos = resource.find(baseUrl);
     if (pos == std::string::npos)
-      throw EDRException("URI does not match registration url");
+      throw EDRNotFound("URI does not match registration url");
 
     std::vector<std::string> resource_parts;
     std::string edrResource = "edr" + resource.substr(pos + baseUrl.size());
@@ -634,7 +659,7 @@ std::string EDRQueryParams::parseEDRQuery(const State& state,
 
     // First keyword must be collections
     if (resource_parts.at(1) != "collections")
-      throw EDRException("Invalid path '" + resource + "'");
+      throw EDRNotFound("Invalid path '" + resource + "'");
 
     // By default get all collections
     itsEDRQuery.query_id = EDRQueryId::AllCollections;
@@ -722,6 +747,19 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
 
     if (wkt.find('(') == std::string::npos || wkt.rfind(')') == std::string::npos)
       throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+
+    // OGC API-EDR: the server SHALL report an error if the coords already define the
+    // levels (Z) or the times (M) and the z or datetime query parameter is given too
+    const bool has_z = !Spine::optional_string(req.getParameter("z"), "").empty();
+    const bool has_datetime = !Spine::optional_string(req.getParameter("datetime"), "").empty();
+    if (has_z && (dims == "Z" || dims == "ZM"))
+      throw EDRException(
+          "Query parameter 'z' cannot be used when the coords define the levels (" +
+          geometry_name + ")");
+    if (has_datetime && (dims == "M" || dims == "ZM"))
+      throw EDRException(
+          "Query parameter 'datetime' cannot be used when the coords define the times (" +
+          geometry_name + ")");
 
     auto len = (wkt.rfind(')') - wkt.find('(') - 1);
     auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
@@ -1036,10 +1074,6 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
       }
     }
 
-    auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
-    if (!crs.empty() && crs != "OGC:CRS84" && crs != "CRS:84")
-      throw EDRException("Invalid crs: " + crs + ". Only OGC:CRS84 is supported");
-    crs = "EPSG:4326";
 
     /*
           // Maybe later: support other CRSs than WGS84
@@ -1079,7 +1113,7 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
   try
   {
     if (!emd.locations)
-      throw EDRException("Location query is not supported by collection '" +
+      throw EDRNotFound("Location query is not supported by collection '" +
                          itsEDRQuery.collection_id + "'");
 
     auto location_id = itsEDRQuery.location_id;
@@ -1197,7 +1231,7 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
 
     if (emd.locations->find(location_id) == emd.locations->end())
     {
-      throw EDRException("Invalid locationId '" + location_id + "' for collection '" +
+      throw EDRNotFound("Invalid locationId '" + location_id + "' for collection '" +
                          itsEDRQuery.collection_id +
                          "'! Please check metadata for valid locationIds!");
     }
@@ -1230,13 +1264,24 @@ void EDRQueryParams::parseLocations(const EDRMetaData& emd, std::string& coords)
   }
 }
 
-void EDRQueryParams::parseCube()
+void EDRQueryParams::parseCube(const EDRMetaData& emd)
 {
   try
   {
     auto bbox = Spine::optional_string(req.getParameter("bbox"), "");
     if (bbox.empty())
       throw EDRException("Query parameter 'bbox' or 'coords' must be defined for Cube");
+
+    // z values are not converted, height-units may only be the unit of the levels
+    auto height_units = Spine::optional_string(req.getParameter("height-units"), "");
+    if (!height_units.empty() && !emd.vertical_extent.levels.empty())
+    {
+      auto native_unit = VerticalReference::native_height_unit(emd.vertical_extent.level_type);
+      if (height_units != native_unit && !(native_unit == "hPa" && height_units == "mbar"))
+        throw EDRException("Invalid height-units option '" + height_units +
+                           "' for cube query, the levels of collection '" +
+                           itsEDRQuery.collection_id + "' are in unit '" + native_unit + "'");
+    }
 
     auto z = Fmi::trim_copy(Spine::optional_string(req.getParameter("z"), ""));
     bool zIsRange = false;
@@ -1308,63 +1353,106 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
     if (datetime.empty())
       throw EDRException("Missing datetime option");
 
-    // https://docs.ogc.org/is/19-086r6/19-086r6.html#req_core_rc-time-response
-    // Do not allow use of durations
+    // OGC API-EDR: date-times are RFC 3339 values, interpret ones without a UTC offset as UTC
+    // instead of the server's local time
+    if (!req.getParameter("tz"))
+      req.addParameter("tz", "UTC");
+
+    datetime = Fmi::trim_copy(datetime);
+
+    // A list of date-times or a repeating interval Rn/start/duration: query the covered time
+    // interval, the output is then limited to the listed times
+    if (datetime.find(',') != std::string::npos ||
+        (!datetime.empty() && std::toupper(datetime.front()) == 'R'))
+    {
+      parseDateTimeList(datetime);
+      req.addParameter("starttime", Fmi::to_iso_string(*itsDateTimeList.begin()) + "Z");
+      req.addParameter("endtime", Fmi::to_iso_string(*itsDateTimeList.rbegin()) + "Z");
+      return;
+    }
+
     if (datetime.find('/') != std::string::npos)
     {
       std::vector<std::string> datetime_parts;
       boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
-      if (datetime_parts.size() !=
-          2)  // Cannot have size()==1, because above check. size() > 2 is however not OK
-        throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
-      auto starttime = datetime_parts.at(0);
-      auto endtime = datetime_parts.at(1);
-
-      bool countError = datetime_parts.size() != 2;
-      bool startError = !starttime.empty() && (toupper(starttime[0]) == 'P');
-      bool endError = !endtime.empty() && (toupper(endtime[0]) == 'P');
-
-      if (countError)
+      if (datetime_parts.size() != 2)
         throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
 
-      if (startError)
-        throw EDRException("Invalid 'starttime' parameter value '" + starttime + "'");
+      const auto starttime = Fmi::trim_copy(datetime_parts.at(0));
+      const auto endtime = Fmi::trim_copy(datetime_parts.at(1));
 
-      if (endError)
-        throw EDRException("Invalid 'endtime' parameter value '" + endtime + "'");
+      // Durations are not allowed
+      if (starttime.empty() || std::toupper(starttime[0]) == 'P')
+        throw EDRException("Invalid 'datetime' interval start '" + starttime + "'");
+      if (endtime.empty() || std::toupper(endtime[0]) == 'P')
+        throw EDRException("Invalid 'datetime' interval end '" + endtime + "'");
 
-      if (starttime == "..")
-        req.addParameter("starttime", "data");
-      else
-        req.addParameter("starttime", starttime);
-      if (endtime != "..")
-        req.addParameter("endtime", endtime);
+      // Open ends (..) extend to the start or the end of the data
+      req.addParameter("starttime", starttime == ".." ? "data" : starttime);
+      req.addParameter("endtime", endtime == ".." ? "data" : endtime);
+      return;
     }
-    else
-    {
-      if (boost::algorithm::ends_with(datetime, ".."))
-      {
-        datetime.resize(datetime.size() - 2);
-        req.addParameter("starttime", datetime);
-      }
-      else if (boost::algorithm::starts_with(datetime, ".."))
-      {
-        datetime = datetime.substr(2);
-        req.addParameter("endtime", datetime);
-      }
-      else
-      {
-        req.addParameter("starttime", datetime);
-        req.addParameter("endtime", datetime);
-      }
 
-      if (!datetime.empty() && (toupper(datetime[0]) == 'P'))
-        throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
-    }
+    if (!datetime.empty() && std::toupper(datetime[0]) == 'P')
+      throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
+
+    req.addParameter("starttime", datetime);
+    req.addParameter("endtime", datetime);
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void EDRQueryParams::parseDateTimeList(const std::string& datetime)
+{
+  try
+  {
+    const std::size_t max_times = 10000;
+
+    if (std::toupper(datetime.front()) == 'R')
+    {
+      // Repeating interval Rn/start/duration, n times starting from the given time
+      std::vector<std::string> parts;
+      boost::algorithm::split(parts, datetime, boost::algorithm::is_any_of("/"));
+      if (parts.size() != 3)
+        throw EDRException("Invalid 'datetime' repeating interval '" + datetime +
+                           "', Rn/start/duration expected");
+
+      const auto count = Fmi::stoi(Fmi::trim_copy(parts[0].substr(1)));
+      if (count <= 0 || static_cast<std::size_t>(count) > max_times)
+        throw EDRException("Invalid number of repetitions in 'datetime' value '" + datetime +
+                           "'");
+
+      auto t = Fmi::TimeParser::parse(Fmi::trim_copy(parts[1]));
+      const auto step = Fmi::TimeParser::parse_iso_duration(Fmi::trim_copy(parts[2]));
+      if (step.total_seconds() <= 0)
+        throw EDRException("Invalid duration in 'datetime' value '" + datetime + "'");
+
+      for (int i = 0; i < count; i++, t += step)
+        itsDateTimeList.insert(t);
+      return;
+    }
+
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, datetime, boost::algorithm::is_any_of(","));
+    if (parts.size() > max_times)
+      throw EDRException("Too many times in the 'datetime' list");
+
+    for (auto part : parts)
+    {
+      boost::algorithm::trim(part);
+      if (part.empty() || part.find('/') != std::string::npos ||
+          std::toupper(part.front()) == 'P')
+        throw EDRException("Invalid 'datetime' list element '" + part +
+                           "', only date-times are allowed in a list");
+      itsDateTimeList.insert(Fmi::TimeParser::parse(part));
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Invalid 'datetime' parameter value '" + datetime + "'");
   }
 }
 
@@ -1587,18 +1675,28 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
     std::list<std::string> param_names;
     boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
 
+    // OGC API-EDR: the values must be from the parameter_names of the collection metadata
+    std::string unknown_names;
     for (auto p : param_names)
     {
+      boost::algorithm::trim(p);
       boost::algorithm::to_lower(p);
       if (p.find(':') != std::string::npos)
         p = p.substr(0, p.find(':'));
       if (emd.parameters.find(p) == emd.parameters.end())
-      {
-        std::cerr << (Spine::log_time_str() + ANSI_FG_MAGENTA + " [edr] Unknown parameter '" + p +
-                      "' ignored!" + ANSI_FG_DEFAULT)
-                  << '\n';
-        continue;
-      }
+        unknown_names += (unknown_names.empty() ? "'" : ", '") + p + "'";
+    }
+    if (!unknown_names.empty())
+      throw EDRException("Unknown parameter-name value(s) " + unknown_names +
+                         " for collection '" + itsEDRQuery.collection_id +
+                         "', see the parameter_names of the collection metadata");
+
+    for (auto p : param_names)
+    {
+      boost::algorithm::trim(p);
+      boost::algorithm::to_lower(p);
+      if (p.find(':') != std::string::npos)
+        p = p.substr(0, p.find(':'));
 
       if (! customDimensions.matches(p, parameterInfo))
         continue;

@@ -5,6 +5,7 @@
 // ======================================================================
 
 #include "PluginImpl.h"
+#include "EDRException.h"
 #include "QueryProcessingHub.h"
 #include "State.h"
 #include "TimeSeriesQuery.h"
@@ -34,6 +35,40 @@ namespace EDR
 {
 namespace
 {
+// Escape a string for embedding into a JSON string value
+std::string json_escape(const std::string& str)
+{
+  std::string ret;
+  ret.reserve(str.size());
+  for (unsigned char c : str)
+  {
+    switch (c)
+    {
+      case '"':
+        ret += "\\\"";
+        break;
+      case '\\':
+        ret += "\\\\";
+        break;
+      case '\n':
+        ret += "\\n";
+        break;
+      case '\r':
+        ret += "\\r";
+        break;
+      case '\t':
+        ret += "\\t";
+        break;
+      default:
+        if (c < 0x20)
+          ret += fmt::format("\\u{:04x}", static_cast<unsigned int>(c));
+        else
+          ret += static_cast<char>(c);
+    }
+  }
+  return ret;
+}
+
 
 std::set<std::string> get_metadata_parameters(const std::shared_ptr<EngineMetaData>& metadata)
 {
@@ -167,7 +202,7 @@ void check_limits(const Spine::TaggedLocationList& locations, const TS::RequestL
       maxradius = std::max(maxradius, tloc.loc->radius);
 
   if (maxradius > limits.maxradius)
-    throw Fmi::Exception(BCP, "Too large radius requested")
+    throw EDRTooLarge("Too large radius requested")
         .addParameter("Radius", Fmi::to_string(maxradius))
         .addParameter("Limit", Fmi::to_string(limits.maxradius));
 }
@@ -930,13 +965,12 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
     }
     else
     {
-      if (firstMessage.find("timeout") != std::string::npos)
-        theResponse.setStatus(Spine::HTTP::Status::request_timeout);
-      else
-        theResponse.setStatus(Spine::HTTP::Status::bad_request);
+      const int status = http_status(ex);
+      theResponse.setStatus(static_cast<Spine::HTTP::Status>(status));
 
       auto problem_detail = itsConfig.getEDRAPI().getProblemDetailJson();
-      boost::algorithm::replace_all(problem_detail, "__DETAIL__", firstMessage);
+      boost::algorithm::replace_all(problem_detail, "__STATUS__", Fmi::to_string(status));
+      boost::algorithm::replace_all(problem_detail, "__DETAIL__", json_escape(firstMessage));
       theResponse.setContent(problem_detail);
       theResponse.setHeader("Content-Type", "application/problem+json");
     }

@@ -1,4 +1,5 @@
 {
  "title": "An error occurred",
+ "status": __STATUS__,
  "detail": "__DETAIL__"
 }

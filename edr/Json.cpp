@@ -566,6 +566,8 @@ void Value::append_values(std::string &out, bool pretty, unsigned int level) con
       out.append(tabs(pretty, level + 1));
       out.append(RIGHT_SQUARE_BRACKET);
     }
+    else if (value_obj.valueType == ValueType::arrayValue)
+      out.append("[]");
     else if (is_empty_data_value(value_obj.data_value))
       out.append("error: data empty");
     else

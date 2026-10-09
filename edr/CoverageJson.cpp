@@ -1,4 +1,6 @@
 #include "CoverageJson.h"
+#include "VerticalReference.h"
+#include "EDRException.h"
 #include "UtilityFunctions.h"
 #include <engines/observation/Keywords.h>
 #include <macgyver/Exception.h>
@@ -228,10 +230,18 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
   auto trs = Json::Value(
       "TIMECRS[\"DateTime\",TDATUM[\"Gregorian "
       "Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time "
-      "(T)\",future]");
+      "(T)\",future]]");
   temporal["trs"] = trs;
 
   return temporal;
+}
+
+Json::Value height_units_json(const std::string &level_type)
+{
+  auto ret = Json::Value(Json::ValueType::arrayValue);
+  for (const auto &unit : VerticalReference::height_units(level_type))
+    ret.append(Json::Value(unit));
+  return ret;
 }
 
 Json::Value get_data_queries(const std::string &host,
@@ -242,7 +252,8 @@ Json::Value get_data_queries(const std::string &host,
                              bool levels_exist,
                              bool instances_exist,
                              const std::string &instance_id = "",
-                             const std::string &level_type = "")
+                             const std::string &level_type = "",
+                             Json::Value *query_links = nullptr)
 {
   auto data_queries = Json::Value(Json::ValueType::objectValue);
 
@@ -314,19 +325,10 @@ Json::Value get_data_queries(const std::string &host,
       query_info_variables["title"] = Json::Value("Cube query");
       query_info_variables["description"] = Json::Value("Data inside requested bounding box");
       query_info_variables["query_type"] = Json::Value("cube");
-      query_info_variables["coords"] = Json::Value(
-          "Well Known Text POLYGON value i.e. POLYGON((24 61,24 "
-          "61.5,24.5 61.5,24.5 61,24 61))");
-      query_info_variables["minz"] =
-          Json::Value("Minimum level to return data for, for example 850");
-      query_info_variables["maxz"] =
-          Json::Value("Maximum level to return data for, for example 300");
-
-      /*
-  query_info_variables["bbox"] = Json::Value(
-      "BBOX value defining lower left and upper right corner coordinates "
-      "i.e. Finland: bbox=19.449758 59.693749, 31.668339 70.115572");
-      */
+      // Cube z values are not converted, they must be in the unit of the levels
+      query_info_variables["height_units"] = Json::Value(Json::ValueType::arrayValue);
+      query_info_variables["height_units"].append(
+          Json::Value(VerticalReference::native_height_unit(level_type)));
       query_type_string = "cube";
     }
     else if (query_type == EDRQueryType::Locations)
@@ -338,6 +340,8 @@ Json::Value get_data_queries(const std::string &host,
       query_info_variables["description"] =
           Json::Value("Data at point location defined by a unique identifier");
       query_info_variables["query_type"] = Json::Value("locations");
+      // A comma separated list of location ids is not supported
+      query_info_variables["multiple_locations"] = Json::Value(false);
       query_type_string = "locations";
     }
     else if (query_type == EDRQueryType::Trajectory)
@@ -360,36 +364,15 @@ Json::Value get_data_queries(const std::string &host,
           Json::Value((host + "/collections/" + producer + instance_str + "/corridor"));
       query_info_variables["title"] = Json::Value("Corridor query");
       query_info_variables["description"] = Json::Value("Data within corridor");
-      query_info_variables["corridor-width"] = Json::Value("Corridor width");
       query_info_variables["query_type"] = Json::Value("corridor");
       auto width_units = Json::Value(Json::ValueType::arrayValue);
       width_units[0] = Json::Value("km");
       width_units[1] = Json::Value("mi");
-      query_info_variables["width-units"] = width_units;
-      if (levels_exist)
-      {
-        query_info_variables["corridor-height"] = Json::Value("Corridor height");
-        auto height_units = Json::Value(Json::ValueType::arrayValue);
-        unsigned int hi = 0;
-        if (boost::algorithm::icontains(level_type, "pressure"))
-        {
-          height_units[hi++] = Json::Value("hPa");
-          height_units[hi++] = Json::Value("mbar");
-          height_units[hi++] = Json::Value("Pa");
-        }
-        else if (boost::algorithm::icontains(level_type, "hybrid"))
-        {
-          height_units[hi++] = Json::Value("1");
-        }
-        else
-        {
-          height_units[hi++] = Json::Value("m");
-          height_units[hi++] = Json::Value("km");
-          height_units[hi++] = Json::Value("mi");
-          height_units[hi++] = Json::Value("ft");
-        }
-        query_info_variables["height-units"] = height_units;
-      }
+      query_info_variables["width_units"] = width_units;
+      // Mandatory, but corridor-height can be used only if the collection has levels
+      query_info_variables["height_units"] =
+          (levels_exist ? height_units_json(level_type)
+                        : Json::Value(Json::ValueType::arrayValue));
       query_info_variables["coords"] = Json::Value(
           "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
           "61,24.2 61.2,24.3 61.3)");
@@ -403,6 +386,19 @@ Json::Value get_data_queries(const std::string &host,
       query_info_output_formats[i++] = Json::Value(f);
     query_info_variables["output_formats"] = query_info_output_formats;
     query_info_variables["default_output_format"] = Json::Value(default_output_format);
+    query_info_link["type"] =
+        Json::Value(UtilityFunctions::output_format_mime_type(default_output_format));
+
+    // OGC API-EDR /req/core/rc-md-query-links: links to the query end points
+    if (query_links)
+    {
+      auto query_link = Json::Value(Json::ValueType::objectValue);
+      query_link["href"] = query_info_link["href"];
+      query_link["rel"] = Json::Value("data");
+      query_link["type"] = query_info_link["type"];
+      query_link["title"] = query_info_link["title"];
+      query_links->append(query_link);
+    }
 
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
@@ -431,6 +427,7 @@ Json::Value get_data_queries(const std::string &host,
     query_info_link["href"] = Json::Value((host + "/collections/" + producer + "/instances"));
     query_info_link["hreflang"] = Json::Value("en");
     query_info_link["rel"] = Json::Value("collection");
+    query_info_link["type"] = Json::Value("application/json");
 
     query_info_variables["title"] = Json::Value("Instances query");
     query_info_variables["query_type"] = Json::Value("instances");
@@ -439,6 +436,19 @@ Json::Value get_data_queries(const std::string &host,
     for (const auto &f : output_format_set)
       query_info_output_formats[i++] = Json::Value(f);
     query_info_variables["default_output_format"] = Json::Value(default_output_format);
+    query_info_link["type"] =
+        Json::Value(UtilityFunctions::output_format_mime_type(default_output_format));
+
+    // OGC API-EDR /req/core/rc-md-query-links: links to the query end points
+    if (query_links)
+    {
+      auto query_link = Json::Value(Json::ValueType::objectValue);
+      query_link["href"] = query_info_link["href"];
+      query_link["rel"] = Json::Value("data");
+      query_link["type"] = query_info_link["type"];
+      query_link["title"] = query_info_link["title"];
+      query_links->append(query_link);
+    }
 
     auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
     auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
@@ -915,7 +925,7 @@ Json::Value add_prologue_one_point(std::optional<int> level,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
@@ -923,9 +933,7 @@ Json::Value add_prologue_one_point(std::optional<int> level,
     {
       referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
       referencing_z["coordinates"][0] = Json::Value("z");
-      referencing_z["system"] = Json::Value(Json::ValueType::objectValue);
-      referencing_z["system"]["type"] = Json::Value("VerticalCRS");
-      referencing_z["system"]["id"] = Json::Value("TODO: " + level_type);
+      referencing_z["system"] = VerticalReference::covjson_system(level_type);
     }
 
     auto referencing_time = Json::Value(Json::ValueType::objectValue);
@@ -1024,16 +1032,14 @@ Json::Value add_prologue_multi_point(std::optional<int> level,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
 
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
     if (level)
     {
       referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
       referencing_z["coordinates"][0] = Json::Value("z");
-      referencing_z["system"] = Json::Value(Json::ValueType::objectValue);
-      referencing_z["system"]["type"] = Json::Value("VerticalCRS");
-      referencing_z["system"]["id"] = Json::Value("TODO: " + level_type);
+      referencing_z["system"] = VerticalReference::covjson_system(level_type);
     }
 
     auto referencing_time = Json::Value(Json::ValueType::objectValue);
@@ -1087,16 +1093,14 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
 
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
     if (levels_exists)
     {
       referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
       referencing_z["coordinates"][0] = Json::Value("z");
-      referencing_z["system"] = Json::Value(Json::ValueType::objectValue);
-      referencing_z["system"]["type"] = Json::Value("VerticalCRS");
-      referencing_z["system"]["id"] = Json::Value("TODO: " + emd.vertical_extent.level_type);
+      referencing_z["system"] = VerticalReference::covjson_system(emd.vertical_extent.level_type);
     }
 
     auto referencing_time = Json::Value(Json::ValueType::objectValue);
@@ -1473,8 +1477,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
     bool instances_exist = !emds.empty();
 
     if (!instances_exist)
-      return reportError(400,
-                         ("Collection '" + edr_query.collection_id + "' does not have instances!"));
+      throw EDRNotFound("Collection '" + edr_query.collection_id + "' does not have instances!");
 
     const auto &producer = requested_epmd.begin()->first;
 
@@ -1531,7 +1534,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
-      spatial["crs"] = Json::Value("OGC:CRS84");
+      spatial["crs"] = Json::Value(CRS84_URI);
       extent["spatial"] = spatial;
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
@@ -1540,6 +1543,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
 
       instance["extent"] = extent;
       // Optional: data_queries
+      auto instance_links = Json::Value(Json::ValueType::arrayValue);
       instance["data_queries"] = get_data_queries(edr_query.host,
                                                   producer,
                                                   emd.data_queries,
@@ -1548,7 +1552,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                                   !emd.vertical_extent.levels.empty(),
                                                   false,
                                                   instance_id,
-                                                  emd.vertical_extent.level_type);
+                                                  emd.vertical_extent.level_type,
+                                                  &instance_links);
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
       //	  crs[0] = Json::Value("EPSG:4326");
@@ -1568,16 +1573,25 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       if (custom_dims.size() > 0)
         instance["extent"]["custom"] = custom_dims;
 
+      const bool single_instance =
+          (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance);
+      auto instance_link = Json::Value(Json::ValueType::objectValue);
+      instance_link["href"] = Json::Value(href + "/" + instance_id);
+      instance_link["rel"] = Json::Value(single_instance ? "self" : "data");
+      instance_link["type"] = Json::Value("application/json");
+      auto all_instance_links = Json::Value(Json::ValueType::arrayValue);
+      all_instance_links.append(instance_link);
+      if (!license.isNullOrEmpty())
+        all_instance_links.append(license);
+      for (std::size_t i = 0; i < instance_links.size(); i++)
+        all_instance_links.append(instance_links[i]);
+      instance["links"] = all_instance_links;
+
+      if (single_instance)
+        return instance;
+
       instances[instance_index] = instance;
       instance_index++;
-
-      if (edr_query.query_id == EDRQueryId::SpecifiedCollectionSpecifiedInstance)
-      {
-        links[0]["href"] = Json::Value(href + "/" + instance_id);
-        instances[0]["links"] = links;
-
-        return instances[0];
-      }
     }
 
     result["instances"] = instances;
@@ -1688,8 +1702,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       // Then get collection info from configuration file, if we didn't get it from engine
       get_collection_info_from_configuration_file(collection_emd, title, description, keyword_set);
 
-      if (! title.empty())
-        value["title"] = Json::Value(title);
+      // Title is recommended, use the id if none is configured
+      value["title"] = Json::Value(title.empty() ? producer : title);
       if (! description.empty())
         value["description"] = Json::Value(description);
       auto keywords = Json::Value(Json::ValueType::arrayValue);
@@ -1724,7 +1738,6 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
           links.append(license);
       }
 
-      value["links"] = links;
       // Extent (mandatory)
       auto extent = Json::Value(Json::ValueType::objectValue);
       // Spatial (mandatory)
@@ -1739,7 +1752,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
-      spatial["crs"] = Json::Value("OGC:CRS84");
+      spatial["crs"] = Json::Value(CRS84_URI);
       extent["spatial"] = spatial;
       // Temporal (optional)
       extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
@@ -1756,7 +1769,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                !collection_emd.vertical_extent.levels.empty(),
                                                instances_exist,
                                                "",
-                                               collection_emd.vertical_extent.level_type);
+                                               collection_emd.vertical_extent.level_type,
+                                               &links);
+      value["links"] = links;
 
       // Optional: crs
       auto crs = Json::Value(Json::ValueType::arrayValue);
@@ -2165,7 +2180,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
@@ -2173,9 +2188,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
     {
       referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
       referencing_z["coordinates"][0] = Json::Value("z");
-      referencing_z["system"] = Json::Value(Json::ValueType::objectValue);
-      referencing_z["system"]["type"] = Json::Value("VerticalCRS");
-      referencing_z["system"]["id"] = Json::Value("TODO: " + emd.vertical_extent.level_type);
+      referencing_z["system"] = VerticalReference::covjson_system(emd.vertical_extent.level_type);
     }
 
     auto referencing_time = Json::Value(Json::ValueType::objectValue);
@@ -3166,15 +3179,13 @@ Json::Value format_output_data_vertical_profile(
     referencing_xy["coordinates"][1] = Json::Value("y");
     referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
+    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
     referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
     referencing_z["coordinates"][0] = Json::Value("z");
-    referencing_z["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_z["system"]["type"] = Json::Value("VerticalCRS");
-    referencing_z["system"]["id"] = Json::Value(emd.vertical_extent.level_type);
+    referencing_z["system"] = VerticalReference::covjson_system(emd.vertical_extent.level_type);
 
     auto referencing_time = Json::Value(Json::ValueType::objectValue);
     referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);

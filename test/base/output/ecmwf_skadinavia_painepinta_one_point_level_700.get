@@ -24,8 +24,11 @@
 				],
 				"system" : 
 				{
-					"id" : "TODO: PressureLevel",
-					"type" : "VerticalCRS"
+					"type" : "VerticalCRS",
+					"description" : 
+					{
+						"en" : "Pressure level in hPa"
+					}
 				}
 			},
 			{
@@ -47,7 +50,7 @@
 			{
 				"values" : 
 				[
-					"2008-09-09T09:00:00Z"
+					"2008-09-09T12:00:00Z"
 				]
 			},
 			"x" : 
@@ -131,7 +134,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				0.8
+				0.5
 			]
 		}
 	}

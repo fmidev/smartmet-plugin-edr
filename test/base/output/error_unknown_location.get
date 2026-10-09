@@ -1,0 +1,8 @@
+Status: 404
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 404,
+  "detail" : "Invalid locationId '99999999' for collection 'synop'! Please check metadata for valid locationIds!"
+}

@@ -36,7 +36,7 @@
 			{
 				"values" : 
 				[
-					"2008-08-05T09:00:00Z"
+					"2008-08-05T12:00:00Z"
 				]
 			},
 			"x" : 
@@ -636,7 +636,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				11
+				9
 			]
 		},
 		"fogintensity" : 
@@ -699,7 +699,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				20
+				19
 			]
 		},
 		"humidity" : 
@@ -720,7 +720,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				78
+				70
 			]
 		},
 		"kindex" : 
@@ -741,7 +741,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				21
+				20
 			]
 		},
 		"lowcloudcover" : 
@@ -825,7 +825,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				87
+				57
 			]
 		},
 		"precipitation1h" : 
@@ -846,7 +846,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				0.7
+				0.2
 			]
 		},
 		"precipitationform" : 
@@ -909,7 +909,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				1004
+				1005
 			]
 		},
 		"probabilitythunderstorm" : 
@@ -951,7 +951,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				165
+				179
 			]
 		},
 		"radiationlw" : 
@@ -972,7 +972,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				357
+				355
 			]
 		},
 		"temperature" : 
@@ -993,7 +993,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				14.9
+				14.7
 			]
 		},
 		"totalcloudcover" : 
@@ -1035,7 +1035,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				63
+				60
 			]
 		},
 		"weathersymbol3" : 
@@ -1056,7 +1056,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				32
+				31
 			]
 		},
 		"winddirection" : 
@@ -1098,7 +1098,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				17
+				15
 			]
 		},
 		"windums" : 
@@ -1119,7 +1119,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				-17
+				-15
 			]
 		},
 		"windvectorms" : 
@@ -1140,7 +1140,7 @@
 			"type" : "NdArray",
 			"values" : 
 			[
-				1608
+				1408
 			]
 		},
 		"windvms" : 

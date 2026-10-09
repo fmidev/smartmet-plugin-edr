@@ -1,0 +1,8 @@
+Status: 400
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "Unknown parameter-name value(s) 'foobar', 'barfoo' for collection 'pal_skandinavia', see the parameter_names of the collection metadata"
+}

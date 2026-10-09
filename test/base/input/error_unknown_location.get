@@ -1,0 +1,2 @@
+GET /edr/collections/synop/locations/99999999?parameter-name=Temperature HTTP/1.0
+X-Test-Headers: Content-Type

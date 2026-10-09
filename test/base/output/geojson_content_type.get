@@ -1,0 +1,71 @@
+Status: 200
+Content-Type: application/geo+json
+
+{
+	"bbox" : 
+	[
+		24.93840,
+		60.16990,
+		24.93840,
+		60.16990
+	],
+	"features" : 
+	[
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.93840,
+					60.16990
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"temperature" : 
+				[
+					14.7
+				],
+				"time" : 
+				[
+					"2008-08-05T12:00:00Z"
+				]
+			}
+		}
+	],
+	"parameters" : 
+	[
+		{
+			"id" : "Temperature",
+			"label" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
+				}
+			}
+		}
+	],
+	"type" : "FeatureCollection"
+}

@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/items HTTP/1.0
+X-Test-Headers: Content-Type

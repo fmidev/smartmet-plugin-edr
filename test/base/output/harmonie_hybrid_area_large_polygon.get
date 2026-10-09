@@ -61224,8 +61224,11 @@
 			],
 			"system" : 
 			{
-				"id" : "TODO: HybridLevel",
-				"type" : "VerticalCRS"
+				"type" : "VerticalCRS",
+				"description" : 
+				{
+					"en" : "Hybrid model level number"
+				}
 			}
 		},
 		{

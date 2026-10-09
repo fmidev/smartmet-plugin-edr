@@ -510,6 +510,21 @@ std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d)
   }
 }
 
+std::string output_format_mime_type(const std::string& output_format)
+{
+  if (output_format == COVERAGE_JSON_FORMAT)
+    return COVERAGE_JSON_MIME_TYPE;
+  if (output_format == GEO_JSON_FORMAT)
+    return "application/geo+json";
+  if (output_format == IWXXM_FORMAT)
+    return "text/xml";
+  if (output_format == IWXXMZIP_FORMAT)
+    return "application/zip";
+  if (output_format == TAC_FORMAT)
+    return "text/plain";
+  return "application/json";
+}
+
 }  // namespace UtilityFunctions
 }  // namespace EDR
 }  // namespace Plugin

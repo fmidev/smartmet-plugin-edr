@@ -324,6 +324,43 @@ void fetch_static_location_values(const CommonQuery& query,
   }
 }
 
+// Remove the values whose time is not in the given list of times (EDR datetime lists)
+void filter_times(TS::TimeSeries& ts, const std::set<Fmi::DateTime>& times)
+{
+  ts.erase(std::remove_if(ts.begin(),
+                          ts.end(),
+                          [&times](const TS::TimedValue& tv)
+                          { return times.find(tv.time.utc_time()) == times.end(); }),
+           ts.end());
+}
+
+void filter_times(TS::OutputData& outputData, const std::set<Fmi::DateTime>& times)
+{
+  for (auto& item : outputData)
+  {
+    for (auto& tsdata : item.second)
+    {
+      if (auto* ts = std::get_if<TS::TimeSeriesPtr>(&tsdata))
+      {
+        if (*ts)
+          filter_times(**ts, times);
+      }
+      else if (auto* tsv = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata))
+      {
+        if (*tsv)
+          for (auto& ts : **tsv)
+            filter_times(ts, times);
+      }
+      else if (auto* tsg = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+      {
+        if (*tsg)
+          for (auto& llts : **tsg)
+            filter_times(llts.timeseries, times);
+      }
+    }
+  }
+}
+
 void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, const std::string& producer)
 {
   try
@@ -749,6 +786,9 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 #endif
 
     setPrecisions(emd, masterquery);
+
+    if (!masterquery.dateTimeList().empty())
+      filter_times(outputData, masterquery.dateTimeList());
 
     // CoordinateFilter::accept() requires an exact (lon,lat) match against the literal
     // coordinates given in the request (LINESTRINGZ/ZM/M, MULTIPOINTZ); it only works when the

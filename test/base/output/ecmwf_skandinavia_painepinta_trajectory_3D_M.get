@@ -102,8 +102,11 @@
 			],
 			"system" : 
 			{
-				"id" : "TODO: PressureLevel",
-				"type" : "VerticalCRS"
+				"type" : "VerticalCRS",
+				"description" : 
+				{
+					"en" : "Pressure level in hPa"
+				}
 			}
 		},
 		{

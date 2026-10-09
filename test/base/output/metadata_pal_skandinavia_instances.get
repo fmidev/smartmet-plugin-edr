@@ -18,6 +18,56 @@
 		{
 			"id" : "20080805T063100",
 			"title" : "Origintime: 2008-08-05T06:31:00Z Starttime: 2008-08-05T03:00:00Z Endtime: 2008-08-09T06:00:00Z Timestep: 60",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100",
+					"rel" : "data",
+					"type" : "application/json"
+				},
+				{
+					"href" : "https://en.ilmatieteenlaitos.fi/open-data-licence",
+					"hreflang" : "en",
+					"rel" : "license",
+					"type" : "text/html"
+				},
+				{
+					"title" : "Area query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/area",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Corridor query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/corridor",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Locations query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/locations",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Position query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/position",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Radius query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/radius",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Trajectory query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/trajectory",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				}
+			],
 			"crs" : 
 			[
 				"OGC:CRS84"
@@ -32,6 +82,7 @@
 						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/area",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Area query",
@@ -62,6 +113,7 @@
 						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/corridor",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Corridor query",
@@ -72,7 +124,6 @@
 								"GeoJSON"
 							],
 							"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
-							"corridor-width" : "Corridor width",
 							"crs_details" : 
 							[
 								{
@@ -81,8 +132,9 @@
 								}
 							],
 							"default_output_format" : "CoverageJSON",
+							"height_units" : [],
 							"query_type" : "corridor",
-							"width-units" : 
+							"width_units" : 
 							[
 								"km",
 								"mi"
@@ -98,6 +150,7 @@
 						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/locations",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Locations query",
@@ -115,6 +168,7 @@
 								}
 							],
 							"default_output_format" : "CoverageJSON",
+							"multiple_locations" : false,
 							"query_type" : "locations"
 						}
 					}
@@ -127,6 +181,7 @@
 						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/position",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Position query",
@@ -157,6 +212,7 @@
 						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/radius",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Radius query",
@@ -192,6 +248,7 @@
 						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/trajectory",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Trajectory query",
@@ -244,7 +301,7 @@
 				],
 				"spatial" : 
 				{
-					"crs" : "OGC:CRS84",
+					"crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
 					"bbox" : 
 					[
 						[
@@ -264,7 +321,7 @@
 							"2008-08-09T06:00:00Z"
 						]
 					],
-					"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+					"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]]",
 					"values" : 
 					[
 						"R99/2008-08-05T03:00:00Z/PT60M"

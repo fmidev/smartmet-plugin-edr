@@ -50,6 +50,9 @@ std::vector<std::string> parseBBoxAndZ(
     const std::string& bbox, std::string& z, bool& zIsRange, std::string& zLo, std::string& zHi);
 std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d = false);
 
+// Media type of an EDR output format (CoverageJSON, GeoJSON, IWXXM, IWXXMZIP, TAC)
+std::string output_format_mime_type(const std::string& output_format);
+
 }  // namespace UtilityFunctions
 }  // namespace EDR
 }  // namespace Plugin

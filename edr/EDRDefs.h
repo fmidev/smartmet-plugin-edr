@@ -58,6 +58,12 @@ enum class SourceEngine
 #define COVERAGE_JSON_FORMAT "CoverageJSON"
 #define GEO_JSON_FORMAT "GeoJSON"
 
+// CoverageJSON media type (OGC API-EDR /req/covjson/definition)
+#define COVERAGE_JSON_MIME_TYPE "application/vnd.cov+json"
+
+// WGS84 longitude/latitude, the only supported CRS
+#define CRS84_URI "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+
 #define PROBLEM_DETAIL "problemdetail"
 
 std::string get_engine_name(SourceEngine source_engine);

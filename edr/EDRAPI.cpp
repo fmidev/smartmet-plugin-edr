@@ -14,6 +14,7 @@ const std::string EMPTY_STRING;
 const std::string PROBLEM_DETAIL_JSON =
 R"JSON({
   "title" : "An error occurred",
+  "status" : __STATUS__,
   "detail" : "__DETAIL__"
 }
 )JSON";

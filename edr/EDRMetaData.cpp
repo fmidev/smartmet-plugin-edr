@@ -1,4 +1,5 @@
 #include "EDRMetaData.h"
+#include "VerticalReference.h"
 #ifndef WITHOUT_AVI
 #include "AviCollection.h"
 #include <engines/avi/Engine.h>
@@ -1111,9 +1112,8 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 
       if (qmd.levels.size() > 1)
       {
-        producer_emd.vertical_extent.vrs =
-            ("Vertical Reference System: " + qmd.levels.front().type);
         producer_emd.vertical_extent.level_type = qmd.levels.front().type;
+        producer_emd.vertical_extent.vrs = VerticalReference::wkt(qmd.levels.front().type);
         for (const auto &item : qmd.levels)
           producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
       }
@@ -1289,8 +1289,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       if (gmd.levels.size() > 1)
       {
-        producer_emd.vertical_extent.vrs =
-            (Fmi::to_string(gmd.levelId) + ";" + gmd.levelName + ";" + gmd.levelDescription);
+        producer_emd.vertical_extent.vrs = VerticalReference::wkt(gmd.levelName);
 
         /*
           1;GROUND;Ground or water surface;
@@ -1500,28 +1499,21 @@ EDRProducerMetaData get_edr_metadata_obs(
         using Engine::Observation::ObsLevelType;
         auto levelType = obs_md.levels().front().getLevelType();
         std::string levelTypeStr;
-        std::string levelDescStr;
 
         producer_emd.vertical_extent.obs_level_type = levelType;
 
         if (levelType == ObsLevelType::Pressure)
-        {
           levelTypeStr = "PressureLevel";
-          levelDescStr = "Pressure level in hPa";
-        }
         /*
         else if (levelType == ObsLevelType::Altitude)
-        {
           levelTypeStr = "Altitude";
-          levelDescStr = "Altitude in meters";
-        }
         */
         else
           throw Fmi::Exception(BCP,
                                ("Unknown observation level type " + std::to_string(levelType)));
 
         producer_emd.vertical_extent.level_type = levelTypeStr;
-        producer_emd.vertical_extent.vrs = ("Vertical Reference System: " + levelDescStr);
+        producer_emd.vertical_extent.vrs = VerticalReference::wkt(levelTypeStr);
         for (const auto &level : obs_md.levels())
           producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level.getLevelValue()));
 

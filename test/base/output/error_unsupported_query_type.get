@@ -1,0 +1,8 @@
+Status: 404
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 404,
+  "detail" : "Invalid query type 'items'. The following queries are supported for collection pal_skandinavia: area,corridor,cube,locations,position,radius,trajectory"
+}

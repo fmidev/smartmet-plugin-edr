@@ -1,0 +1,8 @@
+Status: 400
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "Invalid crs: EPSG:3067. Only OGC:CRS84 is supported"
+}

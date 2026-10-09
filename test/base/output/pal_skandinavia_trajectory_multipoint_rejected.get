@@ -1,4 +1,5 @@
 {
   "title" : "An error occurred",
+  "status" : 400,
   "detail" : "Trajectory and corridor coords must be a LINESTRING or MULTILINESTRING, optionally with Z, M or ZM values: MULTIPOINT((24.1 61.1),(25.2 62.2))"
 }

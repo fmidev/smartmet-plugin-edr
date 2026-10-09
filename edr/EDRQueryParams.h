@@ -4,7 +4,9 @@
 #include "CoordinateFilter.h"
 #include "EDRQuery.h"
 #include "State.h"
+#include <macgyver/DateTime.h>
 #include <spine/HTTP.h>
+#include <set>
 
 namespace SmartMet
 {
@@ -24,6 +26,10 @@ class EDRQueryParams
   const EDRQuery& edrQuery() const { return itsEDRQuery; }
   bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
   const CoordinateFilter& coordinateFilter() const { return itsCoordinateFilter; }
+
+  // Times listed in the datetime parameter (a list or a repeating interval), the output
+  // is limited to these times. Empty if the datetime is a single time or an interval.
+  const std::set<Fmi::DateTime>& dateTimeList() const { return itsDateTimeList; }
 
   std::vector<std::string> icaos;
   std::string requestWKT;
@@ -62,8 +68,9 @@ class EDRQueryParams
   std::string parsePosition(const std::string& coords);
   std::string parseTrajectoryAndCorridor(const std::string& coords);
   void parseLocations(const EDRMetaData& emd, std::string& coords);
-  void parseCube();
+  void parseCube(const EDRMetaData& emd);
   void parseDateTime(const State& state, const std::string& producer, const EDRMetaData& emd);
+  void parseDateTimeList(const std::string& datetime);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,
@@ -91,6 +98,7 @@ class EDRQueryParams
 
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;
+  std::set<Fmi::DateTime> itsDateTimeList;
   std::string mime_type;
 };
 
