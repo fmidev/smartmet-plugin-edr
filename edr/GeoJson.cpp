@@ -781,7 +781,10 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
           }
         }
 
-        if (data_value.value != TS::None())
+        // Not "!= TS::None()": in C++20 that is rewritten as !(None() == value), and
+        // Spine::None compares unequal to everything but None, so missing values were kept
+        // and output as empty strings instead of null
+        if (!std::holds_alternative<Spine::None>(data_value.value))
           tcv.value = data_value.value;
         bool accept = coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
 

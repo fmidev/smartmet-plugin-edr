@@ -2738,7 +2738,10 @@ void add_time_coord_value(const TS::LonLatTimeSeries &llts_data,
       double level = (parameter_level ? *parameter_level
                                       : get_level(tsg_level, levels_present, tsg_index, lev_idx));
 
-      if (data_value.value != TS::None())
+      // Not "!= TS::None()": in C++20 that is rewritten as !(None() == value), and
+      // Spine::None compares unequal to everything but None, so missing values were kept
+      // and output as empty strings instead of null
+      if (!std::holds_alternative<Spine::None>(data_value.value))
         tcv.value = data_value.value;
       bool accept = coordinate_filter.accept(tcv.lon, tcv.lat, level, data_value.time.utc_time());
 
