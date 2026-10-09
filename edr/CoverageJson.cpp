@@ -2418,6 +2418,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
     auto isAviProducer = emd.isAviProducer();
 
     bool levels_present = false;
+    bool time_series = false;  // Does any coverage have several times
     auto coverages = Json::Value(Json::ValueType::arrayValue);
 
     // Levels that occur for any parameter
@@ -2477,6 +2478,9 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
         if (!domain_source)
           continue;
 
+        const auto &group = domain_source->groups[point_idx];
+        time_series = (time_series || group.end - group.begin > 1);
+
         Json::Value coverage = Json::Value(Json::ValueType::objectValue);
         coverage["type"] = Json::Value("Coverage");
         coverage["domain"] =
@@ -2498,9 +2502,13 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
       }
     }
 
-    coverage_collection =
-        add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point",
-        custom_dim_refs, language);
+    // CoverageJSON: a Point domain has at most one time, a PointSeries any number of times
+    coverage_collection = add_prologue_coverage_collection(emd,
+                                                           query_parameters,
+                                                           levels_present,
+                                                           (time_series ? "PointSeries" : "Point"),
+                                                           custom_dim_refs,
+                                                           language);
     coverage_collection["coverages"] = std::move(coverages);
 
     return coverage_collection;
