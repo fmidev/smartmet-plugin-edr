@@ -174,6 +174,19 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
   }
 }
 
+// Distance in kilometres for the within-units and width-units values m, km and mi
+double distance_in_km(double value, const std::string& units, const char* name)
+{
+  if (units == "m")
+    return value / 1000;
+  if (units == "km")
+    return value;
+  if (units == "mi")
+    return value * 1.60934;
+  throw EDRException("Invalid " + std::string(name) + " option '" + units +
+                     "' used, 'm', 'km' and 'mi' are supported");
+}
+
 // Output format selected by the Accept header (RFC 9110 content negotiation). The default
 // format is used if there is no Accept header or it accepts anything.
 std::string negotiate_output_format(const std::optional<std::string>& accept,
@@ -562,9 +575,10 @@ EDRQueryParams::EDRQueryParams(const State& state,
                          itsEDRQuery.collection_id + ": " + output_format_list);
     }
 
-    // RFC 7946: GeoJSON coordinates are always WGS84 longitude/latitude
-    if (itsEDRQuery.crs && output_format == GEO_JSON_FORMAT)
-      throw EDRException("GeoJSON output is available in CRS84 only, crs '" +
+    // RFC 7946: GeoJSON coordinates are always WGS84 longitude/latitude. A geographic CRS
+    // such as EPSG:4326 can be used for the input coordinates, the output stays CRS84.
+    if (itsEDRQuery.crs && output_format == GEO_JSON_FORMAT && !itsEDRQuery.crs->geographic)
+      throw EDRException("GeoJSON output is available in geographic coordinates only, crs '" +
                          itsEDRQuery.crs->id + "' can be used with CoverageJSON");
 
     // Request URLs in each output format for the links of the response
@@ -1024,12 +1038,9 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
          itsEDRQuery.query_type == EDRQueryType::Corridor) &&
         !within.empty() && !within_units.empty())
     {
-      auto radius = Fmi::stod(within);
-      if (within_units == "mi")
-        radius = (radius * 1.60934);
-      else if (within_units != "km")
-        throw EDRException("Invalid within-units option '" + within_units +
-                           "' used, 'km' and 'mi' supported");
+      const auto* units_name =
+          (itsEDRQuery.query_type == EDRQueryType::Corridor ? "width-units" : "within-units");
+      auto radius = distance_in_km(Fmi::stod(within), within_units, units_name);
       coords += (":" + Fmi::to_string(radius));
     }
 
@@ -1043,11 +1054,7 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
       auto distance = Fmi::stod(within);
       if (!(distance > 0))
         throw EDRException("Query parameter 'within' must be positive");
-      if (within_units == "mi")
-        distance *= 1.60934;
-      else if (within_units != "km")
-        throw EDRException("Invalid within-units option '" + within_units +
-                           "' used, 'km' and 'mi' supported");
+      distance = distance_in_km(distance, within_units, "within-units");
       req.setParameter("maxdistance", Fmi::to_string(distance) + "km");
     }
 

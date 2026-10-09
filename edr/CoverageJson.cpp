@@ -357,8 +357,9 @@ Json::Value get_data_queries(const std::string &host,
       query_info_variables["coords"] =
           Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
       auto within_units = Json::Value(Json::ValueType::arrayValue);
-      within_units[0] = Json::Value("km");
-      within_units[1] = Json::Value("mi");
+      within_units[0] = Json::Value("m");
+      within_units[1] = Json::Value("km");
+      within_units[2] = Json::Value("mi");
       query_info_variables["within_units"] = within_units;
       query_type_string = "radius";
     }
@@ -424,8 +425,9 @@ Json::Value get_data_queries(const std::string &host,
       query_info_variables["description"] = Json::Value("Data within corridor");
       query_info_variables["query_type"] = Json::Value("corridor");
       auto width_units = Json::Value(Json::ValueType::arrayValue);
-      width_units[0] = Json::Value("km");
-      width_units[1] = Json::Value("mi");
+      width_units[0] = Json::Value("m");
+      width_units[1] = Json::Value("km");
+      width_units[2] = Json::Value("mi");
       query_info_variables["width_units"] = width_units;
       // Mandatory, but corridor-height can be used only if the collection has levels
       query_info_variables["height_units"] =
@@ -1570,7 +1572,9 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       spatial["crs"] = Json::Value(CRS84_URI);
       extent["spatial"] = spatial;
       // Temporal (optional)
-      extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
+      // The temporal extent is optional, it is unknown if there are no time periods
+      if (!emd.temporal_extent.time_periods.empty())
+        extent["temporal"] = parse_temporal_extent(emd.temporal_extent);
       // Vertical (optional)
       parse_vertical_extent(emd, extent);
 
@@ -1792,7 +1796,9 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       spatial["crs"] = Json::Value(CRS84_URI);
       extent["spatial"] = spatial;
       // Temporal (optional)
-      extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
+      // The temporal extent is optional, it is unknown if there are no time periods
+      if (!collection_emd.temporal_extent.time_periods.empty())
+        extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
       // Vertical (optional)
       parse_vertical_extent(collection_emd, extent);
 

@@ -172,6 +172,7 @@ Content-Type: application/json
 					"query_type" : "corridor",
 					"width_units" : 
 					[
+						"m",
 						"km",
 						"mi"
 					]
@@ -336,6 +337,7 @@ Content-Type: application/json
 					"query_type" : "radius",
 					"within_units" : 
 					[
+						"m",
 						"km",
 						"mi"
 					]

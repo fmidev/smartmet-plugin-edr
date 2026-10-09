@@ -177,6 +177,7 @@ Link: (none)
 					"query_type" : "corridor",
 					"width_units" : 
 					[
+						"m",
 						"km",
 						"mi"
 					]
@@ -299,6 +300,7 @@ Link: (none)
 					"query_type" : "radius",
 					"within_units" : 
 					[
+						"m",
 						"km",
 						"mi"
 					]

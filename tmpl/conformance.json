@@ -7,6 +7,11 @@
     "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/queries",
     "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/json",
     "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/geojson",
-    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/covjson"
+    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/covjson",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.0/conf/collections",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.0/conf/json",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.0/conf/geojson",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.0/conf/covjson"
   ]
 }

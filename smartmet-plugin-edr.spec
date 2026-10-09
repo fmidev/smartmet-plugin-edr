@@ -145,6 +145,9 @@ rm -rf $RPM_BUILD_ROOT
   - resolution-z interpolates cube and corridor data vertically (querydata pressure and
     height levels)
   - Link headers for data responses, the paged locations listing and items
+  - within-units and width-units accept m; GeoJSON accepts geographic CRSs such as EPSG:4326
+  - /conformance also declares the EDR 1.0 classes, collections without time periods have
+    no temporal extent instead of an invalid [null,null] interval
   - Data queries may be sent with form encoded POST
   - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
     bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates

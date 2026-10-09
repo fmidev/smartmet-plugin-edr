@@ -894,8 +894,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     if (!masterquery.dateTimeList().empty())
       filter_times(outputData, masterquery.dateTimeList());
 
-    // Output coordinates in the requested CRS
-    if (edr_query.crs)
+    // Output coordinates in the requested CRS, GeoJSON output is always CRS84
+    if (edr_query.crs && masterquery.output_format != GEO_JSON_FORMAT)
     {
       reproject_output(outputData, masterquery.poptions.parameters(), *edr_query.crs);
       emd.output_crs = edr_query.crs;
