@@ -1174,6 +1174,18 @@ Config::Config(const string &configfile)
 
     // Optional settings. Ensure base url starts with '/' but does not end with it
     itsConfig.lookupValue("timeformat", itsDefaultTimeFormat);
+    // Supported CRSs in addition to CRS84, for example crs = ["EPSG:3067","EPSG:3857"];
+    if (itsConfig.exists("crs"))
+    {
+      const auto &crs_setting = itsConfig.lookup("crs");
+      if (!crs_setting.isArray())
+        throw Fmi::Exception(BCP, "Configuration file error. 'crs' must be an array of strings");
+      std::vector<std::string> crs_list;
+      for (int i = 0; i < crs_setting.getLength(); i++)
+        crs_list.push_back(static_cast<const char *>(crs_setting[i]));
+      itsCRSRegistry.init(crs_list);
+    }
+
     itsConfig.lookupValue("url", itsDefaultUrl);
     Fmi::trim(itsDefaultUrl);
     if (!itsDefaultUrl.empty() && (itsDefaultUrl.front() != '/'))

@@ -253,24 +253,6 @@ std::string negotiate_output_format(const std::optional<std::string>& accept,
   return best_format;
 }
 
-// Identifiers accepted for WGS84 longitude/latitude
-bool is_crs84(const std::string& crs)
-{
-  static const std::set<std::string> aliases{
-      "",
-      "OGC:CRS84",
-      "CRS:84",
-      "CRS84",
-      "[OGC:CRS84]",
-      "urn:ogc:def:crs:OGC:1.3:CRS84",
-      "urn:ogc:def:crs:OGC::CRS84",
-      "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
-      "https://www.opengis.net/def/crs/OGC/1.3/CRS84",
-      "http://www.opengis.net/def/crs/OGC/0/CRS84",
-      "https://www.opengis.net/def/crs/OGC/0/CRS84"};
-  return aliases.find(crs) != aliases.end();
-}
-
 std::string utcDateTime(const Fmi::DateTime& datetime)
 {
   if (datetime.is_not_a_date_time())
@@ -417,6 +399,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
   {
     auto resource = req.getResource();
     itsEDRQuery.host = resolve_host(req, config.defaultUrl());
+    itsEDRQuery.crs_registry = &config.getCRSRegistry();
 
     if (config.getEDRAPI().isEDRAPIQuery(resource))
     {
@@ -489,7 +472,19 @@ EDRQueryParams::EDRQueryParams(const State& state,
     // OGC API-EDR: crs must be one of the CRSs listed in the collection metadata
     auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
     if (!is_crs84(crs))
-      throw EDRException("Invalid crs: " + crs + ". Only OGC:CRS84 is supported");
+    {
+      itsEDRQuery.crs = config.getCRSRegistry().find(crs);
+      if (!itsEDRQuery.crs)
+      {
+        std::string supported = "OGC:CRS84";
+        for (const auto& info : config.getCRSRegistry().all())
+          supported += ", " + info->id;
+        throw EDRException("Invalid crs: " + crs + ". Supported values are " + supported);
+      }
+      // Output coordinates of projected CRSs are compared with the requested ones in metres
+      if (!itsEDRQuery.crs->geographic)
+        itsCoordinateFilter.setTolerance(1.0);
+    }
 
     // If query_type is position, radius, trajectory -> coords is required
     auto coords = Spine::optional_string(req.getParameter("coords"), "");
@@ -557,6 +552,11 @@ EDRQueryParams::EDRQueryParams(const State& state,
                          "'. The following output formats are supported for collection " +
                          itsEDRQuery.collection_id + ": " + output_format_list);
     }
+
+    // RFC 7946: GeoJSON coordinates are always WGS84 longitude/latitude
+    if (itsEDRQuery.crs && output_format == GEO_JSON_FORMAT)
+      throw EDRException("GeoJSON output is available in CRS84 only, crs '" +
+                         itsEDRQuery.crs->id + "' can be used with CoverageJSON");
 
     // Request URLs in each output format for the links of the response
     {
@@ -979,7 +979,9 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
 {
   try
   {
-    auto coords = coordinates;
+    // Coordinates in a CRS whose axis order is latitude/longitude or northing/easting are
+    // handled in the x/y order
+    auto coords = (itsEDRQuery.crs ? itsEDRQuery.crs->toXY(coordinates) : coordinates);
     // EDR within + within-units
     auto within = Spine::optional_string(req.getParameter("within"), "");
     auto within_units = Spine::optional_string(req.getParameter("within-units"), "");
@@ -1197,6 +1199,14 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
             wkt = transformed_wkt;
           }
     */
+    // Coordinates in another CRS are transformed to WGS84, the coordinate filter keeps the
+    // requested coordinates since the output coordinates are transformed back
+    if (itsEDRQuery.crs)
+    {
+      itsRequestXYWkt = wkt;
+      wkt = itsEDRQuery.crs->toWGS84(wkt);
+    }
+
     // The segments of a MULTILINESTRING trajectory are queried as separate locations so that
     // each segment becomes a trajectory of its own in the output. AVI queries read the
     // geometry as a single parameter, and their results are per station anyway.
@@ -1411,6 +1421,11 @@ void EDRQueryParams::parseCube(const EDRMetaData& emd)
     auto wkt = ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
                 upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x +
                 " " + lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
+    if (itsEDRQuery.crs)
+    {
+      itsRequestXYWkt = itsEDRQuery.crs->toXY(wkt);
+      wkt = itsEDRQuery.crs->toWGS84(itsRequestXYWkt);
+    }
     req.addParameter("wkt", wkt);
 
     if (z.empty() && zIsRange)
@@ -1584,7 +1599,9 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
                         " requested with resolution-x and resolution-y, the maximum is " +
                         Fmi::to_string(max_points));
 
-    auto wkt = Spine::optional_string(req.getParameter("wkt"), "");
+    // The grid is regular in the requested CRS
+    auto wkt = (itsEDRQuery.crs ? itsRequestXYWkt
+                                : Spine::optional_string(req.getParameter("wkt"), ""));
     OGRGeometry* geom = nullptr;
     if (OGRGeometryFactory::createFromWkt(wkt.c_str(), nullptr, &geom) != OGRERR_NONE || !geom)
       throw EDRException("Failed to parse the area of the query: " + wkt);
@@ -1602,7 +1619,8 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
     grid.y1 = envelope.MaxY;
 
     // Positions inside the area (cube positions are always inside the bounding box)
-    std::string points;
+    std::vector<double> xs;
+    std::vector<double> ys;
     for (std::size_t j = 0; j < ny; j++)
       for (std::size_t i = 0; i < nx; i++)
       {
@@ -1614,10 +1632,20 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
           if (!geometry->Intersects(&point))
             continue;
         }
-        if (!points.empty())
-          points += ',';
-        points += fmt::format("({} {})", x, y);
+        xs.push_back(x);
+        ys.push_back(y);
       }
+
+    if (itsEDRQuery.crs)
+      itsEDRQuery.crs->toWGS84(xs, ys);
+
+    std::string points;
+    for (std::size_t k = 0; k < xs.size(); k++)
+    {
+      if (!points.empty())
+        points += ',';
+      points += fmt::format("({} {})", xs[k], ys[k]);
+    }
 
     if (points.empty())
       throw EDRException("No positions of the requested grid are inside the area");

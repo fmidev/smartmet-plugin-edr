@@ -6,6 +6,7 @@
 // ======================================================================
 
 #pragma once
+#include "CRSSupport.h"
 
 #include <map>
 #include <optional>
@@ -73,6 +74,11 @@ struct EDRQuery
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;
+  // The requested CRS of the coordinates if other than CRS84
+  CRSInfoPtr crs;
+  // The supported CRSs for the metadata
+  const CRSRegistry *crs_registry = nullptr;
+
   // Area and cube queries on a regular grid (resolution-x, resolution-y)
   EDRGrid grid;
   // Paging of the locations listing (OGC API-EDR limit parameter), no limit by default

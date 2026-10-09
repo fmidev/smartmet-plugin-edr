@@ -236,6 +236,39 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
   return temporal;
 }
 
+// CRS84 and the configured CRSs
+Json::Value crs_details(const CRSRegistry *crs_registry)
+{
+  auto details = Json::Value(Json::ValueType::arrayValue);
+  auto crs84 = Json::Value(Json::ValueType::objectValue);
+  crs84["crs"] = Json::Value("OGC:CRS84");
+  crs84["wkt"] = Json::Value(
+      "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS "
+      "84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT["
+      "\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]"
+      "],AUTHORITY[\"EPSG\",\"4326\"]]");
+  details.append(crs84);
+  if (crs_registry)
+    for (const auto &info : crs_registry->all())
+    {
+      auto detail = Json::Value(Json::ValueType::objectValue);
+      detail["crs"] = Json::Value(info->id);
+      detail["wkt"] = Json::Value(info->wkt);
+      details.append(detail);
+    }
+  return details;
+}
+
+Json::Value crs_list(const CRSRegistry *crs_registry)
+{
+  auto crs = Json::Value(Json::ValueType::arrayValue);
+  crs.append(Json::Value("OGC:CRS84"));
+  if (crs_registry)
+    for (const auto &info : crs_registry->all())
+      crs.append(Json::Value(info->id));
+  return crs;
+}
+
 Json::Value height_units_json(const std::string &level_type)
 {
   auto ret = Json::Value(Json::ValueType::arrayValue);
@@ -253,7 +286,8 @@ Json::Value get_data_queries(const std::string &host,
                              bool instances_exist,
                              const std::string &instance_id = "",
                              const std::string &level_type = "",
-                             Json::Value *query_links = nullptr)
+                             Json::Value *query_links = nullptr,
+                             const CRSRegistry *crs_registry = nullptr)
 {
   auto data_queries = Json::Value(Json::ValueType::objectValue);
 
@@ -400,18 +434,7 @@ Json::Value get_data_queries(const std::string &host,
       query_links->append(query_link);
     }
 
-    auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
-    auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
-    //    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
-    query_info_crs_details_0["crs"] = Json::Value("OGC:CRS84");
-    query_info_crs_details_0["wkt"] = Json::Value(
-        "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS "
-        "84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT["
-        "\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]"
-        "],AUTHORITY[\"EPSG\",\"4326\"]]");
-
-    query_info_crs_details[0] = query_info_crs_details_0;
-    query_info_variables["crs_details"] = query_info_crs_details;
+    query_info_variables["crs_details"] = crs_details(crs_registry);
 
     query_info_link["variables"] = query_info_variables;
     query_info["link"] = query_info_link;
@@ -450,18 +473,8 @@ Json::Value get_data_queries(const std::string &host,
       query_links->append(query_link);
     }
 
-    auto query_info_crs_details = Json::Value(Json::ValueType::arrayValue);
-    auto query_info_crs_details_0 = Json::Value(Json::ValueType::objectValue);
-    //    query_info_crs_details_0["crs"] = Json::Value("EPSG:4326");
-    query_info_crs_details_0["crs"] = Json::Value("OGC:CRS84");
-    query_info_crs_details_0["wkt"] = Json::Value(
-        "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS "
-        "84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT["
-        "\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]"
-        "],AUTHORITY[\"EPSG\",\"4326\"]]");
-    query_info_crs_details[0] = query_info_crs_details_0;
     query_info_variables["output_formats"] = query_info_output_formats;
-    query_info_variables["crs_details"] = query_info_crs_details;
+    query_info_variables["crs_details"] = crs_details(crs_registry);
     query_info_link["variables"] = query_info_variables;
     query_info["link"] = query_info_link;
     data_queries["instances"] = query_info;
@@ -867,12 +880,38 @@ void add_value(const TS::TimedValue &tv,
   }
 }
 
+// Reference system of the x and y coordinates
+Json::Value xy_referencing(const CRSInfoPtr &crs)
+{
+  auto referencing_xy = Json::Value(Json::ValueType::objectValue);
+  referencing_xy["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+  // The order of the coordinates is the order of the axes of the CRS, x is always the
+  // longitude or easting
+  const bool swapped = (crs && crs->swapped);
+  referencing_xy["coordinates"][0] = Json::Value(swapped ? "y" : "x");
+  referencing_xy["coordinates"][1] = Json::Value(swapped ? "x" : "y");
+  referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
+  if (!crs)
+  {
+    referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
+    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
+  }
+  else
+  {
+    referencing_xy["system"]["type"] =
+        Json::Value(crs->geographic ? "GeographicCRS" : "ProjectedCRS");
+    referencing_xy["system"]["id"] = Json::Value(crs->uri);
+  }
+  return referencing_xy;
+}
+
 Json::Value add_prologue_one_point(std::optional<int> level,
                                    const std::string &level_type,
                                    double longitude,
                                    double latitude,
                                    int longitude_precision,
-                                   int latitude_precision)
+                                   int latitude_precision,
+                                   const CRSInfoPtr &output_crs)
 {
   try
   {
@@ -906,13 +945,7 @@ Json::Value add_prologue_one_point(std::optional<int> level,
 
     // Referencing x,y coordinates
     auto referencing = Json::Value(Json::ValueType::arrayValue);
-    auto referencing_xy = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-    referencing_xy["coordinates"][0] = Json::Value("x");
-    referencing_xy["coordinates"][1] = Json::Value("y");
-    referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
+    auto referencing_xy = xy_referencing(output_crs);
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
@@ -955,7 +988,8 @@ Json::Value add_prologue_one_point(std::optional<int> level,
 [[maybe_unused]]
 Json::Value add_prologue_multi_point(std::optional<int> level,
                                      const EDRMetaData &emd,
-                                     const std::vector<TS::LonLat> &coordinates)
+                                     const std::vector<TS::LonLat> &coordinates,
+                                   const CRSInfoPtr &output_crs)
 {
   try
   {
@@ -1013,13 +1047,7 @@ Json::Value add_prologue_multi_point(std::optional<int> level,
     domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
     domain["axes"]["t"]["values"] = Json::Value(Json::ValueType::arrayValue);
     auto referencing = Json::Value(Json::ValueType::arrayValue);
-    auto referencing_xy = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-    referencing_xy["coordinates"][0] = Json::Value("x");
-    referencing_xy["coordinates"][1] = Json::Value("y");
-    referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
+    auto referencing_xy = xy_referencing(output_crs);
 
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
     if (level)
@@ -1074,13 +1102,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
         get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
 
     auto referencing = Json::Value(Json::ValueType::arrayValue);
-    auto referencing_xy = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-    referencing_xy["coordinates"][0] = Json::Value("x");
-    referencing_xy["coordinates"][1] = Json::Value("y");
-    referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
+    auto referencing_xy = xy_referencing(emd.output_crs);
 
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
     if (levels_exists)
@@ -1540,11 +1562,10 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                                   false,
                                                   instance_id,
                                                   emd.vertical_extent.level_type,
-                                                  &instance_links);
+                                                  &instance_links,
+                                                  edr_query.crs_registry);
       // Optional: crs
-      auto crs = Json::Value(Json::ValueType::arrayValue);
-      //	  crs[0] = Json::Value("EPSG:4326");
-      crs[0] = Json::Value("OGC:CRS84");
+      auto crs = crs_list(edr_query.crs_registry);
       instance["crs"] = crs;
 
       auto output_formats = Json::Value(Json::ValueType::arrayValue);
@@ -1762,13 +1783,12 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                instances_exist,
                                                "",
                                                collection_emd.vertical_extent.level_type,
-                                               &links);
+                                               &links,
+                                               edr_query.crs_registry);
       value["links"] = links;
 
       // Optional: crs
-      auto crs = Json::Value(Json::ValueType::arrayValue);
-      //	  crs[0] = Json::Value("EPSG:4326");
-      crs[0] = Json::Value("OGC:CRS84");
+      auto crs = crs_list(edr_query.crs_registry);
       value["crs"] = crs;
 
       // Custom dimensions
@@ -1903,7 +1923,8 @@ void process_parameters_one_point(const std::vector<TS::TimeSeriesData> &outdata
                                           coordinates.front().lon,
                                           coordinates.front().lat,
                                           longitude_precision,
-                                          latitude_precision);
+                                          latitude_precision,
+                                          emd.output_crs);
         coverage["parameters"] =
             get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
         json_param_object["type"] = Json::Value("NdArray");
@@ -2168,13 +2189,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
 
     // Referencing x,y coordinates
     auto referencing = Json::Value(Json::ValueType::arrayValue);
-    auto referencing_xy = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-    referencing_xy["coordinates"][0] = Json::Value("x");
-    referencing_xy["coordinates"][1] = Json::Value("y");
-    referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
+    auto referencing_xy = xy_referencing(emd.output_crs);
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);
@@ -3284,13 +3299,7 @@ Json::Value format_output_data_vertical_profile(
 
     // Referencing x,y coordinates
     auto referencing = Json::Value(Json::ValueType::arrayValue);
-    auto referencing_xy = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-    referencing_xy["coordinates"][0] = Json::Value("x");
-    referencing_xy["coordinates"][1] = Json::Value("y");
-    referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
+    auto referencing_xy = xy_referencing(emd.output_crs);
 
     // Referencing z coordinate
     auto referencing_z = Json::Value(Json::ValueType::objectValue);

@@ -101,6 +101,7 @@ class EDRQueryParams
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;
   std::set<Fmi::DateTime> itsDateTimeList;
+  std::string itsRequestXYWkt;  // the area or path in the requested CRS (x/y order)
   std::string mime_type;
 };
 

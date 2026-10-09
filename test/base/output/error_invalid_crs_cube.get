@@ -4,5 +4,5 @@ Content-Type: application/problem+json
 {
   "title" : "An error occurred",
   "status" : 400,
-  "detail" : "Invalid crs: EPSG:3067. Only OGC:CRS84 is supported"
+  "detail" : "Invalid crs: EPSG:3857. Supported values are OGC:CRS84, EPSG:3067, EPSG:4326"
 }

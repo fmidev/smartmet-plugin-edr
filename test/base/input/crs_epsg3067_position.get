@@ -1,0 +1,1 @@
+GET /edr/collections/pal_skandinavia/position?coords=POINT(385700+6672000)&crs=EPSG:3067&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0

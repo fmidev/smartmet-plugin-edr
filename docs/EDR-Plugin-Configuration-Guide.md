@@ -257,6 +257,15 @@ The unit settings follow the CoverageJSON unit object: `label` is required, as i
 it the symbol is output as a plain string such as `°C`. The optional `id` identifies the unit
 itself, for example with a WMO code registry URI.
 
+# Coordinate reference systems
+
+WGS84 longitude/latitude (OGC:CRS84) is always supported. Additional CRSs for the `crs` query
+parameter are listed as EPSG codes:
+
+```
+crs = ["EPSG:3067", "EPSG:4326", "EPSG:3857"];
+```
+
 # URL, language
 
 ```

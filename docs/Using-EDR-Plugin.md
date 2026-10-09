@@ -236,9 +236,22 @@ together with LINESTRINGZ or LINESTRINGZM coordinates, which already define the 
 
 ### **Parameter crs**
 
-Currently only WGS84 longitude/latitude is supported. It is the default and can be given for
-example as `OGC:CRS84`, `CRS84` or `http://www.opengis.net/def/crs/OGC/1.3/CRS84`. Other values
-are rejected with status 400.
+WGS84 longitude/latitude is the default and can be given for example as `OGC:CRS84`, `CRS84`
+or `http://www.opengis.net/def/crs/OGC/1.3/CRS84`. The other supported coordinate reference
+systems are listed in the `crs` and `crs_details` metadata of the collections, and can be given
+as `EPSG:3067`, `http://www.opengis.net/def/crs/EPSG/0/3067` or `urn:ogc:def:crs:EPSG::3067`.
+Unsupported values are rejected with status 400.
+
+The coordinates of `coords` and `bbox` are given in the requested CRS in the axis order of the
+CRS: for example `EPSG:4326` is latitude/longitude, unlike `OGC:CRS84`. The CoverageJSON output
+coordinates are in the requested CRS too: the `x` axis is always the longitude or easting, and
+the referencing lists the coordinates in the axis order of the CRS. The grids of
+`resolution-x` and `resolution-y` are regular in the requested CRS. GeoJSON output is always in
+WGS84 longitude/latitude, as required by RFC 7946, and cannot be combined with another CRS.
+
+```
+/collections/pal_skandinavia/position?coords=POINT(385700 6672000)&crs=EPSG:3067&parameter-name=Temperature
+```
 
 ### **Parameter f**
 

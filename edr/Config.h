@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AviCollection.h"
+#include "CRSSupport.h"
 #include "CollectionInfo.h"
 #include "EDRAPI.h"
 #include "EDRDefs.h"
@@ -105,6 +106,9 @@ class Config : private boost::noncopyable
 
   bool getPretty() const { return itsPretty; }
 
+  // Supported CRSs in addition to CRS84 (crs setting)
+  const CRSRegistry &getCRSRegistry() const { return itsCRSRegistry; }
+
   const CustomDimReferences &getCustomDimReferences() const
   {
     return itsCustomDimReferences;
@@ -114,6 +118,7 @@ class Config : private boost::noncopyable
 
  private:
   libconfig::Config itsConfig;
+  CRSRegistry itsCRSRegistry;
   std::string itsDefaultPrecision = "normal";
   // Optional override: when precision.enabled_timeseries is provided, its first entry
   // becomes the default precision for timeseries-style requests. Empty means no override.

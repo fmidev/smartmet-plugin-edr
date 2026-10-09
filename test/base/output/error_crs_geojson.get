@@ -4,5 +4,5 @@ Content-Type: application/problem+json
 {
   "title" : "An error occurred",
   "status" : 400,
-  "detail" : "Invalid crs: EPSG:3067. Only OGC:CRS84 is supported"
+  "detail" : "GeoJSON output is available in CRS84 only, crs 'EPSG:3067' can be used with CoverageJSON"
 }

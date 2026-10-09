@@ -1,5 +1,6 @@
 #include "QueryProcessingHub.h"
 #include "UtilityFunctions.h"
+#include "CRSSupport.h"
 #include "CoverageJson.h"
 #include "GeoJson.h"
 #include "GridInterface.h"
@@ -344,6 +345,81 @@ Json::Value data_query_links(const EDRQuery& edr_query, const std::string& outpu
   link["type"] = Json::Value("application/json");
   links.append(link);
   return links;
+}
+
+// Transforms the longitude and latitude columns of the output to the requested CRS
+void reproject_output(TS::OutputData& outputData,
+                      const TS::OptionParsers::ParameterList& parameters,
+                      const CRSInfo& crs)
+{
+  std::optional<std::size_t> lon_index;
+  std::optional<std::size_t> lat_index;
+  for (std::size_t i = 0; i < parameters.size(); i++)
+  {
+    auto name = boost::algorithm::to_lower_copy(parameters[i].name());
+    if (name == "longitude" && !lon_index)
+      lon_index = i;
+    else if (name == "latitude" && !lat_index)
+      lat_index = i;
+  }
+  if (!lon_index || !lat_index)
+    return;
+
+  auto transform = [&crs](TS::TimeSeries& lons, TS::TimeSeries& lats)
+  {
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<std::size_t> positions;
+    for (std::size_t k = 0; k < std::min(lons.size(), lats.size()); k++)
+    {
+      const auto* lon = std::get_if<double>(&lons[k].value);
+      const auto* lat = std::get_if<double>(&lats[k].value);
+      if (lon && lat)
+      {
+        x.push_back(*lon);
+        y.push_back(*lat);
+        positions.push_back(k);
+      }
+    }
+    if (positions.empty())
+      return;
+    crs.fromWGS84(x, y);
+    for (std::size_t n = 0; n < positions.size(); n++)
+    {
+      lons[positions[n]].value = x[n];
+      lats[positions[n]].value = y[n];
+    }
+  };
+
+  for (auto& item : outputData)
+  {
+    auto& columns = item.second;
+    if (std::max(*lon_index, *lat_index) >= columns.size())
+      continue;
+    auto& lon_data = columns[*lon_index];
+    auto& lat_data = columns[*lat_index];
+
+    if (auto* lon = std::get_if<TS::TimeSeriesPtr>(&lon_data))
+    {
+      auto* lat = std::get_if<TS::TimeSeriesPtr>(&lat_data);
+      if (lat && *lon && *lat)
+        transform(**lon, **lat);
+    }
+    else if (auto* lonv = std::get_if<TS::TimeSeriesVectorPtr>(&lon_data))
+    {
+      auto* latv = std::get_if<TS::TimeSeriesVectorPtr>(&lat_data);
+      if (latv && *lonv && *latv)
+        for (std::size_t k = 0; k < std::min((*lonv)->size(), (*latv)->size()); k++)
+          transform((**lonv)[k], (**latv)[k]);
+    }
+    else if (auto* long_group = std::get_if<TS::TimeSeriesGroupPtr>(&lon_data))
+    {
+      auto* latg = std::get_if<TS::TimeSeriesGroupPtr>(&lat_data);
+      if (latg && *long_group && *latg)
+        for (std::size_t k = 0; k < std::min((*long_group)->size(), (*latg)->size()); k++)
+          transform((**long_group)[k].timeseries, (**latg)[k].timeseries);
+    }
+  }
 }
 
 // Remove the values whose time is not in the given list of times (EDR datetime lists)
@@ -811,6 +887,18 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
     if (!masterquery.dateTimeList().empty())
       filter_times(outputData, masterquery.dateTimeList());
+
+    // Output coordinates in the requested CRS
+    if (edr_query.crs)
+    {
+      reproject_output(outputData, masterquery.poptions.parameters(), *edr_query.crs);
+      emd.output_crs = edr_query.crs;
+      if (!edr_query.crs->geographic)
+      {
+        emd.parameter_precisions["longitude"] = 2;
+        emd.parameter_precisions["latitude"] = 2;
+      }
+    }
 
     // CoordinateFilter::accept() requires an exact (lon,lat) match against the literal
     // coordinates given in the request (LINESTRINGZ/ZM/M, MULTIPOINTZ); it only works when the

@@ -142,6 +142,9 @@ rm -rf $RPM_BUILD_ROOT
   - resolution-x and resolution-y for area and cube queries on gridded data return a
     CoverageJSON Grid domain coverage
   - Data queries may be sent with form encoded POST
+  - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
+    bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates
+    are reprojected to it
   - /conformance declares EDR 1.2
 - The API documents are no longer cached per Host header
 

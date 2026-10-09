@@ -21,6 +21,9 @@ class CoordinateFilter
   bool accept(double longitude, double latitude, double level, const Fmi::DateTime &timestep) const;
   bool isEmpty() const;
 
+  // Tolerance of coordinate comparisons, by default 1e-5 (degrees)
+  void setTolerance(double tolerance) { itsTolerance = tolerance; }
+
   // Position of the coordinate in the order the coordinates were added (e.g. the position
   // along the requested trajectory), or nothing if the coordinate was not added
   std::optional<std::size_t> position(double longitude, double latitude) const;
@@ -38,6 +41,7 @@ class CoordinateFilter
   AllowedTimesteps itsAllowedTimesteps;
   AllowedLevelsTimesteps itsAllowedLevelsTimesteps;
   std::map<LonLat, std::size_t> itsPositions;
+  double itsTolerance = 1e-5;
 
   void addPosition(const LonLat &lonlat);
 };
