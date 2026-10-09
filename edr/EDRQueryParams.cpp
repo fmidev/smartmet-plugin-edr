@@ -15,6 +15,7 @@
 #include <fmt/format.h>
 #include <ogr_geometry.h>
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <string>
@@ -493,6 +494,13 @@ EDRQueryParams::EDRQueryParams(const State& state,
     if (!is_crs84(crs))
     {
       itsEDRQuery.crs = config.getCRSRegistry().find(crs);
+      if (itsEDRQuery.crs)
+      {
+        // MetOcean profile: the output referencing system id is the requested crs value
+        auto info = std::make_shared<CRSInfo>(*itsEDRQuery.crs);
+        info->request_name = crs;
+        itsEDRQuery.crs = info;
+      }
       if (!itsEDRQuery.crs)
       {
         std::string supported = "OGC:CRS84";
@@ -679,7 +687,18 @@ std::string EDRQueryParams::parseInstances(const State& state,
 {
   try
   {
+    // MetOcean profile: instance ids are RFC 3339 times (2008-08-05T06:31:00Z). Other forms
+    // of the same time such as the earlier 20080805T063100 are accepted as aliases.
     itsEDRQuery.instance_id = resource_parts.at(4);
+    try
+    {
+      itsEDRQuery.instance_id =
+          Fmi::date_time::to_iso_extended_string(Fmi::TimeParser::parse(itsEDRQuery.instance_id)) +
+          "Z";
+    }
+    catch (...)
+    {
+    }
     itsEDRQuery.query_id = EDRQueryId::SpecifiedCollectionSpecifiedInstance;
 
     if (!state.getPlugin().isValidInstance(itsEDRQuery.collection_id, itsEDRQuery.instance_id))
@@ -1477,6 +1496,7 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
     //                  using nearest metadata time instant to current time by default.
     //
     auto datetime = Spine::optional_string(req.getParameter("datetime"), "");
+    const bool requested_datetime = !datetime.empty();
 
     if (datetime.empty())
       datetime = itsCoordinateFilter.getDatetime();
@@ -1518,6 +1538,9 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
         (!datetime.empty() && std::toupper(datetime.front()) == 'R'))
     {
       parseDateTimeList(datetime);
+      if (requested_datetime)
+        for (const auto& t : itsDateTimeList)
+          checkModelTimeStep(emd, t);
       req.addParameter("starttime", Fmi::to_iso_string(*itsDateTimeList.begin()) + "Z");
       req.addParameter("endtime", Fmi::to_iso_string(*itsDateTimeList.rbegin()) + "Z");
       return;
@@ -1547,6 +1570,20 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
 
     if (!datetime.empty() && std::toupper(datetime[0]) == 'P')
       throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
+
+    if (requested_datetime)
+    {
+      std::optional<Fmi::DateTime> t;
+      try
+      {
+        t = Fmi::TimeParser::parse(datetime);
+      }
+      catch (...)
+      {
+      }
+      if (t)
+        checkModelTimeStep(emd, *t);
+    }
 
     req.addParameter("starttime", datetime);
     req.addParameter("endtime", datetime);
@@ -2026,6 +2063,53 @@ void EDRQueryParams::parseLimitAndOffset()
     itsEDRQuery.limit = std::min(static_cast<std::size_t>(*limit), max_limit);
   if (auto offset = parse("offset", 0))
     itsEDRQuery.offset = static_cast<std::size_t>(*offset);
+}
+
+void EDRQueryParams::checkModelTimeStep(const EDRMetaData& emd, const Fmi::DateTime& t) const
+{
+  // MetOcean profile /req/nwp/collection_data_queries C: a time between the time steps of a
+  // model is an error. Observations and aviation messages have no fixed time steps. The
+  // extent of an instance may differ from the latest one, instance queries are not checked.
+  if (emd.isObsProducer() || emd.isAviProducer() || !itsEDRQuery.instance_id.empty())
+    return;
+
+  const auto& extent = emd.temporal_extent;
+  if (extent.time_periods.empty())
+    return;
+
+  // Times outside the extent have no data at all
+  const auto& first = extent.time_periods.front().start_time;
+  const auto& last_period = extent.time_periods.back();
+  const auto& last =
+      (last_period.end_time.is_not_a_date_time() ? last_period.start_time : last_period.end_time);
+  if (t < first || t > last)
+    return;
+
+  for (const auto& period : extent.single_time_periods)
+    if (period.start_time == t)
+      return;
+
+  for (const auto& period : extent.time_periods)
+  {
+    if (period.end_time.is_not_a_date_time())
+    {
+      if (period.start_time == t)
+        return;
+    }
+    else if (t >= period.start_time && t <= period.end_time)
+    {
+      // Unknown time step, any time inside the period is accepted
+      if (period.timestep <= 0)
+        return;
+      const auto minutes = (t - period.start_time).total_seconds() / 60.0;
+      if (std::fmod(minutes, period.timestep) == 0)
+        return;
+    }
+  }
+
+  throw EDRException("Time " + Fmi::date_time::to_iso_extended_string(t) +
+                     "Z is between the time steps of collection '" + itsEDRQuery.collection_id +
+                     "'");
 }
 
 void EDRQueryParams::parseDateTimeList(const std::string& datetime)

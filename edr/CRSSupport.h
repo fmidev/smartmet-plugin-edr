@@ -31,6 +31,7 @@ struct CRSInfo
   std::string wkt;   // WKT definition for the collection metadata
   bool geographic = false;
   bool swapped = false;  // authority axis order is latitude/longitude or northing/easting
+  std::string request_name;  // the crs parameter value of the request, if set
 
   // Transformations are created for each use since PROJ objects must not be shared by
   // threads, the gis library caches the spatial references. Internally the coordinates are

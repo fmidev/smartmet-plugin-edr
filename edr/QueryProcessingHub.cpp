@@ -1,5 +1,8 @@
 #include "QueryProcessingHub.h"
 #include "UtilityFunctions.h"
+#include <ogr_geometry.h>
+#include <cstring>
+#include <optional>
 #include "CRSSupport.h"
 #include "CoverageJson.h"
 #include "GeoJson.h"
@@ -475,6 +478,51 @@ void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, cons
 // A location without data is left out of a multi-location result. Only if no location got
 // any data does the request fail, with the same error a single location used to get
 // (BRAINSTORM-3500).
+// The location of a 'No data available for <place>' exception, if the exception is one
+std::optional<std::string> no_data_place(const Fmi::Exception& exception)
+{
+  const std::string prefix = "No data available for ";
+  for (const auto* e = &exception; e != nullptr; e = e->getPrevException())
+  {
+    const char* what = e->getWhat();
+    if (what != nullptr && std::strncmp(what, prefix.c_str(), prefix.size()) == 0)
+      return std::string(what + prefix.size());
+  }
+  return {};
+}
+
+// True if some location of the query is inside the spatial extent of the collection
+bool inside_spatial_extent(const CommonQuery& query, const EDRMetaData& emd)
+{
+  const auto& extent = emd.spatial_extent;
+  OGREnvelope bbox;
+  bbox.MinX = extent.bbox_xmin;
+  bbox.MaxX = extent.bbox_xmax;
+  bbox.MinY = extent.bbox_ymin;
+  bbox.MaxY = extent.bbox_ymax;
+
+  for (const auto& tloc : query.loptions->locations())
+  {
+    if (!tloc.loc)
+      continue;
+    // EDR coordinates are WKT geometries, other locations are points
+    OGREnvelope envelope;
+    const auto* geometry = (tloc.loc->type == Spine::Location::Wkt
+                                ? query.wktGeometries.getGeometry(tloc.loc->name)
+                                : nullptr);
+    if (geometry)
+      geometry->getEnvelope(&envelope);
+    else
+    {
+      envelope.MinX = envelope.MaxX = tloc.loc->longitude;
+      envelope.MinY = envelope.MaxY = tloc.loc->latitude;
+    }
+    if (envelope.Intersects(bbox))
+      return true;
+  }
+  return false;
+}
+
 void require_some_data(const std::vector<std::string>& theNoDataLocations)
 {
   std::string names;
@@ -866,9 +914,26 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       if (process_qengine_query)
       {
-        auto skipped = itsQEngineQuery.processQEngineQuery(
-            state, q, outputData, areaproducers, producerDataPeriod);
-        no_data_locations.insert(no_data_locations.end(), skipped.begin(), skipped.end());
+        try
+        {
+          auto skipped = itsQEngineQuery.processQEngineQuery(
+              state, q, outputData, areaproducers, producerDataPeriod);
+          no_data_locations.insert(no_data_locations.end(), skipped.begin(), skipped.end());
+        }
+        catch (...)
+        {
+          // A location whose data could not be found after all (e.g. no point data station
+          // within the requested distance) is handled like the locations skipped above
+          Fmi::Exception ex(BCP, "Operation failed!", nullptr);
+          auto place = no_data_place(ex);
+          if (!place)
+            throw;
+          no_data_locations.push_back(*place);
+          outputData.erase(std::remove_if(outputData.begin(),
+                                          outputData.end(),
+                                          [](const auto& item) { return item.second.empty(); }),
+                           outputData.end());
+        }
       }
 
       // get the latestTimestep from previous query
@@ -882,7 +947,11 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       ++producer_group;
     }
 
-    if (outputData.empty() && !no_data_locations.empty())
+    // MetOcean profile /req/core/error_handling: a query inside the extent of the collection
+    // which finds no data is answered with 204 No Content, only queries completely outside the
+    // extent are errors
+    if (outputData.empty() && !no_data_locations.empty() &&
+        !inside_spatial_extent(masterquery, emd))
       require_some_data(no_data_locations);
 
 #ifndef WITHOUT_OBSERVATION
@@ -1410,8 +1479,9 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
       ++producer_group;
     }
 
+    // No data: not cached, processQuery decides between 204 No Content and an error
     if (locations_with_data == 0 && !no_data_locations.empty())
-      require_some_data(no_data_locations);
+      return Fmi::bad_hash;
 
     return hash;
   }

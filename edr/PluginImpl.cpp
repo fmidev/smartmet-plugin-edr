@@ -1807,7 +1807,8 @@ bool PluginImpl::isValidInstance(const std::string& producer, const std::string&
     if (epmd != engine_metadata.end())
     {
       for (auto const& md : epmd->second)
-        if (Fmi::date_time::to_iso_string(md.temporal_extent.origin_time) == instanceId)
+        if (Fmi::date_time::to_iso_extended_string(md.temporal_extent.origin_time) + "Z" ==
+            instanceId)
           return true;
     }
   }

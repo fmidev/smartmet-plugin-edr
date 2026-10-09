@@ -2,12 +2,12 @@
 	"links" : 
 	[
 		{
-			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position?coords=POINT%2860.1699%2024.9384%29&crs=EPSG%3A4326&datetime=2008-08-05T12%3A00%3A00Z&f=CoverageJSON&parameter-name=Temperature",
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position?coords=POINT%2824.9384%2060.1699%29&crs=EPSG%3A4326&datetime=2008-08-05T12%3A00%3A00Z&f=CoverageJSON&parameter-name=Temperature",
 			"rel" : "alternate",
 			"type" : "application/vnd.cov+json"
 		},
 		{
-			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position?coords=POINT%2860.1699%2024.9384%29&crs=EPSG%3A4326&datetime=2008-08-05T12%3A00%3A00Z&f=GeoJSON&parameter-name=Temperature",
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position?coords=POINT%2824.9384%2060.1699%29&crs=EPSG%3A4326&datetime=2008-08-05T12%3A00%3A00Z&f=GeoJSON&parameter-name=Temperature",
 			"rel" : "self",
 			"type" : "application/geo+json"
 		},

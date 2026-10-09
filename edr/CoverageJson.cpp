@@ -227,11 +227,8 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
     }
   }
 
-  auto trs = Json::Value(
-      "TIMECRS[\"DateTime\",TDATUM[\"Gregorian "
-      "Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time "
-      "(T)\",future]]");
-  temporal["trs"] = trs;
+  // MetOcean profile /req/core/collection_temporal_extent: the trs is Gregorian
+  temporal["trs"] = Json::Value("Gregorian");
 
   return temporal;
 }
@@ -917,16 +914,19 @@ Json::Value xy_referencing(const CRSInfoPtr &crs)
   referencing_xy["coordinates"][0] = Json::Value(swapped ? "y" : "x");
   referencing_xy["coordinates"][1] = Json::Value(swapped ? "x" : "y");
   referencing_xy["system"] = Json::Value(Json::ValueType::objectValue);
+  // MetOcean profile /req/data-query-response-format/referencing: the id is OGC:CRS84, or
+  // the crs parameter value if one was given
   if (!crs)
   {
     referencing_xy["system"]["type"] = Json::Value("GeographicCRS");
-    referencing_xy["system"]["id"] = Json::Value(CRS84_URI);
+    referencing_xy["system"]["id"] = Json::Value("OGC:CRS84");
   }
   else
   {
     referencing_xy["system"]["type"] =
         Json::Value(crs->geographic ? "GeographicCRS" : "ProjectedCRS");
-    referencing_xy["system"]["id"] = Json::Value(crs->uri);
+    referencing_xy["system"]["id"] =
+        Json::Value(crs->request_name.empty() ? crs->id : crs->request_name);
   }
   return referencing_xy;
 }
@@ -1534,7 +1534,9 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
     unsigned int instance_index = 0;
     for (const auto &emd : emds)
     {
-      auto instance_id = Fmi::to_iso_string(emd.temporal_extent.origin_time);
+      // MetOcean profile /req/nwp/collection_granularity: the id is an RFC 3339 time
+      auto instance_id =
+          Fmi::date_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z";
 
       if (!process_instance(edr_query, emd, instance_id))
         continue;
@@ -1569,7 +1571,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
-      spatial["crs"] = Json::Value(CRS84_URI);
+      spatial["crs"] = Json::Value("OGC:CRS84");
       extent["spatial"] = spatial;
       // Temporal (optional)
       // The temporal extent is optional, it is unknown if there are no time periods
@@ -1793,7 +1795,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       spatial["bbox"][0] = bbox;
       // CRS (mandatory)
       //      spatial["crs"] = Json::Value("EPSG:4326");
-      spatial["crs"] = Json::Value(CRS84_URI);
+      spatial["crs"] = Json::Value("OGC:CRS84");
       extent["spatial"] = spatial;
       // Temporal (optional)
       // The temporal extent is optional, it is unknown if there are no time periods

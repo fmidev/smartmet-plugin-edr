@@ -1,3 +1,6 @@
+Status: 200
+Content-Type: application/vnd.cov+json
+
 {
 	"type" : "Coverage",
 	"domain" : 
@@ -8,12 +11,12 @@
 			{
 				"coordinates" : 
 				[
-					"y",
-					"x"
+					"x",
+					"y"
 				],
 				"system" : 
 				{
-					"id" : "http://www.opengis.net/def/crs/EPSG/0/4326",
+					"id" : "OGC:CRS84",
 					"type" : "GeographicCRS"
 				}
 			},

@@ -17,7 +17,7 @@ Link: <http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position?coords=PO
 				],
 				"system" : 
 				{
-					"id" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+					"id" : "OGC:CRS84",
 					"type" : "GeographicCRS"
 				}
 			},

@@ -289,12 +289,16 @@ def check_collection(fname, path, coll):
     spatial = extent.get("spatial", {})
     if "bbox" not in spatial or "crs" not in spatial:
         error(fname, path + ".extent.spatial", "spatial extent must have bbox and crs")
+    # MetOcean profile: OGC:CRS84 and Gregorian; otherwise WKT or a CRS URI
     crs = spatial.get("crs", "")
-    if not (crs.startswith(WKT_KEYWORDS) or re.match(r"https?://www\.opengis\.net/def/crs/", crs)):
-        error(fname, path + ".extent.spatial.crs", f"crs '{crs}' is neither WKT nor a CRS URI")
+    if not (crs == "OGC:CRS84" or crs.startswith(WKT_KEYWORDS) or
+            re.match(r"https?://www\.opengis\.net/def/crs/", crs)):
+        error(fname, path + ".extent.spatial.crs", f"crs '{crs}' is not OGC:CRS84, WKT or a CRS URI")
     for key, member in (("temporal", "trs"), ("vertical", "vrs")):
         if key in extent:
             text = extent[key].get(member, "")
+            if key == "temporal" and text == "Gregorian":
+                continue
             if not text.startswith(WKT_KEYWORDS) or not balanced(text):
                 error(fname, f"{path}.extent.{key}.{member}", "must be a valid WKT definition")
     for name, q in coll.get("data_queries", {}).items():

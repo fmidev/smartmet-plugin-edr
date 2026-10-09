@@ -75,6 +75,7 @@ class EDRQueryParams
   void parseCube(const EDRMetaData& emd);
   void parseDateTime(const State& state, const std::string& producer, const EDRMetaData& emd);
   void parseDateTimeList(const std::string& datetime);
+  void checkModelTimeStep(const EDRMetaData& emd, const Fmi::DateTime& t) const;
   void parseLimitAndOffset();
   void parseItemsQuery(const EDRMetaData& emd, const Config& config);
   void parseResolution(const EDRMetaData& emd, const Config& config);

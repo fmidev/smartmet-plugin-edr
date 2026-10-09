@@ -148,6 +148,10 @@ rm -rf $RPM_BUILD_ROOT
   - within-units and width-units accept m; GeoJSON accepts geographic CRSs such as EPSG:4326
   - /conformance also declares the EDR 1.0 classes, collections without time periods have
     no temporal extent instead of an invalid [null,null] interval
+  - MetOcean profile: extent CRS OGC:CRS84 and trs Gregorian, CoverageJSON referencing ids
+    OGC:CRS84 or the crs parameter value, RFC 3339 instance ids (old ids accepted), 400 for a
+    datetime between model time steps, 204 for no data inside the extent
+  - EPSG:4326 coordinates are longitude/latitude like CRS84
   - Data queries may be sent with form encoded POST
   - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
     bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates

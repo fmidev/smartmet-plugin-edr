@@ -243,7 +243,8 @@ as `EPSG:3067`, `http://www.opengis.net/def/crs/EPSG/0/3067` or `urn:ogc:def:crs
 Unsupported values are rejected with status 400.
 
 The coordinates of `coords` and `bbox` are given in the requested CRS in the axis order of the
-CRS: for example `EPSG:4326` is latitude/longitude, unlike `OGC:CRS84`. The CoverageJSON output
+CRS, except that `EPSG:4326` uses the longitude/latitude order like `OGC:CRS84`, as the OGC API
+EDR examples and test suite do. The CoverageJSON output
 coordinates are in the requested CRS too: the `x` axis is always the longitude or easting, and
 the referencing lists the coordinates in the axis order of the CRS. The grids of
 `resolution-x` and `resolution-y` are regular in the requested CRS. GeoJSON output is always in
@@ -325,9 +326,20 @@ and IWXXM. The paged locations listing and the items responses list `self`, `nex
 and `collection` links both in the body and in the `Link` header. Collection metadata
 responses have their (many) links in the body only.
 
+## Instances
+
+The instance identifiers are the origin times of the model runs as RFC 3339 times, for
+example `/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z`. Other notations of the
+same time, such as the earlier `20080805T063100`, are accepted too.
+
+For model data a `datetime` between the time steps of the model is an error (400), as
+required by the MetOcean profile. Intervals are not affected.
+
 ## Errors
 
-Errors are reported with an `application/problem+json` body containing `title`, `status` and
+A query inside the spatial extent of a collection which finds no data is answered with 204
+No Content; a query completely outside the extent is an error. Errors are reported with an
+`application/problem+json` body containing `title`, `status` and
 `detail`. The status is 404 for unknown collections, instances, locations and query types, 406
 for unsupported Accept headers, 413 for requests exceeding the configured limits, 503 for
 timeouts and 400 for other invalid requests.
