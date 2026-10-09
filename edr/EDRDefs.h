@@ -33,7 +33,6 @@ using DefaultOutputFormats =
 using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
 using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // producer -> keywords
 using AviCollections = std::list<AviCollection>;
-using APISettings = std::map<std::string, std::string>;
 using License = std::map<std::string, std::string>;
 using ProducerLicenses = std::map<std::string, License>;  // producer -> license
 using CustomDimReferences = std::map<std::string, std::string>;
@@ -64,7 +63,6 @@ enum class SourceEngine
 // WGS84 longitude/latitude, the only supported CRS
 #define CRS84_URI "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
 
-#define PROBLEM_DETAIL "problemdetail"
 
 std::string get_engine_name(SourceEngine source_engine);
 

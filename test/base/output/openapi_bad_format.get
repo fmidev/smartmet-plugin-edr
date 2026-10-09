@@ -1,0 +1,4 @@
+Status: 400
+Content-Type: application/problem+json
+
+{"detail":"Unsupported format 'xml', use json or html","status":400,"title":"Bad Request"}

@@ -1,0 +1,4 @@
+GET /edr/api HTTP/1.0
+Accept: application/vnd.oai.openapi+json, application/json;q=0.9, application/yaml;q=0.8, */*;q=0.5
+X-Test-Headers: Content-Type,Access-Control-Allow-Origin
+

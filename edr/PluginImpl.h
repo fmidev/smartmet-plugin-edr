@@ -21,6 +21,7 @@
 #include <macgyver/TimeZones.h>
 #include <spine/ConfigTools.h>
 #include <spine/HTTP.h>
+#include <spine/OpenApi.h>
 #include <spine/Table.h>
 #include <timeseries/TimeSeriesInclude.h>
 #include <map>
@@ -105,6 +106,9 @@ class PluginImpl
   void updateSupportedLocations();
   void updateQueryDataLocations();
   void updateParameterInfo();
+  void publishApiDefinitions() const;
+  bool handleApiRequest(const Spine::HTTP::Request& theRequest,
+                        Spine::HTTP::Response& theResponse) const;
   void checkNewDataAndNotify(const std::shared_ptr<EngineMetaData>& new_emd) const;
   std::map<std::string, Fmi::DateTime> getNotificationTimes(SourceEngine source_engine,
                                                              EngineMetaData& new_emd,
@@ -123,6 +127,10 @@ class PluginImpl
   mutable std::unique_ptr<TS::TimeSeriesGeneratorCache> itsTimeSeriesCache;
   Engine::Gis::GeometryStorage itsGeometryStorage;
   std::unique_ptr<Fmi::AsyncTask> itsMetaDataUpdateTask;
+
+  // Generated OpenAPI definitions: the EDR API and each TimeSeries URL
+  std::unique_ptr<Spine::OpenAPI::Publisher> itsEdrApi;
+  std::map<std::string, std::unique_ptr<Spine::OpenAPI::Publisher>> itsTimeSeriesApis;
 
   SupportedProducerLocations itsSupportedLocations;
   ParameterInfo itsConfigParameterInfo;

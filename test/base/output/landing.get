@@ -1,38 +1,47 @@
 {
-  "title": "FMI EDR Server",
-  "description": "API for querying meteorological datasets. Conforms to OGC API Environmental Data Retrieval specification",
-  "provider": {
-    "name": "FMI",
-    "url": "https://www.fmi.fi"
+  "contact" : 
+  {
+    "email" : "edr@fmi.fi"
   },
-  "contact": {
-    "email": "edr@fmi.fi"
-  },
-  "links": [
+  "description" : "API for querying meteorological datasets. Conforms to OGC API Environmental Data Retrieval specification",
+  "links" : 
+  [
     {
-      "href": "http://smartmet.fmi.fi/edr/?f=JSON",
-      "rel": "self",
-      "type": "application/json",
-      "title": "Landing Page in JSON"
+      "href" : "http://smartmet.fmi.fi/edr",
+      "rel" : "self",
+      "title" : "This document",
+      "type" : "application/json"
     },
     {
-      "href": "http://smartmet.fmi.fi/edr/api?f=JSON",
-      "rel": "service-desc",
-      "type": "application/json",
-      "title": "API description in JSON"
+      "href" : "http://smartmet.fmi.fi/edr/api",
+      "rel" : "service-desc",
+      "title" : "The API definition (OpenAPI 3.0)",
+      "type" : "application/vnd.oai.openapi+json;version=3.0"
     },
     {
-      "href": "http://smartmet.fmi.fi/edr/conformance?f=JSON",
-      "rel": "conformance",
-      "type": "application/json",
-      "title": "Conformance Declaration in JSON"
+      "href" : "http://smartmet.fmi.fi/edr/api/docs",
+      "rel" : "service-doc",
+      "title" : "The API documentation",
+      "type" : "text/html"
     },
     {
-      "href": "http://smartmet.fmi.fi/edr/collections",
-      "rel": "data",
-      "type": "application/json",
-      "title": "Collections metadata in JSON"
+      "href" : "http://smartmet.fmi.fi/edr/conformance",
+      "rel" : "http://www.opengis.net/def/rel/ogc/1.0/conformance",
+      "title" : "Conformance classes",
+      "type" : "application/json"
+    },
+    {
+      "href" : "http://smartmet.fmi.fi/edr/collections",
+      "rel" : "http://www.opengis.net/def/rel/ogc/1.0/data",
+      "title" : "Collections of data",
+      "type" : "application/json"
     }
-  ]
+  ],
+  "provider" : 
+  {
+    "name" : "FMI",
+    "url" : "https://www.fmi.fi"
+  },
+  "title" : "FMI EDR Server"
 }
 

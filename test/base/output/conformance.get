@@ -2,15 +2,18 @@ Status: 200
 Content-Type: application/json
 
 {
-  "conformsTo": [
-    "https://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
-    "https://www.opengis.net/spec/ogcapi-common-2/1.0/conf/collections",
-    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/core",
-    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/collections",
-    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/queries",
-    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/json",
-    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/geojson",
-    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/covjson"
+  "conformsTo" : 
+  [
+    "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/oas30",
+    "http://www.opengis.net/spec/ogcapi-common-2/1.0/conf/collections",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/core",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/collections",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/queries",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/json",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/geojson",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/covjson",
+    "http://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/oas30"
   ]
 }
 

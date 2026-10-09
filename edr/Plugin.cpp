@@ -87,6 +87,29 @@ void Plugin::init()
               false))
         throw Fmi::Exception(BCP,
                              "Failed to register timeseries content handler for '" + ts_url + "'");
+
+      // The OpenAPI definition of the TimeSeries API and its documentation pages
+      if (new_impl->itsConfig.openAPISettings().enabled)
+      {
+        for (const auto& api_url : {ts_url + "/api", ts_url + "/api/docs"})
+        {
+          const bool prefix = (api_url != ts_url + "/api");
+          if (!itsReactor->addContentHandler(
+                  this,
+                  api_url,
+                  [this](Spine::Reactor& theReactor,
+                         const Spine::HTTP::Request& theRequest,
+                         Spine::HTTP::Response& theResponse)
+                  {
+                    plugin_impl.load()->timeSeriesRequestHandler(
+                        theReactor, theRequest, theResponse);
+                  },
+                  {},
+                  prefix))
+            throw Fmi::Exception(
+                BCP, "Failed to register timeseries API content handler for '" + api_url + "'");
+        }
+      }
     }
 
     // Register admin request handler for forced reload (authenticated)

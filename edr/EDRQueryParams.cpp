@@ -415,11 +415,19 @@ EDRQueryParams::EDRQueryParams(const State& state,
     auto resource = req.getResource();
     itsEDRQuery.host = resolve_host(req, config.defaultUrl());
 
-    if (config.getEDRAPI().isEDRAPIQuery(resource))
+    // The landing page and the conformance declaration are generated documents. The API
+    // definition (<root>/api) is answered before the query is parsed.
     {
-      itsEDRQuery.query_id = EDRQueryId::APIQuery;
-      itsEDRQuery.instance_id = resource;
-      return;
+      std::string path = resource;
+      while (path.size() > 1 && path.back() == '/')
+        path.pop_back();
+      const auto& root = config.defaultUrl();
+      if (path == root || path == root + "/conformance")
+      {
+        itsEDRQuery.query_id = EDRQueryId::APIQuery;
+        itsEDRQuery.instance_id = (path == root ? "landing" : "conformance");
+        return;
+      }
     }
 
     std::vector<std::string> resource_parts;

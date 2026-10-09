@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.9
-Release: 7%{?dist}.fmi
+Release: 8%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -34,7 +34,7 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.10.3
+BuildRequires: smartmet-library-spine-devel >= 26.10.9-2
 BuildRequires: smartmet-library-locus-devel >= 26.10.3
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.3
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
@@ -60,7 +60,8 @@ Requires: smartmet-library-gis >= 26.10.3
 Requires: smartmet-library-locus >= 26.10.3
 Requires: smartmet-library-macgyver >= 26.10.3
 Requires: smartmet-library-newbase >= 26.10.8
-Requires: smartmet-library-spine >= 26.10.3
+Requires: smartmet-library-spine >= 26.10.9-2
+Requires: smartmet-swagger-ui
 Requires: smartmet-library-timeseries >= 26.10.8
 Requires: smartmet-library-gis >= 26.10.3
 Requires: smartmet-library-grid-files >= 26.9.26
@@ -77,8 +78,8 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.9
+#TestRequires: smartmet-library-spine >= 26.10.9-2
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.9-2
 #TestRequires: smartmet-library-newbase-devel >= 26.10.8
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -117,10 +118,20 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(0775,root,root,0775)
 %{_datadir}/smartmet/plugins/edr.so
-%defattr(0664,root,root,0775)
-%{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-8.fmi
+- Generated OpenAPI 3.0 definitions instead of the static api.json template:
+  - /edr/api describes the query types, parameters, output formats, instances and
+    locations of the configured collections, with per-collection paths listing the
+    exact parameter names, formats and levels (openapi.expand_collections)
+  - <timeseries_url>/api describes the TimeSeries API
+  - Swagger UI documentation pages at .../api/docs, served from smartmet-swagger-ui
+  - The definitions are regenerated whenever the metadata changes
+- The landing page and the conformance declaration are generated; the texts are
+  configured with the landing_page setting, the old api setting is ignored
+- Conformance classes use the http scheme of the OGC URIs and declare oas30
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-7.fmi
 - OGC API-EDR 1.2 and CoverageJSON conformance fixes:
   - CoverageJSON media type application/vnd.cov+json, output format selection with the

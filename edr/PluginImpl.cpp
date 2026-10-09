@@ -5,6 +5,7 @@
 // ======================================================================
 
 #include "PluginImpl.h"
+#include "ApiDefinition.h"
 #include "EDRException.h"
 #include "QueryProcessingHub.h"
 #include "State.h"
@@ -36,6 +37,13 @@ namespace EDR
 namespace
 {
 // Escape a string for embedding into a JSON string value
+const char* const PROBLEM_DETAIL_JSON = R"JSON({
+  "title" : "An error occurred",
+  "status" : __STATUS__,
+  "detail" : "__DETAIL__"
+}
+)JSON";
+
 std::string json_escape(const std::string& str)
 {
   std::string ret;
@@ -805,6 +813,10 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
 
   try
   {
+    // The API definition and its documentation
+    if (handleApiRequest(theRequest, theResponse))
+      return;
+
     auto request = theRequest;
 
     if (Spine::optional_bool(request.getParameter("grouplocations"), false))
@@ -893,6 +905,10 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
 
   try
   {
+    // The API definition and its documentation
+    if (handleApiRequest(theRequest, theResponse))
+      return;
+
     // The request will be modified when parsing the input
     auto request = theRequest;
 
@@ -973,7 +989,8 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
       const int status = http_status(ex);
       theResponse.setStatus(static_cast<Spine::HTTP::Status>(status));
 
-      auto problem_detail = itsConfig.getEDRAPI().getProblemDetailJson();
+      // RFC 7807 problem details
+      std::string problem_detail = PROBLEM_DETAIL_JSON;
       boost::algorithm::replace_all(problem_detail, "__STATUS__", Fmi::to_string(status));
       boost::algorithm::replace_all(problem_detail, "__DETAIL__", json_escape(firstMessage));
       theResponse.setContent(problem_detail);
@@ -1091,6 +1108,16 @@ void PluginImpl::init()
     updateMetaData(true);
     // Update metadata parameter info from config
     updateParameterInfo();
+
+    // Generated OpenAPI definitions
+    const auto& openapi = itsConfig.openAPISettings();
+    if (openapi.enabled)
+    {
+      itsEdrApi = std::make_unique<Spine::OpenAPI::Publisher>(openapi);
+      for (const auto& url : itsConfig.timeSeriesUrls())
+        itsTimeSeriesApis.emplace(url, std::make_unique<Spine::OpenAPI::Publisher>(openapi));
+      publishApiDefinitions();
+    }
 
     if (Spine::Reactor::isShuttingDown())
       return;
@@ -1287,6 +1314,78 @@ void PluginImpl::updateMetaData(bool initial_phase)
     //	checkNewDataAndNotify(engine_meta_data);
 
     itsMetaData.store(engine_meta_data);
+
+    // The API definitions list the collections, parameters and instances. The initial
+    // definitions are published by init() once the parameter info is available.
+    if (!initial_phase)
+      publishApiDefinitions();
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Regenerate the OpenAPI definitions from the current metadata
+ *
+ * A failure is logged and the previous definitions stay in use.
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::publishApiDefinitions() const
+{
+  try
+  {
+    auto metadata = itsMetaData.load();
+    if (!metadata)
+      return;
+
+    if (itsEdrApi)
+      itsEdrApi->publish(ApiDefinition::edr(itsConfig, *metadata));
+
+    for (const auto& item : itsTimeSeriesApis)
+      item.second->publish(ApiDefinition::timeseries(itsConfig, *metadata, item.first));
+  }
+  catch (...)
+  {
+    Fmi::Exception::Trace(BCP, "Failed to generate the OpenAPI definitions").printError();
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Answer <root>/api, <root>/api/docs and the documentation files
+ *
+ * Returns false if the request is not for an API document.
+ */
+// ----------------------------------------------------------------------
+
+bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
+                                  Spine::HTTP::Response& theResponse) const
+{
+  try
+  {
+    const auto& resource = theRequest.getResource();
+    const auto& root = itsConfig.defaultUrl();
+
+    if (itsEdrApi && Spine::OpenAPI::Publisher::isApiResource(resource, root))
+      return itsEdrApi->handle(
+          theRequest, theResponse, root, Spine::OpenAPI::serverUrl(theRequest, root));
+
+    for (const auto& item : itsTimeSeriesApis)
+    {
+      if (Spine::OpenAPI::Publisher::isApiResource(resource, item.first))
+      {
+        // The paths of the TimeSeries definition are absolute
+        auto server = Spine::OpenAPI::serverUrl(theRequest, "");
+        if (server.empty())
+          server = "/";
+        return item.second->handle(theRequest, theResponse, item.first, server);
+      }
+    }
+    return false;
   }
   catch (...)
   {
