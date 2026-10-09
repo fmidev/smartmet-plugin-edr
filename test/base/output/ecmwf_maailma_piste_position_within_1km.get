@@ -1,4 +1,4 @@
 {
   "title" : "An error occurred",
-  "detail" : "No data available for 'POINT(145.0 -37.8)'!"
+  "detail" : "No data available for POINT(145.0 -37.8)"
 }
