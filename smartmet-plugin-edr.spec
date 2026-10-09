@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.9
-Release: 6%{?dist}.fmi
+Release: 7%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -78,7 +78,7 @@ Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
 #TestRequires: smartmet-library-spine >= 26.10.3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.9.29
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.9
 #TestRequires: smartmet-library-newbase-devel >= 26.10.8
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -121,6 +121,27 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-7.fmi
+- OGC API-EDR 1.2 and CoverageJSON conformance fixes:
+  - CoverageJSON media type application/vnd.cov+json, output format selection with the
+    Accept header when f is missing (406 if nothing acceptable), f is case insensitive
+  - Errors are reported with 404, 406, 413 and 503 where appropriate instead of 400
+  - Collection and instance metadata link to the query end points; corridor
+    width_units/height_units, cube height_units, multiple_locations; CRS84 URI as the
+    spatial extent CRS, fixed TIMECRS WKT, WKT2 vertical reference systems
+  - CoverageJSON z axes are referenced with proper VerticalCRS objects instead of a
+    'TODO' placeholder, axis order t, z, y, x
+  - datetime lists, repeating intervals and open intervals; times without an offset are UTC
+  - open z ranges, crs aliases, unknown parameter names and Z/M coordinate conflicts are
+    rejected as required
+  - LINESTRINGZ/ZM trajectories are one coverage, waypoints with extra decimals are no
+    longer dropped
+  - GeoJSON responses have links, parameters use plain strings, configurable unit id and
+    plain unit symbols
+  - Paging of the locations listing with limit and offset
+  - /conformance declares EDR 1.2
+- The API documents are no longer cached per Host header
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-6.fmi
 - A location without data no longer fails a multi-location querydata request; it is left out, and the request fails only if no location has data (BRAINSTORM-3500)
 
