@@ -502,7 +502,8 @@ QueryProcessingHub::QueryProcessingHub(const PluginImpl& thePlugin)
 {
 }
 
-Links QueryProcessingHub::dataQueryLinks(const EDRQuery& edr_query, const std::string& output_format)
+Links QueryProcessingHub::dataQueryLinks(const EDRQuery& edr_query,
+                                         const std::string& output_format)
 {
   Links links;
   for (const auto& item : edr_query.format_urls)
@@ -510,7 +511,9 @@ Links QueryProcessingHub::dataQueryLinks(const EDRQuery& edr_query, const std::s
                      item.first == output_format ? "self" : "alternate",
                      UtilityFunctions::output_format_mime_type(item.first)});
   links.push_back(
-      {edr_query.host + "/collections/" + edr_query.collection_id, "collection", "application/json"});
+      {edr_query.host + "/collections/" + edr_query.collection_id,
+       "collection",
+       "application/json"});
   return links;
 }
 

@@ -3530,7 +3530,9 @@ void page_locations(const EDRQuery &edr_query,
                      "prev",
                      "application/geo+json"});
   links.push_back(
-      {edr_query.host + "/collections/" + edr_query.collection_id, "collection", "application/json"});
+      {edr_query.host + "/collections/" + edr_query.collection_id,
+       "collection",
+       "application/json"});
 
   result["links"] = links_json(links);
   result["numberMatched"] = Json::Value(matched);
