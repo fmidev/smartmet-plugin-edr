@@ -10,7 +10,6 @@ namespace EDR
 {
 namespace
 {
-const std::string EMPTY_STRING;
 const std::string PROBLEM_DETAIL_JSON =
 R"JSON({
   "title" : "An error occurred",
@@ -23,33 +22,29 @@ R"JSON({
 bool EDRAPI::isEDRAPIQuery(const std::string& url) const
 {
   std::string url_string = url;
-  if (itsAPISettings.find(url_string) == itsAPISettings.end() && url_string.back() == '/')
+  if (itsAPISettings.find(url_string) == itsAPISettings.end() && !url_string.empty() &&
+      url_string.back() == '/')
     url_string.pop_back();
   return (itsAPISettings.find(url_string) != itsAPISettings.end());
 }
 
-const std::string& EDRAPI::getAPI(const std::string& url, const std::string& host) const
+std::string EDRAPI::getAPI(const std::string& url, const std::string& host) const
 {
   // If no API setting defined for the requested URL return empty string
   std::string url_string = url;
-  if (itsAPISettings.find(url_string) == itsAPISettings.end() && url_string.back() == '/')
+  if (itsAPISettings.find(url_string) == itsAPISettings.end() && !url_string.empty() &&
+      url_string.back() == '/')
     url_string.pop_back();
 
-  if (itsAPISettings.find(url_string) == itsAPISettings.end())
-    return EMPTY_STRING;
+  auto it = itsAPISettings.find(url_string);
+  if (it == itsAPISettings.end())
+    return {};
 
-  // If response isnt in the map insert it
-  {
-    Spine::ReadLock lock(itsMutex);
-    if (itsAPIQueryResponses.find(host + url_string) == itsAPIQueryResponses.end())
-    {
-      auto template_file = itsAPISettings.at(url_string);
-      boost::algorithm::replace_all(template_file, "__HOST__", host);
-      itsAPIQueryResponses[host + url_string] = template_file;
-    }
-  }
-
-  return itsAPIQueryResponses.at(host + url_string);
+  // The documents are small and rarely requested, there is no need to cache the result
+  // for each host name
+  auto response = it->second;
+  boost::algorithm::replace_all(response, "__HOST__", host);
+  return response;
 }
 
 std::string EDRAPI::getProblemDetailJson() const

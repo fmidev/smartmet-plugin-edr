@@ -1,4 +1,22 @@
 {
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area?coords=POLYGON%28%2824%2061%2C24%2061.5%2C24.5%2061.5%2C24.5%2061%2C24%2061%29%29&datetime=200808051200%2F200808051300&f=CoverageJSON&parameter-name=Temperature%2CPressure",
+			"rel" : "alternate",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area?coords=POLYGON%28%2824%2061%2C24%2061.5%2C24.5%2061.5%2C24.5%2061%2C24%2061%29%29&datetime=200808051200%2F200808051300&f=GeoJSON&parameter-name=Temperature%2CPressure",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
 	"bbox" : 
 	[
 		24.17909,

@@ -1,4 +1,5 @@
 #include "QueryProcessingHub.h"
+#include "UtilityFunctions.h"
 #include "CoverageJson.h"
 #include "GeoJson.h"
 #include "GridInterface.h"
@@ -322,6 +323,27 @@ void fetch_static_location_values(const CommonQuery& query,
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+// Links of a data query response (OGC API-EDR /req/geojson/content): the request itself,
+// the request in the other output formats and the collection
+Json::Value data_query_links(const EDRQuery& edr_query, const std::string& output_format)
+{
+  auto links = Json::Value(Json::ValueType::arrayValue);
+  for (const auto& item : edr_query.format_urls)
+  {
+    auto link = Json::Value(Json::ValueType::objectValue);
+    link["href"] = Json::Value(item.second);
+    link["rel"] = Json::Value(item.first == output_format ? "self" : "alternate");
+    link["type"] = Json::Value(UtilityFunctions::output_format_mime_type(item.first));
+    links.append(link);
+  }
+  auto link = Json::Value(Json::ValueType::objectValue);
+  link["href"] = Json::Value(edr_query.host + "/collections/" + edr_query.collection_id);
+  link["rel"] = Json::Value("collection");
+  link["type"] = Json::Value("application/json");
+  links.append(link);
+  return links;
 }
 
 // Remove the values whose time is not in the given list of times (EDR datetime lists)
@@ -852,6 +874,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
                                                      effective_query_parameters(masterquery),
                                                      custom_dim_refs,
                                                      edr_query.language);
+      if (!result.isNullOrEmpty())
+        result["links"] = data_query_links(edr_query, masterquery.output_format);
       table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }
 

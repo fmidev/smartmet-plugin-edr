@@ -1,0 +1,16 @@
+Status: 200
+Content-Type: application/json
+
+{
+  "conformsTo": [
+    "https://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
+    "https://www.opengis.net/spec/ogcapi-common-2/1.0/conf/collections",
+    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/core",
+    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/collections",
+    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/queries",
+    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/json",
+    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/geojson",
+    "https://www.opengis.net/spec/ogcapi-edr-1/1.2/conf/covjson"
+  ]
+}
+

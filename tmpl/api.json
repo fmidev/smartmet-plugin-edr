@@ -3540,30 +3540,6 @@
             }
           },
           {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
             "name": "f",
             "in": "query",
             "description": "Identifier of the output format to return the response in.\n\nValid identifers are listed in the collection's/instance's metadata.\n",
@@ -3736,30 +3712,6 @@
             "required": false,
             "style": "form",
             "explode": false
-          },
-          {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
           },
           {
             "name": "crs",
@@ -4129,42 +4081,6 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-z",
-            "in": "query",
-            "description": "Number of data points along z-axis.\n\nFor example, `resolution-z=10` would retrieve 10 values along the z-axis:\na value at both the minimum z and maximum z coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
             }
           },
           {
@@ -7557,30 +7473,6 @@
             "explode": false
           },
           {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
             "name": "crs",
             "in": "query",
             "description": "Identifier of the coordinate reference system (CRS) to return data in.\nAlso specifies the CRS of the `coords` parameter.\n\nValid identifiers are listed in the collection's/instance's metadata.\n\nIf not supplied, CRS will default to native coordinate system of data\n",
@@ -7771,30 +7663,6 @@
             "required": false,
             "style": "form",
             "explode": false
-          },
-          {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
           },
           {
             "name": "crs",
@@ -8200,42 +8068,6 @@
             "required": false,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-z",
-            "in": "query",
-            "description": "Number of data points along z-axis.\n\nFor example, `resolution-z=10` would retrieve 10 values along the z-axis:\na value at both the minimum z and maximum z coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
             }
           },
           {

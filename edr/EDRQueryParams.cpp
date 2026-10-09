@@ -459,6 +459,20 @@ EDRQueryParams::EDRQueryParams(const State& state,
                          itsEDRQuery.collection_id + ": " + output_format_list);
     }
 
+    // Request URLs in each output format for the links of the response
+    {
+      const auto& base_url = config.defaultUrl();
+      const auto pos = resource.find(base_url);
+      const auto path =
+          (pos == std::string::npos ? resource : resource.substr(pos + base_url.size()));
+      for (const auto& format : supportedOutputFormats)
+      {
+        auto format_request = request;
+        format_request.setParameter("f", format);
+        itsEDRQuery.format_urls[format] = itsEDRQuery.host + path + format_request.getQueryString();
+      }
+    }
+
     if (output_format == COVERAGE_JSON_FORMAT)
       mime_type = COVERAGE_JSON_MIME_TYPE;
     else if (output_format == GEO_JSON_FORMAT)

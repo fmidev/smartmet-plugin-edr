@@ -57,6 +57,8 @@ struct EDRQuery
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;
+  // Request URLs of a data query for each output format of the collection (for links)
+  std::map<std::string, std::string> format_urls;
 };
 
 std::string to_string(EDRQueryType query_type);
