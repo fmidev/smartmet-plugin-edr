@@ -46,9 +46,9 @@ bool is_data_query(const Spine::HTTP::Request& req,
     //
     //   position   coords=wkt|POINT|MULTIPOINT|MULTIPOINTZ
     //   area       coords=wkt|POLYGON|MULTIPOLYGON&z=lo/hi
-    //   corridor   coords=LINESTRING[ZM|Z|M]&corridor-width=width&width-units={km|mi}
+    //   corridor   coords=[MULTI]LINESTRING[ZM|Z|M]&corridor-width=width&width-units={km|mi}
     //   radius     coords=wkt|POINT|MULTIPOINT|MULTIPOINTZ&within=radius&within-units={km|mi}
-    //   trajectory coords=LINESTRING[ZM|Z|M]
+    //   trajectory coords=[MULTI]LINESTRING[ZM|Z|M]
     //   cube       coords=wkt|POLYGON&minz=lo&maxz=hi|bbox=bllon,bllat,trlon,trlat&z=lo/hi
     //
     //   locations/LOCID
@@ -708,83 +708,111 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
     // "LINESTRING Z" is equivalent to "LINESTRINGZ"
     boost::algorithm::erase_all(geometry_name, " ");
 
-    // OGC API EDR defines trajectories and corridors as single LINESTRINGs. Other
-    // geometries would otherwise be relabelled as an invalid LINESTRING below.
-    if (geometry_name != "LINESTRING" && geometry_name != "LINESTRINGZ" &&
-        geometry_name != "LINESTRINGM" && geometry_name != "LINESTRINGZM")
+    // OGC API EDR: the coords are a LINESTRING or, if supported, a MULTILINESTRING, with
+    // optional Z (height) and M (epoch time) values. Other geometries get a 400 error.
+    const bool multi = boost::algorithm::starts_with(geometry_name, "MULTILINESTRING");
+    const std::string dims =
+        geometry_name.substr(std::min(geometry_name.size(), std::size_t(multi ? 15 : 10)));
+    if ((geometry_name != (multi ? "MULTILINESTRING" : "LINESTRING") + dims) ||
+        (dims != "" && dims != "Z" && dims != "M" && dims != "ZM"))
       throw EDRException(
-          "Trajectory and corridor coords must be a LINESTRING, LINESTRINGZ, LINESTRINGM or "
-          "LINESTRINGZM: " +
+          "Trajectory and corridor coords must be a LINESTRING or MULTILINESTRING, optionally "
+          "with Z, M or ZM values: " +
           coords);
+
+    if (wkt.find('(') == std::string::npos || wkt.rfind(')') == std::string::npos)
+      throw EDRException("Invalid " + geometry_name + " definition: " + coords);
 
     auto len = (wkt.rfind(')') - wkt.find('(') - 1);
     auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
     auto radius = wkt.substr(wkt.rfind(')') + 1);
 
-    wkt = "LINESTRING(";
-    if (geometry_name == "LINESTRINGZM")
+    // Converts the coordinates of one line into 2D coordinates, storing the levels and times
+    // given as Z and M values into the coordinate filter
+    auto parse_line = [&](const std::string& line) -> std::string
     {
-      // lon,lat,level,epoch time
+      if (dims.empty())
+        return line;
+
+      const std::size_t expected = (dims == "ZM" ? 4 : 3);
+      std::string ret;
       std::vector<std::string> coordinates;
-      boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
-      for (const auto& coordinate_item : coordinates)
+      boost::algorithm::split(coordinates, line, boost::algorithm::is_any_of(","));
+      for (auto coordinate : coordinates)
       {
+        boost::algorithm::trim(coordinate);
         std::vector<std::string> parts;
-        boost::algorithm::split(parts, coordinate_item, boost::algorithm::is_any_of(" "));
-        if (parts.size() != 4)
-          throw EDRException(
-              "Invalid LINESTRINGZM definition, longitude, latitude, level, epoch time "
-              "expected: " +
-              coords);
-        wkt.append(parts[0] + " " + parts[1] + ",");
-        itsCoordinateFilter.add(Fmi::stod(parts[0]),
-                                Fmi::stod(parts[1]),
-                                Fmi::stod(parts[2]),
-                                Fmi::date_time::from_time_t(Fmi::stod(parts[3])));
+        boost::algorithm::split(parts,
+                                coordinate,
+                                boost::algorithm::is_any_of(" "),
+                                boost::algorithm::token_compress_on);
+        if (parts.size() != expected)
+        {
+          if (dims == "ZM")
+            throw EDRException("Invalid " + geometry_name +
+                               " definition, longitude, latitude, level, epoch time expected: " +
+                               coords);
+          if (dims == "Z")
+            throw EDRException("Invalid " + geometry_name +
+                               " definition, longitude, latitude, level expected: " + coords);
+          throw EDRException("Invalid " + geometry_name +
+                             " definition, longitude, latitude, epoch time expected: " + coords);
+        }
+
+        if (!ret.empty())
+          ret += ',';
+        ret += parts[0] + " " + parts[1];
+
+        const double lon = Fmi::stod(parts[0]);
+        const double lat = Fmi::stod(parts[1]);
+        if (dims == "ZM")
+          itsCoordinateFilter.add(
+              lon, lat, Fmi::stod(parts[2]), Fmi::date_time::from_time_t(Fmi::stod(parts[3])));
+        else if (dims == "Z")
+          itsCoordinateFilter.add(lon, lat, Fmi::stod(parts[2]));
+        else
+          itsCoordinateFilter.add(lon, lat, Fmi::date_time::from_time_t(Fmi::stod(parts[2])));
       }
-    }
-    else if (geometry_name == "LINESTRINGZ")
-    {
-      // lon,lat,level
-      std::vector<std::string> coordinates;
-      boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
-      for (const auto& item : coordinates)
-      {
-        std::vector<std::string> parts;
-        boost::algorithm::split(parts, item, boost::algorithm::is_any_of(" "));
-        if (parts.size() != 3)
-          throw EDRException(
-              "Invalid LINESTRINGZ definition, longitude, latitude, level expected: " + coords);
-        wkt.append(parts[0] + " " + parts[1] + ",");
-        itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
-      }
-    }
-    else if (geometry_name == "LINESTRINGM")
-    {
-      // lon,lat,epoch time
-      std::vector<std::string> coordinates;
-      boost::algorithm::split(coordinates, geometry_values, boost::algorithm::is_any_of(","));
-      for (const auto& item : coordinates)
-      {
-        std::vector<std::string> parts;
-        boost::algorithm::split(parts, item, boost::algorithm::is_any_of(" "));
-        if (parts.size() != 3)
-          throw EDRException(
-              "Invalid LINESTRINGM definition, longitude, latitude, epoch time expected: " +
-              coords);
-        wkt.append(parts[0] + " " + parts[1] + ",");
-        itsCoordinateFilter.add(Fmi::stod(parts[0]),
-                                Fmi::stod(parts[1]),
-                                Fmi::date_time::from_time_t(Fmi::stod(parts[2])));
-      }
-    }
+      return ret;
+    };
+
+    if (!multi)
+      wkt = "LINESTRING(" + parse_line(geometry_values) + ")";
     else
     {
-      wkt.append(geometry_values);
+      // The values are of the form (x y,...),(x y,...)
+      wkt = "MULTILINESTRING(";
+      std::size_t pos = 0;
+      bool first = true;
+      while (true)
+      {
+        pos = geometry_values.find_first_not_of(" ", pos);
+        if (pos == std::string::npos)
+          break;
+        if (!first)
+        {
+          if (geometry_values[pos] != ',')
+            throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+          pos = geometry_values.find_first_not_of(" ", pos + 1);
+          if (pos == std::string::npos)
+            throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+        }
+        const auto close = geometry_values.find(')', pos);
+        if (geometry_values[pos] != '(' || close == std::string::npos ||
+            geometry_values.find('(', pos + 1) < close)
+          throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+
+        if (!first)
+          wkt += ',';
+        wkt += "(" + parse_line(geometry_values.substr(pos + 1, close - pos - 1)) + ")";
+        first = false;
+        pos = close + 1;
+      }
+      if (first)
+        throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+      wkt += ")";
     }
-    if (wkt.back() == ',')
-      wkt.resize(wkt.size() - 1);
-    wkt.append(")");
+
     if (!radius.empty())
       wkt.append(radius);
 
@@ -962,7 +990,7 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
               "hybrid/model levels, 'm', 'km', 'mi', 'ft' for height/altitude/depth levels");
 
         // The corridor's centre level comes from the path's own Z coordinates
-        // (LINESTRINGZ/LINESTRINGZM); if the path is 2D an explicit 'z' level must be given
+        // ([MULTI]LINESTRINGZ/ZM); if the path is 2D an explicit 'z' level must be given
         // instead to act as the centre of the height band
         auto levels = itsCoordinateFilter.getLevels();
         std::string centre_lo;
@@ -980,7 +1008,7 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
           if (z.empty())
             throw EDRException(
                 "Query parameter 'corridor-height' requires 3D coords "
-                "(LINESTRINGZ/LINESTRINGZM) or an explicit 'z' query parameter to define the "
+                "([MULTI]LINESTRINGZ/ZM) or an explicit 'z' query parameter to define the "
                 "centre level of the corridor");
 
           // 'z' may be a single value, a list, a range (lo/hi) or a repeating interval
@@ -1014,7 +1042,23 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
             wkt = transformed_wkt;
           }
     */
-    req.addParameter("wkt", wkt);
+    // The segments of a MULTILINESTRING trajectory are queried as separate locations so that
+    // each segment becomes a trajectory of its own in the output. AVI queries read the
+    // geometry as a single parameter, and their results are per station anyway.
+    if (itsEDRQuery.query_type == EDRQueryType::Trajectory && !emd.isAviProducer() &&
+        boost::algorithm::starts_with(wkt, "MULTILINESTRING("))
+    {
+      // parseTrajectoryAndCorridor has normalized the value to MULTILINESTRING((...),(...))
+      std::size_t pos = wkt.find('(');  // the outer parenthesis
+      while ((pos = wkt.find('(', pos + 1)) != std::string::npos)
+      {
+        const auto close = wkt.find(')', pos);
+        req.addParameter("wkt", "LINESTRING" + wkt.substr(pos, close - pos + 1));
+        pos = close;
+      }
+    }
+    else
+      req.addParameter("wkt", wkt);
   }
   catch (...)
   {

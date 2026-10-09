@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/trajectory?coords=MULTILINESTRINGM((24.1+61.1+1217937600,25.2+62.2+1217937600),(26.3+63.3+1217941200,27.4+64.4+1217941200))&parameter-name=Temperature HTTP/1.0
+

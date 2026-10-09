@@ -363,6 +363,14 @@ If the coords specify a 4D trajectory i.e. coords=LINESTRINGZM(...​) an error 
 
 The Z in LINESTRINGZ and LINESTRINGZM refers to the height value.The M in LINESTRINGM and LINESTRINGZM refers to the number of seconds that have elapsed since the Unix epoch, that is the time 00:00:00 UTC on 1 January 1970. See https://en.wikipedia.org/wiki/Unix_time
 
+A trajectory with several separate segments can be given as a MULTILINESTRING, optionally with Z, M or ZM values like a LINESTRING. In CoverageJSON each segment is returned as a Trajectory coverage of its own, in the order the segments were given; GeoJSON output contains the points of all the segments:
+
+```
+coords=MULTILINESTRING((-3.53 50.72,-3.35 50.92),(-3.11 51.02,-2.85 51.42,-2.59 51.46))
+```
+
+Other geometries are rejected with a 400 error. MULTILINESTRING is also accepted in corridor queries, the corridor then covers all the segments.
+
 ## Corridor query
 
 The Corridor query returns data along and around the path defined by the *coords* parameter.
