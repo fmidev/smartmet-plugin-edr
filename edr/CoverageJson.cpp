@@ -2727,7 +2727,8 @@ bool append_trajectory_coverages(Json::Value &coverages,
         }
       std::stable_sort(values.begin(),
                        values.end(),
-                       [&key](const LevelValue &a, const LevelValue &b) { return key(a) < key(b); });
+                       [&key](const LevelValue &a, const LevelValue &b)
+                       { return key(a) < key(b); });
     }
 
     // Each position must occur on one level only, and all parameters must have the same
@@ -3533,8 +3534,9 @@ void page_locations(const EDRQuery &edr_query, Json::Value &features, Json::Valu
     links.append(make_link(href(first > *edr_query.limit ? first - *edr_query.limit : 0),
                            "prev",
                            "application/geo+json"));
-  links.append(make_link(
-      edr_query.host + "/collections/" + edr_query.collection_id, "collection", "application/json"));
+  links.append(make_link(edr_query.host + "/collections/" + edr_query.collection_id,
+                         "collection",
+                         "application/json"));
 
   result["links"] = links;
   result["numberMatched"] = Json::Value(matched);
@@ -3849,7 +3851,8 @@ Json::Value formatGridOutputData(const TS::OutputData &outputData,
       for (std::size_t n = 0; n < values.size(); n++)
       {
         const auto &value = values[n];
-        if (value && (std::holds_alternative<double>(*value) || std::holds_alternative<int>(*value)))
+        if (value &&
+            (std::holds_alternative<double>(*value) || std::holds_alternative<int>(*value)))
           data_values[n] = UtilityFunctions::json_value(*value, precision);
         else
           data_values[n] = Json::Value();

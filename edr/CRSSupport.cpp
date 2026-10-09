@@ -93,7 +93,8 @@ void CRSRegistry::init(const std::vector<std::string>& crs_list)
       info->geographic = srs.isGeographic();
       // The CRS objects use the longitude/latitude (easting/northing) order, OGC requires
       // the axis order of the authority
-      info->swapped = (srs.get()->EPSGTreatsAsLatLong() || srs.get()->EPSGTreatsAsNorthingEasting());
+      info->swapped =
+          (srs.get()->EPSGTreatsAsLatLong() || srs.get()->EPSGTreatsAsNorthingEasting());
       itsCRSs.push_back(info);
     }
   }
