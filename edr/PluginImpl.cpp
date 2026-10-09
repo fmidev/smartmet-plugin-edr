@@ -541,26 +541,31 @@ void PluginImpl::query(const State& state,
     }
     else
     {
-      product_hash = Fmi::hash_value(*result);
-      if (etag_only(request, response, product_hash))
-        return;
+      // No data is answered with 204 No Content. Such a response must not carry an
+      // ETag: the frontend would cache the empty entity under it and serve it later
+      // as a 200 response. Without an ETag the frontend passes the 204 through also
+      // when answering its ETag probe.
 
-      if (q.output_format == IWXXMZIP_FORMAT)
+      bool no_data = (q.output_format == IWXXMZIP_FORMAT
+                          ? qph.getZipFileName().empty()
+                          : (*result == (q.valueformatter.missing() + "\n")));
+
+      if (no_data)
       {
-        if (qph.getZipFileName().empty())
-          response.setStatus(204);
-        else
+        result->clear();
+        response.setStatus(Spine::HTTP::Status::no_content);
+        response.removeHeader("Content-type");
+      }
+      else
+      {
+        product_hash = Fmi::hash_value(*result);
+        if (etag_only(request, response, product_hash))
+          return;
+
+        if (q.output_format == IWXXMZIP_FORMAT)
           response.setHeader("Content-Disposition",
                              std::string("attachement; filename=") + qph.getZipFileName());
       }
-      else if (*result == (q.valueformatter.missing() + "\n"))
-      {
-        result->clear();
-        response.setStatus(204);
-      }
-
-      if (response.getStatus() == 204)
-        response.removeHeader("Content-type");
 
       response.setContent(*result);
     }
