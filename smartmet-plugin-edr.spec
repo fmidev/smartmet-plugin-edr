@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.8
-Release: 2%{?dist}.fmi
+Version: 26.10.9
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-1.fmi
+- Faster JSON output: values are moved instead of copied into the documents and serialized into a single buffer (BRAINSTORM-3483)
+
 * Thu Oct 08 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.8-2.fmi
 - Coordinate locations keep their dem and covertype, which land/water handling needs (BRAINSTORM-3483)
 
