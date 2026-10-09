@@ -483,6 +483,11 @@ void PluginImpl::query(const State& state,
     }
     response.setHeader("Content-Type", mime);
 
+    // The output format of a data query is negotiated with the Accept header unless the f
+    // option is given
+    if (!q.isEDRMetaDataQuery() && !request.getParameter("f"))
+      response.setHeader("Vary", "Accept");
+
     // Calculate the hash value for the product.
 
     std::size_t product_hash = Fmi::bad_hash;

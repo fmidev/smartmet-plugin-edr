@@ -1050,6 +1050,9 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
     // EDR resource has to be fully included in the hash
     Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
 
+    // The output format may have been selected with the Accept header
+    Fmi::hash_combine(hash, Fmi::hash_value(masterquery.output_format));
+
     if (masterquery.isEDRMetaDataQuery())
     {
       auto metadata = state.getPlugin().itsMetaData.load();

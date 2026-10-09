@@ -35,6 +35,10 @@ int http_status(const Fmi::Exception& exception);
 #define EDRNotFound(description) \
   Fmi::Exception(BCP, description).addParameter(SmartMet::Plugin::EDR::HTTP_STATUS_PARAMETER, "404")
 
+// No acceptable output format in the Accept header (406 Not Acceptable)
+#define EDRNotAcceptable(description) \
+  Fmi::Exception(BCP, description).addParameter(SmartMet::Plugin::EDR::HTTP_STATUS_PARAMETER, "406")
+
 // Request exceeds the configured limits (413 Content Too Large)
 #define EDRTooLarge(description) \
   Fmi::Exception(BCP, description).addParameter(SmartMet::Plugin::EDR::HTTP_STATUS_PARAMETER, "413")

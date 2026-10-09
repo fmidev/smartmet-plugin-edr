@@ -1,0 +1,8 @@
+Status: 406
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 406,
+  "detail" : "None of the media types in the Accept header 'image/png' is supported, use the f option to select one of the output formats of the collection"
+}

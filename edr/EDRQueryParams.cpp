@@ -171,6 +171,85 @@ std::string resolve_host(const Spine::HTTP::Request& theRequest, const std::stri
   }
 }
 
+// Output format selected by the Accept header (RFC 9110 content negotiation). The default
+// format is used if there is no Accept header or it accepts anything.
+std::string negotiate_output_format(const std::optional<std::string>& accept,
+                                    const std::set<std::string>& supported_formats,
+                                    const std::string& default_format)
+{
+  if (!accept || Fmi::trim_copy(*accept).empty())
+    return default_format;
+
+  // Media type -> output format
+  static const std::vector<std::pair<std::string, std::string>> media_types{
+      {COVERAGE_JSON_MIME_TYPE, COVERAGE_JSON_FORMAT},
+      {"application/prs.coverage+json", COVERAGE_JSON_FORMAT},
+      {"application/geo+json", GEO_JSON_FORMAT},
+      {"application/json", ""},  // the default format if it is JSON
+      {"text/xml", IWXXM_FORMAT},
+      {"application/xml", IWXXM_FORMAT},
+      {"application/zip", IWXXMZIP_FORMAT},
+      {"text/plain", TAC_FORMAT}};
+
+  std::string best_format;
+  double best_q = 0;
+
+  std::vector<std::string> ranges;
+  boost::algorithm::split(ranges, *accept, boost::algorithm::is_any_of(","));
+  for (const auto& range : ranges)
+  {
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, range, boost::algorithm::is_any_of(";"));
+    const auto type = boost::algorithm::to_lower_copy(Fmi::trim_copy(parts[0]));
+    double q = 1;
+    for (std::size_t i = 1; i < parts.size(); i++)
+    {
+      auto param = Fmi::trim_copy(parts[i]);
+      if (boost::algorithm::istarts_with(param, "q="))
+      {
+        try
+        {
+          q = std::stod(param.substr(2));
+        }
+        catch (...)
+        {
+          q = 0;
+        }
+      }
+    }
+    if (q <= best_q)
+      continue;
+
+    std::string format;
+    if (type == "*/*" || type == "application/*")
+      format = default_format;
+    else
+    {
+      for (const auto& item : media_types)
+        if (item.first == type)
+        {
+          format = item.second;
+          if (format.empty() && (default_format == COVERAGE_JSON_FORMAT ||
+                                 default_format == GEO_JSON_FORMAT))
+            format = default_format;
+          break;
+        }
+    }
+
+    if (!format.empty() && supported_formats.find(format) != supported_formats.end())
+    {
+      best_format = format;
+      best_q = q;
+    }
+  }
+
+  if (best_format.empty())
+    throw EDRNotAcceptable("None of the media types in the Accept header '" + *accept +
+                           "' is supported, use the f option to select one of the output "
+                           "formats of the collection");
+  return best_format;
+}
+
 // Identifiers accepted for WGS84 longitude/latitude
 bool is_crs84(const std::string& crs)
 {
@@ -446,11 +525,22 @@ EDRQueryParams::EDRQueryParams(const State& state,
       throw EDRException("No matching parameter names given!");
     }
 
-    // If f-option is missing, use default output format
-    output_format = Spine::optional_string(req.getParameter("f"), emd.default_output_format);
-
     const auto& supportedOutputFormats =
         config.getSupportedOutputFormats(itsEDRQuery.collection_id);
+
+    // The f option overrides content negotiation, the format names are case insensitive
+    auto f_option = req.getParameter("f");
+    if (f_option)
+    {
+      output_format = *f_option;
+      for (const auto& format : supportedOutputFormats)
+        if (boost::algorithm::iequals(format, output_format))
+          output_format = format;
+    }
+    else
+      output_format = negotiate_output_format(
+          req.getHeader("Accept"), supportedOutputFormats, emd.default_output_format);
+
     if (supportedOutputFormats.find(output_format) == supportedOutputFormats.end())
     {
       auto output_format_list = boost::algorithm::join(supportedOutputFormats, ",");
