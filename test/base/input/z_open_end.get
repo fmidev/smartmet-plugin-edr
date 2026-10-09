@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/position?coords=POINT(24.9384+60.1699)&datetime=2008-09-09T12:00:00Z&parameter-name=Temperature&z=700/.. HTTP/1.0

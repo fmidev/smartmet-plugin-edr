@@ -378,6 +378,15 @@ bool parseRangeListValue(std::string& valueStr,
       loValue = boost::algorithm::trim_copy(parts[0]);
       hiValue = boost::algorithm::trim_copy(parts[1]);
 
+      // Open ranges ../hi and lo/.. (OGC API-EDR z parameter) extend to all levels
+      if (repeat == 0)
+      {
+        if (loValue == "..")
+          loValue = "-1e10";
+        if (hiValue == "..")
+          hiValue = "1e10";
+      }
+
       if (loValue.empty() || hiValue.empty() || (repeat > maxRepeat) ||
           ((repeat == 0) && (Fmi::stod(loValue) > Fmi::stod(hiValue))))
         throw Fmi::Exception(BCP, "");
