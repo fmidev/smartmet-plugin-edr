@@ -3451,8 +3451,67 @@ Json::Value format_output_data_vertical_profile(
   }
 }
 
-Json::Value parse_locations(const std::string &producer, const EngineMetaData &emd)
+// Adds numberMatched, numberReturned and the paging links of the locations listing
+void page_locations(const EDRQuery &edr_query, Json::Value &features, Json::Value &result)
 {
+  const auto matched = features.size();
+  const auto first = std::min(edr_query.offset, matched);
+  const auto count =
+      (edr_query.limit ? std::min(*edr_query.limit, matched - first) : matched - first);
+
+  if (first > 0 || count < matched)
+  {
+    auto page = Json::Value(Json::ValueType::arrayValue);
+    for (std::size_t i = first; i < first + count; i++)
+      page.append(features[i]);
+    features = std::move(page);
+  }
+
+  auto base = edr_query.host + "/collections/" + edr_query.collection_id +
+              (edr_query.instance_id.empty() ? "" : "/instances/" + edr_query.instance_id) +
+              "/locations";
+  auto href = [&base, &edr_query](std::size_t offset)
+  {
+    std::string ret = base;
+    std::string sep = "?";
+    if (edr_query.limit)
+    {
+      ret += sep + "limit=" + Fmi::to_string(*edr_query.limit);
+      sep = "&";
+    }
+    if (offset > 0)
+      ret += sep + "offset=" + Fmi::to_string(offset);
+    return ret;
+  };
+  auto make_link = [](const std::string &url, const std::string &rel, const std::string &type)
+  {
+    auto link = Json::Value(Json::ValueType::objectValue);
+    link["href"] = Json::Value(url);
+    link["rel"] = Json::Value(rel);
+    link["type"] = Json::Value(type);
+    return link;
+  };
+
+  auto links = Json::Value(Json::ValueType::arrayValue);
+  links.append(make_link(href(first), "self", "application/geo+json"));
+  if (edr_query.limit && first + count < matched)
+    links.append(make_link(href(first + count), "next", "application/geo+json"));
+  if (edr_query.limit && first > 0)
+    links.append(make_link(href(first > *edr_query.limit ? first - *edr_query.limit : 0),
+                           "prev",
+                           "application/geo+json"));
+  links.append(make_link(
+      edr_query.host + "/collections/" + edr_query.collection_id, "collection", "application/json"));
+
+  result["links"] = links;
+  result["numberMatched"] = Json::Value(matched);
+  result["numberReturned"] = Json::Value(count);
+}
+
+Json::Value parse_locations(const EDRQuery &edr_query, const EngineMetaData &emd)
+{
+  const std::string &producer = edr_query.collection_id;
+
   try
   {
     Json::Value result;
@@ -3610,6 +3669,7 @@ Json::Value parse_locations(const std::string &producer, const EngineMetaData &e
       features[features.size()] = all;
     }
 
+    page_locations(edr_query, features, result);
     result["features"] = features;
 
     return result;
@@ -3743,7 +3803,7 @@ Json::Value parseEDRMetaData(const EDRQuery &edr_query,
     const std::string &producer = edr_query.collection_id;
 
     if (edr_query.query_id == EDRQueryId::SpecifiedCollectionLocations)
-      return parse_locations(producer, emd);
+      return parse_locations(edr_query, emd);
 
     Json::Value result;
 

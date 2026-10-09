@@ -1,0 +1,91 @@
+Status: 200
+Content-Type: application/geo+json
+
+{
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop/locations?limit=3&offset=2",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop/locations?limit=3&offset=5",
+			"rel" : "next",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop/locations?limit=3",
+			"rel" : "prev",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"features" : 
+	[
+		{
+			"id" : "10015",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					7.9,
+					54.1833
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2008-11-28T13:00:00Z/2008-12-05T13:00:00Z",
+				"detail" : "Id is qdstation from synop",
+				"name" : "Helgoland"
+			}
+		},
+		{
+			"id" : "10020",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					8.41666,
+					55.0167
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2008-11-28T13:00:00Z/2008-12-05T13:00:00Z",
+				"detail" : "Id is qdstation from synop",
+				"name" : "List"
+			}
+		},
+		{
+			"id" : "10022",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					8.95,
+					54.8
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2008-11-28T13:00:00Z/2008-12-05T13:00:00Z",
+				"detail" : "Id is qdstation from synop",
+				"name" : "Leck"
+			}
+		}
+	],
+	"numberMatched" : 2506,
+	"numberReturned" : 3,
+	"type" : "FeatureCollection"
+}

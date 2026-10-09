@@ -71,6 +71,7 @@ class EDRQueryParams
   void parseCube(const EDRMetaData& emd);
   void parseDateTime(const State& state, const std::string& producer, const EDRMetaData& emd);
   void parseDateTimeList(const std::string& datetime);
+  void parseLimitAndOffset();
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,

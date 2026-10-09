@@ -463,6 +463,9 @@ EDRQueryParams::EDRQueryParams(const State& state,
     // If meta data query return from here
     if (itsEDRQuery.query_id != EDRQueryId::DataQuery)
     {
+      if (itsEDRQuery.query_type == EDRQueryType::Locations)
+        parseLimitAndOffset();
+
       // BRAINSTORM-3267; if mime_type is left empty, plugin sets the type usíng output format
       //
       if (itsEDRQuery.query_type == EDRQueryType::Locations)
@@ -1507,6 +1510,37 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+void EDRQueryParams::parseLimitAndOffset()
+{
+  // OGC API-EDR /req/edr/rc-limit-definition: 1..10000, larger values are not an error
+  // but are reduced to the maximum
+  const std::size_t max_limit = 10000;
+
+  auto parse = [this](const char* name, long min_value) -> std::optional<long>
+  {
+    auto value = req.getParameter(name);
+    if (!value)
+      return {};
+    try
+    {
+      std::size_t pos = 0;
+      auto n = std::stol(*value, &pos);
+      if (pos == value->size() && n >= min_value)
+        return n;
+    }
+    catch (...)
+    {
+    }
+    throw EDRException("Invalid '" + std::string(name) + "' parameter value '" + *value +
+                       "', an integer >= " + Fmi::to_string(min_value) + " is required");
+  };
+
+  if (auto limit = parse("limit", 1))
+    itsEDRQuery.limit = std::min(static_cast<std::size_t>(*limit), max_limit);
+  if (auto offset = parse("offset", 0))
+    itsEDRQuery.offset = static_cast<std::size_t>(*offset);
 }
 
 void EDRQueryParams::parseDateTimeList(const std::string& datetime)

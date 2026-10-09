@@ -1057,6 +1057,8 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
     {
       auto metadata = state.getPlugin().itsMetaData.load();
       Fmi::hash_combine(hash, Fmi::hash_value(metadata->getMetaDataUpdateTime()));
+      // e.g. the paging of the locations listing
+      parameters_hash_value(request, hash);
       return hash;
     }
 

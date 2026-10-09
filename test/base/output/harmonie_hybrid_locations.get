@@ -1,4 +1,17 @@
 {
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/harmonie_hybrid/locations",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/harmonie_hybrid",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
 	"features" : 
 	[
 		{
@@ -249,5 +262,7 @@
 			}
 		}
 	],
+	"numberMatched" : 13,
+	"numberReturned" : 13,
 	"type" : "FeatureCollection"
 }

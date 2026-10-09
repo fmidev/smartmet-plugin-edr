@@ -8,6 +8,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -57,6 +58,9 @@ struct EDRQuery
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;
+  // Paging of the locations listing (OGC API-EDR limit parameter), no limit by default
+  std::optional<std::size_t> limit;
+  std::size_t offset = 0;
   // Request URLs of a data query for each output format of the collection (for links)
   std::map<std::string, std::string> format_urls;
 };
