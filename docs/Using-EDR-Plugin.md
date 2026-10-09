@@ -278,6 +278,26 @@ data such as observations.
 /collections/pal_skandinavia/area?coords=POLYGON((24 60,25 60,25 61,24 60))&parameter-name=Temperature&resolution-x=5&resolution-y=4
 ```
 
+For corridor queries `resolution-x` is the number of positions along the path (2-1000) and
+`resolution-y` the number of positions across the corridor at equal offsets from one edge to
+the other (1-1000, 1 means the centre line only). The path must be a LINESTRING or
+LINESTRINGZ. The CoverageJSON output is a collection with one coverage for each offset across
+the corridor: a `Trajectory` along the path, or a `Section` with a `z` axis when the
+collection has levels.
+
+## Parameter resolution-z
+
+For cube and corridor queries `resolution-z` gives the number of levels (2-1000) from the
+minimum to the maximum of the requested vertical range: the `z` range of a cube, the
+`corridor-height` band of a corridor, or the whole vertical extent of the collection if
+neither is given. The data is interpolated to these levels. Interpolation is available for
+pressure and height levels of querydata collections; hybrid levels, observations and grid
+engine collections reject the parameter. The value 0 means the levels of the data.
+
+```
+/collections/ecmwf_skandinavia_painepinta/cube?bbox=24,60,25,61&z=500/1000&resolution-x=2&resolution-y=2&resolution-z=3&parameter-name=Temperature
+```
+
 ## Items of aviation collections
 
 Aviation message collections (for example METAR and TAF) can offer their messages as items

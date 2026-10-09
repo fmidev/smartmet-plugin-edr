@@ -1658,6 +1658,164 @@ void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd)
   }
 }
 
+namespace
+{
+// Spherical geometry for sampling corridors
+const double earth_radius = 6371008.8;  // metres
+
+struct LonLatPoint
+{
+  double lon;
+  double lat;
+};
+
+double to_rad(double deg)
+{
+  return deg * M_PI / 180;
+}
+
+double to_deg(double rad)
+{
+  return rad * 180 / M_PI;
+}
+
+double distance(const LonLatPoint& a, const LonLatPoint& b)
+{
+  const double dlat = to_rad(b.lat - a.lat);
+  const double dlon = to_rad(b.lon - a.lon);
+  const double h = std::sin(dlat / 2) * std::sin(dlat / 2) +
+                   std::cos(to_rad(a.lat)) * std::cos(to_rad(b.lat)) * std::sin(dlon / 2) *
+                       std::sin(dlon / 2);
+  return 2 * earth_radius * std::asin(std::min(1.0, std::sqrt(h)));
+}
+
+// Initial bearing from a to b in degrees
+double bearing(const LonLatPoint& a, const LonLatPoint& b)
+{
+  const double lat1 = to_rad(a.lat);
+  const double lat2 = to_rad(b.lat);
+  const double dlon = to_rad(b.lon - a.lon);
+  const double y = std::sin(dlon) * std::cos(lat2);
+  const double x =
+      std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(dlon);
+  return to_deg(std::atan2(y, x));
+}
+
+// The point at the given distance (metres) and bearing (degrees) from p
+LonLatPoint destination(const LonLatPoint& p, double brng, double dist)
+{
+  const double delta = dist / earth_radius;
+  const double theta = to_rad(brng);
+  const double lat1 = to_rad(p.lat);
+  const double lon1 = to_rad(p.lon);
+  const double lat2 = std::asin(std::sin(lat1) * std::cos(delta) +
+                                std::cos(lat1) * std::sin(delta) * std::cos(theta));
+  const double lon2 =
+      lon1 + std::atan2(std::sin(theta) * std::sin(delta) * std::cos(lat1),
+                        std::cos(delta) - std::sin(lat1) * std::sin(lat2));
+  return {std::remainder(to_deg(lon2), 360.0), to_deg(lat2)};
+}
+
+}  // namespace
+
+void EDRQueryParams::parseCorridorResolution(std::size_t nx, std::size_t ny)
+{
+  try
+  {
+    // The path in WGS84 with the corridor width in kilometres appended as ":width"
+    auto wkt = Spine::optional_string(req.getParameter("wkt"), "");
+    auto colon = wkt.rfind(':');
+    if (colon == std::string::npos || wkt.rfind(')') > colon)
+      throw EDRException("Corridor width is missing");
+    const double width = Fmi::stod(wkt.substr(colon + 1)) * 1000;
+    wkt.resize(colon);
+
+    if (!itsCoordinateFilter.getDatetime().empty())
+      throw EDRException(
+          "Query parameters 'resolution-x' and 'resolution-y' cannot be used with "
+          "LINESTRINGM or LINESTRINGZM coordinates");
+
+    OGRGeometry* geom = nullptr;
+    if (OGRGeometryFactory::createFromWkt(wkt.c_str(), nullptr, &geom) != OGRERR_NONE || !geom)
+      throw EDRException("Failed to parse the corridor path: " + wkt);
+    std::unique_ptr<OGRGeometry> geometry(geom);
+    if (wkbFlatten(geometry->getGeometryType()) != wkbLineString)
+      throw EDRException(
+          "Query parameters 'resolution-x' and 'resolution-y' require a LINESTRING corridor");
+
+    std::vector<LonLatPoint> path;
+    const auto* line = geometry->toLineString();
+    for (int k = 0; k < line->getNumPoints(); k++)
+      path.push_back({line->getX(k), line->getY(k)});
+
+    std::vector<double> cumulative{0};
+    for (std::size_t k = 1; k < path.size(); k++)
+      cumulative.push_back(cumulative.back() + distance(path[k - 1], path[k]));
+    const double length = cumulative.back();
+    if (path.size() < 2 || length <= 0)
+      throw EDRException("The corridor path must have a non-zero length");
+
+    // Positions along the path at equal distances, and across the corridor at equal offsets
+    // perpendicular to the path. The positions are ordered by the offset first.
+    std::vector<double> xs(nx * ny);
+    std::vector<double> ys(nx * ny);
+    std::size_t segment = 1;
+    for (std::size_t i = 0; i < nx; i++)
+    {
+      const double s = length * double(i) / double(nx - 1);
+      while (segment + 1 < path.size() && cumulative[segment] < s)
+        segment++;
+      const auto& a = path[segment - 1];
+      const auto& b = path[segment];
+      const double seglen = cumulative[segment] - cumulative[segment - 1];
+      const double fraction =
+          (seglen > 0 ? std::clamp((s - cumulative[segment - 1]) / seglen, 0.0, 1.0) : 0.0);
+
+      // Linear interpolation within a segment and the initial bearing of the segment are
+      // accurate enough for corridor sized segments
+      const LonLatPoint p{a.lon + fraction * (b.lon - a.lon), a.lat + fraction * (b.lat - a.lat)};
+      const double brng = bearing(a, b);
+
+      for (std::size_t j = 0; j < ny; j++)
+      {
+        const double offset = (ny == 1 ? 0.0 : -width / 2 + width * double(j) / double(ny - 1));
+        const auto q = (offset == 0 ? p : destination(p, brng + 90, offset));
+        xs[j * nx + i] = q.lon;
+        ys[j * nx + i] = q.lat;
+      }
+    }
+
+    std::string points;
+    for (std::size_t k = 0; k < xs.size(); k++)
+    {
+      if (!points.empty())
+        points += ',';
+      points += fmt::format("({} {})", xs[k], ys[k]);
+    }
+    req.removeParameter("wkt");
+    req.addParameter("wkt", "MULTIPOINT(" + points + ")");
+
+    // The output coordinates are in the requested CRS
+    if (itsEDRQuery.crs)
+      itsEDRQuery.crs->fromWGS84(xs, ys);
+
+    EDRCorridorGrid corridor_grid;
+    corridor_grid.nx = nx;
+    corridor_grid.ny = ny;
+    corridor_grid.width = width;
+    corridor_grid.x = std::move(xs);
+    corridor_grid.y = std::move(ys);
+    itsEDRQuery.corridor_grid = std::move(corridor_grid);
+
+    // The positions are queried as interpolated positions
+    itsEDRQuery.query_type = EDRQueryType::Position;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& config)
 {
   try
@@ -1667,16 +1825,20 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
     if (!opt_x && !opt_y)
       return;
 
+    const bool corridor = (itsEDRQuery.query_type == EDRQueryType::Corridor);
     if (itsEDRQuery.query_type != EDRQueryType::Area &&
-        itsEDRQuery.query_type != EDRQueryType::Cube)
+        itsEDRQuery.query_type != EDRQueryType::Cube && !corridor)
       throw EDRException(
-          "Query parameters 'resolution-x' and 'resolution-y' are supported only for area and "
-          "cube queries");
+          "Query parameters 'resolution-x' and 'resolution-y' are supported only for area, cube "
+          "and corridor queries");
 
     // OGC API-EDR: the number of positions along the axis including the minimum and the
-    // maximum, 0 means the native resolution of the data
+    // maximum, 0 means the native resolution of the data. For corridors x is along the path
+    // and y across the corridor, where 1 means the centre line only.
     const std::size_t max_positions = 1000;
-    auto parse = [max_positions](const std::optional<std::string>& value, const char* name)
+    auto parse = [max_positions](const std::optional<std::string>& value,
+                                 const char* name,
+                                 long min_positions)
     {
       if (!value)
         throw EDRException(std::string("Query parameter '") + name +
@@ -1685,20 +1847,21 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
       {
         std::size_t pos = 0;
         auto n = std::stol(*value, &pos);
-        if (pos == value->size() && (n == 0 || (n >= 2 && n <= long(max_positions))))
+        if (pos == value->size() &&
+            (n == 0 || (n >= min_positions && n <= long(max_positions))))
           return static_cast<std::size_t>(n);
       }
       catch (...)
       {
       }
       throw EDRException(std::string("Invalid '") + name + "' value '" + *value +
-                         "', valid values are 0 for the native resolution and 2-" +
-                         Fmi::to_string(max_positions) +
+                         "', valid values are 0 for the native resolution and " +
+                         Fmi::to_string(min_positions) + "-" + Fmi::to_string(max_positions) +
                          " for the number of positions including the minimum and maximum");
     };
 
-    auto nx = parse(opt_x, "resolution-x");
-    auto ny = parse(opt_y, "resolution-y");
+    auto nx = parse(opt_x, "resolution-x", 2);
+    auto ny = parse(opt_y, "resolution-y", corridor ? 1 : 2);
 
     if (nx == 0 && ny == 0)
       return;
@@ -1723,6 +1886,12 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
       throw EDRTooLarge("Too many grid positions " + Fmi::to_string(nx * ny) +
                         " requested with resolution-x and resolution-y, the maximum is " +
                         Fmi::to_string(max_points));
+
+    if (corridor)
+    {
+      parseCorridorResolution(nx, ny);
+      return;
+    }
 
     // The grid is regular in the requested CRS
     auto wkt = (itsEDRQuery.crs ? itsRequestXYWkt

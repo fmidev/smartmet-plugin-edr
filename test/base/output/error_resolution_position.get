@@ -4,5 +4,5 @@ Content-Type: application/problem+json
 {
   "title" : "An error occurred",
   "status" : 400,
-  "detail" : "Query parameters 'resolution-x' and 'resolution-y' are supported only for area and cube queries"
+  "detail" : "Query parameters 'resolution-x' and 'resolution-y' are supported only for area, cube and corridor queries"
 }

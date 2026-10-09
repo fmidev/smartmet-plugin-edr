@@ -140,7 +140,10 @@ rm -rf $RPM_BUILD_ROOT
     plain unit symbols
   - Paging of the locations listing with limit and offset
   - resolution-x and resolution-y for area and cube queries on gridded data return a
-    CoverageJSON Grid domain coverage
+    CoverageJSON Grid domain coverage; for corridors they sample positions along and across
+    the path and return Trajectory or Section coverages
+  - resolution-z interpolates cube and corridor data vertically (querydata pressure and
+    height levels)
   - Data queries may be sent with form encoded POST
   - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
     bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates

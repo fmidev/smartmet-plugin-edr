@@ -12,6 +12,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace SmartMet
 {
@@ -66,6 +67,18 @@ struct EDRGrid
   double y(std::size_t j) const { return y0 + (y1 - y0) * double(j) / double(ny - 1); }
 };
 
+// Corridor positions requested with resolution-x (along the path) and resolution-y (across)
+struct EDRCorridorGrid
+{
+  std::size_t nx = 0;
+  std::size_t ny = 0;
+  double width = 0;       // metres
+  std::vector<double> x;  // output coordinates, position (i,j) is at index j*nx+i
+  std::vector<double> y;
+
+  bool active() const { return nx > 0 && ny > 0; }
+};
+
 struct EDRQuery
 {
   std::string host;
@@ -85,6 +98,9 @@ struct EDRQuery
 
   // Area and cube queries on a regular grid (resolution-x, resolution-y)
   EDRGrid grid;
+  // Corridor queries with resolution-x and resolution-y
+  EDRCorridorGrid corridor_grid;
+
   // Paging of the locations listing (OGC API-EDR limit parameter), no limit by default
   std::optional<std::size_t> limit;
   std::size_t offset = 0;

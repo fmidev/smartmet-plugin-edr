@@ -32,6 +32,15 @@ Json::Value formatGridOutputData(const TS::OutputData &outputData,
                                  const std::vector<Spine::Parameter> &query_parameters,
                                  const CustomDimReferences &custom_dim_refs,
                                  const std::string &language);
+// Corridor queries with resolution-x and resolution-y: a collection of Trajectory or Section
+// coverages, one for each offset across the corridor
+Json::Value formatCorridorOutputData(const TS::OutputData &outputData,
+                                     const EDRMetaData &emd,
+                                     const EDRCorridorGrid &corridor,
+                                     const std::set<int> &levels,
+                                     const std::vector<Spine::Parameter> &query_parameters,
+                                     const CustomDimReferences &custom_dim_refs,
+                                     const std::string &language);
 Json::Value parseEDRMetaData(const EDRQuery &edr_query,
                              const EngineMetaData &emd,
                              const ProducerLicenses &licenses,

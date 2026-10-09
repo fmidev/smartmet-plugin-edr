@@ -1,0 +1,2 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/corridor?coords=LINESTRINGM(24+60+1220961600,25+60.5+1220972400)&corridor-width=50&width-units=km&resolution-x=3&resolution-y=2&parameter-name=Temperature HTTP/1.0
+X-Test-Headers: Content-Type

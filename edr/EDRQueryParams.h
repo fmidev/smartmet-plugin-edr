@@ -75,6 +75,7 @@ class EDRQueryParams
   void parseItemsQuery(const EDRMetaData& emd, const Config& config);
   void parseResolution(const EDRMetaData& emd, const Config& config);
   void parseResolutionZ(const EDRMetaData& emd);
+  void parseCorridorResolution(std::size_t nx, std::size_t ny);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,

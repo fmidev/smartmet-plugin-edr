@@ -108,6 +108,16 @@ def check_domain(fname, path, domain, domain_type, has_referencing):
             error(fname, path, "Trajectory composite axis must be a (t,x,y[,z]) tuple")
         if "z" in sizes and not single("z"):
             error(fname, path, "Trajectory domain axis 'z' must be single-valued")
+    if dt == "Section":
+        comp = axes.get("composite", {})
+        if comp.get("dataType") != "tuple" or comp.get("coordinates") != ["t", "x", "y"]:
+            error(fname, path, "Section composite axis must be a (t,x,y) tuple")
+        if "z" not in sizes:
+            error(fname, path, "Section domain must have a 'z' axis")
+    if dt in ("Trajectory", "Section"):
+        times = [v[0] for v in axes.get("composite", {}).get("values", []) if isinstance(v, list)]
+        if times != sorted(times):
+            error(fname, path, "composite values must be ordered by time")
     if dt == "MultiPointSeries":
         if "composite" not in sizes or "t" not in sizes:
             error(fname, path, "MultiPointSeries domain must have 'composite' and 't' axes")

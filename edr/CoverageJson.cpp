@@ -3874,6 +3874,187 @@ Json::Value formatGridOutputData(const TS::OutputData &outputData,
   }
 }
 
+Json::Value formatCorridorOutputData(const TS::OutputData &outputData,
+                                     const EDRMetaData &emd,
+                                     const EDRCorridorGrid &corridor,
+                                     const std::set<int> &levels,
+                                     const std::vector<Spine::Parameter> &query_parameters,
+                                     const CustomDimReferences &custom_dim_refs,
+                                     const std::string &language)
+{
+  try
+  {
+    const CoordinateFilter no_filter;
+    ParameterNames dpn;
+    auto dpp = get_data_per_parameter(
+        outputData, levels, no_filter, query_parameters, emd.isGridProducer(), dpn);
+    if (dpp.empty())
+      return {};
+
+    std::set<std::string> time_set;
+    std::set<double> level_set;
+    for (const auto &dpp_item : dpp)
+      for (const auto &dpl_item : dpp_item.second)
+      {
+        if (dpl_item.first != std::numeric_limits<double>::max())
+          level_set.insert(dpl_item.first);
+        for (const auto &tcv : dpl_item.second)
+          time_set.insert(tcv.time);
+      }
+    const std::vector<std::string> times(time_set.begin(), time_set.end());
+    const std::vector<double> zs(level_set.begin(), level_set.end());
+    const bool has_z = !zs.empty();
+    const std::size_t nt = times.size();
+    const std::size_t nz = (has_z ? zs.size() : 1);
+    const std::size_t nx = corridor.nx;
+
+    // Position index of the output coordinates, which are the requested positions in the
+    // output CRS
+    const bool projected = (emd.output_crs && !emd.output_crs->geographic);
+    const double tolerance = (projected ? 1.0 : 1e-5);
+    std::map<std::pair<long, long>, std::size_t> index;
+    auto key = [tolerance](double x, double y)
+    { return std::make_pair(std::lround(x / tolerance), std::lround(y / tolerance)); };
+    for (std::size_t k = 0; k < corridor.x.size(); k++)
+      index.insert(std::make_pair(key(corridor.x[k], corridor.y[k]), k));
+    auto position = [&](double x, double y) -> std::optional<std::size_t>
+    {
+      const auto center = key(x, y);
+      for (long dx = -1; dx <= 1; dx++)
+        for (long dy = -1; dy <= 1; dy++)
+        {
+          auto it = index.find(std::make_pair(center.first + dx, center.second + dy));
+          if (it != index.end())
+            return it->second;
+        }
+      return {};
+    };
+
+    // Values of each parameter at (t, z, j, i)
+    const std::size_t npos = corridor.x.size();
+    std::map<std::string, std::vector<std::optional<TS::Value>>> values;
+    for (const auto &dpp_item : dpp)
+    {
+      auto &array = values[dpp_item.first];
+      array.resize(nt * nz * npos);
+      for (const auto &dpl_item : dpp_item.second)
+      {
+        std::size_t k = 0;
+        if (has_z)
+        {
+          auto it = std::lower_bound(zs.begin(), zs.end(), dpl_item.first);
+          if (it == zs.end() || *it != dpl_item.first)
+            continue;
+          k = std::size_t(it - zs.begin());
+        }
+        for (const auto &tcv : dpl_item.second)
+        {
+          auto pos = position(tcv.lon, tcv.lat);
+          if (!pos)
+            continue;
+          auto t = std::size_t(std::lower_bound(times.begin(), times.end(), tcv.time) -
+                               times.begin());
+          array[(t * nz + k) * npos + *pos] = tcv.value;
+        }
+      }
+    }
+
+    const auto *domain_type = (has_z ? "Section" : "Trajectory");
+    auto collection = add_prologue_coverage_collection(
+        emd, query_parameters, has_z, domain_type, custom_dim_refs, language);
+
+    const auto longitude_precision = emd.getPrecision("longitude");
+    const auto latitude_precision = emd.getPrecision("latitude");
+    auto coverages = Json::Value(Json::ValueType::arrayValue);
+
+    // One coverage for each offset across the corridor, the composite axis runs along the path
+    // ordered by time
+    for (std::size_t j = 0; j < corridor.ny; j++)
+    {
+      auto composite = Json::Value(Json::ValueType::objectValue);
+      composite["dataType"] = Json::Value("tuple");
+      composite["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+      composite["coordinates"].append(Json::Value("t"));
+      composite["coordinates"].append(Json::Value("x"));
+      composite["coordinates"].append(Json::Value("y"));
+      // Note: Json::Value::append would concatenate the tuples into one array
+      composite["values"] = Json::Value(Json::ValueType::arrayValue);
+      std::size_t n = 0;
+      for (std::size_t t = 0; t < nt; t++)
+        for (std::size_t i = 0; i < nx; i++)
+        {
+          auto tuple = Json::Value(Json::ValueType::arrayValue);
+          tuple[0] = Json::Value(times[t]);
+          tuple[1] = Json::Value(corridor.x[j * nx + i], longitude_precision);
+          tuple[2] = Json::Value(corridor.y[j * nx + i], latitude_precision);
+          composite["values"][n++] = tuple;
+        }
+
+      auto domain = Json::Value(Json::ValueType::objectValue);
+      domain["type"] = Json::Value("Domain");
+      domain["axes"] = Json::Value(Json::ValueType::objectValue);
+      domain["axes"]["composite"] = composite;
+      if (has_z)
+      {
+        domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
+        domain["axes"]["z"]["values"] = Json::Value(Json::ValueType::arrayValue);
+        for (auto z : zs)
+          domain["axes"]["z"]["values"].append(Json::Value(z, 0));
+      }
+
+      auto ranges = Json::Value(Json::ValueType::objectValue);
+      for (const auto &item : values)
+      {
+        const auto &array = item.second;
+        auto range = Json::Value(Json::ValueType::objectValue);
+        range["type"] = Json::Value("NdArray");
+        range["dataType"] = Json::Value("float");
+        auto axis_names = Json::Value(Json::ValueType::arrayValue);
+        auto shape = Json::Value(Json::ValueType::arrayValue);
+        if (has_z)
+        {
+          axis_names.append(Json::Value("z"));
+          shape.append(Json::Value(nz));
+        }
+        axis_names.append(Json::Value("composite"));
+        shape.append(Json::Value(nt * nx));
+        range["axisNames"] = axis_names;
+        range["shape"] = shape;
+
+        const auto precision = emd.getPrecision(item.first);
+        auto data_values = Json::Value(Json::ValueType::arrayValue);
+        std::size_t n = 0;
+        for (std::size_t k = 0; k < nz; k++)
+          for (std::size_t t = 0; t < nt; t++)
+            for (std::size_t i = 0; i < nx; i++)
+            {
+              const auto &value = array[(t * nz + k) * npos + j * nx + i];
+              if (value && (std::holds_alternative<double>(*value) ||
+                            std::holds_alternative<int>(*value)))
+                data_values[n++] = UtilityFunctions::json_value(*value, precision);
+              else
+                data_values[n++] = Json::Value();
+            }
+        range["values"] = data_values;
+        ranges[dpn.at(item.first)] = range;
+      }
+
+      auto coverage = Json::Value(Json::ValueType::objectValue);
+      coverage["type"] = Json::Value("Coverage");
+      coverage["domain"] = domain;
+      coverage["ranges"] = ranges;
+      coverages.append(coverage);
+    }
+
+    collection["coverages"] = coverages;
+    return collection;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 Json::Value formatOutputData(const TS::OutputData &outputData,
                              const EDRMetaData &emd,
                              EDRQueryType query_type,
