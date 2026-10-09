@@ -139,6 +139,9 @@ rm -rf $RPM_BUILD_ROOT
   - GeoJSON responses have links, parameters use plain strings, configurable unit id and
     plain unit symbols
   - Paging of the locations listing with limit and offset
+  - resolution-x and resolution-y for area and cube queries on gridded data return a
+    CoverageJSON Grid domain coverage
+  - Data queries may be sent with form encoded POST
   - /conformance declares EDR 1.2
 - The API documents are no longer cached per Host header
 
