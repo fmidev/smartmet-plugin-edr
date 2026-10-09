@@ -3540,6 +3540,28 @@
             }
           },
           {
+            "name": "resolution-x",
+            "in": "query",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
             "name": "f",
             "in": "query",
             "description": "Identifier of the output format to return the response in.\n\nValid identifers are listed in the collection's/instance's metadata.\n",
@@ -3712,6 +3734,28 @@
             "required": false,
             "style": "form",
             "explode": false
+          },
+          {
+            "name": "resolution-x",
+            "in": "query",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
           },
           {
             "name": "crs",
@@ -7473,6 +7517,28 @@
             "explode": false
           },
           {
+            "name": "resolution-x",
+            "in": "query",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
             "name": "crs",
             "in": "query",
             "description": "Identifier of the coordinate reference system (CRS) to return data in.\nAlso specifies the CRS of the `coords` parameter.\n\nValid identifiers are listed in the collection's/instance's metadata.\n\nIf not supplied, CRS will default to native coordinate system of data\n",
@@ -7663,6 +7729,28 @@
             "required": false,
             "style": "form",
             "explode": false
+          },
+          {
+            "name": "resolution-x",
+            "in": "query",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
           },
           {
             "name": "crs",
