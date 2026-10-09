@@ -164,6 +164,20 @@ November 15, 2022, 12:00:00 UTC or earlier:
 ```
 datetime=../2022-11-15T12:00:00Z
 ```
+_Example 3 - Lists and repeating intervals_
+
+Data only at the listed times:
+```
+datetime=2022-11-15T06:00:00Z,2022-11-15T12:00:00Z,2022-11-15T18:00:00Z
+```
+Four times at three hour intervals starting at 06 UTC (`Rn/start/duration`, n times):
+```
+datetime=R4/2022-11-15T06:00:00Z/PT3H
+```
+
+Open interval ends extend to the start or the end of the data. Durations are not accepted as
+interval ends. Times without a UTC offset are interpreted as UTC. If datetime is not given,
+the time of the data closest to the current time is used.
 
 ### **Parameter parameter-name**
 
@@ -207,13 +221,48 @@ z=60/110
 ```
 If level is not specified all available levels are returned.
 
+_Example 4 - Open ranges and repeating intervals_
+
+Levels up to 700 and from 700 onwards, and 4 levels starting from 1000 with step -100:
+
+```
+z=../700
+z=700/..
+z=R4/1000/-100
+```
+
+The z parameter is ignored for collections without a vertical extent. It cannot be used
+together with LINESTRINGZ or LINESTRINGZM coordinates, which already define the levels.
+
 ### **Parameter crs**
 
-Currently only EPSG:4326 is supported, and it is also default crs, so no need to use this parameter.
+Currently only WGS84 longitude/latitude is supported. It is the default and can be given for
+example as `OGC:CRS84`, `CRS84` or `http://www.opengis.net/def/crs/OGC/1.3/CRS84`. Other values
+are rejected with status 400.
 
 ### **Parameter f**
 
-Currently only CovergeJSON is supported, and it is also default format, so no need to use this parameter.
+The output formats of a collection are listed in its `output_formats` metadata, for example
+`CoverageJSON` (media type `application/vnd.cov+json`) and `GeoJSON`
+(`application/geo+json`). The format names are case insensitive. Without the f parameter the
+format is selected with the HTTP `Accept` header, for example
+`Accept: application/geo+json`, and if the header accepts anything the collection's default
+format is used. If none of the accepted media types is available, the response is
+406 Not Acceptable.
+
+## Errors
+
+Errors are reported with an `application/problem+json` body containing `title`, `status` and
+`detail`. The status is 404 for unknown collections, instances, locations and query types, 406
+for unsupported Accept headers, 413 for requests exceeding the configured limits, 503 for
+timeouts and 400 for other invalid requests.
+
+## Locations listing
+
+`/collections/{collectionId}/locations` lists the locations of a collection as a GeoJSON
+feature collection. The listing can be paged with `limit` (1-10000, larger values are reduced
+to 10000) and `offset`; the response contains `numberMatched`, `numberReturned` and `next`/`prev`
+links. Without `limit` all locations are returned.
 
 ## Position query
 
