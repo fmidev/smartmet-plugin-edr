@@ -87,11 +87,14 @@ class Value
   Value(const NullValue &value);
 
   Value(const Value &value);
+  Value(Value &&value) noexcept;
   Value &operator=(const Value &value);
+  Value &operator=(Value &&value);
   Value &operator[](const std::string &key);
   Value &operator[](ArrayIndex index);
   std::string toStyledString(bool pretty) const;
   void append(const Value &value);
+  void append(Value &&value);
   std::size_t size() const { return data_value_vector.size(); }
   bool isNullOrEmpty() const {
     // We count on just-constructed Json::Value() with no contents (even empty)
@@ -110,15 +113,20 @@ class Value
   const_iterator end() const;
 
  private:
+  template <typename V>
+  Value &assign(V &&value);
   std::string to_string(bool pretty) const;
   std::string to_string_impl(bool pretty, unsigned int level) const;
   void append_to_string(std::string &out, bool pretty, unsigned int level) const;
   std::string value() const;
-  std::string values_to_string(bool pretty, unsigned int level) const;
-  static std::string data_value_vector_to_string(const std::vector<Value> &data_value_vector,
-                                                 bool pretty,
-                                                 unsigned int level);
-  std::string data_value_vector_to_string(bool pretty, unsigned int level) const;
+  void append_values(std::string &out, bool pretty, unsigned int level) const;
+  void append_array(std::string &out, bool pretty, unsigned int level) const;
+  static void append_elements(std::string &out,
+                              const std::vector<Value> &elements,
+                              bool pretty,
+                              unsigned int level);
+  static bool is_empty_array(const std::vector<Value> &elements);
+  static bool elements_start_with_newline(const std::vector<Value> &elements, bool pretty);
 
   DataValue data_value;                   // Value is stored here
   std::vector<Value> data_value_vector;   // // Vector of values

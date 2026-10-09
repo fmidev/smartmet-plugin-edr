@@ -2336,12 +2336,12 @@ Json::Value build_point_domain(const std::vector<time_coord_value> &values,
     auto &t_values = domain_axes_t["values"];
     for (std::size_t k = group.begin; k < group.end; k++)
       t_values[static_cast<unsigned int>(k - group.begin)] = Json::Value(values[k].time);
-    domain_axes["x"] = domain_axes_x;
-    domain_axes["y"] = domain_axes_y;
-    domain_axes["t"] = domain_axes_t;
+    domain_axes["x"] = std::move(domain_axes_x);
+    domain_axes["y"] = std::move(domain_axes_y);
+    domain_axes["t"] = std::move(domain_axes_t);
     set_level_value(levels_present, level, domain_axes);
 
-    domain["axes"] = domain_axes;
+    domain["axes"] = std::move(domain_axes);
     return domain;
   }
   catch (...)
@@ -2375,20 +2375,20 @@ Json::Value build_point_range(const std::vector<time_coord_value> &values,
       shape[2] = Json::Value(n_timesteps);
     }
 
-    range_item["shape"] = shape;
+    range_item["shape"] = std::move(shape);
     auto axis_names = Json::Value(Json::ValueType::arrayValue);
     set_axis_names(levels_present, axis_names);
 
-    range_item["axisNames"] = axis_names;
+    range_item["axisNames"] = std::move(axis_names);
     auto parameter_values = Json::Value(Json::ValueType::arrayValue);
     for (std::size_t k = group.begin; k < group.end; k++)
     {
       Json::Value single_value;
       set_parameter_value(values[k], parameter_precision, isAviProducer, single_value, range_item);
-      parameter_values[static_cast<unsigned int>(k - group.begin)] = single_value[0];
+      parameter_values[static_cast<unsigned int>(k - group.begin)] = std::move(single_value[0]);
     }
 
-    range_item["values"] = parameter_values;
+    range_item["values"] = std::move(parameter_values);
     return range_item;
   }
   catch (...)
@@ -2492,16 +2492,16 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
           ranges[*pld.output_name] = build_point_range(
               *pld.values, pld.groups[point_idx], pld.precision, isAviProducer, levels_present);
         }
-        coverage["ranges"] = ranges;
+        coverage["ranges"] = std::move(ranges);
 
-        coverages[coverages.size()] = coverage;
+        coverages[coverages.size()] = std::move(coverage);
       }
     }
 
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Point",
         custom_dim_refs, language);
-    coverage_collection["coverages"] = coverages;
+    coverage_collection["coverages"] = std::move(coverages);
 
     return coverage_collection;
   }

@@ -3,10 +3,15 @@
 #include <fmt/format.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/ValueFormatter.h>
+#include <algorithm>
+#include <array>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <set>
 #include <string_view>
+#include <type_traits>
+#include <utility>
 
 namespace SmartMet
 {
@@ -103,85 +108,89 @@ ValueType get_value_type(const DataValue &dv)
   return ValueType::nullValue;
 }
 
-std::string json_encode(const std::string &input, bool isStringObject = false)
+void append_json_encoded(std::string &out, const std::string &input, bool isStringObject)
 {
-  std::string output;
-  output.reserve(input.size());
-
   for (unsigned char c : input)
   {
     switch (c)
     {
       case '"':
-        output += (isStringObject ? "\"" : "\\\"");
+        out += (isStringObject ? "\"" : "\\\"");
         break;
       case '\\':
-        output += "\\\\";
+        out += "\\\\";
         break;
       case '\b':
-        output += "\\b";
+        out += "\\b";
         break;
       case '\f':
-        output += "\\f";
+        out += "\\f";
         break;
       case '\n':
-        output += "\\n";
+        out += "\\n";
         break;
       case '\r':
-        output += "\\r";
+        out += "\\r";
         break;
       case '\t':
-        output += "\\t";
+        out += "\\t";
         break;
       default:
         if (c < 0x20)
-          output += fmt::format("\\u{:04x}", c);
+          out += fmt::format("\\u{:04x}", c);
         else
-          output += c;
+          out += static_cast<char>(c);
         break;
     }
   }
+}
 
-  return output;
+// Only a string object (inserted into the output as is) can be serialized to nothing
+bool is_empty_data_value(const DataValue &dv)
+{
+  const auto *str = std::get_if<std::string>(&dv.get_data());
+  return (str != nullptr && dv.isStringObjectValue() && str->empty());
+}
+
+void append_data_value(std::string &out, const DataValue &dv, int precision)
+{
+  const auto &data = dv.get_data();
+
+  if (const auto *str = std::get_if<std::string>(&data))
+  {
+    if (dv.isStringObjectValue())
+      append_json_encoded(out, *str, true);
+    else
+    {
+      out += '"';
+      append_json_encoded(out, *str, false);
+      out += '"';
+    }
+  }
+  else if (const auto *ivalue = std::get_if<std::size_t>(&data))
+  {
+    out += Fmi::to_string(*ivalue);
+  }
+  else if (const auto *dvalue = std::get_if<double>(&data))
+  {
+    // format() does not modify the formatter, so one instance can be shared
+    static const Fmi::ValueFormatter formatter(Fmi::ValueFormatterParam("null", "fixed"));
+    out += formatter.format(*dvalue, precision);
+  }
+  else if (const auto *bvalue = std::get_if<bool>(&data))
+  {
+    out += (*bvalue ? "true" : "false");
+  }
+  else
+  {
+    out += "null";
+  }
 }
 
 std::string data_value_to_string(const DataValue &dv, int precision)
 {
   std::string ret;
-
-  ValueType vt = get_value_type(dv);
-
-  const auto &data = dv.get_data();
-
-  if (vt == ValueType::stringValue)
-  {
-    auto str = *(std::get_if<std::string>(&data));
-    if (dv.isStringObjectValue())
-      ret = json_encode(str, true);
-    else
-      ret = "\"" + json_encode(str) + "\"";
-  }
-  else if (vt == ValueType::intValue)
-  {
-    ret = Fmi::to_string(std::get<std::size_t>(data));
-  }
-  else if (vt == ValueType::boolValue)
-  {
-    auto bool_value = std::get<bool>(data);
-    ret = (bool_value ? "true" : "false");
-  }
-  else if (vt == ValueType::doubleValue)
-  {
-    Fmi::ValueFormatterParam fmtParam("null", "fixed");
-    Fmi::ValueFormatter formatter(fmtParam);
-    double value = std::get<double>(data);
-    ret = formatter.format(value, precision);
-  }
-  else if (vt == ValueType::nullValue)
-  {
-    ret = "null";
-  }
-
+  append_data_value(ret, dv, precision);
   return ret;
 }
 
@@ -265,7 +274,31 @@ Value::Value(const NullValue &value)
 {
 }
 
+namespace
+{
+// Moves a member of the assigned value when assigning from an rvalue, copies it otherwise
+template <typename V, typename T>
+decltype(auto) member(T &m)
+{
+  if constexpr (std::is_rvalue_reference_v<V &&>)
+    return std::move(m);
+  else
+    return static_cast<const T &>(m);
+}
+}  // namespace
+
 Value &Value::operator=(const Value &value)
+{
+  return assign(value);
+}
+
+Value &Value::operator=(Value &&value)
+{
+  return assign(std::move(value));
+}
+
+template <typename V>
+Value &Value::assign(V &&value)
 {
   if (this == &value)
     return *this;
@@ -274,51 +307,43 @@ Value &Value::operator=(const Value &value)
   {
     if (value.valueType == ValueType::objectValue)
     {
-      //  std::cout << "Assigning object for key: " << nodeKey << std::endl;
       // If object value -> child
       auto &key_value = parentNode->children[nodeKey];
       key_value.valueType = value.valueType;
-      key_value.data_value = value.data_value;
-      key_value.data_value_vector = value.data_value_vector;
-      key_value.values = value.values;
+      key_value.data_value = member<V>(value.data_value);
+      key_value.data_value_vector = member<V>(value.data_value_vector);
+      key_value.values = member<V>(value.values);
       key_value.precision = value.precision;
       key_value.parentNode = parentNode;
-      for (const auto &item : value.children)
+      for (auto &item : value.children)
       {
         auto &key_value_child = key_value.children[item.first];
-        key_value_child.data_value = item.second.data_value;
-        key_value_child.data_value_vector = item.second.data_value_vector;
-        key_value_child.values = item.second.values;
-        key_value_child.children = item.second.children;
+        key_value_child.data_value = member<V>(item.second.data_value);
+        key_value_child.data_value_vector = member<V>(item.second.data_value_vector);
+        key_value_child.values = member<V>(item.second.values);
+        key_value_child.children = member<V>(item.second.children);
       }
     }
     else
     {
       // data value
-      //		  std::cout << "Assgining data value for key_0 " <<
-      // std::endl;
       auto &key_value = (nodeKey == UNINITIALIZED_KEY ? *this : parentNode->values[nodeKey]);
-      //		  std::cout << "Assgining data value for key "  <<
-      //&key_value << ", "<< nodeKey  << std::endl;
-      key_value.data_value = value.data_value;
-      key_value.data_value_vector = value.data_value_vector;
-      key_value.values = value.values;
+      key_value.data_value = member<V>(value.data_value);
+      key_value.data_value_vector = member<V>(value.data_value_vector);
+      key_value.values = member<V>(value.values);
       key_value.precision = value.precision;
-      key_value.children = value.children;
+      key_value.children = member<V>(value.children);
       key_value.valueType = value.valueType;
       key_value.parentNode = parentNode;
     }
   }
   else
   {
-    //	  std::cout << "Assignment operator= to this (this, key, valuekey) " <<
-    // this << ", " << nodeKey << ", "  << value.nodeKey << ", "  <<
-    // value_type_to_string(valueType) << std::endl;
-    data_value = value.data_value;
-    data_value_vector = value.data_value_vector;
-    values = value.values;
+    data_value = member<V>(value.data_value);
+    data_value_vector = member<V>(value.data_value_vector);
+    values = member<V>(value.values);
     precision = value.precision;
-    children = value.children;
+    children = member<V>(value.children);
     valueType = value.valueType;
     parentNode = value.parentNode;
   }
@@ -378,6 +403,18 @@ Value::Value(const Value &value)
   */
 }
 
+Value::Value(Value &&value) noexcept
+    : data_value(std::move(value.data_value)),
+      data_value_vector(std::move(value.data_value_vector)),
+      values(std::move(value.values)),
+      children(std::move(value.children)),
+      valueType(value.valueType),
+      nodeKey(std::move(value.nodeKey)),
+      precision(value.precision),
+      parentNode(value.parentNode)
+{
+}
+
 Value &Value::operator[](ArrayIndex index)
 {
   if (valueType != ValueType::arrayValue)
@@ -397,139 +434,175 @@ Value &Value::operator[](ArrayIndex index)
   return data_value_vector.at(index);
 }
 
-std::string Value::data_value_vector_to_string(const std::vector<Value> &data_value_vector,
-                                               bool pretty,
-                                               unsigned int level)
+// The serializer appends everything to a single output buffer. Separators and brackets depend on
+// how the next part of the output begins, which is decided from the values before they are
+// written instead of inspecting already serialized temporary strings.
+
+bool Value::is_empty_array(const std::vector<Value> &elements)
 {
-  std::string value_array;
-  for (const auto &val : data_value_vector)
+  for (const auto &val : elements)
   {
     if (val.valueType < ValueType::arrayValue)
     {
-      auto new_value = val.data_value.to_string(val.precision);
-      if (!value_array.empty() && !new_value.empty())
-        value_array.append(comma(pretty));
-      value_array.append(tabs(pretty, level + 2));
-      value_array.append(new_value);
+      if (!is_empty_data_value(val.data_value))
+        return false;
+    }
+    else if (val.valueType != ValueType::arrayValue || !is_empty_array(val.data_value_vector))
+      return false;  // objects always have braces
+  }
+  return true;
+}
+
+// Whether append_elements output begins with a line break: only pretty printed objects do
+bool Value::elements_start_with_newline(const std::vector<Value> &elements, bool pretty)
+{
+  if (!pretty)
+    return false;
+
+  for (const auto &val : elements)
+  {
+    if (val.valueType == ValueType::objectValue)
+      return true;
+    // Scalars always begin with indentation, empty arrays produce nothing
+    if (val.valueType < ValueType::arrayValue || !is_empty_array(val.data_value_vector))
+      return false;
+  }
+  return false;
+}
+
+void Value::append_elements(std::string &out,
+                            const std::vector<Value> &elements,
+                            bool pretty,
+                            unsigned int level)
+{
+  const std::size_t start = out.size();
+  for (const auto &val : elements)
+  {
+    if (val.valueType < ValueType::arrayValue)
+    {
+      if (out.size() > start && !is_empty_data_value(val.data_value))
+        out.append(comma(pretty));
+      out.append(tabs(pretty, level + 2));
+      append_data_value(out, val.data_value, val.precision);
     }
     else
     {
-      auto new_value = val.to_string_impl(pretty, level + 2);
-      if (!value_array.empty() && !new_value.empty())
+      const bool empty =
+          (val.valueType == ValueType::arrayValue && is_empty_array(val.data_value_vector));
+      if (out.size() > start && !empty)
       {
-        // Objects and arrays begin with a line break of their own when pretty printing
-        if (boost::algorithm::starts_with(new_value, NEWLINE))
-          value_array.append(",");
+        // Objects begin with a line break of their own when pretty printing
+        if (pretty && val.valueType == ValueType::objectValue)
+          out.append(",");
         else
-          value_array.append(comma(pretty));
+          out.append(comma(pretty));
       }
-      value_array.append(new_value);
+      val.append_to_string(out, pretty, level + 2);
     }
   }
-  return value_array;
 }
 
-std::string Value::values_to_string(bool pretty, unsigned int level) const
+void Value::append_values(std::string &out, bool pretty, unsigned int level) const
 {
-  std::string result;
-
   if (values.empty())
-    return data_value_vector_to_string(pretty, level);
-
-  std::vector<std::string> keys;
-  for (const auto &item : values)
   {
-    if (!(item.first == "id" || item.first == "title" || item.first == "description" ||
-          item.first == "links" || item.first == "output_formats" || item.first == "keywords" ||
-          item.first == "crs"))
-      keys.push_back(item.first);
+    append_array(out, pretty, level);
+    return;
   }
 
   // Order of fields in output document: id,title,description,links,output_formats,keywords,crs
+  // and then the rest in alphabetical order
 
   const std::array<const char *, 7> fields{
-      "crs", "keywords", "output_formats", "links", "description", "title", "id"};
+      "id", "title", "description", "links", "output_formats", "keywords", "crs"};
 
+  std::vector<const std::pair<const std::string, Value> *> members;
+  members.reserve(values.size());
   for (const auto *field : fields)
-    if (values.find(field) != values.end())
-      keys.insert(keys.begin(), field);
-
-  for (const auto &key : keys)
   {
-    const auto &value_obj = values.at(key);
+    auto pos = values.find(field);
+    if (pos != values.end())
+      members.push_back(&(*pos));
+  }
+  if (members.size() < values.size())
+  {
+    for (const auto &item : values)
+    {
+      if (std::find_if(fields.begin(),
+                       fields.end(),
+                       [&item](const char *field) { return item.first == field; }) == fields.end())
+        members.push_back(&item);
+    }
+  }
 
-    // The member text is never empty (it always contains the key), so the separator can be
-    // decided before the member is appended directly to the result
+  const std::size_t start = out.size();
+
+  for (const auto *member : members)
+  {
+    const auto &key = member->first;
+    const auto &value_obj = member->second;
+
+    const std::string_view result(out.data() + start, out.size() - start);
     if (!result.empty() && !boost::algorithm::ends_with(result, open_brace(pretty)) &&
         !boost::algorithm::ends_with(result, RIGHT_ROUND_BRACKET_PLUS_COMMA))
-      result.append(comma(pretty));
+      out.append(comma(pretty));
 
-    result.append(tabs(pretty, level + 1));
-    result.append("\"");
-    result.append(key);
-    result.append("\"");
-    result.append(name_separator(pretty));
+    out.append(tabs(pretty, level + 1));
+    out.append("\"");
+    out.append(key);
+    out.append("\"");
+    out.append(name_separator(pretty));
 
     if (!value_obj.data_value_vector.empty())
     {
-      auto value_array = data_value_vector_to_string(value_obj.data_value_vector, pretty, level);
-
-      result.append(newline(pretty));
-      result.append(tabs(pretty, level + 1));
-      if (boost::algorithm::starts_with(value_array, NEWLINE))
-        result.append(LEFT_SQUARE_BRACKET);
+      out.append(newline(pretty));
+      out.append(tabs(pretty, level + 1));
+      if (elements_start_with_newline(value_obj.data_value_vector, pretty))
+        out.append(LEFT_SQUARE_BRACKET);
       else
-        result.append(open_bracket(pretty));
-      result.append(value_array);
-      result.append(newline(pretty));
-      result.append(tabs(pretty, level + 1));
-      result.append(RIGHT_SQUARE_BRACKET);
+        out.append(open_bracket(pretty));
+      append_elements(out, value_obj.data_value_vector, pretty, level);
+      out.append(newline(pretty));
+      out.append(tabs(pretty, level + 1));
+      out.append(RIGHT_SQUARE_BRACKET);
     }
+    else if (is_empty_data_value(value_obj.data_value))
+      out.append("error: data empty");
     else
-    {
-      std::string data = data_value_to_string(value_obj.data_value, value_obj.precision);
-      if (data.empty())
-        result.append("error: data empty");
-      else
-        result.append(data);
-    }
+      append_data_value(out, value_obj.data_value, value_obj.precision);
   }
-
-  return result;
 }
 
-std::string Value::data_value_vector_to_string(bool pretty, unsigned int level) const
+void Value::append_array(std::string &out, bool pretty, unsigned int level) const
 {
-  auto ret = std::string();
+  if (is_empty_array(data_value_vector))
+    return;
 
+  out.append(tabs(pretty, level));
+  out.append(open_bracket(pretty));
+
+  const std::size_t start = out.size();
   for (const auto &dv : data_value_vector)
   {
-    std::string value;
-    if (dv.valueType < ValueType::arrayValue)
-      value = dv.data_value.to_string(dv.precision);
+    const bool scalar = (dv.valueType < ValueType::arrayValue);
+    if (scalar ? is_empty_data_value(dv.data_value)
+               : (dv.valueType == ValueType::arrayValue && is_empty_array(dv.data_value_vector)))
+      continue;
+
+    const std::string_view ret(out.data() + start, out.size() - start);
+    if (!ret.empty() && !boost::algorithm::ends_with(ret, open_brace(pretty)) &&
+        !boost::algorithm::ends_with(ret, RIGHT_ROUND_BRACKET_PLUS_COMMA))
+      out.append(comma(pretty));
+    out.append(tabs(pretty, level + 1));
+    if (scalar)
+      append_data_value(out, dv.data_value, dv.precision);
     else
-      value = dv.to_string(pretty);
-    if (!value.empty())
-    {
-      if (!ret.empty() && !boost::algorithm::ends_with(ret, open_brace(pretty)) &&
-          !boost::algorithm::ends_with(ret, RIGHT_ROUND_BRACKET_PLUS_COMMA))
-        ret.append(comma(pretty));
-      ret.append(tabs(pretty, level + 1));
-      ret.append(value);
-    }
+      dv.append_to_string(out, pretty, 0);
   }
 
-  if (ret.empty())
-    return ret;
-
-  std::string result = tabs(pretty, level);
-  result.reserve(result.size() + ret.size() + 8 + 2 * level);
-  result.append(open_bracket(pretty));
-  result.append(ret);
-  result.append(newline(pretty));
-  result.append(tabs(pretty, level));
-  result.append(RIGHT_SQUARE_BRACKET);
-  return result;
+  out.append(newline(pretty));
+  out.append(tabs(pretty, level));
+  out.append(RIGHT_SQUARE_BRACKET);
 }
 
 std::string Value::to_string_impl(bool pretty, unsigned int level) const
@@ -545,7 +618,7 @@ void Value::append_to_string(std::string &out, bool pretty, unsigned int level) 
 {
   if (valueType == ValueType::arrayValue)
   {
-    out.append(data_value_vector_to_string(pretty, level));
+    append_array(out, pretty, level);
     return;
   }
 
@@ -560,7 +633,7 @@ void Value::append_to_string(std::string &out, bool pretty, unsigned int level) 
     out.append(open_brace(pretty));
   }
 
-  out.append(values_to_string(pretty, level));
+  append_values(out, pretty, level);
 
   // The separator test must only look at what this object has written so far
   if (!children.empty())
@@ -623,6 +696,16 @@ void Value::append(const Value &value)
         data_value_vector.end(), value.data_value_vector.begin(), value.data_value_vector.end());
   else
     data_value_vector.push_back(value);
+}
+
+void Value::append(Value &&value)
+{
+  if (!value.data_value_vector.empty())
+    data_value_vector.insert(data_value_vector.end(),
+                             std::make_move_iterator(value.data_value_vector.begin()),
+                             std::make_move_iterator(value.data_value_vector.end()));
+  else
+    data_value_vector.push_back(std::move(value));
 }
 
 std::string DataValue::to_string(int precision /*= DEFAULT_PRECISION*/) const
