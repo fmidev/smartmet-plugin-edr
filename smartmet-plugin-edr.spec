@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.9
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-3.fmi
+- Trajectory and corridor queries accept MULTILINESTRING coords, optionally with Z, M or ZM values (BRAINSTORM-3483)
+- Each segment of a MULTILINESTRING trajectory is a separate Trajectory coverage (BRAINSTORM-3483)
+- GeoJSON output of several locations no longer keeps only the last location's data
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
 - Refresh the locations of point querydata collections in the metadata update loop (BRAINSTORM-3514)
 - Match parameter_info setting names case-insensitively (BRAINSTORM-3352)

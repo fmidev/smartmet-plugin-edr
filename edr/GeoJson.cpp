@@ -869,7 +869,15 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
         DataPerLevel dpl = get_parameter_data(
             tsg_data, tsg_lon, tsg_lat, tsg_level, levels_present, coordinate_filter);
 
-        dpp[parameter_name] = dpl;
+        // Append, since several locations (e.g. MULTILINESTRING segments) may contribute
+        auto &parameter_data = dpp[parameter_name];
+        for (auto &dpl_item : dpl)
+        {
+          auto &values = parameter_data[dpl_item.first];
+          values.insert(values.end(),
+                        std::make_move_iterator(dpl_item.second.begin()),
+                        std::make_move_iterator(dpl_item.second.end()));
+        }
         dpn[parameter_name] = parse_parameter_name(query_parameters[j].originalName());
       }
     }

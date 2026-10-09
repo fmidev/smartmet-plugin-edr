@@ -2597,9 +2597,65 @@ Json::Value build_trajectory_range(const std::vector<time_coord_value> &values,
   }
 }
 
+// Appends one Coverage per level of a single trajectory, returns true if levels are present
+bool append_trajectory_coverages(Json::Value &coverages,
+                                 const DataPerParameter &dpp,
+                                 const ParameterNames &dpn,
+                                 const EDRMetaData &emd)
+{
+  const auto &longitude_precision = emd.getPrecision("longitude");
+  const auto &latitude_precision = emd.getPrecision("latitude");
+
+  bool levels_present = false;
+
+  // Levels that occur for any parameter
+  std::set<double> levels;
+  for (const auto &dpp_item : dpp)
+    for (const auto &dpl_item : dpp_item.second)
+      levels.insert(dpl_item.first);
+
+  for (double level : levels)
+  {
+    // One Coverage per level, merging every parameter's values into its "ranges" instead of
+    // emitting a separate Coverage (with a duplicated domain) per parameter.
+    const std::vector<time_coord_value> *domain_values = nullptr;
+    auto ranges = Json::Value(Json::ValueType::objectValue);
+
+    for (const auto &dpp_item : dpp)
+    {
+      const auto &parameter_name = dpp_item.first;
+      auto lvl_it = dpp_item.second.find(level);
+      if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
+        continue;
+
+      const auto &values = lvl_it->second;
+      if (!domain_values)
+        domain_values = &values;
+
+      const auto &parameter_precision = emd.getPrecision(parameter_name);
+      ranges[dpn.at(parameter_name)] = build_trajectory_range(values, parameter_precision);
+    }
+
+    if (!domain_values)
+      continue;
+
+    levels_present = (levels_present || (level != std::numeric_limits<double>::max()));
+
+    Json::Value coverage = Json::Value(Json::ValueType::objectValue);
+    coverage["type"] = Json::Value("Coverage");
+    coverage["domain"] = build_trajectory_domain(*domain_values, longitude_precision,
+                                                  latitude_precision, levels_present,
+                                                  static_cast<int>(level));
+    coverage["ranges"] = std::move(ranges);
+    coverages[coverages.size()] = std::move(coverage);
+  }
+
+  return levels_present;
+}
+
+// Each trajectory (e.g. each segment of a MULTILINESTRING) gets Coverages of its own
 Json::Value format_coverage_collection_trajectory(
-    const DataPerParameter &dpp,
-    const ParameterNames &dpn,
+    const std::vector<std::pair<DataPerParameter, ParameterNames>> &trajectories,
     const EDRMetaData &emd,
     const std::vector<Spine::Parameter> &query_parameters,
     const CustomDimReferences &custom_dim_refs,
@@ -2607,65 +2663,27 @@ Json::Value format_coverage_collection_trajectory(
 {
   try
   {
-    //	  std::cout << "format_coverage_collection_trajectory" << std::endl;
-
     Json::Value coverage_collection;
 
-    if (dpp.empty())
+    bool empty = true;
+    for (const auto &trajectory : trajectories)
+      empty = (empty && trajectory.first.empty());
+    if (empty)
       return coverage_collection;
-
-    const auto &longitude_precision = emd.getPrecision("longitude");
-    const auto &latitude_precision = emd.getPrecision("latitude");
 
     bool levels_present = false;
     auto coverages = Json::Value(Json::ValueType::arrayValue);
 
-    // Levels that occur for any parameter
-    std::set<double> levels;
-    for (const auto &dpp_item : dpp)
-      for (const auto &dpl_item : dpp_item.second)
-        levels.insert(dpl_item.first);
-
-    for (double level : levels)
-    {
-      // One Coverage per level, merging every parameter's values into its "ranges" instead of
-      // emitting a separate Coverage (with a duplicated domain) per parameter.
-      const std::vector<time_coord_value> *domain_values = nullptr;
-      auto ranges = Json::Value(Json::ValueType::objectValue);
-
-      for (const auto &dpp_item : dpp)
-      {
-        const auto &parameter_name = dpp_item.first;
-        auto lvl_it = dpp_item.second.find(level);
-        if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
-          continue;
-
-        const auto &values = lvl_it->second;
-        if (!domain_values)
-          domain_values = &values;
-
-        const auto &parameter_precision = emd.getPrecision(parameter_name);
-        ranges[dpn.at(parameter_name)] = build_trajectory_range(values, parameter_precision);
-      }
-
-      if (!domain_values)
-        continue;
-
-      levels_present = (levels_present || (level != std::numeric_limits<double>::max()));
-
-      Json::Value coverage = Json::Value(Json::ValueType::objectValue);
-      coverage["type"] = Json::Value("Coverage");
-      coverage["domain"] = build_trajectory_domain(*domain_values, longitude_precision,
-                                                    latitude_precision, levels_present,
-                                                    static_cast<int>(level));
-      coverage["ranges"] = ranges;
-      coverages[coverages.size()] = coverage;
-    }
+    for (const auto &trajectory : trajectories)
+      if (!trajectory.first.empty())
+        levels_present = (append_trajectory_coverages(
+                              coverages, trajectory.first, trajectory.second, emd) ||
+                          levels_present);
 
     coverage_collection =
         add_prologue_coverage_collection(emd, query_parameters, levels_present, "Trajectory",
                                          custom_dim_refs, language);
-    coverage_collection["coverages"] = coverages;
+    coverage_collection["coverages"] = std::move(coverages);
 
     return coverage_collection;
   }
@@ -2945,13 +2963,29 @@ Json::Value format_output_data_coverage_collection(
     if (outputData.empty())
       Json::Value();
 
+    if (query_type == EDRQueryType::Trajectory)
+    {
+      // Every location is a separate trajectory
+      std::vector<std::pair<DataPerParameter, ParameterNames>> trajectories;
+      for (const auto &item : outputData)
+      {
+        const TS::OutputData location_data{item};
+        ParameterNames location_dpn;
+        auto location_dpp = get_data_per_parameter(location_data,
+                                                   levels,
+                                                   coordinate_filter,
+                                                   query_parameters,
+                                                   emd.isGridProducer(),
+                                                   location_dpn);
+        trajectories.emplace_back(std::move(location_dpp), std::move(location_dpn));
+      }
+      return format_coverage_collection_trajectory(
+          trajectories, emd, query_parameters, custom_dim_refs, language);
+    }
+
     ParameterNames dpn;
     auto dpp = get_data_per_parameter(
         outputData, levels, coordinate_filter, query_parameters, emd.isGridProducer(), dpn);
-
-    if (query_type == EDRQueryType::Trajectory)
-      return format_coverage_collection_trajectory(
-          dpp, dpn, emd, query_parameters, custom_dim_refs, language);
 
     return format_coverage_collection_point(
         dpp, dpn, emd, query_parameters, custom_dim_refs, language);

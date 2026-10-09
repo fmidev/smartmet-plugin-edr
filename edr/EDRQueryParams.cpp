@@ -1042,7 +1042,23 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
             wkt = transformed_wkt;
           }
     */
-    req.addParameter("wkt", wkt);
+    // The segments of a MULTILINESTRING trajectory are queried as separate locations so that
+    // each segment becomes a trajectory of its own in the output. AVI queries read the
+    // geometry as a single parameter, and their results are per station anyway.
+    if (itsEDRQuery.query_type == EDRQueryType::Trajectory && !emd.isAviProducer() &&
+        boost::algorithm::starts_with(wkt, "MULTILINESTRING("))
+    {
+      // parseTrajectoryAndCorridor has normalized the value to MULTILINESTRING((...),(...))
+      std::size_t pos = wkt.find('(');  // the outer parenthesis
+      while ((pos = wkt.find('(', pos + 1)) != std::string::npos)
+      {
+        const auto close = wkt.find(')', pos);
+        req.addParameter("wkt", "LINESTRING" + wkt.substr(pos, close - pos + 1));
+        pos = close;
+      }
+    }
+    else
+      req.addParameter("wkt", wkt);
   }
   catch (...)
   {

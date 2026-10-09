@@ -1,0 +1,2 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/trajectory?coords=MULTILINESTRINGZ((24.4839+60.9723+850,24.6864+61.0426+850),(25.0196+61.0436+500,24.9738+60.8516+500))&datetime=200809091200&parameter-name=Temperature HTTP/1.0
+

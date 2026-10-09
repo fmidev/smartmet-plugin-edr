@@ -28,7 +28,51 @@
 								"2008-08-05T09:00:00Z",
 								25.20000,
 								62.20000
-							],
+							]
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						2
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						16.1,
+						15.6
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
 							[
 								"2008-08-05T09:00:00Z",
 								26.30000,
@@ -54,13 +98,11 @@
 					"dataType" : "float",
 					"shape" : 
 					[
-						4
+						2
 					],
 					"type" : "NdArray",
 					"values" : 
 					[
-						16.1,
-						15.6,
 						15.3,
 						13.9
 					]

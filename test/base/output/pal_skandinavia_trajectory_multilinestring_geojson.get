@@ -1,0 +1,137 @@
+{
+	"bbox" : 
+	[
+		24.10000,
+		61.10000,
+		27.40000,
+		64.40000
+	],
+	"features" : 
+	[
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					27.40000,
+					64.40000
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"temperature" : 
+				[
+					13.9
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.10000,
+					61.10000
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"temperature" : 
+				[
+					16.1
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.20000,
+					62.20000
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"temperature" : 
+				[
+					15.6
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					26.30000,
+					63.30000
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"temperature" : 
+				[
+					15.3
+				],
+				"time" : 
+				[
+					"2008-08-05T09:00:00Z"
+				]
+			}
+		}
+	],
+	"parameters" : 
+	[
+		{
+			"id" : "Temperature",
+			"label" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "http://codes.wmo.int/common/unit/_degC",
+					"value" : "˚C"
+				}
+			}
+		}
+	],
+	"type" : "FeatureCollection"
+}
