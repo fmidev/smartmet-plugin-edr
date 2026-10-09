@@ -39,9 +39,9 @@ BuildRequires: smartmet-library-locus-devel >= 26.10.3
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.3
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
 BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
-BuildRequires: smartmet-library-newbase-devel >= 26.10.3
+BuildRequires: smartmet-library-newbase-devel >= 26.10.8
 BuildRequires: smartmet-library-gis-devel >= 26.10.3
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.3
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.8
 BuildRequires: smartmet-engine-avi-devel >= 26.10.3
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.3
 %if %{with observation}
@@ -59,9 +59,9 @@ Requires: jsoncpp
 Requires: smartmet-library-gis >= 26.10.3
 Requires: smartmet-library-locus >= 26.10.3
 Requires: smartmet-library-macgyver >= 26.10.3
-Requires: smartmet-library-newbase >= 26.10.3
+Requires: smartmet-library-newbase >= 26.10.8
 Requires: smartmet-library-spine >= 26.10.3
-Requires: smartmet-library-timeseries >= 26.10.3
+Requires: smartmet-library-timeseries >= 26.10.8
 Requires: smartmet-library-gis >= 26.10.3
 Requires: smartmet-library-grid-files >= 26.9.26
 Requires: smartmet-engine-avi >= 26.10.3
@@ -79,7 +79,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
 #TestRequires: smartmet-library-spine >= 26.10.3
 #TestRequires: smartmet-library-spine-plugin-test >= 26.9.29
-#TestRequires: smartmet-library-newbase-devel >= 26.10.3
+#TestRequires: smartmet-library-newbase-devel >= 26.10.8
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
@@ -129,6 +129,8 @@ rm -rf $RPM_BUILD_ROOT
 
 * Thu Oct 08 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.8-1.fmi
 - Trajectory and corridor queries reject non-LINESTRING coords with a clear message (BRAINSTORM-3483)
+- Area queries whose center is outside the data use the requested collection (BRAINSTORM-3026)
+- Fixed UTC end times being limited by the local data end time, which emptied queries west of Greenwich (BRAINSTORM-3026)
 
 * Sun Oct 04 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.4-1.fmi
 - Treat tapsi_qc as a mobile producer as the timeseries plugin does (BRAINSTORM-3008)

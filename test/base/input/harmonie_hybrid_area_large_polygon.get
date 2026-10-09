@@ -1,0 +1,2 @@
+GET /edr/collections/harmonie_hybrid/area?coords=POLYGON((-50+-50,-50+70,70+70,70+-50,-50+-50))&datetime=2017-05-12T01:00:00Z/2017-05-12T03:00:00Z&parameter-name=Temperature HTTP/1.0
+
