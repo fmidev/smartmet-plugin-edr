@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.9
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-3.fmi
+- Missing observation values are output as null instead of empty strings
+- Producers without a working database driver or data period no longer prevent the plugin from starting
+- The observation period of soundings no longer applies to the producers listed after them
+- Observation tests run with observations enabled
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
 - Refresh the locations of point querydata collections in the metadata update loop (BRAINSTORM-3514)
 - Match parameter_info setting names case-insensitively (BRAINSTORM-3352)
