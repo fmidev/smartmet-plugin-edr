@@ -1,0 +1,2 @@
+GET /edr/collections/ecmwf_maailma_piste/position?coords=POINT(145.0+-37.8)&within=20&within-units=km&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0
+

@@ -835,6 +835,24 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
       coords += (":" + Fmi::to_string(radius));
     }
 
+    if (itsEDRQuery.query_type == EDRQueryType::Position && !within.empty())
+    {
+      // Extension to OGC API EDR: within and within-units limit the distance of the
+      // station (or point data location) used for the position (BRAINSTORM-2883)
+      if (within_units.empty())
+        throw EDRException("Query parameter 'within-units' must be defined with 'within'");
+
+      auto distance = Fmi::stod(within);
+      if (!(distance > 0))
+        throw EDRException("Query parameter 'within' must be positive");
+      if (within_units == "mi")
+        distance *= 1.60934;
+      else if (within_units != "km")
+        throw EDRException("Invalid within-units option '" + within_units +
+                           "' used, 'km' and 'mi' supported");
+      req.setParameter("maxdistance", Fmi::to_string(distance) + "km");
+    }
+
     auto wkt = coords;
     if (itsEDRQuery.query_type == EDRQueryType::Position)
       wkt = parsePosition(coords);
