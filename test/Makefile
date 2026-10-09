@@ -68,6 +68,16 @@ validate-outputs:
 	  echo "python3 not available, skipping output validation"; \
 	fi
 
+# Conformance test suites against a local server, needs network access (see conformance/)
+conformance:
+	conformance/start-test-server.sh 8088
+	ok=true; \
+	conformance/run-ogc-ets.sh http://localhost:8088/edr > conformance/tmp/ogc-ets.txt || ok=false; \
+	conformance/metocean-checks.py http://localhost:8088/edr > conformance/tmp/metocean.txt || ok=false; \
+	conformance/stop-test-server.sh; \
+	head -1 conformance/tmp/ogc-ets.txt; tail -1 conformance/tmp/metocean.txt; \
+	$$ok
+
 stmp-geonames-db:
 	$(MAKE) geonames-database
 	date >$@
@@ -92,4 +102,4 @@ cnf/avi.conf cnf/geonames.conf cnf/gis.conf:
 
 dummy:
 
-.PHONY: cnf/geonames.conf cnf/gis.conf dummy validate-outputs
+.PHONY: cnf/geonames.conf cnf/gis.conf dummy validate-outputs conformance
