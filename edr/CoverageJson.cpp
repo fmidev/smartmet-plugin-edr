@@ -294,8 +294,8 @@ Json::Value get_data_queries(const std::string &host,
   {
     auto query_type = to_query_type_id(qt_str);
 
-    if (query_type == EDRQueryType::Cube && !levels_exist)
-      continue;
+    // Cube queries are available without levels too, the bounding box selects the data
+    // (BRAINSTORM-2827)
 
     auto query_info = Json::Value(Json::ValueType::objectValue);
     auto query_info_variables = Json::Value(Json::ValueType::objectValue);
@@ -383,8 +383,9 @@ Json::Value get_data_queries(const std::string &host,
       query_info_variables["query_type"] = Json::Value("cube");
       // Cube z values are not converted, they must be in the unit of the levels
       query_info_variables["height_units"] = Json::Value(Json::ValueType::arrayValue);
-      query_info_variables["height_units"].append(
-          Json::Value(VerticalReference::native_height_unit(level_type)));
+      if (levels_exist)
+        query_info_variables["height_units"].append(
+            Json::Value(VerticalReference::native_height_unit(level_type)));
       query_type_string = "cube";
     }
     else if (query_type == EDRQueryType::Locations)
@@ -727,6 +728,15 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
       desc = standard_name + " " + Fmi::to_string(pinfo.metocean.level) + "m";
     else
       desc = edr_parameter_name;
+
+    // The unit reported by the engine is used if the configuration does not define one
+    if (pinfo.unit_symbol_value.empty() && !edr_parameter.unit.empty() &&
+        !boost::algorithm::iequals(edr_parameter.unit, "No Unit"))
+    {
+      pinfo.unit_symbol_value = edr_parameter.unit;
+      if (pinfo.unit_label.empty())
+        pinfo.unit_label = edr_parameter.unit;
+    }
 
     auto unit_label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter_name);
 

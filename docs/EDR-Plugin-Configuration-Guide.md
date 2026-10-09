@@ -242,8 +242,8 @@ parameter_info:
 			};
 			symbol:
 			{
-				value = "Cel";
-				type = "http://www.opengis.net/def/uom/UCUM/";
+				value = "°C";
+				type = "https://qudt.org/vocab/unit/DEG_C";
 			};
 		};
 	};
@@ -252,10 +252,12 @@ parameter_info:
 ```
 
 The unit settings follow the CoverageJSON unit object: `label` is required, as is `symbol.value`.
-`symbol.type` names the unit serialization scheme of the symbol, for example
-`http://www.opengis.net/def/uom/UCUM/` for UCUM (whose symbol for degrees Celsius is `Cel`); without
-it the symbol is output as a plain string such as `°C`. The optional `id` identifies the unit
-itself, for example with a WMO code registry URI.
+`symbol.type` names the unit vocabulary of the symbol. The MetOcean profile requires QUDT:
+`https://qudt.org/vocab/unit/<unit>` with the `qudt:symbol` of the unit as the value, for
+example `°C` for `https://qudt.org/vocab/unit/DEG_C`. Without `symbol.type` the symbol is
+output as a plain string. The optional `id` identifies the unit itself, for example with a WMO
+code registry URI. Parameters without a configured unit use the unit reported by the engine,
+if any, as a plain symbol.
 
 # Coordinate reference systems
 

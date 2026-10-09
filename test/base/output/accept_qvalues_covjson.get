@@ -90,8 +90,8 @@ Vary: Accept
 				},
 				"symbol" : 
 				{
-					"type" : "http://www.opengis.net/def/uom/UCUM/",
-					"value" : "Cel"
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
 				}
 			}
 		}

@@ -361,6 +361,15 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query
       else
         desc = edr_parameter_name;
 
+      // The unit reported by the engine is used if the configuration does not define one
+      if (pinfo.unit_symbol_value.empty() && !edr_parameter.unit.empty() &&
+          !boost::algorithm::iequals(edr_parameter.unit, "No Unit"))
+      {
+        pinfo.unit_symbol_value = edr_parameter.unit;
+        if (pinfo.unit_label.empty())
+          pinfo.unit_label = edr_parameter.unit;
+      }
+
       auto unit_label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter_name);
 
       auto parameter = Json::Value(Json::ValueType::objectValue);

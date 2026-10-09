@@ -79,6 +79,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
 #TestRequires: smartmet-library-spine >= 26.10.3
 #TestRequires: smartmet-library-spine-plugin-test >= 26.10.9
+#TestRequires: smartmet-engine-querydata >= 26.10.9
 #TestRequires: smartmet-library-newbase-devel >= 26.10.8
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -152,6 +153,8 @@ rm -rf $RPM_BUILD_ROOT
     OGC:CRS84 or the crs parameter value, RFC 3339 instance ids (old ids accepted), 400 for a
     datetime between model time steps, 204 for no data inside the extent
   - EPSG:4326 coordinates are longitude/latitude like CRS84
+  - Cube queries are advertised for collections without levels too, parameters without a
+    configured unit use the unit reported by the engine
   - Data queries may be sent with form encoded POST
   - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
     bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates
