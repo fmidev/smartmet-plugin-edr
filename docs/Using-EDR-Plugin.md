@@ -265,6 +265,11 @@ data such as observations.
 /collections/pal_skandinavia/area?coords=POLYGON((24 60,25 60,25 61,24 60))&parameter-name=Temperature&resolution-x=5&resolution-y=4
 ```
 
+## POST requests
+
+Data queries may also be sent with HTTP POST using a form encoded body
+(`Content-Type: application/x-www-form-urlencoded`) containing the same query parameters.
+
 ## Errors
 
 Errors are reported with an `application/problem+json` body containing `title`, `status` and
