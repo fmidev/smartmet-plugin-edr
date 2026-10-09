@@ -1185,8 +1185,20 @@ void PluginImpl::updateMetaData(bool initial_phase)
         // std::shared_ptr<std::vector<ObservableProperty>>
         std::map<std::string, const Engine::Observation::ObservableProperty*> properties;
         std::vector<std::string> params;
-        itsObservableProperties =
-            itsEngines.obsEngine->observablePropertyQuery(params, default_language);
+        try
+        {
+          itsObservableProperties =
+              itsEngines.obsEngine->observablePropertyQuery(params, default_language);
+        }
+        catch (...)
+        {
+          // The properties only describe the parameters, the collections work without them.
+          // For example the SpatiaLite drivers have no measurand table.
+          Fmi::Exception::Trace(BCP, "Failed to read the observable properties")
+              .disableStackTrace()
+              .printError();
+          itsObservableProperties.reset();
+        }
         // Some database drivers (e.g. SpatiaLite) do not implement observablePropertyQuery
         // and return a null pointer instead of an empty vector.
         if (itsObservableProperties)
@@ -1378,7 +1390,19 @@ void PluginImpl::updateSupportedLocations()
         settings.stationtype = producer;
         settings.allplaces = true;
         Spine::Stations stations;
-        itsEngines.obsEngine->getStations(stations, settings);
+        try
+        {
+          itsEngines.obsEngine->getStations(stations, settings);
+        }
+        catch (...)
+        {
+          // A station type without a working database driver must not prevent the
+          // locations of the other producers from being listed
+          Fmi::Exception::Trace(BCP, "Failed to read the stations of producer " + producer)
+              .disableStackTrace()
+              .printError();
+          continue;
+        }
         SupportedLocations sls;
         for (const auto& station : stations)
         {

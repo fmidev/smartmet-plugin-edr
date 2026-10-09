@@ -1447,8 +1447,20 @@ EDRProducerMetaData get_edr_metadata_obs(
 
     for (const auto &prod : producers)
     {
-      if (cic.isVisibleCollection(SourceEngine::Observation, prod))
+      if (!cic.isVisibleCollection(SourceEngine::Observation, prod))
+        continue;
+      try
+      {
         observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod, settings)));
+      }
+      catch (...)
+      {
+        // A station type without a working database driver must not prevent the other
+        // collections from being published
+        Fmi::Exception::Trace(BCP, "Failed to read the metadata of producer " + prod)
+            .disableStackTrace()
+            .printError();
+      }
     }
 
     const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
@@ -1466,6 +1478,16 @@ EDRProducerMetaData get_edr_metadata_obs(
       if (!measurand_params.empty())
         params.clear();
       params.insert(measurand_params.begin(), measurand_params.end());
+
+      if (obs_md.period.last().is_special())
+      {
+        std::cerr << "Warning: observation producer " << producer
+                  << " has no data period, the collection is not published\n";
+        continue;
+      }
+
+      // Soundings use their full period; this must not affect the producers that follow
+      auto producer_observation_period = observation_period;
 
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Observation;
@@ -1503,7 +1525,7 @@ EDRProducerMetaData get_edr_metadata_obs(
           producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level.getLevelValue()));
 
         producer_emd.vertical_extent.is_level_range = true;
-        observation_period = 0;
+        producer_observation_period = 0;
 
         producer_emd.stationMetaData.insert(obs_md.stationMetaData.begin(),
                                             obs_md.stationMetaData.end());
@@ -1535,9 +1557,9 @@ EDRProducerMetaData get_edr_metadata_obs(
         end_time = obs_md.dbperiod().end();
       }
 
-      if (observation_period > 0)
+      if (producer_observation_period > 0)
       {
-        temporal_extent_period.start_time = (end_time - Fmi::Hours(observation_period));
+        temporal_extent_period.start_time = (end_time - Fmi::Hours(producer_observation_period));
 
         Fmi::TimePeriod tp(temporal_extent_period.start_time, end_time);
         periodLength = tp.length().total_minutes();
