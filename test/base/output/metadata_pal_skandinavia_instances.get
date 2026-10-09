@@ -71,7 +71,7 @@
 								"CoverageJSON",
 								"GeoJSON"
 							],
-							"coords" : "Well Known Text LINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
+							"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
 							"corridor-width" : "Corridor width",
 							"crs_details" : 
 							[
@@ -201,7 +201,7 @@
 								"CoverageJSON",
 								"GeoJSON"
 							],
-							"coords" : "Well Known Text LINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
+							"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
 							"crs_details" : 
 							[
 								{

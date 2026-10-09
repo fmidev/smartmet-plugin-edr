@@ -1,0 +1,4 @@
+{
+  "title" : "An error occurred",
+  "detail" : "Invalid MULTILINESTRING definition: MULTILINESTRING((24.1 61.1,25.2 62.2),26.3 63.3)"
+}

@@ -349,7 +349,7 @@ Json::Value get_data_queries(const std::string &host,
       query_info_variables["description"] = Json::Value("Data along trajectory");
       query_info_variables["query_type"] = Json::Value("trajectory");
       query_info_variables["coords"] = Json::Value(
-          "Well Known Text LINESTRING value i.e. LINESTRING(24 "
+          "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
           "61,24.2 61.2,24.3 61.3)");
       query_type_string = "trajectory";
     }
@@ -391,7 +391,7 @@ Json::Value get_data_queries(const std::string &host,
         query_info_variables["height-units"] = height_units;
       }
       query_info_variables["coords"] = Json::Value(
-          "Well Known Text LINESTRING value i.e. LINESTRING(24 "
+          "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
           "61,24.2 61.2,24.3 61.3)");
       query_type_string = "corridor";
     }
