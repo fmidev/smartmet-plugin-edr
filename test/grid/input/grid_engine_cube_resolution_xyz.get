@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta.5901.2/cube?bbox=24,60,25,61&z=50000/100000&resolution-x=2&resolution-y=2&resolution-z=3&datetime=2008-09-09T12:00:00Z&parameter-name=t-k HTTP/1.0

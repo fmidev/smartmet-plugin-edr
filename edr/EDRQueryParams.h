@@ -74,11 +74,18 @@ class EDRQueryParams
   void parseLimitAndOffset();
   void parseItemsQuery(const EDRMetaData& emd, const Config& config);
   void parseResolution(const EDRMetaData& emd, const Config& config);
+  void parseResolutionZ(const EDRMetaData& emd);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,
                                       bool& noReqParams,
                                       const CustomDimensions& customDimensions);
+  std::string parseParameterNames(const State& state,
+                                  const EDRMetaData& emd,
+                                  bool grid_producer,
+                                  bool& noReqParams,
+                                  const CustomDimensions& customDimensions,
+                                  const std::string& z);
   std::string cleanParameterNames(const std::string& parameter_names,
                                   const EDRMetaData& emd,
                                   bool grid_producer,
@@ -103,6 +110,7 @@ class EDRQueryParams
   CoordinateFilter itsCoordinateFilter;
   std::set<Fmi::DateTime> itsDateTimeList;
   std::string itsRequestXYWkt;  // the area or path in the requested CRS (x/y order)
+  std::vector<double> itsInterpolatedLevels;  // resolution-z levels in the collection units
   std::string mime_type;
 };
 

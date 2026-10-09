@@ -513,7 +513,10 @@ EDRQueryParams::EDRQueryParams(const State& state,
              (itsEDRQuery.query_type == EDRQueryType::Corridor))
       throw EDRException("Missing coords option!");
 
-    // resolution-x and resolution-y for area and cube queries
+    // resolution-z for cube and corridor queries
+    parseResolutionZ(emd);
+
+    // resolution-x and resolution-y for area, cube and corridor queries
     parseResolution(emd, config);
 
     // EDR datetime
@@ -1547,6 +1550,114 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
   }
 }
 
+void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd)
+{
+  try
+  {
+    auto opt = req.getParameter("resolution-z");
+    if (!opt)
+      return;
+
+    if (itsEDRQuery.query_type != EDRQueryType::Cube &&
+        itsEDRQuery.query_type != EDRQueryType::Corridor)
+      throw EDRException(
+          "Query parameter 'resolution-z' is supported only for cube and corridor queries");
+
+    // OGC API-EDR: the number of levels including the minimum and the maximum, 0 means the
+    // levels of the data
+    const long max_levels = 1000;
+    long nz = -1;
+    try
+    {
+      std::size_t pos = 0;
+      nz = std::stol(*opt, &pos);
+      if (pos != opt->size())
+        nz = -1;
+    }
+    catch (...)
+    {
+    }
+    if (nz != 0 && (nz < 2 || nz > max_levels))
+      throw EDRException("Invalid 'resolution-z' value '" + *opt +
+                         "', valid values are 0 for the levels of the data and 2-" +
+                         Fmi::to_string(max_levels) +
+                         " for the number of levels including the minimum and maximum");
+    if (nz == 0)
+      return;
+
+    const auto& extent = emd.vertical_extent;
+    if (extent.levels.empty())
+      throw EDRException("Query parameter 'resolution-z' cannot be used, collection '" +
+                         itsEDRQuery.collection_id + "' has no vertical extent");
+
+    // Vertical interpolation is available for pressure and height levels
+    using VerticalReference::LevelKind;
+    const auto kind = VerticalReference::kind(extent.level_type);
+    const bool pressure = (kind == LevelKind::PressureHPa || kind == LevelKind::PressurePa);
+    const bool height =
+        (kind == LevelKind::HeightAboveGround || kind == LevelKind::AltitudeAboveMSL);
+    // The grid engine does not interpolate to other than the levels of the data
+    if (emd.isGridProducer())
+      throw EDRException("Query parameter 'resolution-z' is not supported for collection '" +
+                         itsEDRQuery.collection_id + "', its data is not interpolated vertically");
+
+    if ((!pressure && !height) || emd.isObsProducer())
+      throw EDRException(
+          "Query parameter 'resolution-z' cannot be used, the levels of collection '" +
+          itsEDRQuery.collection_id + "' cannot be interpolated");
+
+    double extent_min = std::numeric_limits<double>::max();
+    double extent_max = std::numeric_limits<double>::lowest();
+    for (const auto& level : extent.levels)
+    {
+      const auto value = Fmi::stod(level);
+      extent_min = std::min(extent_min, value);
+      extent_max = std::max(extent_max, value);
+    }
+
+    // The range of the z parameter (for corridors the corridor-height band), or all levels
+    double zmin = extent_min;
+    double zmax = extent_max;
+    auto z = Spine::optional_string(req.getParameter("z"), "");
+    if (!z.empty())
+    {
+      bool is_range = false;
+      std::string lo;
+      std::string hi;
+      if (!UtilityFunctions::parseRangeListValue(z, is_range, lo, hi))
+        throw EDRException("Invalid 'z' query parameter '" + z + "'");
+      zmin = Fmi::stod(lo);
+      zmax = (hi.empty() ? zmin : Fmi::stod(hi));
+      if (zmin > zmax)
+        std::swap(zmin, zmax);
+      zmin = std::max(zmin, extent_min);
+      zmax = std::min(zmax, extent_max);
+      if (zmin > zmax)
+        throw EDRException(
+            "Query parameter 'z' does not overlap the vertical extent of collection '" +
+            itsEDRQuery.collection_id + "'");
+    }
+
+    std::string values;
+    for (long k = 0; k < nz; k++)
+    {
+      const double level = zmin + (zmax - zmin) * double(k) / double(nz - 1);
+      itsInterpolatedLevels.push_back(level);
+      if (!values.empty())
+        values += ',';
+      values += fmt::format("{}", level);
+    }
+
+    req.removeParameter("z");
+    req.removeParameter(pressure ? "pressures" : "heights");
+    req.addParameter(pressure ? "pressures" : "heights", values);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& config)
 {
   try
@@ -2062,6 +2173,10 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
 {
   try
   {
+    // Levels interpolated with resolution-z replace the levels of the data
+    if (!itsInterpolatedLevels.empty())
+      return parseParameterNames(state, emd, grid_producer, noReqParams, customDimensions, "");
+
     auto z = Spine::optional_string(req.getParameter("z"), "");
     double min_level = std::numeric_limits<double>::min();
     double max_level = std::numeric_limits<double>::max();
@@ -2145,6 +2260,23 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
       req.addParameter(zParameter, z);
     req.addParameter("levelrange", range ? "1" : "");
 
+    return parseParameterNames(state, emd, grid_producer, noReqParams, customDimensions, z);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+std::string EDRQueryParams::parseParameterNames(const State& state,
+                                                const EDRMetaData& emd,
+                                                bool grid_producer,
+                                                bool& noReqParams,
+                                                const CustomDimensions& customDimensions,
+                                                const std::string& z)
+{
+  try
+  {
     // EDR parameter-name
     auto parameter_names = Spine::optional_string(req.getParameter("parameter-name"), "");
     noReqParams = parameter_names.empty();

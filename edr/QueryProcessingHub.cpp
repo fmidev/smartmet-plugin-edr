@@ -935,6 +935,16 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
         (skipCoordinateFilterForOutput ? emptyCoordinateFilter
                                        : masterquery.coordinateFilter());
 
+    // Levels interpolated with resolution-z are given as pressures or heights
+    std::set<int> output_levels = masterquery.levels;
+    if (output_levels.empty())
+    {
+      for (auto pressure : masterquery.pressures)
+        output_levels.insert(static_cast<int>(std::lround(pressure)));
+      for (auto height : masterquery.heights)
+        output_levels.insert(static_cast<int>(std::lround(height)));
+    }
+
     if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT ||
         masterquery.output_format == IWXXMZIP_FORMAT)
     {
@@ -954,7 +964,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
           CoverageJson::formatGridOutputData(outputData,
                                              emd,
                                              edr_query.grid,
-                                             masterquery.levels,
+                                             output_levels,
                                              effective_query_parameters(masterquery),
                                              custom_dim_refs,
                                              edr_query.language);
@@ -965,7 +975,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       Json::Value result = CoverageJson::formatOutputData(outputData,
                                                           emd,
                                                           edr_query.query_type,
-                                                          masterquery.levels,
+                                                          output_levels,
                                                           coordinateFilterForOutput,
                                                           effective_query_parameters(masterquery),
                                                           producer == SOUNDING_PRODUCER,
@@ -978,7 +988,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       Json::Value result = GeoJson::formatOutputData(outputData,
                                                      emd,
                                                      edr_query.query_type,
-                                                     masterquery.levels,
+                                                     output_levels,
                                                      coordinateFilterForOutput,
                                                      effective_query_parameters(masterquery),
                                                      custom_dim_refs,

@@ -1,0 +1,8 @@
+Status: 400
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "Invalid 'resolution-z' value '1', valid values are 0 for the levels of the data and 2-1000 for the number of levels including the minimum and maximum"
+}
