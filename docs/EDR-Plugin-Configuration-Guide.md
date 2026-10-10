@@ -84,6 +84,12 @@ openapi:
 	swagger_ui_dir     = "/usr/share/smartmet/swagger-ui";
 	expand_collections = true;   # also describe each collection with its exact values
 	max_enum           = 1000;   # longer value lists are not listed in the definition
+	# Background of the keyword location maps: a Web Mercator tile URL template,
+	# normally an OGC API - Tiles layer of the same server. Without it the maps
+	# show a longitude/latitude grid.
+	map_tiles          = "/tiles/collections/<layer>/tiles/EPSG:3857/{z}/{y}/{x}?f=png";
+	map_tile_size      = 256;    # default 256
+	map_attribution    = "...";  # shown in the corner of the map
 	contact = { name = "FMI"; url = "https://www.fmi.fi"; email = "edr@fmi.fi"; };
 	license = { name = "CC BY 4.0"; url = "https://creativecommons.org/licenses/by/4.0/"; };
 };
@@ -94,6 +100,13 @@ With `expand_collections` the definition contains, in addition to the generic
 parameter names, output formats, levels, instances and locations as value lists. Clients
 such as OGC API Browser use them to validate requests. Value lists longer than `max_enum`
 are left out.
+
+On the TimeSeries documentation pages the `keyword` and `inkeyword` parameters have a button
+which shows the locations of the given keyword on a map. Moving the mouse over a location
+shows its name, ids, coordinates, elevation, region, country and time zone, in the language
+of the `lang` parameter. The map can be zoomed with the mouse wheel or the +/− buttons and
+moved by dragging. `map_tiles` is either a path on the same server or an http(s) URL; the
+origin of a URL is allowed in the Content-Security-Policy of the page.
 
 # AVI engine configuration
 

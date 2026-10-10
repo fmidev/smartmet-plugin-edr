@@ -128,6 +128,8 @@ rm -rf $RPM_BUILD_ROOT
   - <timeseries_url>/api describes the TimeSeries API
   - Swagger UI documentation pages at .../api/docs, served from smartmet-swagger-ui
   - The definitions are regenerated whenever the metadata changes
+  - The TimeSeries keyword and inkeyword parameters show the locations of the keyword
+    on a map in the documentation page (openapi.map_tiles)
 - The landing page and the conformance declaration are generated; the texts are
   configured with the landing_page setting, the old api setting is ignored
 - Conformance classes use the http scheme of the OGC URIs

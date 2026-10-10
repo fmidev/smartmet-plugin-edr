@@ -1239,6 +1239,17 @@ Spine::OpenAPI::Document timeseries(const Config& config,
 
       auto parameter = OA::parameter(name, "query", p.description, schema);
       parameter["x-group"] = p.group;
+      if (name == "keyword" || name == "inkeyword")
+      {
+        // The documentation page shows the locations of the keyword on a map
+        auto& locations = parameter["x-smartmet-locations"];
+        locations["path"] = url;
+        locations["parameter"] = "keyword";
+        locations["language"] = "lang";
+        locations["query"]["param"] = "name,geoid,fmisid,wmo,lat,lon,elevation,region,country,tz";
+        locations["query"]["timesteps"] = "1";
+        locations["query"]["format"] = "json";
+      }
       params.append(parameter);
     }
 
