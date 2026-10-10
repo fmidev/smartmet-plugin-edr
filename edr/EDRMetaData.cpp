@@ -472,8 +472,9 @@ bool parse_merged_time_periods(const std::vector<TimePeriod> &time_periods,
     //
     bool lastPeriod = (i == (time_periods.size() - 1));
     auto timesteps =
-        lastPeriod ? ((tp.getEndTime() - tp.getStartTime()).total_seconds() / first_period_length)
-                   : 0;
+        (lastPeriod && first_period_length > 0)
+            ? ((tp.getEndTime() - tp.getStartTime()).total_seconds() / first_period_length)
+            : 0;
     bool sameLength =
         (lastPeriod && (timesteps > 1)) ? true : (first_period_length == tp_current.length());
 
