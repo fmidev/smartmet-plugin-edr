@@ -64,7 +64,15 @@ changes:
 | `/timeseries/api`, `/timeseries/api/docs` | The same for the TimeSeries API (each `timeseries_url`) |
 
 The landing page links the definition (`rel=service-desc`) and the documentation
-(`rel=service-doc`). The Swagger UI files are served by the plugin from a local directory,
+(`rel=service-doc`).
+
+The documentation page shows the executed request with its full URL, and as bash (curl),
+Python, R and JavaScript snippets. When the request has a time window (`datetime=start/end`,
+or `starttime` and `endtime` in the TimeSeries API), the bash, Python, R and JavaScript
+"loop" snippets are scripts which repeat the request for consecutive days, weeks, months or
+years and save each response to a file; each period ends one second before the next one
+starts. The scripts use only curl and GNU date, the Python standard library, base R (4.0 or
+newer) and Node.js (18 or newer). The Swagger UI files are served by the plugin from a local directory,
 package `smartmet-swagger-ui`, so the documentation does not depend on any public CDN.
 
 ```
