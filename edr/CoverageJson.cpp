@@ -89,7 +89,7 @@ TS::TimeSeriesGroupPtr as_timeseries_group(const TS::TimeSeriesData &tsdata)
   {
     auto tsg = std::make_shared<TS::TimeSeriesGroup>();
     if (*ptr)
-      tsg->emplace_back(TS::LonLatTimeSeries(TS::LonLat(0, 0), **ptr));
+      tsg->emplace_back(TS::LonLat(0, 0), **ptr);
     return tsg;
   }
 

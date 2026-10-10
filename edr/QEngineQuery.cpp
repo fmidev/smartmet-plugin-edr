@@ -979,8 +979,7 @@ TS::TimeSeriesGroupPtr QEngineQuery::getQEngineValuesForArea(
         TS::TimeSeries ts;
         for (const auto& t : theQueryDataTlist)
           ts.emplace_back(TS::TimedValue(t, theProducer));
-        querydata_result->push_back(
-            TS::LonLatTimeSeries(Spine::LonLat(location->longitude, location->latitude), ts));
+        querydata_result->emplace_back(Spine::LonLat(location->longitude, location->latitude), ts);
       }
     }
     else if (UtilityFunctions::is_special_parameter(paramname))
