@@ -27,6 +27,8 @@
 #include <timeseries/TimeSeriesGenerator.h>
 #include <timeseries/TimeSeriesUtility.h>
 
+#include <ranges>
+
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
 
 using namespace std;
@@ -1429,8 +1431,8 @@ void GridInterface::findLevels(CommonQuery& masterquery,
             {
               // Fetching pressure levels.
               itsGridEngine->getProducerParameterLevelList(producerName, 2, 0.01, tmpLevels);
-              for (auto lev = tmpLevels.rbegin(); lev != tmpLevels.rend(); ++lev)
-                levels.emplace_back(*lev * 100);
+              for (double tmpLevel : std::ranges::reverse_view(tmpLevels))
+                levels.emplace_back(tmpLevel * 100);
             }
             else if (levelId == 3)
             {
@@ -1452,8 +1454,8 @@ void GridInterface::findLevels(CommonQuery& masterquery,
                 {
                   case 2:  // Pressure level
                     itsGridEngine->getProducerParameterLevelList(producerName, 2, 0.01, tmpLevels);
-                    for (auto lev = tmpLevels.rbegin(); lev != tmpLevels.rend(); ++lev)
-                      levels.emplace_back(*lev * 100);
+                    for (double tmpLevel : std::ranges::reverse_view(tmpLevels))
+                      levels.emplace_back(tmpLevel * 100);
                     break;
 
                   case 3:  // model
@@ -1478,9 +1480,8 @@ void GridInterface::findLevels(CommonQuery& masterquery,
           if (levelId == 2)
           {
             // If the level type is "pressure" then we should use these levels in reverse order.
-            for (auto level = masterquery.levels.rbegin(); level != masterquery.levels.rend();
-                 ++level)
-              levels.emplace_back((double)(*level * 100));
+            for (int level : std::ranges::reverse_view(masterquery.levels))
+              levels.emplace_back((double)(level * 100));
           }
           else
           {
