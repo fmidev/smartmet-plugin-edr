@@ -15,8 +15,8 @@
     {
       "href" : "http://smartmet.fmi.fi/edr/api",
       "rel" : "service-desc",
-      "title" : "The API definition (OpenAPI 3.0)",
-      "type" : "application/vnd.oai.openapi+json;version=3.0"
+      "title" : "The API definition (OpenAPI 3.1)",
+      "type" : "application/vnd.oai.openapi+json;version=3.1"
     },
     {
       "href" : "http://smartmet.fmi.fi/edr/api/docs",

@@ -1093,9 +1093,8 @@ JsonValue ts_schema(const TSParameter& p)
   JsonValue doc;
   auto& classes = doc["conformsTo"];
   classes.append(std::string(COMMON_CONF) + "core");
-  classes.append(std::string(COMMON_CONF) + "oas30");
   classes.append(std::string(COMMON2_CONF) + "collections");
-  for (const char* name : {"core", "collections", "queries", "json", "geojson", "covjson", "oas30"})
+  for (const char* name : {"core", "collections", "queries", "json", "geojson", "covjson"})
     classes.append(std::string(EDR_CONF) + name);
   return doc;
 }
@@ -1198,7 +1197,7 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     auto& params = op["parameters"];
 
     JsonValue param_schema = OA::arraySchema(OA::stringSchema());
-    param_schema["example"] = "name,time,temperature";
+    param_schema["examples"].append("name,time,temperature");
     auto param = OA::parameter(
         "param",
         "query",

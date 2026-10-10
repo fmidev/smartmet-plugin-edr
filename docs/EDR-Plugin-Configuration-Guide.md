@@ -53,13 +53,13 @@ JSON templates is obsolete and ignored with a warning.
 
 # API definition and documentation
 
-The plugin generates OpenAPI 3.0 definitions of the EDR API and of each TimeSeries URL from
+The plugin generates OpenAPI 3.1 definitions of the EDR API and of each TimeSeries URL from
 the configuration and the current metadata, and regenerates them whenever the metadata
 changes:
 
 | Resource | Content |
 | --- | --- |
-| `/edr/api` | OpenAPI definition (`application/vnd.oai.openapi+json;version=3.0`); with `f=html`, or when the client prefers `text/html`, the documentation page |
+| `/edr/api` | OpenAPI definition (`application/vnd.oai.openapi+json;version=3.1`); with `f=html`, or when the client prefers `text/html`, the documentation page |
 | `/edr/api/docs` | Documentation page rendered by Swagger UI |
 | `/timeseries/api`, `/timeseries/api/docs` | The same for the TimeSeries API (each `timeseries_url`) |
 

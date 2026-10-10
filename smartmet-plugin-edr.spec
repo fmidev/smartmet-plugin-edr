@@ -121,7 +121,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-8.fmi
-- Generated OpenAPI 3.0 definitions instead of the static api.json template:
+- Generated OpenAPI 3.1 definitions instead of the static api.json template:
   - /edr/api describes the query types, parameters, output formats, instances and
     locations of the configured collections, with per-collection paths listing the
     exact parameter names, formats and levels (openapi.expand_collections)
@@ -130,7 +130,7 @@ rm -rf $RPM_BUILD_ROOT
   - The definitions are regenerated whenever the metadata changes
 - The landing page and the conformance declaration are generated; the texts are
   configured with the landing_page setting, the old api setting is ignored
-- Conformance classes use the http scheme of the OGC URIs and declare oas30
+- Conformance classes use the http scheme of the OGC URIs
 
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-7.fmi
 - OGC API-EDR 1.2 and CoverageJSON conformance fixes:
