@@ -29,8 +29,8 @@ namespace Plugin
 {
 namespace EDR
 {
-#define MAX_TIME_PERIODS 300
-#define DEFAULT_PRECISION -1
+constexpr std::size_t MAX_TIME_PERIODS = 300;
+constexpr int DEFAULT_PRECISION = -1;
 
 namespace
 {
