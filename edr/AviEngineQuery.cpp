@@ -4,6 +4,7 @@
 #include "UtilityFunctions.h"
 #include <macgyver/TimeParser.h>
 #include <spine/HTTP.h>
+#include <optional>
 #include <tuple>
 
 using namespace boost::algorithm;
@@ -422,12 +423,23 @@ std::pair<Fmi::DateTime, Fmi::DateTime> items_time_range(const EDRQuery &edr_que
   }
   auto first = datetime.substr(0, pos);
   auto second = datetime.substr(pos + 1);
+  const std::optional<Fmi::DateTime> extent_start =
+      (periods.empty() ? std::optional<Fmi::DateTime>() : start);
   if (first != "..")
     start = parse(first);
   if (second != "..")
     end = parse(second);
   if (end < start)
     throw EDRException("Invalid 'datetime' value '" + datetime + "', the end is before the start");
+
+  // The messages are searched within the temporal extent of the collection only, or within
+  // 31 days if the extent is unknown, so that a request cannot make the engine read all
+  // messages
+  end = std::min(end, now);
+  if (extent_start)
+    start = std::max(start, *extent_start);
+  else
+    start = std::max(start, end - Fmi::Hours(31 * 24));
   return {start, end};
 }
 
@@ -564,8 +576,9 @@ Json::Value AviEngineQuery::processItemsQuery(const Config &config,
           aviCollection.getExcludeIcaoFilters().end());
 
     std::vector<AviItem> items;
-    if (!queryOptions.itsLocationOptions.itsIcaos.empty() ||
-        !queryOptions.itsLocationOptions.itsBBoxes.empty())
+    if ((!queryOptions.itsLocationOptions.itsIcaos.empty() ||
+         !queryOptions.itsLocationOptions.itsBBoxes.empty()) &&
+        start <= end)
     {
       auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 

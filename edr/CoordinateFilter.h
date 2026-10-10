@@ -22,7 +22,7 @@ class CoordinateFilter
   bool isEmpty() const;
 
   // Tolerance of coordinate comparisons, by default 1e-5 (degrees)
-  void setTolerance(double tolerance) { itsTolerance = tolerance; }
+  void setTolerance(double tolerance);
 
   // Position of the coordinate in the order the coordinates were added (e.g. the position
   // along the requested trajectory), or nothing if the coordinate was not added
@@ -43,7 +43,25 @@ class CoordinateFilter
   std::map<LonLat, std::size_t> itsPositions;
   double itsTolerance = 1e-5;
 
+  // The coordinates rounded to the tolerance, for finding them in constant time
+  using Bucket = std::pair<long, long>;
+  std::multimap<Bucket, LonLat> itsBuckets;
+
   void addPosition(const LonLat &lonlat);
+  Bucket bucket(const LonLat &lonlat) const;
+
+  // The added coordinate matching the given one within the tolerance
+  std::optional<LonLat> match(const LonLat &lonlat) const;
+
+  template <typename Map>
+  typename Map::const_iterator find(const Map &map, const LonLat &lonlat) const
+  {
+    auto it = map.find(lonlat);
+    if (it != map.end())
+      return it;
+    auto matched = match(lonlat);
+    return (matched ? map.find(*matched) : map.end());
+  }
 };
 
 }  // namespace EDR

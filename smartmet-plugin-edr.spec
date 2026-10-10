@@ -162,6 +162,9 @@ rm -rf $RPM_BUILD_ROOT
     bbox filtering and paging, single messages by item id
   - /conformance declares EDR 1.2
 - The API documents are no longer cached per Host header
+- Request size limits for interpolated grids (positions times levels) and the items time
+  range, faster area and coordinate matching, format links omit credential parameters,
+  error headers contain printable characters only
 
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-6.fmi
 - A location without data no longer fails a multi-location querydata request; it is left out, and the request fails only if no location has data (BRAINSTORM-3500)

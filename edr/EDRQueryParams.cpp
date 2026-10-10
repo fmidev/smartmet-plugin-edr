@@ -13,6 +13,7 @@
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <fmt/format.h>
+#include <ogr_api.h>
 #include <ogr_geometry.h>
 #include <algorithm>
 #include <cmath>
@@ -535,7 +536,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
       throw EDRException("Missing coords option!");
 
     // resolution-z for cube and corridor queries
-    parseResolutionZ(emd);
+    parseResolutionZ(emd, config);
 
     // resolution-x and resolution-y for area, cube and corridor queries
     parseResolution(emd, config);
@@ -599,6 +600,10 @@ EDRQueryParams::EDRQueryParams(const State& state,
       {
         auto format_request = request;
         format_request.setParameter("f", format);
+        // Credentials are never echoed as parameters, resolve_host adds the apikey to the
+        // host part of the URL when the client allows it
+        format_request.removeParameter("fmi-apikey");
+        format_request.removeParameter("access-token");
         itsEDRQuery.format_urls[format] = itsEDRQuery.host + path + format_request.getQueryString();
       }
     }
@@ -1594,7 +1599,7 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
   }
 }
 
-void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd)
+void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd, const Config& config)
 {
   try
   {
@@ -1609,7 +1614,9 @@ void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd)
 
     // OGC API-EDR: the number of levels including the minimum and the maximum, 0 means the
     // levels of the data
-    const long max_levels = 1000;
+    // At most 1000 levels unless the request limits of the configuration say otherwise
+    const auto& limits = config.requestLimits();
+    const long max_levels = (limits.maxlevels > 0 ? long(limits.maxlevels) : 1000);
     long nz = -1;
     try
     {
@@ -1925,11 +1932,19 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
                          "with gridded data only");
 
     const auto& limits = config.requestLimits();
+    // Limits of the interpolated positions and positions times levels unless the request limits
+    // of the configuration say otherwise
     const std::size_t max_points = (limits.maxlocations > 0 ? limits.maxlocations : 250000);
     if (nx * ny > max_points)
       throw EDRTooLarge("Too many grid positions " + Fmi::to_string(nx * ny) +
                         " requested with resolution-x and resolution-y, the maximum is " +
                         Fmi::to_string(max_points));
+    const std::size_t max_elements = (limits.maxelements > 0 ? limits.maxelements : 1000000);
+    const std::size_t nz = std::max<std::size_t>(1, itsInterpolatedLevels.size());
+    if (nx * ny * nz > max_elements)
+      throw EDRTooLarge("Too many grid positions and levels " + Fmi::to_string(nx * ny * nz) +
+                        " requested with resolution-x/y/z, the maximum is " +
+                        Fmi::to_string(max_elements));
 
     if (corridor)
     {
@@ -1956,7 +1971,17 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
     grid.y0 = envelope.MinY;
     grid.y1 = envelope.MaxY;
 
-    // Positions inside the area (cube positions are always inside the bounding box)
+    // Positions inside the area (cube positions are always inside the bounding box). A
+    // prepared geometry makes the test fast also for complex polygons.
+    std::unique_ptr<OGRPreparedGeometry, void (*)(OGRPreparedGeometry*)> prepared(
+        (itsEDRQuery.query_type == EDRQueryType::Area
+             ? OGRCreatePreparedGeometry(OGRGeometry::ToHandle(geometry.get()))
+             : nullptr),
+        [](OGRPreparedGeometry* g)
+        {
+          if (g)
+            OGRDestroyPreparedGeometry(g);
+        });
     std::vector<double> xs;
     std::vector<double> ys;
     for (std::size_t j = 0; j < ny; j++)
@@ -1967,7 +1992,11 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
         if (itsEDRQuery.query_type == EDRQueryType::Area)
         {
           OGRPoint point(x, y);
-          if (!geometry->Intersects(&point))
+          const bool inside =
+              (prepared
+                   ? OGRPreparedGeometryIntersects(prepared.get(), OGRGeometry::ToHandle(&point))
+                   : geometry->Intersects(&point));
+          if (!inside)
             continue;
         }
         xs.push_back(x);

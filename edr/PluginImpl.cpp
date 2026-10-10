@@ -35,6 +35,9 @@ namespace EDR
 {
 namespace
 {
+// Maximum size of the Link header
+const std::size_t max_link_header_size = 4096;
+
 // Escape a string for embedding into a JSON string value
 std::string json_escape(const std::string& str)
 {
@@ -519,8 +522,14 @@ void PluginImpl::query(const State& state,
     const Links links = (q.isEDRMetaDataQuery()
                              ? q.responseLinks
                              : QueryProcessingHub::dataQueryLinks(q.edrQuery(), q.output_format));
+    // Recommendation 11 B: the links are left out of the header when there are too many of
+    // them or they are long (e.g. the coords of a long trajectory), proxies limit header sizes
     if (!links.empty())
-      response.setHeader("Link", link_header(links));
+    {
+      const auto header = link_header(links);
+      if (header.size() <= max_link_header_size)
+        response.setHeader("Link", header);
+    }
 
     if (obj)
     {
@@ -880,7 +889,13 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
       theResponse.setContent(firstMessage);
     }
 
-    boost::algorithm::replace_all(firstMessage, "\n", " ");
+    // The message may contain request parameters, control characters (e.g. CR) must not
+    // end up in the header
+    std::replace_if(
+        firstMessage.begin(),
+        firstMessage.end(),
+        [](char c) { return static_cast<unsigned char>(c) < 0x20 || c == 0x7f; },
+        ' ');
     if (firstMessage.size() > 300)
       firstMessage.resize(300);
     theResponse.setHeader("X-TimeSeriesPlugin-Error", firstMessage);
@@ -990,7 +1005,13 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
     }
 
     // Adding the first exception information into the response header
-    boost::algorithm::replace_all(firstMessage, "\n", " ");
+    // The message may contain request parameters, control characters (e.g. CR) must not
+    // end up in the header
+    std::replace_if(
+        firstMessage.begin(),
+        firstMessage.end(),
+        [](char c) { return static_cast<unsigned char>(c) < 0x20 || c == 0x7f; },
+        ' ');
     if (firstMessage.size() > 300)
       firstMessage.resize(300);
     theResponse.setHeader("X-EDRPlugin-Error", firstMessage);
