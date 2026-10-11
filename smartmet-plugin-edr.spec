@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.11
-Release: 3%{?dist}.fmi
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -34,43 +34,43 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.10.11-3
+BuildRequires: smartmet-library-spine-devel >= 26.10.11
 BuildRequires: smartmet-library-locus-devel >= 26.10.3
-BuildRequires: smartmet-library-macgyver-devel >= 26.10.3
-BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
-BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
-BuildRequires: smartmet-library-newbase-devel >= 26.10.8
-BuildRequires: smartmet-library-gis-devel >= 26.10.3
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.8
-BuildRequires: smartmet-engine-avi-devel >= 26.10.3
-BuildRequires: smartmet-engine-geonames-devel >= 26.10.3
+BuildRequires: smartmet-library-macgyver-devel >= 26.10.11
+BuildRequires: smartmet-library-grid-content-devel >= 26.10.11
+BuildRequires: smartmet-library-grid-files-devel >= 26.10.11
+BuildRequires: smartmet-library-newbase-devel >= 26.10.11
+BuildRequires: smartmet-library-gis-devel >= 26.10.11
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.11
+BuildRequires: smartmet-engine-avi-devel >= 26.10.11
+BuildRequires: smartmet-engine-geonames-devel >= 26.10.11
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.10.3
+BuildRequires: smartmet-engine-observation-devel >= 26.10.11
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 26.10.3
+BuildRequires: smartmet-engine-querydata-devel >= 26.10.11
 BuildRequires: smartmet-engine-gis-devel >= 26.9.26
-BuildRequires: smartmet-engine-grid-devel >= 26.9.26
+BuildRequires: smartmet-engine-grid-devel >= 26.10.11
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 26.9.30
+#Requires: smartmet-engine-observation >= 26.10.11
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 26.10.3
+Requires: smartmet-library-gis >= 26.10.11
 Requires: smartmet-library-locus >= 26.10.3
-Requires: smartmet-library-macgyver >= 26.10.3
-Requires: smartmet-library-newbase >= 26.10.8
-Requires: smartmet-library-spine >= 26.10.11-3
+Requires: smartmet-library-macgyver >= 26.10.11
+Requires: smartmet-library-newbase >= 26.10.11
+Requires: smartmet-library-spine >= 26.10.11
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-timeseries >= 26.10.8
-Requires: smartmet-library-gis >= 26.10.3
-Requires: smartmet-library-grid-files >= 26.9.26
-Requires: smartmet-engine-avi >= 26.10.3
-Requires: smartmet-engine-geonames >= 26.10.3
-Requires: smartmet-engine-querydata >= 26.10.3
+Requires: smartmet-library-timeseries >= 26.10.11
+Requires: smartmet-library-gis >= 26.10.11
+Requires: smartmet-library-grid-files >= 26.10.11
+Requires: smartmet-engine-avi >= 26.10.11
+Requires: smartmet-engine-geonames >= 26.10.11
+Requires: smartmet-engine-querydata >= 26.10.11
 Requires: smartmet-engine-gis >= 26.9.26
-Requires: smartmet-engine-grid >= 26.9.26
-Requires: smartmet-server >= 26.9.29
+Requires: smartmet-engine-grid >= 26.10.11
+Requires: smartmet-server >= 26.10.11
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -78,22 +78,22 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.11-3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.11-3
-#TestRequires: smartmet-library-newbase-devel >= 26.10.8
+#TestRequires: smartmet-library-spine >= 26.10.11
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.11
+#TestRequires: smartmet-library-newbase-devel >= 26.10.11
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
-#TestRequires: smartmet-library-grid-files-test >= 26.10.6
-#TestRequires: smartmet-library-gis >= 26.10.3
-#TestRequires: smartmet-engine-avi >= 26.10.3
-#TestRequires: smartmet-engine-geonames >= 26.10.3
+#TestRequires: smartmet-library-grid-files-test >= 26.10.11
+#TestRequires: smartmet-library-gis >= 26.10.11
+#TestRequires: smartmet-engine-avi >= 26.10.11
+#TestRequires: smartmet-engine-geonames >= 26.10.11
 #TestRequires: smartmet-engine-gis >= 26.9.26
-#TestRequires: smartmet-engine-querydata >= 26.10.11-1
+#TestRequires: smartmet-engine-querydata >= 26.10.11
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.11-2
+#TestRequires: smartmet-engine-observation >= 26.10.11
 %endif
-#TestRequires: smartmet-engine-grid >= 26.10.3
+#TestRequires: smartmet-engine-grid >= 26.10.11
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
@@ -120,7 +120,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
-* Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-3.fmi
+* Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-1.fmi
 - Generated OpenAPI 3.1 definitions instead of the static api.json template:
   - /edr/api describes the query types, parameters, output formats, instances and
     locations of the configured collections, with per-collection paths listing the
@@ -136,8 +136,6 @@ rm -rf $RPM_BUILD_ROOT
 - The generated definitions declare resolution-x, resolution-y and resolution-z for the area,
   cube and corridor queries and list cube queries for collections without levels; the
   conformance declaration also lists the EDR 1.0 classes
-
-* Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-2.fmi
 - OGC API-EDR 1.2 and CoverageJSON conformance fixes:
   - CoverageJSON media type application/vnd.cov+json, output format selection with the
     Accept header when f is missing (406 if nothing acceptable), f is case insensitive
@@ -181,12 +179,8 @@ rm -rf $RPM_BUILD_ROOT
 - Request size limits for interpolated grids (positions times levels) and the items time
   range, faster area and coordinate matching, format links omit credential parameters,
   error headers contain printable characters only
-- Tests require spine-plugin-test >= 26.10.11-1, querydata >= 26.10.11-1 and observation >= 26.10.11-2
-
-* Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-1.fmi
+- Tests require spine-plugin-test >= 26.10.11, querydata >= 26.10.11 and observation >= 26.10.11
 - Invalid numbers are now detected instead of silently becoming 0 or a numeric prefix
-
-* Sat Oct 10 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.10-1.fmi
 - Fixed division by zero when merging time periods whose first period has zero length
 - Use emplace and C++ standard library headers where clang-tidy suggests it, no functional changes
 - Use range-based for loops where clang-tidy suggests it, no functional changes
