@@ -1,4 +1,5 @@
 #include "QueryProcessingHub.h"
+#include "ApiDefinition.h"
 #include "UtilityFunctions.h"
 #include <ogr_geometry.h>
 #include <cstring>
@@ -594,9 +595,14 @@ std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const Stat
     const auto& edr_query = masterquery.edrQuery();
     if (edr_query.query_id == EDRQueryId::APIQuery)
     {
-      auto result =
-          state.getPlugin().itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
-      table.set(0, 0, result);
+      const auto& config = state.getPlugin().itsConfig;
+      auto result = (edr_query.instance_id == "landing"
+                         ? ApiDefinition::landingPage(config, edr_query.host)
+                         : ApiDefinition::conformance());
+      ::Json::StreamWriterBuilder builder;
+      builder["indentation"] = "  ";
+      builder["emitUTF8"] = true;
+      table.set(0, 0, ::Json::writeString(builder, result) + "\n");
     }
 #ifndef WITHOUT_AVI
     else if (edr_query.query_id == EDRQueryId::SpecifiedCollectionItems)

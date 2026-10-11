@@ -1,0 +1,1 @@
+GET /timeseries?param=name%2Cgeoid%2Cfmisid%2Cwmo%2Clat%2Clon%2Celevation%2Cregion%2Ccountry%2Ctz&timesteps=1&format=json&keyword=finavia&lang=sv HTTP/1.0

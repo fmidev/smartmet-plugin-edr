@@ -334,11 +334,12 @@ def check_collection(fname, path, coll):
 
 def check_edr_json(fname, doc, status):
     if "conformsTo" in doc:
-        for c in ("https://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
-                  "https://www.opengis.net/spec/ogcapi-common-2/1.0/conf/collections"):
+        # The conformance class URIs of the OGC standards use the http scheme
+        for c in ("http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
+                  "http://www.opengis.net/spec/ogcapi-common-2/1.0/conf/collections"):
             if c not in doc["conformsTo"]:
                 error(fname, "$.conformsTo", f"missing {c}")
-        if not any(re.match(r"https://www\.opengis\.net/spec/ogcapi-edr-1/[0-9.]+/conf/core$", c)
+        if not any(re.match(r"http://www\.opengis\.net/spec/ogcapi-edr-1/[0-9.]+/conf/core$", c)
                    for c in doc["conformsTo"]):
             error(fname, "$.conformsTo", "missing the EDR core conformance class")
     elif "detail" in doc and "title" in doc:
@@ -364,8 +365,9 @@ def check_edr_json(fname, doc, status):
             check_links(fname, "$.links", doc.get("links"), False)
     elif "links" in doc and "title" in doc:
         rels = {link.get("rel") for link in doc["links"]}
+        # OGC API - Common uses the registered relation URIs, the short forms are also used
         for rel in ("conformance", "data"):
-            if rel not in rels:
+            if not rels & {rel, "http://www.opengis.net/def/rel/ogc/1.0/" + rel}:
                 error(fname, "$.links", f"landing page must link to '{rel}'")
         if not rels & {"service-desc", "service-doc"}:
             error(fname, "$.links", "landing page must link to the API definition")

@@ -9,6 +9,7 @@
 #include "Precision.h"
 #include <grid-files/common/GeneralFunctions.h>
 #include <grid-files/common/ShowFunction.h>
+#include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <spine/ConfigTools.h>
@@ -18,6 +19,7 @@
 #include <algorithm>
 #include <mutex>
 #include <ogr_geometry.h>
+#include <iostream>
 #include <stdexcept>
 
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
@@ -522,67 +524,46 @@ void Config::parse_config_api_settings()
 {
   try
   {
-    std::string api_key = "api";
-    std::string api_items_key = "api.items";
+    // The API definition, landing page and conformance declaration are generated. The old
+    // template based settings are no longer used.
+    if (itsConfig.exists("api"))
+      std::cerr << Spine::log_time_str() << ANSI_FG_YELLOW
+                << " [edr] Warning: the 'api' setting is obsolete and ignored, the API documents "
+                   "are generated. Use the 'openapi' and 'landing_page' settings instead."
+                << ANSI_FG_DEFAULT << std::endl;
 
-    if (!itsConfig.exists(api_key))
-      return;
+    itsOpenAPISettings = Spine::OpenAPI::Settings::parse(itsConfig);
 
-    if (!itsConfig.exists(api_key + ".items"))
-      throw Fmi::Exception(BCP, "Configuration file error. EDR api settings must contain 'items'!");
-
-    libconfig::Setting &edr_api = itsConfig.lookup(api_key);
-
-    std::string templatedir = "/usr/share/smartmet/edr";
-    edr_api.lookupValue("templatedir", templatedir);
-    Fmi::trim(templatedir);
-
-    if (templatedir.empty())
-      throw Fmi::Exception(
-          BCP, "Configuration file error. Settings 'api.templatedir' can not be empty!");
-
-    libconfig::Setting &edr_api_items = itsConfig.lookup(api_items_key);
-
-    if (!edr_api_items.isList())
-      throw Fmi::Exception(
-          BCP, "Configuration file error. Settings 'api.items' must be a list of objects");
-
-    APISettings conf_api_settings;
-
-    for (int i = 0; i < edr_api_items.getLength(); i++)
+    if (itsConfig.exists("landing_page"))
     {
-      std::string path(api_items_key + ".[" + Fmi::to_string(i) + "]");
-      libconfig::Setting &api_item = edr_api_items[i];
+      const libconfig::Setting &page = itsConfig.lookup("landing_page");
+      if (!page.isGroup())
+        throw Fmi::Exception(BCP, "Configuration file error. 'landing_page' must be a group");
 
-      if (!api_item.isGroup())
-        throw Fmi::Exception(BCP, "Configuration file error. " + path + " must be an object");
+      page.lookupValue("title", itsLandingPage.title);
+      page.lookupValue("description", itsLandingPage.description);
+      page.lookupValue("version", itsLandingPage.version);
 
-      try
+      for (const char *name : {"provider", "contact"})
       {
-        std::string url_setting;
-        std::string template_setting;
-        api_item.lookupValue("url", url_setting);
-        Fmi::trim(url_setting);
-        if (url_setting.empty() || (url_setting.front() != '/'))
-          url_setting = itsDefaultUrl + "/" + url_setting;
-        if (url_setting.size() < 2)
-          throw Fmi::Exception(BCP, "url '" + url_setting + "' is not valid");
-        if (url_setting.back() == '/')
-          url_setting.pop_back();
-        if (conf_api_settings.count(url_setting) > 0)
-          throw Fmi::Exception(BCP, "url '" + url_setting + "' is duplicate");
-        api_item.lookupValue("template", template_setting);
-        Fmi::trim(template_setting);
-        if (template_setting.empty())
-          throw Fmi::Exception(BCP, "template cannot be empty");
-        conf_api_settings[url_setting] = template_setting;
-      }
-      catch (const std::exception &e)
-      {
-        throw Fmi::Exception(BCP, "Configuration file error. " + path + " " + e.what());
+        if (!page.exists(name))
+          continue;
+        const libconfig::Setting &group = page[name];
+        if (!group.isGroup())
+          throw Fmi::Exception(BCP, "Configuration file error. 'landing_page." +
+                                        std::string(name) + "' must be a group");
+        ::Json::Value &value = (std::string(name) == "provider" ? itsLandingPage.provider
+                                                               : itsLandingPage.contact);
+        for (int i = 0; i < group.getLength(); i++)
+        {
+          if (group[i].getType() != libconfig::Setting::TypeString)
+            throw Fmi::Exception(BCP, "Configuration file error. 'landing_page." +
+                                          std::string(name) + "." + group[i].getName() +
+                                          "' must be a string");
+          value[group[i].getName()] = static_cast<const char *>(group[i]);
+        }
       }
     }
-    itsEDRAPI.setSettings(templatedir, conf_api_settings);
   }
   catch (...)
   {

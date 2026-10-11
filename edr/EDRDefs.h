@@ -33,7 +33,6 @@ using DefaultOutputFormats =
 using SupportedDataQueries = std::map<std::string, std::set<std::string>>;  // producer -> queries
 using ProducerKeywords = std::map<std::string, std::set<std::string>>;      // producer -> keywords
 using AviCollections = std::list<AviCollection>;
-using APISettings = std::map<std::string, std::string>;
 using License = std::map<std::string, std::string>;
 using ProducerLicenses = std::map<std::string, License>;  // producer -> license
 using CustomDimReferences = std::map<std::string, std::string>;
@@ -61,7 +60,6 @@ enum class SourceEngine
 // CoverageJSON media type (OGC API-EDR /req/covjson/definition)
 #define COVERAGE_JSON_MIME_TYPE "application/vnd.cov+json"
 
-#define PROBLEM_DETAIL "problemdetail"
 
 std::string get_engine_name(SourceEngine source_engine);
 

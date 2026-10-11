@@ -9,7 +9,6 @@
 #include "AviCollection.h"
 #include "CRSSupport.h"
 #include "CollectionInfo.h"
-#include "EDRAPI.h"
 #include "EDRDefs.h"
 #include "Precision.h"
 #include "ProducerParameters.h"
@@ -17,6 +16,8 @@
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
 #include <engines/grid/Engine.h>
+#include <json/json.h>
+#include <spine/OpenApi.h>
 #include <spine/Parameter.h>
 #include <spine/TableFormatterOptions.h>
 #include <timeseries/RequestLimits.h>
@@ -29,6 +30,18 @@ namespace Plugin
 {
 namespace EDR
 {
+// Landing page contents, the links are generated
+struct LandingPage
+{
+  std::string title = "SmartMet EDR Server";
+  std::string description =
+      "Environmental data retrieval API conforming to the OGC API - Environmental Data "
+      "Retrieval standard";
+  std::string version = "1.0";  // Version of the API definition
+  ::Json::Value provider;         // Optional provider object, null if not set
+  ::Json::Value contact;          // Optional contact object, null if not set
+};
+
 class Config : private boost::noncopyable
 {
  public:
@@ -100,7 +113,8 @@ class Config : private boost::noncopyable
   time_t itsLastAliasCheck;
 
   const AviCollections &getAviCollections() const { return itsAviCollections; }
-  const EDRAPI &getEDRAPI() const { return itsEDRAPI; }
+  const Spine::OpenAPI::Settings &openAPISettings() const { return itsOpenAPISettings; }
+  const LandingPage &landingPage() const { return itsLandingPage; }
   const CollectionInfoContainer &getCollectionInfo() const { return itsCollectionInfo; }
   const ProducerParameters &getProducerParameters() const { return itsProducerParameters; }
 
@@ -170,7 +184,8 @@ class Config : private boost::noncopyable
   AviCollections itsAviCollections;
   CollectionInfoContainer itsCollectionInfo;
   ProducerParameters itsProducerParameters;
-  mutable EDRAPI itsEDRAPI;
+  Spine::OpenAPI::Settings itsOpenAPISettings;
+  LandingPage itsLandingPage;
 
   // Custom dimension references. If initial value is empty, reference configuration is required
   // only if any standard_name is configured (e.g. MetOcean profile)

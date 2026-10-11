@@ -76,9 +76,9 @@ Defined in `EDRQuery.h` as `EDRQueryType`: Position, Radius, Area, Cube, Traject
 
 The plugin uses a custom `Json.h` wrapper (aliasing `Json::Value` etc.) rather than importing jsoncpp headers directly.
 
-### Template files
+### API documents
 
-`tmpl/*.json` — JSON templates for API landing page, conformance, and problem detail responses. Installed to `$(datadir)/smartmet/edr`.
+The landing page, conformance declaration and OpenAPI definitions (`/edr/api`, `<timeseries_url>/api`, documentation pages at `.../api/docs`) are generated in `ApiDefinition.cpp` from the configuration and the metadata; there are no templates. `PluginImpl::publishApiDefinitions()` regenerates the definitions after each metadata update and hands them to `Spine::OpenAPI::Publisher`, which serves them. `test/validate-openapi.py` validates the definitions and checks that every successful test request is described by them, so new request parameters must be added to `ApiDefinition.cpp`.
 
 ### Key classes
 

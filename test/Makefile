@@ -9,16 +9,16 @@ ifdef CI
 GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
 TEST_PREPARE_TARGETS += geonames-database
 TEST_FINISH_TARGETS += stop-test-db
-TEST_TARGETS := test-sqlite-impl test-grid validate-outputs
+TEST_TARGETS := test-sqlite-impl test-grid validate-outputs validate-openapi
 EXTRA_IGNORE := input/.testignore_circle-ci
 else
 ifdef LOCAL_TESTS_ONLY
 GEONAMES_HOST_EDIT := cat
-TEST_TARGETS := test-sqlite-impl test-grid validate-outputs
+TEST_TARGETS := test-sqlite-impl test-grid validate-outputs validate-openapi
 EXTRA_IGNORE := input/.testignore_circle-ci
 else
 GEONAMES_HOST_EDIT := cat
-TEST_TARGETS := test-sqlite-impl test-oracle-impl test-postgresql-impl test-grid validate-outputs
+TEST_TARGETS := test-sqlite-impl test-oracle-impl test-postgresql-impl test-grid validate-outputs validate-openapi
 EXTRA_IGNORE :=
 endif
 endif
@@ -78,6 +78,17 @@ conformance:
 	head -1 conformance/tmp/ogc-ets.txt; tail -1 conformance/tmp/metocean.txt; \
 	$$ok
 
+# Validate the generated OpenAPI definitions, and check that every successful test request is
+# described by them (operation, enums, required and declared parameters)
+validate-openapi:
+	if command -v python3 >/dev/null; then \
+	  python3 validate-openapi.py --ignore base/input/.testignore_ci \
+	    base/output/openapi.get:base/input \
+	    base/output/timeseries/openapi.get:base/input/timeseries; \
+	else \
+	  echo "python3 not available, skipping OpenAPI validation"; \
+	fi
+
 stmp-geonames-db:
 	$(MAKE) geonames-database
 	date >$@
@@ -102,4 +113,4 @@ cnf/avi.conf cnf/geonames.conf cnf/gis.conf:
 
 dummy:
 
-.PHONY: cnf/geonames.conf cnf/gis.conf dummy validate-outputs conformance
+.PHONY: cnf/geonames.conf cnf/gis.conf dummy validate-outputs validate-openapi conformance
