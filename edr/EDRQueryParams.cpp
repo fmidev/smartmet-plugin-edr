@@ -1468,7 +1468,7 @@ EDRQueryParams::CustomDimensions::CustomDimensions(const Spine::HTTP::Request& r
           throw EDRException("Empty level value not allowed");
         try
         {
-          levels.push_back(atof(s.c_str()));
+          levels.push_back(Fmi::stod(s));
         }
         catch (...)
         {
