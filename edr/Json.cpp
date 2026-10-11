@@ -289,6 +289,8 @@ decltype(auto) member(T &m)
 
 Value &Value::operator=(const Value &value)
 {
+  if (&value == this)
+    return *this;
   return assign(value);
 }
 
