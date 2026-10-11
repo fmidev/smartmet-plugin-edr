@@ -41,6 +41,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OAS_SCHEMA = "oas31-schema.json"
 
 
+
+# Access credentials are handled before the API (and left out of the links), they are
+# not parameters of the API
+CREDENTIALS = {"fmi-apikey", "apikey", "access-token"}
+
 def error(where, msg):
     errors.append(f"{where}: {msg}")
 
@@ -143,6 +148,8 @@ def request_issues(op, path_values, query):
             issues.append(f"{op.path}: required parameter {name} is missing")
 
     for name, value in query:
+        if name in CREDENTIALS:
+            continue
         param = op.params.get(("query", name))
         if param is None:
             issues.append(f"{op.path}: query parameter {name} is not declared")

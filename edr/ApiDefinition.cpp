@@ -55,7 +55,7 @@ const std::vector<std::string> crs84_aliases{"OGC:CRS84",
                                              "http://www.opengis.net/def/crs/OGC/0/CRS84",
                                              "https://www.opengis.net/def/crs/OGC/0/CRS84"};
 
-const std::vector<std::string> distance_units{"km", "mi"};
+const std::vector<std::string> distance_units{"m", "km", "mi"};
 
 // ----------------------------------------------------------------------
 // What the definition needs to know about a collection
@@ -68,6 +68,7 @@ struct Collection
   SourceEngine source = SourceEngine::Undefined;
   std::vector<std::string> queries;  // supported data query types, see query_types
   bool locations = false;            // locations query supported
+  bool items = false;                // items of an aviation collection
   std::vector<std::string> formats;
   std::string default_format;
   std::vector<std::string> parameters;
@@ -115,6 +116,7 @@ std::vector<Collection> get_collections(const EngineMetaData& metadata)
         if (emd.data_queries.count(q) > 0)
           c.queries.push_back(q);
       c.locations = (emd.data_queries.count("locations") > 0);
+      c.items = (emd.data_queries.count("items") > 0);
 
       c.formats.assign(emd.output_formats.begin(), emd.output_formats.end());
       c.default_format = emd.default_output_format;
@@ -307,6 +309,7 @@ void add_edr_schemas(OA::Document& doc)
 
 void add_edr_parameters(OA::Document& doc,
                         const std::vector<Collection>& collections,
+                        const std::vector<std::string>& crs_values,
                         std::size_t maxEnum)
 {
   using OA::parameter;
@@ -397,9 +400,10 @@ void add_edr_parameters(OA::Document& doc,
                    "crs",
                    parameter("crs",
                              "query",
-                             "Coordinate reference system of the coordinates. Only WGS84 "
-                             "longitude/latitude is supported.",
-                             OA::enumSchema(crs84_aliases, maxEnum)));
+                             "Coordinate reference system of the coordinates: WGS84 "
+                             "longitude/latitude (the default) or one of the CRSs listed in the "
+                             "crs setting of the server.",
+                             OA::enumSchema(crs_values, maxEnum)));
   doc.addComponent(
       "parameters",
       "f",
@@ -540,6 +544,33 @@ void add_edr_parameters(OA::Document& doc,
   doc.addComponent("parameters",
                    "offset",
                    parameter("offset", "query", "Number of locations to skip", integer_schema(0)));
+
+  // Items of the aviation collections
+  JsonValue item_bbox = OA::arraySchema(number_schema());
+  item_bbox["minItems"] = 4;
+  item_bbox["maxItems"] = 4;
+  doc.addComponent("parameters",
+                   "items.bbox",
+                   parameter("bbox",
+                             "query",
+                             "Bounding box minlon,minlat,maxlon,maxlat of the stations or areas",
+                             item_bbox));
+  JsonValue item_limit = integer_schema(1);
+  item_limit["maximum"] = 10000;
+  item_limit["default"] = 10;
+  doc.addComponent("parameters",
+                   "items.limit",
+                   parameter("limit", "query", "Maximum number of items to return", item_limit));
+  doc.addComponent("parameters",
+                   "items.offset",
+                   parameter("offset", "query", "Number of items to skip", integer_schema(0)));
+  doc.addComponent("parameters",
+                   "itemId",
+                   parameter("itemId",
+                             "path",
+                             "Identifier of a message, ICAO_messagetime_messageid",
+                             stringSchema(),
+                             true));
   doc.addComponent("parameters",
                    "locationId.query",
                    parameter("locationId",
@@ -773,6 +804,33 @@ void add_locations_operations(OA::Document& doc,
   add_data_responses(doc, data, formats);
 }
 
+void add_items_operations(OA::Document& doc,
+                          const PathPrefix& prefix,
+                          const std::string& operationSuffix)
+{
+  auto& list = doc.operation(prefix.path + "/items", "get");
+  list["tags"].append(TAG_DATA);
+  list["summary"] = "Messages of the collection";
+  list["description"] =
+      "The messages as GeoJSON features selected by datetime (message time, by default the "
+      "temporal extent of the collection) and bbox, paged with limit and offset.";
+  list["operationId"] = operation_id(prefix.idPrefix, "items", operationSuffix);
+  list["parameters"] = prefix.pathParameters;
+  list["parameters"].append(OA::ref("parameters", "datetime"));
+  list["parameters"].append(OA::ref("parameters", "items.bbox"));
+  list["parameters"].append(OA::ref("parameters", "items.limit"));
+  list["parameters"].append(OA::ref("parameters", "items.offset"));
+  add_data_responses(doc, list, {GEO_JSON_FORMAT});
+
+  auto& item = doc.operation(prefix.path + "/items/{itemId}", "get");
+  item["tags"].append(TAG_DATA);
+  item["summary"] = "A message of the collection";
+  item["operationId"] = operation_id(prefix.idPrefix, "item", operationSuffix);
+  item["parameters"] = prefix.pathParameters;
+  item["parameters"].append(OA::ref("parameters", "itemId"));
+  add_data_responses(doc, item, {GEO_JSON_FORMAT});
+}
+
 void add_metadata_operation(OA::Document& doc,
                             const std::string& path,
                             const std::string& tag,
@@ -800,10 +858,12 @@ void add_generic_paths(OA::Document& doc, const std::vector<Collection>& collect
   const auto formats = union_of(collections, &Collection::formats);
   const auto queries = union_of(collections, &Collection::queries);
   bool locations = false;
+  bool items = false;
   bool instances = false;
   for (const auto& c : collections)
   {
     locations |= c.locations;
+    items |= c.items;
     instances |= !c.instances.empty();
   }
 
@@ -829,6 +889,8 @@ void add_generic_paths(OA::Document& doc, const std::vector<Collection>& collect
     add_data_query_operation(doc, collection, query, formats, "");
   if (locations)
     add_locations_operations(doc, collection, formats, "", OA::ref("parameters", "locationId"));
+  if (items)
+    add_items_operations(doc, collection, "");
 
   if (!instances)
     return;
@@ -934,6 +996,8 @@ void add_collection_paths(OA::Document& doc, const Collection& c, std::size_t ma
     specialize(doc.operation(base + "/locations", "get"));
     specialize(doc.operation(base + "/locations/{locationId}", "get"));
   }
+  if (c.items)
+    add_items_operations(doc, collection, c.id);
 
   if (c.instances.empty())
     return;
@@ -1191,7 +1255,14 @@ Spine::OpenAPI::Document edr(const Config& config, const EngineMetaData& metadat
 
     doc.addCommonComponents();
     add_edr_schemas(doc);
-    add_edr_parameters(doc, collections, max_enum);
+    // CRS84 and the CRSs of the crs setting, by identifier and URI
+    std::vector<std::string> crs_values = crs84_aliases;
+    for (const auto& crs : config.getCRSRegistry().all())
+    {
+      crs_values.push_back(crs->id);
+      crs_values.push_back(crs->uri);
+    }
+    add_edr_parameters(doc, collections, crs_values, max_enum);
 
     doc.addCoreOperations(TAG_CAPABILITIES, JsonValue());
 
