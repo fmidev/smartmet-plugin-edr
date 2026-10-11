@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia HTTP/1.0
+X-Test-Headers: Link

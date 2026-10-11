@@ -1,0 +1,8 @@
+Status: 404
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 404,
+  "detail" : "Instance id '2000-01-01T00:00:00Z' is not valid"
+}

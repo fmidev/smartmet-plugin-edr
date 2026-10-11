@@ -1,4 +1,17 @@
 {
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop/locations",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
 	"features" : 
 	[
 		{
@@ -47616,5 +47629,7 @@
 			}
 		}
 	],
+	"numberMatched" : 2506,
+	"numberReturned" : 2506,
 	"type" : "FeatureCollection"
 }

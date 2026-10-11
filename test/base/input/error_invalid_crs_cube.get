@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/cube?bbox=25,60,26,61&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature&crs=EPSG:3857 HTTP/1.0
+X-Test-Headers: Content-Type

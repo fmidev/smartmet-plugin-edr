@@ -5,6 +5,7 @@
 // ======================================================================
 
 #include "PluginImpl.h"
+#include "EDRException.h"
 #include "QueryProcessingHub.h"
 #include "State.h"
 #include "TimeSeriesQuery.h"
@@ -34,6 +35,43 @@ namespace EDR
 {
 namespace
 {
+// Maximum size of the Link header
+const std::size_t max_link_header_size = 4096;
+
+// Escape a string for embedding into a JSON string value
+std::string json_escape(const std::string& str)
+{
+  std::string ret;
+  ret.reserve(str.size());
+  for (unsigned char c : str)
+  {
+    switch (c)
+    {
+      case '"':
+        ret += "\\\"";
+        break;
+      case '\\':
+        ret += "\\\\";
+        break;
+      case '\n':
+        ret += "\\n";
+        break;
+      case '\r':
+        ret += "\\r";
+        break;
+      case '\t':
+        ret += "\\t";
+        break;
+      default:
+        if (c < 0x20)
+          ret += fmt::format("\\u{:04x}", static_cast<unsigned int>(c));
+        else
+          ret += static_cast<char>(c);
+    }
+  }
+  return ret;
+}
+
 
 std::set<std::string> get_metadata_parameters(const std::shared_ptr<EngineMetaData>& metadata)
 {
@@ -167,7 +205,7 @@ void check_limits(const Spine::TaggedLocationList& locations, const TS::RequestL
       maxradius = std::max(maxradius, tloc.loc->radius);
 
   if (maxradius > limits.maxradius)
-    throw Fmi::Exception(BCP, "Too large radius requested")
+    throw EDRTooLarge("Too large radius requested")
         .addParameter("Radius", Fmi::to_string(maxradius))
         .addParameter("Limit", Fmi::to_string(limits.maxradius));
 }
@@ -448,6 +486,11 @@ void PluginImpl::query(const State& state,
     }
     response.setHeader("Content-Type", mime);
 
+    // The output format of a data query is negotiated with the Accept header unless the f
+    // option is given
+    if (!q.isEDRMetaDataQuery() && !request.getParameter("f"))
+      response.setHeader("Vary", "Accept");
+
     // Calculate the hash value for the product.
 
     std::size_t product_hash = Fmi::bad_hash;
@@ -472,6 +515,21 @@ void PluginImpl::query(const State& state,
 
     // If obj is not nullptr it is from cache
     obj = qph.processQuery(state, data, q, queryStreamer, product_hash);
+
+    // OGC API-EDR recommendation 11: the links of the response also as Link headers. Data
+    // responses link to the request in each output format and to the collection, paged
+    // listings to the other pages. CoverageJSON, TAC and IWXXM have no links in the body.
+    const Links links = (q.isEDRMetaDataQuery()
+                             ? q.responseLinks
+                             : QueryProcessingHub::dataQueryLinks(q.edrQuery(), q.output_format));
+    // Recommendation 11 B: the links are left out of the header when there are too many of
+    // them or they are long (e.g. the coords of a long trajectory), proxies limit header sizes
+    if (!links.empty())
+    {
+      const auto header = link_header(links);
+      if (header.size() <= max_link_header_size)
+        response.setHeader("Link", header);
+    }
 
     if (obj)
     {
@@ -831,7 +889,13 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
       theResponse.setContent(firstMessage);
     }
 
-    boost::algorithm::replace_all(firstMessage, "\n", " ");
+    // The message may contain request parameters, control characters (e.g. CR) must not
+    // end up in the header
+    std::replace_if(
+        firstMessage.begin(),
+        firstMessage.end(),
+        [](char c) { return static_cast<unsigned char>(c) < 0x20 || c == 0x7f; },
+        ' ');
     if (firstMessage.size() > 300)
       firstMessage.resize(300);
     theResponse.setHeader("X-TimeSeriesPlugin-Error", firstMessage);
@@ -930,19 +994,24 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
     }
     else
     {
-      if (firstMessage.find("timeout") != std::string::npos)
-        theResponse.setStatus(Spine::HTTP::Status::request_timeout);
-      else
-        theResponse.setStatus(Spine::HTTP::Status::bad_request);
+      const int status = http_status(ex);
+      theResponse.setStatus(static_cast<Spine::HTTP::Status>(status));
 
       auto problem_detail = itsConfig.getEDRAPI().getProblemDetailJson();
-      boost::algorithm::replace_all(problem_detail, "__DETAIL__", firstMessage);
+      boost::algorithm::replace_all(problem_detail, "__STATUS__", Fmi::to_string(status));
+      boost::algorithm::replace_all(problem_detail, "__DETAIL__", json_escape(firstMessage));
       theResponse.setContent(problem_detail);
       theResponse.setHeader("Content-Type", "application/problem+json");
     }
 
     // Adding the first exception information into the response header
-    boost::algorithm::replace_all(firstMessage, "\n", " ");
+    // The message may contain request parameters, control characters (e.g. CR) must not
+    // end up in the header
+    std::replace_if(
+        firstMessage.begin(),
+        firstMessage.end(),
+        [](char c) { return static_cast<unsigned char>(c) < 0x20 || c == 0x7f; },
+        ' ');
     if (firstMessage.size() > 300)
       firstMessage.resize(300);
     theResponse.setHeader("X-EDRPlugin-Error", firstMessage);
@@ -1619,9 +1688,9 @@ void PluginImpl::updateParameterInfo()
           throw Fmi::Exception(BCP, unit_label_key + " setting is required");
         lconfig.lookupValue(pname_key + ".unit.symbol.value", pinfo.unit_symbol_value);
         lconfig.lookupValue(pname_key + ".unit.symbol.type", pinfo.unit_symbol_type);
-        if (pinfo.unit_symbol_value.empty() || pinfo.unit_symbol_type.empty())
-          throw Fmi::Exception(
-              BCP, pname_key + " unit.symbol value and unit.symbol.type settings are required");
+        lconfig.lookupValue(pname_key + ".unit.id", pinfo.unit_id);
+        if (pinfo.unit_symbol_value.empty())
+          throw Fmi::Exception(BCP, pname_key + " unit.symbol.value setting is required");
         // metocean; standard name
         lconfig.lookupValue(pname_key + ".standard_name", pinfo.metocean.standard_name);
         // metocean; level
@@ -1759,7 +1828,8 @@ bool PluginImpl::isValidInstance(const std::string& producer, const std::string&
     if (epmd != engine_metadata.end())
     {
       for (auto const& md : epmd->second)
-        if (Fmi::date_time::to_iso_string(md.temporal_extent.origin_time) == instanceId)
+        if (Fmi::date_time::to_iso_extended_string(md.temporal_extent.origin_time) + "Z" ==
+            instanceId)
           return true;
     }
   }

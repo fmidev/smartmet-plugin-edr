@@ -37,3 +37,4 @@
 /tmp
 .gdbinit
 /smartmet-plugin-edr.tar.gz
+test/conformance/tmp/

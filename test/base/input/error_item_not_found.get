@@ -1,0 +1,2 @@
+GET /edr/collections/metar/items/EFHK_20151121T115000Z_1 HTTP/1.0
+X-Test-Headers: Content-Type

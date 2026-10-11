@@ -1,0 +1,340 @@
+{
+	"coverages" : 
+	[
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-08-05T12:00:00Z",
+								23.67692,
+								60.15677
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								24.00860,
+								60.32343
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								24.34027,
+								60.49010
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								24.67191,
+								60.65676
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								23.67692,
+								60.15677
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.00860,
+								60.32343
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.34027,
+								60.49010
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.67191,
+								60.65676
+							]
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						8
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						14.6,
+						15.0,
+						15.7,
+						16.5,
+						14.6,
+						15.0,
+						15.6,
+						16.3
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-08-05T12:00:00Z",
+								24.00000,
+								60.00000
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								24.33333,
+								60.16667
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								24.66667,
+								60.33333
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								25.00000,
+								60.50000
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.00000,
+								60.00000
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.33333,
+								60.16667
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.66667,
+								60.33333
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								25.00000,
+								60.50000
+							]
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						8
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						14.7,
+						14.4,
+						15.0,
+						16.1,
+						14.7,
+						14.5,
+						14.9,
+						15.8
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-08-05T12:00:00Z",
+								24.32003,
+								59.84245
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								24.65497,
+								60.00911
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								24.98994,
+								60.17578
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								25.32492,
+								60.34244
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.32003,
+								59.84245
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.65497,
+								60.00911
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								24.98994,
+								60.17578
+							],
+							[
+								"2008-08-05T13:00:00Z",
+								25.32492,
+								60.34244
+							]
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						8
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						14.7,
+						14.3,
+						14.8,
+						15.8,
+						14.8,
+						14.5,
+						14.8,
+						15.6
+					]
+				}
+			}
+		}
+	],
+	"domainType" : "Trajectory",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"x",
+				"y"
+			],
+			"system" : 
+			{
+				"id" : "OGC:CRS84",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "Temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	}
+}

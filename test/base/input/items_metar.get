@@ -1,0 +1,2 @@
+GET /edr/collections/metar/items?datetime=2015-11-21T11:00:00Z/2015-11-21T12:00:00Z&limit=3 HTTP/1.0
+X-Test-Headers: Content-Type,Link

@@ -1,0 +1,8 @@
+Status: 400
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "Time 2008-08-05T12:30:00Z is between the time steps of collection 'pal_skandinavia'"
+}

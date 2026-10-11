@@ -1,0 +1,2 @@
+GET /edr/collections/synop/area?coords=POLYGON((24+60,25+60,25+61,24+60))&datetime=2008-11-29T00:00:00Z&parameter-name=Temperature&resolution-x=4&resolution-y=4 HTTP/1.0
+X-Test-Headers: Content-Type

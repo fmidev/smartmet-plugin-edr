@@ -164,6 +164,20 @@ November 15, 2022, 12:00:00 UTC or earlier:
 ```
 datetime=../2022-11-15T12:00:00Z
 ```
+_Example 3 - Lists and repeating intervals_
+
+Data only at the listed times:
+```
+datetime=2022-11-15T06:00:00Z,2022-11-15T12:00:00Z,2022-11-15T18:00:00Z
+```
+Four times at three hour intervals starting at 06 UTC (`Rn/start/duration`, n times):
+```
+datetime=R4/2022-11-15T06:00:00Z/PT3H
+```
+
+Open interval ends extend to the start or the end of the data. Durations are not accepted as
+interval ends. Times without a UTC offset are interpreted as UTC. If datetime is not given,
+the time of the data closest to the current time is used.
 
 ### **Parameter parameter-name**
 
@@ -207,13 +221,135 @@ z=60/110
 ```
 If level is not specified all available levels are returned.
 
+_Example 4 - Open ranges and repeating intervals_
+
+Levels up to 700 and from 700 onwards, and 4 levels starting from 1000 with step -100:
+
+```
+z=../700
+z=700/..
+z=R4/1000/-100
+```
+
+The z parameter is ignored for collections without a vertical extent. It cannot be used
+together with LINESTRINGZ or LINESTRINGZM coordinates, which already define the levels.
+
 ### **Parameter crs**
 
-Currently only EPSG:4326 is supported, and it is also default crs, so no need to use this parameter.
+WGS84 longitude/latitude is the default and can be given for example as `OGC:CRS84`, `CRS84`
+or `http://www.opengis.net/def/crs/OGC/1.3/CRS84`. The other supported coordinate reference
+systems are listed in the `crs` and `crs_details` metadata of the collections, and can be given
+as `EPSG:3067`, `http://www.opengis.net/def/crs/EPSG/0/3067` or `urn:ogc:def:crs:EPSG::3067`.
+Unsupported values are rejected with status 400.
+
+The coordinates of `coords` and `bbox` are given in the requested CRS in the axis order of the
+CRS, except that `EPSG:4326` uses the longitude/latitude order like `OGC:CRS84`, as the OGC API
+EDR examples and test suite do. The CoverageJSON output
+coordinates are in the requested CRS too: the `x` axis is always the longitude or easting, and
+the referencing lists the coordinates in the axis order of the CRS. The grids of
+`resolution-x` and `resolution-y` are regular in the requested CRS. GeoJSON output is always in
+WGS84 longitude/latitude, as required by RFC 7946, and cannot be combined with another CRS.
+
+```
+/collections/pal_skandinavia/position?coords=POINT(385700 6672000)&crs=EPSG:3067&parameter-name=Temperature
+```
 
 ### **Parameter f**
 
-Currently only CovergeJSON is supported, and it is also default format, so no need to use this parameter.
+The output formats of a collection are listed in its `output_formats` metadata, for example
+`CoverageJSON` (media type `application/vnd.cov+json`) and `GeoJSON`
+(`application/geo+json`). The format names are case insensitive. Without the f parameter the
+format is selected with the HTTP `Accept` header, for example
+`Accept: application/geo+json`, and if the header accepts anything the collection's default
+format is used. If none of the accepted media types is available, the response is
+406 Not Acceptable.
+
+## Parameters resolution-x and resolution-y
+
+Area and cube queries on gridded collections can return the data on a regular
+longitude/latitude grid. `resolution-x` and `resolution-y` give the number of positions along
+the axis including the minimum and the maximum of the bounding box of the area (2-1000). The
+data is interpolated to the grid positions, and the CoverageJSON output is a single coverage
+with a `Grid` domain whose axes are `t`, `z` (if the collection has levels), `y` and `x`.
+Positions outside an area polygon have null values. The value 0 for both parameters means
+the native resolution, which is also the default. The parameters are not available for point
+data such as observations.
+
+```
+/collections/pal_skandinavia/area?coords=POLYGON((24 60,25 60,25 61,24 60))&parameter-name=Temperature&resolution-x=5&resolution-y=4
+```
+
+For corridor queries `resolution-x` is the number of positions along the path (2-1000) and
+`resolution-y` the number of positions across the corridor at equal offsets from one edge to
+the other (1-1000, 1 means the centre line only). The path must be a LINESTRING or
+LINESTRINGZ. The CoverageJSON output is a collection with one coverage for each offset across
+the corridor: a `Trajectory` along the path, or a `Section` with a `z` axis when the
+collection has levels.
+
+## Parameter resolution-z
+
+For cube and corridor queries `resolution-z` gives the number of levels (2-1000) from the
+minimum to the maximum of the requested vertical range: the `z` range of a cube, the
+`corridor-height` band of a corridor, or the whole vertical extent of the collection if
+neither is given. The data is interpolated to these levels. Interpolation is available for
+pressure and height levels of querydata collections; hybrid levels, observations and grid
+engine collections reject the parameter. The value 0 means the levels of the data.
+
+```
+/collections/ecmwf_skandinavia_painepinta/cube?bbox=24,60,25,61&z=500/1000&resolution-x=2&resolution-y=2&resolution-z=3&parameter-name=Temperature
+```
+
+## Items of aviation collections
+
+Aviation message collections (for example METAR and TAF) can offer their messages as items
+when `items` is enabled in the collection's data queries. `/collections/{collectionId}/items`
+returns a GeoJSON feature collection of the messages; each feature has the station or area
+geometry and the properties `datetime` (message time), `icao` and `message` (TAC). The
+items are selected by `datetime` (message time, by default the temporal extent of the
+collection) and `bbox` (`minlon,minlat,maxlon,maxlat`), and are paged with `limit` (default 10,
+at most 10000) and `offset`. The response contains `numberMatched`, `numberReturned` and
+`next`/`prev` links. A single message is available as `/collections/{collectionId}/items/{itemId}`,
+where the item id has the form `ICAO_messagetime_messageid`, for example
+`EFHK_20151121T115000Z_35927633`.
+
+## POST requests
+
+Data queries may also be sent with HTTP POST using a form encoded body
+(`Content-Type: application/x-www-form-urlencoded`) containing the same query parameters.
+
+## Link headers
+
+Data query responses carry an HTTP `Link` header (RFC 8288) with the same request in each
+output format of the collection (`self` and `alternate`) and the `collection`. This is the
+only way to get these links for formats without links in the body, such as CoverageJSON, TAC
+and IWXXM. The paged locations listing and the items responses list `self`, `next`, `prev`
+and `collection` links both in the body and in the `Link` header. Collection metadata
+responses have their (many) links in the body only.
+
+## Instances
+
+The instance identifiers are the origin times of the model runs as RFC 3339 times, for
+example `/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z`. Other notations of the
+same time, such as the earlier `20080805T063100`, are accepted too.
+
+For model data a `datetime` between the time steps of the model is an error (400), as
+required by the MetOcean profile. Intervals are not affected.
+
+## Errors
+
+A query inside the spatial extent of a collection which finds no data is answered with 204
+No Content; a query completely outside the extent is an error. Errors are reported with an
+`application/problem+json` body containing `title`, `status` and
+`detail`. The status is 404 for unknown collections, instances, locations and query types, 406
+for unsupported Accept headers, 413 for requests exceeding the configured limits, 503 for
+timeouts and 400 for other invalid requests.
+
+## Locations listing
+
+`/collections/{collectionId}/locations` lists the locations of a collection as a GeoJSON
+feature collection. The listing can be paged with `limit` (1-10000, larger values are reduced
+to 10000) and `offset`; the response contains `numberMatched`, `numberReturned` and `next`/`prev`
+links. Without `limit` all locations are returned.
 
 ## Position query
 

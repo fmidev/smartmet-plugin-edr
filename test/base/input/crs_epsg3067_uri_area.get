@@ -1,0 +1,1 @@
+GET /edr/collections/pal_skandinavia/area?coords=POLYGON((380000+6670000,400000+6670000,400000+6690000,380000+6690000,380000+6670000))&crs=http://www.opengis.net/def/crs/EPSG/0/3067&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0

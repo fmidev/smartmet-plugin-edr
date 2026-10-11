@@ -1,0 +1,24 @@
+{
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/locations?limit=10000&offset=27",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/locations?limit=10000",
+			"rel" : "prev",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"features" : [],
+	"numberMatched" : 27,
+	"numberReturned" : 0,
+	"type" : "FeatureCollection"
+}

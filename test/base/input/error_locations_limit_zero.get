@@ -1,0 +1,2 @@
+GET /edr/collections/synop/locations?limit=0 HTTP/1.0
+X-Test-Headers: Content-Type

@@ -1,4 +1,5 @@
 #include "GridEngineQuery.h"
+#include "EDRException.h"
 #include "GridInterface.h"
 #include "LocationTools.h"
 #include "PostProcessing.h"
@@ -252,6 +253,12 @@ bool GridEngineQuery::processGridEngineQuery(const State& state,
   {
     if (itsPlugin.itsConfig.gridEngineDisabled())
       return false;
+
+    // EDR resolution-z: the grid data is not interpolated to other than its own levels
+    if (!query.is_timeseries_query && (!query.pressures.empty() || !query.heights.empty()))
+      throw EDRException(
+          "Query parameter 'resolution-z' is not supported for grid data, its data is not "
+          "interpolated vertically");
 
     Fmi::DateTime latestTimestep = query.latestTimestep;
 

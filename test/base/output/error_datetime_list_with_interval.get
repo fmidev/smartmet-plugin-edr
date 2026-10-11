@@ -1,0 +1,8 @@
+Status: 400
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "Invalid 'datetime' list element '2008-08-05T06:00:00Z/2008-08-05T09:00:00Z', only date-times are allowed in a list"
+}

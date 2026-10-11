@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/corridor?coords=MULTILINESTRING((24+60,25+60.5),(26+61,27+61))&corridor-width=50&width-units=km&resolution-x=3&resolution-y=2&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0
+X-Test-Headers: Content-Type

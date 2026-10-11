@@ -58,6 +58,9 @@ enum class SourceEngine
 #define COVERAGE_JSON_FORMAT "CoverageJSON"
 #define GEO_JSON_FORMAT "GeoJSON"
 
+// CoverageJSON media type (OGC API-EDR /req/covjson/definition)
+#define COVERAGE_JSON_MIME_TYPE "application/vnd.cov+json"
+
 #define PROBLEM_DETAIL "problemdetail"
 
 std::string get_engine_name(SourceEngine source_engine);

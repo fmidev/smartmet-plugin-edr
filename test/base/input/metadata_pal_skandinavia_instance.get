@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/instances/20080805T063100 HTTP/1.0
+X-Test-Headers: Content-Type

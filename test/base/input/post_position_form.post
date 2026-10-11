@@ -1,0 +1,6 @@
+POST /edr/collections/pal_skandinavia/position HTTP/1.0
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 88
+X-Test-Headers: Content-Type
+
+coords=POINT(24.9384%2060.1699)&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature

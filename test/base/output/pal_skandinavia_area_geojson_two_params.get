@@ -1,4 +1,22 @@
 {
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area?coords=POLYGON%28%2824%2061%2C24%2061.5%2C24.5%2061.5%2C24.5%2061%2C24%2061%29%29&datetime=200808051200%2F200808051300&f=CoverageJSON&parameter-name=Temperature%2CPressure",
+			"rel" : "alternate",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/area?coords=POLYGON%28%2824%2061%2C24%2061.5%2C24.5%2061.5%2C24.5%2061%2C24%2061%29%29&datetime=200808051200%2F200808051300&f=GeoJSON&parameter-name=Temperature%2CPressure",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
 	"bbox" : 
 	[
 		24.17909,
@@ -28,13 +46,13 @@
 				],
 				"temperature" : 
 				[
-					16.1,
-					16.7
+					17.7,
+					17.6
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z",
-					"2008-08-05T10:00:00Z"
+					"2008-08-05T12:00:00Z",
+					"2008-08-05T13:00:00Z"
 				]
 			}
 		},
@@ -54,17 +72,17 @@
 				"pressure" : 
 				[
 					1007,
-					1007
+					1008
 				],
 				"temperature" : 
 				[
-					16.0,
-					16.6
+					17.8,
+					17.7
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z",
-					"2008-08-05T10:00:00Z"
+					"2008-08-05T12:00:00Z",
+					"2008-08-05T13:00:00Z"
 				]
 			}
 		},
@@ -83,18 +101,18 @@
 			{
 				"pressure" : 
 				[
-					1006,
+					1007,
 					1007
 				],
 				"temperature" : 
 				[
-					16.1,
-					16.6
+					17.3,
+					17.3
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z",
-					"2008-08-05T10:00:00Z"
+					"2008-08-05T12:00:00Z",
+					"2008-08-05T13:00:00Z"
 				]
 			}
 		},
@@ -113,18 +131,18 @@
 			{
 				"pressure" : 
 				[
-					1006,
+					1007,
 					1007
 				],
 				"temperature" : 
 				[
-					16.1,
-					16.6
+					17.4,
+					17.4
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z",
-					"2008-08-05T10:00:00Z"
+					"2008-08-05T12:00:00Z",
+					"2008-08-05T13:00:00Z"
 				]
 			}
 		},
@@ -144,17 +162,17 @@
 				"pressure" : 
 				[
 					1006,
-					1006
+					1007
 				],
 				"temperature" : 
 				[
-					16.1,
-					16.5
+					17.0,
+					17.1
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z",
-					"2008-08-05T10:00:00Z"
+					"2008-08-05T12:00:00Z",
+					"2008-08-05T13:00:00Z"
 				]
 			}
 		},
@@ -173,18 +191,18 @@
 			{
 				"pressure" : 
 				[
-					1006,
-					1006
+					1007,
+					1007
 				],
 				"temperature" : 
 				[
-					16.1,
-					16.5
+					17.1,
+					17.1
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z",
-					"2008-08-05T10:00:00Z"
+					"2008-08-05T12:00:00Z",
+					"2008-08-05T13:00:00Z"
 				]
 			}
 		}
@@ -193,48 +211,39 @@
 	[
 		{
 			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
 			"label" : "Temperature",
 			"type" : "Parameter",
-			"description" : 
-			{
-				"fi" : "Ilman lämpötila"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Temperature",
-				"label" : 
-				{
-					"fi" : "Temperature"
-				}
+				"label" : "Temperature"
 			},
 			"unit" : 
 			{
-				"label" : 
-				{
-					"fi" : "Celsius"
-				},
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : "Celsius",
 				"symbol" : 
 				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
 				}
 			}
 		},
 		{
 			"id" : "Pressure",
+			"description" : "Pintapaine",
 			"label" : "Pressure",
 			"type" : "Parameter",
-			"description" : 
-			{
-				"fi" : "Pintapaine"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Pressure",
-				"label" : 
-				{
-					"fi" : "Pressure"
-				}
+				"label" : "Pressure"
+			},
+			"unit" : 
+			{
+				"label" : "hehtopascal",
+				"symbol" : "hPa"
 			}
 		}
 	],

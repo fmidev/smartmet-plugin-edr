@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/trajectory?coords=LINESTRINGZ(385700+6672000+850,400000+6700000+700)&crs=EPSG:3067&datetime=2008-09-09T12:00:00Z&parameter-name=Temperature HTTP/1.0

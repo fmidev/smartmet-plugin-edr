@@ -1,0 +1,129 @@
+{
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items?limit=10&bbox=24%2C60%2C26%2C61&datetime=2015-11-21T11%3A00%3A00Z%2F2015-11-21T12%3A00%3A00Z",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"features" : 
+	[
+		{
+			"id" : "EFHF_20151121T112000Z_35933765",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFHF_20151121T112000Z_35933765",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.0451,
+					60.2535
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:20:00Z",
+				"icao" : "EFHF",
+				"message" : "EFHF 211120Z 25008KT 220V300 9999 BKN013 02/M01 Q0985="
+			}
+		},
+		{
+			"id" : "EFHK_20151121T112000Z_35931567",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFHK_20151121T112000Z_35931567",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.907,
+					60.3158
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:20:00Z",
+				"icao" : "EFHK",
+				"message" : "METAR EFHK 211120Z 25009KT 9999 VCSH FEW008 BKN012 01/M00 Q0985 TEMPO SCT011 BKN016="
+			}
+		},
+		{
+			"id" : "EFHF_20151121T115000Z_35938518",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFHF_20151121T115000Z_35938518",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.0451,
+					60.2535
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:50:00Z",
+				"icao" : "EFHF",
+				"message" : "EFHF 211150Z 25008KT 220V290 9999 BKN015 02/M01 Q0985="
+			}
+		},
+		{
+			"id" : "EFHK_20151121T115000Z_35937900",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFHK_20151121T115000Z_35937900",
+					"rel" : "self",
+					"type" : "application/geo+json"
+				}
+			],
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.907,
+					60.3158
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2015-11-21T11:50:00Z",
+				"icao" : "EFHK",
+				"message" : "METAR EFHK 211150Z 25010KT 9999 FEW010 BKN014 01/M00 Q0985 BECMG BKN015="
+			}
+		}
+	],
+	"numberMatched" : 4,
+	"numberReturned" : 4,
+	"type" : "FeatureCollection"
+}

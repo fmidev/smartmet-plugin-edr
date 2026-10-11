@@ -6,10 +6,13 @@
 // ======================================================================
 
 #pragma once
+#include "CRSSupport.h"
 
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
+#include <vector>
 
 namespace SmartMet
 {
@@ -44,8 +47,36 @@ enum class EDRQueryId
   SpecifiedCollectionAllInstances,
   SpecifiedCollectionSpecifiedInstance,
   SpecifiedCollectionLocations,
+  SpecifiedCollectionItems,
   DataQuery,
   APIQuery
+};
+
+// A regular longitude/latitude grid requested with resolution-x and resolution-y
+struct EDRGrid
+{
+  std::size_t nx = 0;  // number of positions along x including the minimum and maximum
+  std::size_t ny = 0;
+  double x0 = 0;
+  double x1 = 0;
+  double y0 = 0;
+  double y1 = 0;
+
+  bool active() const { return nx > 0 && ny > 0; }
+  double x(std::size_t i) const { return x0 + (x1 - x0) * double(i) / double(nx - 1); }
+  double y(std::size_t j) const { return y0 + (y1 - y0) * double(j) / double(ny - 1); }
+};
+
+// Corridor positions requested with resolution-x (along the path) and resolution-y (across)
+struct EDRCorridorGrid
+{
+  std::size_t nx = 0;
+  std::size_t ny = 0;
+  double width = 0;       // metres
+  std::vector<double> x;  // output coordinates, position (i,j) is at index j*nx+i
+  std::vector<double> y;
+
+  bool active() const { return nx > 0 && ny > 0; }
 };
 
 struct EDRQuery
@@ -54,9 +85,27 @@ struct EDRQuery
   std::string collection_id;
   std::string instance_id;
   std::string location_id;
+  std::string item_id;
+  std::string bbox;      // items query filter
+  std::string datetime;  // items query filter
   EDRQueryType query_type{EDRQueryType::InvalidQueryType};  // query type in the request
   EDRQueryId query_id{EDRQueryId::DataQuery};
   std::string language;
+  // The requested CRS of the coordinates if other than CRS84
+  CRSInfoPtr crs;
+  // The supported CRSs for the metadata
+  const CRSRegistry *crs_registry = nullptr;
+
+  // Area and cube queries on a regular grid (resolution-x, resolution-y)
+  EDRGrid grid;
+  // Corridor queries with resolution-x and resolution-y
+  EDRCorridorGrid corridor_grid;
+
+  // Paging of the locations listing (OGC API-EDR limit parameter), no limit by default
+  std::optional<std::size_t> limit;
+  std::size_t offset = 0;
+  // Request URLs of a data query for each output format of the collection (for links)
+  std::map<std::string, std::string> format_urls;
 };
 
 std::string to_string(EDRQueryType query_type);

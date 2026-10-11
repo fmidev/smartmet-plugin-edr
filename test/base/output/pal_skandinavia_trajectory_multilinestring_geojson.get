@@ -1,4 +1,22 @@
 {
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/trajectory?coords=MULTILINESTRING%28%2824.1%2061.1%2C25.2%2062.2%29%2C%2826.3%2063.3%2C27.4%2064.4%29%29&datetime=200808051200&f=CoverageJSON&parameter-name=Temperature",
+			"rel" : "alternate",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/trajectory?coords=MULTILINESTRING%28%2824.1%2061.1%2C25.2%2062.2%29%2C%2826.3%2063.3%2C27.4%2064.4%29%29&datetime=200808051200&f=GeoJSON&parameter-name=Temperature",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
 	"bbox" : 
 	[
 		24.10000,
@@ -23,11 +41,11 @@
 			{
 				"temperature" : 
 				[
-					13.9
+					14.3
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z"
+					"2008-08-05T12:00:00Z"
 				]
 			}
 		},
@@ -46,11 +64,11 @@
 			{
 				"temperature" : 
 				[
-					16.1
+					17.1
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z"
+					"2008-08-05T12:00:00Z"
 				]
 			}
 		},
@@ -69,11 +87,11 @@
 			{
 				"temperature" : 
 				[
-					15.6
+					17.2
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z"
+					"2008-08-05T12:00:00Z"
 				]
 			}
 		},
@@ -92,11 +110,11 @@
 			{
 				"temperature" : 
 				[
-					15.3
+					16.0
 				],
 				"time" : 
 				[
-					"2008-08-05T09:00:00Z"
+					"2008-08-05T12:00:00Z"
 				]
 			}
 		}
@@ -105,30 +123,22 @@
 	[
 		{
 			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
 			"label" : "Temperature",
 			"type" : "Parameter",
-			"description" : 
-			{
-				"fi" : "Ilman lämpötila"
-			},
 			"observedProperty" : 
 			{
 				"id" : "Temperature",
-				"label" : 
-				{
-					"fi" : "Temperature"
-				}
+				"label" : "Temperature"
 			},
 			"unit" : 
 			{
-				"label" : 
-				{
-					"fi" : "Celsius"
-				},
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : "Celsius",
 				"symbol" : 
 				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
 				}
 			}
 		}

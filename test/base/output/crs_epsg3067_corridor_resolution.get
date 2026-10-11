@@ -1,0 +1,190 @@
+{
+	"coverages" : 
+	[
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-08-05T12:00:00Z",
+								381230.25,
+								6674275.36
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								388402.05,
+								6688260.41
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								395522.15,
+								6702259.16
+							]
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						3
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						14.6,
+						15.2,
+						15.9
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-08-05T12:00:00Z",
+								390169.70,
+								6669724.71
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								397349.60,
+								6683725.94
+							],
+							[
+								"2008-08-05T12:00:00Z",
+								404477.80,
+								6697740.91
+							]
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						3
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						14.8,
+						15.4,
+						15.9
+					]
+				}
+			}
+		}
+	],
+	"domainType" : "Trajectory",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"x",
+				"y"
+			],
+			"system" : 
+			{
+				"id" : "EPSG:3067",
+				"type" : "ProjectedCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "Temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	}
+}

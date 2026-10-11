@@ -1,0 +1,82 @@
+Status: 200
+Content-Type: application/geo+json
+Vary: (none)
+
+{
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position?coords=POINT%2824.9384%2060.1699%29&datetime=2008-08-05T12%3A00%3A00Z&f=CoverageJSON&parameter-name=Temperature",
+			"rel" : "alternate",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/position?coords=POINT%2824.9384%2060.1699%29&datetime=2008-08-05T12%3A00%3A00Z&f=GeoJSON&parameter-name=Temperature",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"bbox" : 
+	[
+		24.93840,
+		60.16990,
+		24.93840,
+		60.16990
+	],
+	"features" : 
+	[
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					24.93840,
+					60.16990
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"temperature" : 
+				[
+					14.7
+				],
+				"time" : 
+				[
+					"2008-08-05T12:00:00Z"
+				]
+			}
+		}
+	],
+	"parameters" : 
+	[
+		{
+			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
+			"label" : "Temperature",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : "Temperature"
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : "Celsius",
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	],
+	"type" : "FeatureCollection"
+}

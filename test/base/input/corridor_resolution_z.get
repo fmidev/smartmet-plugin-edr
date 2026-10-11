@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/corridor?coords=LINESTRING(24.9+60.2,25.0+60.25)&corridor-width=50&width-units=km&z=700&corridor-height=200&height-units=hPa&resolution-z=3&datetime=2008-09-09T12:00:00Z&parameter-name=Temperature HTTP/1.0

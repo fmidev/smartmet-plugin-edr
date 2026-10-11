@@ -1,6 +1,7 @@
 #include "CoordinateFilter.h"
 #include <macgyver/DateTime.h>
 #include <macgyver/StringConversion.h>
+#include <cmath>
 
 namespace SmartMet
 {
@@ -63,12 +64,14 @@ void CoordinateFilter::add(double longitude, double latitude, double level)
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedLevels[lonlat].insert(level);
+  addPosition(lonlat);
 }
 
 void CoordinateFilter::add(double longitude, double latitude, const Fmi::DateTime &timestep)
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedTimesteps[lonlat].insert(timestep);
+  addPosition(lonlat);
 }
 
 void CoordinateFilter::add(double longitude,
@@ -78,6 +81,55 @@ void CoordinateFilter::add(double longitude,
 {
   LonLat lonlat(longitude, latitude);
   itsAllowedLevelsTimesteps[lonlat].insert(std::make_pair(level, timestep));
+  addPosition(lonlat);
+}
+
+// Coordinates are compared with a tolerance since the output coordinates may have been
+// stored with a lower precision (e.g. as floats) than the requested coordinates
+
+void CoordinateFilter::setTolerance(double tolerance)
+{
+  itsTolerance = tolerance;
+  itsBuckets.clear();
+  for (const auto &item : itsPositions)
+    itsBuckets.insert(std::make_pair(bucket(item.first), item.first));
+}
+
+CoordinateFilter::Bucket CoordinateFilter::bucket(const LonLat &lonlat) const
+{
+  return {std::lround(std::floor(lonlat.first / itsTolerance)),
+          std::lround(std::floor(lonlat.second / itsTolerance))};
+}
+
+void CoordinateFilter::addPosition(const LonLat &lonlat)
+{
+  // The first occurrence of a coordinate decides
+  if (itsPositions.insert(std::make_pair(lonlat, itsPositions.size())).second)
+    itsBuckets.insert(std::make_pair(bucket(lonlat), lonlat));
+}
+
+std::optional<CoordinateFilter::LonLat> CoordinateFilter::match(const LonLat &lonlat) const
+{
+  // A coordinate within the tolerance is in the same or a neighbouring bucket
+  const auto center = bucket(lonlat);
+  for (long dx = -1; dx <= 1; dx++)
+    for (long dy = -1; dy <= 1; dy++)
+    {
+      auto range = itsBuckets.equal_range(Bucket(center.first + dx, center.second + dy));
+      for (auto it = range.first; it != range.second; ++it)
+        if (std::abs(it->second.first - lonlat.first) < itsTolerance &&
+            std::abs(it->second.second - lonlat.second) < itsTolerance)
+          return it->second;
+    }
+  return {};
+}
+
+std::optional<std::size_t> CoordinateFilter::position(double longitude, double latitude) const
+{
+  auto it = find(itsPositions, LonLat(longitude, latitude));
+  if (it == itsPositions.end())
+    return {};
+  return it->second;
 }
 
 bool CoordinateFilter::isEmpty() const
@@ -150,10 +202,11 @@ bool CoordinateFilter::accept(double longitude,
 
   if (!itsAllowedLevelsTimesteps.empty())
   {
-    if (itsAllowedLevelsTimesteps.find(lonlat) == itsAllowedLevelsTimesteps.end())
+    auto it = find(itsAllowedLevelsTimesteps, lonlat);
+    if (it == itsAllowedLevelsTimesteps.end())
       return false;
 
-    const auto &level_time_pairs = itsAllowedLevelsTimesteps.at(lonlat);
+    const auto &level_time_pairs = it->second;
 
     for (const auto &item : level_time_pairs)
     {
@@ -163,19 +216,21 @@ bool CoordinateFilter::accept(double longitude,
   }
   else if (!itsAllowedLevels.empty())
   {
-    if (itsAllowedLevels.find(lonlat) == itsAllowedLevels.end())
+    auto it = find(itsAllowedLevels, lonlat);
+    if (it == itsAllowedLevels.end())
       return false;
 
-    const auto &levels = itsAllowedLevels.at(lonlat);
+    const auto &levels = it->second;
 
     return (levels.find(level) != levels.end());
   }
   else if (!itsAllowedTimesteps.empty())
   {
-    if (itsAllowedTimesteps.find(lonlat) == itsAllowedTimesteps.end())
+    auto it = find(itsAllowedTimesteps, lonlat);
+    if (it == itsAllowedTimesteps.end())
       return false;
 
-    const auto &timesteps = itsAllowedTimesteps.at(lonlat);
+    const auto &timesteps = it->second;
 
     return (timesteps.find(timestep) != timesteps.end());
   }

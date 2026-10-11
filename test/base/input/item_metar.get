@@ -1,0 +1,2 @@
+GET /edr/collections/metar/items/EFTU_20151121T110000Z_35927633 HTTP/1.0
+X-Test-Headers: Content-Type,Link

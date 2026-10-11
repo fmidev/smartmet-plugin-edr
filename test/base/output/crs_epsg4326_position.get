@@ -1,0 +1,119 @@
+{
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "PointSeries",
+		"referencing" : 
+		[
+			{
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
+				{
+					"id" : "EPSG:4326",
+					"type" : "GeographicCRS"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
+				{
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
+				}
+			}
+		],
+		"type" : "Domain",
+		"axes" : 
+		{
+			"t" : 
+			{
+				"values" : 
+				[
+					"2008-08-05T12:00:00Z"
+				]
+			},
+			"x" : 
+			{
+				"values" : 
+				[
+					24.93840
+				]
+			},
+			"y" : 
+			{
+				"values" : 
+				[
+					60.16990
+				]
+			}
+		}
+	},
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "Temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"y",
+				"x"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				14.7
+			]
+		}
+	}
+}

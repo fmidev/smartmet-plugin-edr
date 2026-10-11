@@ -1,0 +1,36 @@
+Status: 200
+Content-Type: application/geo+json
+Link: <http://smartmet.fmi.fi/edr/collections/metar/items/EFTU_20151121T110000Z_35927633>; rel="self"; type="application/geo+json", <http://smartmet.fmi.fi/edr/collections/metar>; rel="collection"; type="application/json"
+
+{
+	"id" : "EFTU_20151121T110000Z_35927633",
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar/items/EFTU_20151121T110000Z_35927633",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/metar",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"type" : "Feature",
+	"geometry" : 
+	{
+		"coordinates" : 
+		[
+			22.2792,
+			60.5157
+		],
+		"type" : "Point"
+	},
+	"properties" : 
+	{
+		"datetime" : "2015-11-21T11:00:00Z",
+		"icao" : "EFTU",
+		"message" : "SPECI EFTU 211100Z AUTO 31010KT 9999 -RASN BKN005/// OVC014/// 01/01 Q0986 R08/29//95="
+	}
+}

@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.11
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -78,7 +78,7 @@ Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
 #TestRequires: smartmet-library-spine >= 26.10.3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.9.29
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.11-1
 #TestRequires: smartmet-library-newbase-devel >= 26.10.8
 #TestRequires: redis
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -88,9 +88,9 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-avi >= 26.10.3
 #TestRequires: smartmet-engine-geonames >= 26.10.3
 #TestRequires: smartmet-engine-gis >= 26.9.26
-#TestRequires: smartmet-engine-querydata >= 26.10.3
+#TestRequires: smartmet-engine-querydata >= 26.10.11-1
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.3
+#TestRequires: smartmet-engine-observation >= 26.10.11-2
 %endif
 #TestRequires: smartmet-engine-grid >= 26.10.3
 #TestRequires: gdal312-libs
@@ -121,6 +121,52 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-2.fmi
+- OGC API-EDR 1.2 and CoverageJSON conformance fixes:
+  - CoverageJSON media type application/vnd.cov+json, output format selection with the
+    Accept header when f is missing (406 if nothing acceptable), f is case insensitive
+  - Errors are reported with 404, 406, 413 and 503 where appropriate instead of 400
+  - Collection and instance metadata link to the query end points; corridor
+    width_units/height_units, cube height_units, multiple_locations; CRS84 URI as the
+    spatial extent CRS, fixed TIMECRS WKT, WKT2 vertical reference systems
+  - CoverageJSON z axes are referenced with proper VerticalCRS objects instead of a
+    'TODO' placeholder, axis order t, z, y, x
+  - datetime lists, repeating intervals and open intervals; times without an offset are UTC
+  - open z ranges, crs aliases, unknown parameter names and Z/M coordinate conflicts are
+    rejected as required
+  - LINESTRINGZ/ZM trajectories are one coverage, waypoints with extra decimals are no
+    longer dropped
+  - GeoJSON responses have links, parameters use plain strings, configurable unit id and
+    plain unit symbols
+  - Paging of the locations listing with limit and offset
+  - resolution-x and resolution-y for area and cube queries on gridded data return a
+    CoverageJSON Grid domain coverage; for corridors they sample positions along and across
+    the path and return Trajectory or Section coverages
+  - resolution-z interpolates cube and corridor data vertically (querydata pressure and
+    height levels)
+  - Link headers for data responses, the paged locations listing and items
+  - within-units and width-units accept m; GeoJSON accepts geographic CRSs such as EPSG:4326
+  - /conformance also declares the EDR 1.0 classes, collections without time periods have
+    no temporal extent instead of an invalid [null,null] interval
+  - MetOcean profile: extent CRS OGC:CRS84 and trs Gregorian, CoverageJSON referencing ids
+    OGC:CRS84 or the crs parameter value, RFC 3339 instance ids (old ids accepted), 400 for a
+    datetime between model time steps, 204 for no data inside the extent
+  - EPSG:4326 coordinates are longitude/latitude like CRS84
+  - Cube queries are advertised for collections without levels too, parameters without a
+    configured unit use the unit reported by the engine
+  - Data queries may be sent with form encoded POST
+  - The crs parameter supports the CRSs listed in the new crs setting: coordinates and
+    bounding boxes are transformed from the requested CRS, CoverageJSON output coordinates
+    are reprojected to it
+  - Items query for aviation collections: messages as GeoJSON features with datetime and
+    bbox filtering and paging, single messages by item id
+  - /conformance declares EDR 1.2
+- The API documents are no longer cached per Host header
+- Request size limits for interpolated grids (positions times levels) and the items time
+  range, faster area and coordinate matching, format links omit credential parameters,
+  error headers contain printable characters only
+- Tests require spine-plugin-test >= 26.10.11-1, querydata >= 26.10.11-1 and observation >= 26.10.11-2
+
 * Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-1.fmi
 - Invalid numbers are now detected instead of silently becoming 0 or a numeric prefix
 

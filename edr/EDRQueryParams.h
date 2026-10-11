@@ -3,8 +3,11 @@
 #include "Config.h"
 #include "CoordinateFilter.h"
 #include "EDRQuery.h"
+#include "Links.h"
 #include "State.h"
+#include <macgyver/DateTime.h>
 #include <spine/HTTP.h>
+#include <set>
 
 namespace SmartMet
 {
@@ -24,6 +27,13 @@ class EDRQueryParams
   const EDRQuery& edrQuery() const { return itsEDRQuery; }
   bool isEDRMetaDataQuery() const { return itsEDRQuery.query_id != EDRQueryId::DataQuery; }
   const CoordinateFilter& coordinateFilter() const { return itsCoordinateFilter; }
+
+  // Times listed in the datetime parameter (a list or a repeating interval), the output
+  // is limited to these times. Empty if the datetime is a single time or an interval.
+  const std::set<Fmi::DateTime>& dateTimeList() const { return itsDateTimeList; }
+
+  // Links of the response for the Link header, collected while processing the request
+  Links responseLinks;
 
   std::vector<std::string> icaos;
   std::string requestWKT;
@@ -62,13 +72,26 @@ class EDRQueryParams
   std::string parsePosition(const std::string& coords);
   std::string parseTrajectoryAndCorridor(const std::string& coords);
   void parseLocations(const EDRMetaData& emd, std::string& coords);
-  void parseCube();
+  void parseCube(const EDRMetaData& emd);
   void parseDateTime(const State& state, const std::string& producer, const EDRMetaData& emd);
+  void parseDateTimeList(const std::string& datetime);
+  void checkModelTimeStep(const EDRMetaData& emd, const Fmi::DateTime& t) const;
+  void parseLimitAndOffset();
+  void parseItemsQuery(const EDRMetaData& emd, const Config& config);
+  void parseResolution(const EDRMetaData& emd, const Config& config);
+  void parseResolutionZ(const EDRMetaData& emd, const Config& config);
+  void parseCorridorResolution(std::size_t nx, std::size_t ny);
   std::string parseParameterNamesAndZ(const State& state,
                                       const EDRMetaData& emd,
                                       bool grid_producer,
                                       bool& noReqParams,
                                       const CustomDimensions& customDimensions);
+  std::string parseParameterNames(const State& state,
+                                  const EDRMetaData& emd,
+                                  bool grid_producer,
+                                  bool& noReqParams,
+                                  const CustomDimensions& customDimensions,
+                                  const std::string& z);
   std::string cleanParameterNames(const std::string& parameter_names,
                                   const EDRMetaData& emd,
                                   bool grid_producer,
@@ -91,6 +114,9 @@ class EDRQueryParams
 
   EDRQuery itsEDRQuery;
   CoordinateFilter itsCoordinateFilter;
+  std::set<Fmi::DateTime> itsDateTimeList;
+  std::string itsRequestXYWkt;  // the area or path in the requested CRS (x/y order)
+  std::vector<double> itsInterpolatedLevels;  // resolution-z levels in the collection units
   std::string mime_type;
 };
 

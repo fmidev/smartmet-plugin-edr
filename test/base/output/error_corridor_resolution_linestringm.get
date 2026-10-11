@@ -1,0 +1,8 @@
+Status: 400
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "Query parameters 'resolution-x' and 'resolution-y' cannot be used with LINESTRINGM or LINESTRINGZM coordinates"
+}

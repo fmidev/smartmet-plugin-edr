@@ -378,6 +378,15 @@ bool parseRangeListValue(std::string& valueStr,
       loValue = boost::algorithm::trim_copy(parts[0]);
       hiValue = boost::algorithm::trim_copy(parts[1]);
 
+      // Open ranges ../hi and lo/.. (OGC API-EDR z parameter) extend to all levels
+      if (repeat == 0)
+      {
+        if (loValue == "..")
+          loValue = "-1e10";
+        if (hiValue == "..")
+          hiValue = "1e10";
+      }
+
       if (loValue.empty() || hiValue.empty() || (repeat > maxRepeat) ||
           ((repeat == 0) && (Fmi::stod(loValue) > Fmi::stod(hiValue))))
         throw Fmi::Exception(BCP, "");
@@ -508,6 +517,21 @@ std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d)
   {
     throw Fmi::Exception(BCP, "Operation failed!", nullptr);
   }
+}
+
+std::string output_format_mime_type(const std::string& output_format)
+{
+  if (output_format == COVERAGE_JSON_FORMAT)
+    return COVERAGE_JSON_MIME_TYPE;
+  if (output_format == GEO_JSON_FORMAT)
+    return "application/geo+json";
+  if (output_format == IWXXM_FORMAT)
+    return "text/xml";
+  if (output_format == IWXXMZIP_FORMAT)
+    return "application/zip";
+  if (output_format == TAC_FORMAT)
+    return "text/plain";
+  return "application/json";
 }
 
 }  // namespace UtilityFunctions

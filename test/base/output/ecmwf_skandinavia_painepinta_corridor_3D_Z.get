@@ -12,7 +12,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -44,10 +44,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -60,7 +60,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-41.9
+						-42.1
 					]
 				}
 			}
@@ -76,7 +76,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -108,10 +108,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -140,7 +140,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -172,10 +172,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -188,7 +188,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.1
+						-41.9
 					]
 				}
 			}
@@ -204,7 +204,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -236,10 +236,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -252,7 +252,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.0
+						-41.9
 					]
 				}
 			}
@@ -268,7 +268,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -300,10 +300,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -316,7 +316,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-41.9
+						-41.8
 					]
 				}
 			}
@@ -332,7 +332,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -364,10 +364,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -380,7 +380,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-41.8
+						-41.7
 					]
 				}
 			}
@@ -396,7 +396,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -428,10 +428,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -444,7 +444,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.2
+						-42.0
 					]
 				}
 			}
@@ -460,7 +460,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -492,10 +492,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -508,7 +508,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.1
+						-42.0
 					]
 				}
 			}
@@ -524,7 +524,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -556,10 +556,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -572,7 +572,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.1
+						-41.9
 					]
 				}
 			}
@@ -588,7 +588,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -620,10 +620,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -636,7 +636,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.1
+						-41.9
 					]
 				}
 			}
@@ -652,7 +652,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -684,10 +684,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -700,7 +700,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.0
+						-41.9
 					]
 				}
 			}
@@ -716,7 +716,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -748,10 +748,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -764,7 +764,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-41.9
+						-41.8
 					]
 				}
 			}
@@ -780,7 +780,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -812,10 +812,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -828,7 +828,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-41.8
+						-41.7
 					]
 				}
 			}
@@ -844,7 +844,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -876,10 +876,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -892,7 +892,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.3
+						-42.0
 					]
 				}
 			}
@@ -908,7 +908,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -940,10 +940,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -956,7 +956,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.2
+						-41.9
 					]
 				}
 			}
@@ -972,7 +972,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1004,10 +1004,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1020,7 +1020,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.0
+						-41.8
 					]
 				}
 			}
@@ -1036,7 +1036,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1068,10 +1068,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1084,7 +1084,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-41.9
+						-41.8
 					]
 				}
 			}
@@ -1100,7 +1100,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1132,10 +1132,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1148,7 +1148,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-41.8
+						-41.9
 					]
 				}
 			}
@@ -1164,7 +1164,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1196,10 +1196,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1212,7 +1212,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.0
+						-41.9
 					]
 				}
 			}
@@ -1228,7 +1228,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1260,10 +1260,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1292,7 +1292,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1324,10 +1324,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1340,7 +1340,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.3
+						-41.8
 					]
 				}
 			}
@@ -1356,7 +1356,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1388,10 +1388,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1404,7 +1404,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.3
+						-41.9
 					]
 				}
 			}
@@ -1420,7 +1420,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1452,10 +1452,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1468,7 +1468,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.6
+						-42.1
 					]
 				}
 			}
@@ -1484,7 +1484,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1516,10 +1516,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1532,7 +1532,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.4
+						-42.0
 					]
 				}
 			}
@@ -1548,7 +1548,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1580,10 +1580,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1596,7 +1596,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.5
+						-42.1
 					]
 				}
 			}
@@ -1612,7 +1612,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1644,10 +1644,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1660,7 +1660,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.4
+						-42.0
 					]
 				}
 			}
@@ -1676,7 +1676,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1708,10 +1708,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1724,7 +1724,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.2
+						-41.9
 					]
 				}
 			}
@@ -1740,7 +1740,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1772,10 +1772,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1788,7 +1788,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.1
+						-41.8
 					]
 				}
 			}
@@ -1804,7 +1804,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1836,10 +1836,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1852,7 +1852,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.3
+						-42.0
 					]
 				}
 			}
@@ -1868,7 +1868,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1900,10 +1900,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1916,7 +1916,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.2
+						-42.0
 					]
 				}
 			}
@@ -1932,7 +1932,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -1964,10 +1964,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -1980,7 +1980,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.1
+						-41.9
 					]
 				}
 			}
@@ -1996,7 +1996,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2028,10 +2028,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2044,7 +2044,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.0
+						-41.9
 					]
 				}
 			}
@@ -2060,7 +2060,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2092,10 +2092,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2124,7 +2124,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2156,10 +2156,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2172,7 +2172,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.0
+						-42.2
 					]
 				}
 			}
@@ -2188,7 +2188,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2220,10 +2220,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2236,7 +2236,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.1
+						-42.4
 					]
 				}
 			}
@@ -2252,7 +2252,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2284,10 +2284,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2316,7 +2316,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2348,10 +2348,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2364,7 +2364,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.3
+						-42.4
 					]
 				}
 			}
@@ -2380,7 +2380,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2412,10 +2412,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2428,7 +2428,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.4
+						-42.5
 					]
 				}
 			}
@@ -2444,7 +2444,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2476,10 +2476,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2492,7 +2492,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.5
+						-42.7
 					]
 				}
 			}
@@ -2508,7 +2508,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2540,10 +2540,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2556,7 +2556,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-42.8
+						-42.9
 					]
 				}
 			}
@@ -2572,7 +2572,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2604,10 +2604,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -2620,7 +2620,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.9
+						-14.7
 					]
 				}
 			}
@@ -2636,7 +2636,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -2668,842 +2668,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.7
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							23.45970
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.06566
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
 						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.5
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.15677
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.04250
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.1
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.85262
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.01511
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-12.9
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.54703
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							59.98351
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-12.6
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							21.38051
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.46919
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-14.0
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							22.08895
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.45861
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.9
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							22.79675
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.44372
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-14.0
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							23.50369
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.42452
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.9
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.20957
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.40103
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.6
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							24.91417
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.37325
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.3
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.61729
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.34120
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-13.1
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							22.11590
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.81855
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						-14.1
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-09-09T09:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							22.83280
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.80344
-						]
-					},
-					"z" : 
-					{
-						"values" : 
-						[
-							500
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"x",
-						"y",
-						"z",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3532,7 +2700,839 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							23.45970
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.06566
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.9
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							24.15677
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.04250
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.6
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							24.85262
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.01511
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.2
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							25.54703
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							59.98351
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-12.9
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							21.38051
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.46919
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-14.3
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							22.08895
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.45861
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-14.1
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							22.79675
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.44372
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.9
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							23.50369
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.42452
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.8
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							24.20957
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.40103
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.6
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							24.91417
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.37325
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.4
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							25.61729
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.34120
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.1
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							22.11590
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.81855
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-14.1
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							22.83280
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.80344
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-14.0
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -3564,10 +3564,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3580,7 +3580,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.8
+						-13.7
 					]
 				}
 			}
@@ -3596,7 +3596,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -3628,10 +3628,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3660,7 +3660,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -3692,10 +3692,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3708,7 +3708,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.4
+						-13.2
 					]
 				}
 			}
@@ -3724,7 +3724,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -3756,10 +3756,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3772,7 +3772,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.6
+						-13.5
 					]
 				}
 			}
@@ -3788,7 +3788,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -3820,10 +3820,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3836,7 +3836,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.5
+						-13.4
 					]
 				}
 			}
@@ -3852,7 +3852,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -3884,10 +3884,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3900,7 +3900,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.6
+						-13.7
 					]
 				}
 			}
@@ -3916,7 +3916,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -3948,10 +3948,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -3980,7 +3980,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4012,10 +4012,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4044,7 +4044,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4076,10 +4076,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4092,7 +4092,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.6
+						-13.5
 					]
 				}
 			}
@@ -4108,7 +4108,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4140,10 +4140,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4156,7 +4156,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.9
+						-13.6
 					]
 				}
 			}
@@ -4172,7 +4172,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4204,10 +4204,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4220,7 +4220,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.0
+						-13.5
 					]
 				}
 			}
@@ -4236,7 +4236,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4268,10 +4268,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4284,7 +4284,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.0
+						-13.5
 					]
 				}
 			}
@@ -4300,7 +4300,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4332,10 +4332,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4348,7 +4348,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.1
+						-13.5
 					]
 				}
 			}
@@ -4364,7 +4364,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4396,10 +4396,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4412,7 +4412,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.1
+						-13.4
 					]
 				}
 			}
@@ -4428,7 +4428,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4460,10 +4460,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4476,7 +4476,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.1
+						-13.4
 					]
 				}
 			}
@@ -4492,7 +4492,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4524,10 +4524,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4540,7 +4540,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.0
+						-13.4
 					]
 				}
 			}
@@ -4556,7 +4556,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4588,10 +4588,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4604,7 +4604,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.0
+						-13.5
 					]
 				}
 			}
@@ -4620,7 +4620,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4652,10 +4652,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4668,7 +4668,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.1
+						-13.7
 					]
 				}
 			}
@@ -4684,7 +4684,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4716,10 +4716,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4732,7 +4732,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.4
+						-14.0
 					]
 				}
 			}
@@ -4748,7 +4748,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4780,10 +4780,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4796,7 +4796,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.8
+						-14.3
 					]
 				}
 			}
@@ -4812,7 +4812,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4844,10 +4844,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4860,7 +4860,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-13.7
+						-13.6
 					]
 				}
 			}
@@ -4876,7 +4876,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4908,10 +4908,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4940,7 +4940,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -4972,10 +4972,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -4988,7 +4988,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.3
+						-14.2
 					]
 				}
 			}
@@ -5004,7 +5004,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5036,10 +5036,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5052,7 +5052,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-14.8
+						-14.4
 					]
 				}
 			}
@@ -5068,7 +5068,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5100,10 +5100,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5116,7 +5116,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-15.0
+						-14.4
 					]
 				}
 			}
@@ -5132,7 +5132,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5164,10 +5164,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5180,7 +5180,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.9
+						-0.8
 					]
 				}
 			}
@@ -5196,7 +5196,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5228,10 +5228,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5244,7 +5244,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.3
+						-0.2
 					]
 				}
 			}
@@ -5260,7 +5260,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5292,10 +5292,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5308,7 +5308,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.0
+						0.1
 					]
 				}
 			}
@@ -5324,7 +5324,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5356,10 +5356,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5372,7 +5372,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.4
+						0.3
 					]
 				}
 			}
@@ -5388,7 +5388,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5420,10 +5420,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5436,7 +5436,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.7
+						0.5
 					]
 				}
 			}
@@ -5452,7 +5452,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5484,10 +5484,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5500,7 +5500,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.8
+						0.5
 					]
 				}
 			}
@@ -5516,7 +5516,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5548,10 +5548,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5564,7 +5564,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-1.7
+						-1.9
 					]
 				}
 			}
@@ -5580,7 +5580,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5612,10 +5612,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5628,7 +5628,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.9
+						-1.2
 					]
 				}
 			}
@@ -5644,7 +5644,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5676,10 +5676,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5692,7 +5692,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.2
+						-0.5
 					]
 				}
 			}
@@ -5708,7 +5708,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5740,10 +5740,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5756,7 +5756,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.2
+						-0.1
 					]
 				}
 			}
@@ -5772,7 +5772,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5804,10 +5804,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5820,7 +5820,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.6
+						0.2
 					]
 				}
 			}
@@ -5836,7 +5836,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5868,10 +5868,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5884,7 +5884,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.8
+						0.4
 					]
 				}
 			}
@@ -5900,7 +5900,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5932,10 +5932,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -5948,7 +5948,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						1.0
+						0.5
 					]
 				}
 			}
@@ -5964,7 +5964,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -5996,10 +5996,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6012,7 +6012,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.6
+						-1.0
 					]
 				}
 			}
@@ -6028,7 +6028,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6060,10 +6060,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6076,7 +6076,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.2
+						-0.4
 					]
 				}
 			}
@@ -6092,7 +6092,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6124,10 +6124,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6140,7 +6140,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.7
+						0.2
 					]
 				}
 			}
@@ -6156,7 +6156,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6188,10 +6188,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6204,7 +6204,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						1.0
+						0.4
 					]
 				}
 			}
@@ -6220,7 +6220,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6252,10 +6252,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6268,7 +6268,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						1.3
+						0.7
 					]
 				}
 			}
@@ -6284,7 +6284,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6316,10 +6316,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6332,7 +6332,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						1.3
+						0.9
 					]
 				}
 			}
@@ -6348,7 +6348,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6380,10 +6380,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6396,7 +6396,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						1.4
+						1.1
 					]
 				}
 			}
@@ -6412,7 +6412,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6444,10 +6444,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6476,7 +6476,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6508,10 +6508,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6524,7 +6524,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						1.1
+						0.9
 					]
 				}
 			}
@@ -6540,7 +6540,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6572,10 +6572,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6588,7 +6588,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.7
+						0.5
 					]
 				}
 			}
@@ -6604,7 +6604,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6636,10 +6636,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6652,7 +6652,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.6
+						0.3
 					]
 				}
 			}
@@ -6668,7 +6668,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6700,10 +6700,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6716,7 +6716,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.4
+						-0.2
 					]
 				}
 			}
@@ -6732,7 +6732,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6764,10 +6764,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6780,7 +6780,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.2
+						-0.4
 					]
 				}
 			}
@@ -6796,7 +6796,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6828,10 +6828,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6844,7 +6844,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.0
+						-0.6
 					]
 				}
 			}
@@ -6860,7 +6860,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6892,10 +6892,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6908,7 +6908,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.2
+						-0.8
 					]
 				}
 			}
@@ -6924,7 +6924,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -6956,10 +6956,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -6972,7 +6972,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						0.0
+						-0.9
 					]
 				}
 			}
@@ -6988,7 +6988,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7020,10 +7020,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7036,7 +7036,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.4
+						-1.1
 					]
 				}
 			}
@@ -7052,7 +7052,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7084,10 +7084,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7100,7 +7100,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-0.9
+						-1.3
 					]
 				}
 			}
@@ -7116,7 +7116,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7148,10 +7148,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7164,7 +7164,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-1.3
+						-1.5
 					]
 				}
 			}
@@ -7180,7 +7180,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7212,10 +7212,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7228,7 +7228,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-1.8
+						-1.7
 					]
 				}
 			}
@@ -7244,7 +7244,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7276,10 +7276,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7292,7 +7292,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-2.2
+						-1.9
 					]
 				}
 			}
@@ -7308,7 +7308,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7340,10 +7340,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7356,7 +7356,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-2.4
+						-1.9
 					]
 				}
 			}
@@ -7372,7 +7372,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7404,10 +7404,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7420,7 +7420,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-2.2
+						-2.0
 					]
 				}
 			}
@@ -7436,7 +7436,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7468,10 +7468,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7484,7 +7484,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-2.5
+						-2.1
 					]
 				}
 			}
@@ -7500,7 +7500,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7532,10 +7532,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7548,7 +7548,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-2.6
+						-2.1
 					]
 				}
 			}
@@ -7564,7 +7564,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7596,10 +7596,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7612,7 +7612,7 @@
 					"type" : "NdArray",
 					"values" : 
 					[
-						-2.6
+						-2.2
 					]
 				}
 			}
@@ -7628,7 +7628,7 @@
 					{
 						"values" : 
 						[
-							"2008-09-09T09:00:00Z"
+							"2008-09-09T12:00:00Z"
 						]
 					},
 					"x" : 
@@ -7660,10 +7660,10 @@
 				{
 					"axisNames" : 
 					[
-						"x",
-						"y",
+						"t",
 						"z",
-						"t"
+						"y",
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -7693,7 +7693,7 @@
 			],
 			"system" : 
 			{
-				"id" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+				"id" : "OGC:CRS84",
 				"type" : "GeographicCRS"
 			}
 		},
@@ -7704,8 +7704,11 @@
 			],
 			"system" : 
 			{
-				"id" : "TODO: PressureLevel",
-				"type" : "VerticalCRS"
+				"type" : "VerticalCRS",
+				"description" : 
+				{
+					"en" : "Pressure level in hPa"
+				}
 			}
 		},
 		{
@@ -7745,14 +7748,15 @@
 			},
 			"unit" : 
 			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
 				"label" : 
 				{
 					"fi" : "Celsius"
 				},
 				"symbol" : 
 				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
 				}
 			}
 		}

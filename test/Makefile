@@ -9,16 +9,16 @@ ifdef CI
 GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
 TEST_PREPARE_TARGETS += geonames-database
 TEST_FINISH_TARGETS += stop-test-db
-TEST_TARGETS := test-sqlite-impl test-grid
+TEST_TARGETS := test-sqlite-impl test-grid validate-outputs
 EXTRA_IGNORE := input/.testignore_circle-ci
 else
 ifdef LOCAL_TESTS_ONLY
 GEONAMES_HOST_EDIT := cat
-TEST_TARGETS := test-sqlite-impl test-grid
+TEST_TARGETS := test-sqlite-impl test-grid validate-outputs
 EXTRA_IGNORE := input/.testignore_circle-ci
 else
 GEONAMES_HOST_EDIT := cat
-TEST_TARGETS := test-sqlite-impl test-oracle-impl test-postgresql-impl test-grid
+TEST_TARGETS := test-sqlite-impl test-oracle-impl test-postgresql-impl test-grid validate-outputs
 EXTRA_IGNORE :=
 endif
 endif
@@ -59,6 +59,25 @@ test-grid: $(TEST_PREPARE_TARGETS)
 	$(MAKE) -C grid test-grid
 	$(MAKE) $(TEST_FINISH_TARGETS)
 
+# Check the expected outputs against the rules of OGC API-EDR and CoverageJSON. Tests not
+# run in CI are skipped, their outputs may be outdated.
+validate-outputs:
+	if command -v python3 >/dev/null; then \
+	  python3 validate-outputs.py --ignore base/input/.testignore_ci base/output grid/output; \
+	else \
+	  echo "python3 not available, skipping output validation"; \
+	fi
+
+# Conformance test suites against a local server, needs network access (see conformance/)
+conformance:
+	conformance/start-test-server.sh 8088
+	ok=true; \
+	conformance/run-ogc-ets.sh http://localhost:8088/edr > conformance/tmp/ogc-ets.txt || ok=false; \
+	conformance/metocean-checks.py http://localhost:8088/edr > conformance/tmp/metocean.txt || ok=false; \
+	conformance/stop-test-server.sh; \
+	head -1 conformance/tmp/ogc-ets.txt; tail -1 conformance/tmp/metocean.txt; \
+	$$ok
+
 stmp-geonames-db:
 	$(MAKE) geonames-database
 	date >$@
@@ -83,4 +102,4 @@ cnf/avi.conf cnf/geonames.conf cnf/gis.conf:
 
 dummy:
 
-.PHONY: cnf/geonames.conf cnf/gis.conf dummy
+.PHONY: cnf/geonames.conf cnf/gis.conf dummy validate-outputs conformance

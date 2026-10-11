@@ -1,0 +1,2 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta HTTP/1.0
+X-Test-Headers: Content-Type

@@ -1,0 +1,83 @@
+{
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop/locations?limit=3",
+			"rel" : "self",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop/locations?limit=3&offset=3",
+			"rel" : "next",
+			"type" : "application/geo+json"
+		},
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/synop",
+			"rel" : "collection",
+			"type" : "application/json"
+		}
+	],
+	"features" : 
+	[
+		{
+			"id" : "10004",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					6.35,
+					54.1667
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2008-11-28T13:00:00Z/2008-12-05T13:00:00Z",
+				"detail" : "Id is qdstation from synop",
+				"name" : "UFS TW Ems"
+			}
+		},
+		{
+			"id" : "1001",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					-8.66666,
+					70.9333
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2008-11-28T13:00:00Z/2008-12-05T13:00:00Z",
+				"detail" : "Id is qdstation from synop",
+				"name" : "JAN MAYEN"
+			}
+		},
+		{
+			"id" : "10015",
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					7.9,
+					54.1833
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"datetime" : "2008-11-28T13:00:00Z/2008-12-05T13:00:00Z",
+				"detail" : "Id is qdstation from synop",
+				"name" : "Helgoland"
+			}
+		}
+	],
+	"numberMatched" : 2506,
+	"numberReturned" : 3,
+	"type" : "FeatureCollection"
+}

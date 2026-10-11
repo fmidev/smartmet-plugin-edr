@@ -16,11 +16,74 @@
 	"instances" : 
 	[
 		{
-			"id" : "20080805T063100",
+			"id" : "2008-08-05T06:31:00Z",
 			"title" : "Origintime: 2008-08-05T06:31:00Z Starttime: 2008-08-05T03:00:00Z Endtime: 2008-08-09T06:00:00Z Timestep: 60",
+			"links" : 
+			[
+				{
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z",
+					"rel" : "data",
+					"type" : "application/json"
+				},
+				{
+					"href" : "https://en.ilmatieteenlaitos.fi/open-data-licence",
+					"hreflang" : "en",
+					"rel" : "license",
+					"type" : "text/html"
+				},
+				{
+					"title" : "Area query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/area",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Corridor query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/corridor",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Cube query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/cube",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Locations query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/locations",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Position query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/position",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Radius query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/radius",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				},
+				{
+					"title" : "Trajectory query",
+					"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/trajectory",
+					"rel" : "data",
+					"type" : "application/vnd.cov+json"
+				}
+			],
+			"output_formats" : 
+			[
+				"CoverageJSON",
+				"GeoJSON"
+			],
 			"crs" : 
 			[
-				"OGC:CRS84"
+				"OGC:CRS84",
+				"EPSG:3067",
+				"EPSG:4326"
 			],
 			"data_queries" : 
 			{
@@ -29,9 +92,10 @@
 					"link" : 
 					{
 						"title" : "Area query",
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/area",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/area",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Area query",
@@ -47,6 +111,14 @@
 								{
 									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								},
+								{
+									"crs" : "EPSG:3067",
+									"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+								},
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
 							"default_output_format" : "CoverageJSON",
@@ -59,9 +131,10 @@
 					"link" : 
 					{
 						"title" : "Corridor query",
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/corridor",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/corridor",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Corridor query",
@@ -72,21 +145,69 @@
 								"GeoJSON"
 							],
 							"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
-							"corridor-width" : "Corridor width",
 							"crs_details" : 
 							[
 								{
 									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								},
+								{
+									"crs" : "EPSG:3067",
+									"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+								},
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
 							"default_output_format" : "CoverageJSON",
+							"height_units" : [],
 							"query_type" : "corridor",
-							"width-units" : 
+							"width_units" : 
 							[
+								"m",
 								"km",
 								"mi"
 							]
+						}
+					}
+				},
+				"cube" : 
+				{
+					"link" : 
+					{
+						"title" : "Cube query",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/cube",
+						"hreflang" : "en",
+						"rel" : "data",
+						"type" : "application/vnd.cov+json",
+						"variables" : 
+						{
+							"title" : "Cube query",
+							"description" : "Data inside requested bounding box",
+							"output_formats" : 
+							[
+								"CoverageJSON",
+								"GeoJSON"
+							],
+							"crs_details" : 
+							[
+								{
+									"crs" : "OGC:CRS84",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								},
+								{
+									"crs" : "EPSG:3067",
+									"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+								},
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+								}
+							],
+							"default_output_format" : "CoverageJSON",
+							"height_units" : [],
+							"query_type" : "cube"
 						}
 					}
 				},
@@ -95,9 +216,10 @@
 					"link" : 
 					{
 						"title" : "Locations query",
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/locations",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/locations",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Locations query",
@@ -112,9 +234,18 @@
 								{
 									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								},
+								{
+									"crs" : "EPSG:3067",
+									"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+								},
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
 							"default_output_format" : "CoverageJSON",
+							"multiple_locations" : false,
 							"query_type" : "locations"
 						}
 					}
@@ -124,9 +255,10 @@
 					"link" : 
 					{
 						"title" : "Position query",
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/position",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/position",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Position query",
@@ -142,6 +274,14 @@
 								{
 									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								},
+								{
+									"crs" : "EPSG:3067",
+									"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+								},
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
 							"default_output_format" : "CoverageJSON",
@@ -154,9 +294,10 @@
 					"link" : 
 					{
 						"title" : "Radius query",
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/radius",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/radius",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Radius query",
@@ -172,12 +313,21 @@
 								{
 									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								},
+								{
+									"crs" : "EPSG:3067",
+									"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+								},
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
 							"default_output_format" : "CoverageJSON",
 							"query_type" : "radius",
 							"within_units" : 
 							[
+								"m",
 								"km",
 								"mi"
 							]
@@ -189,9 +339,10 @@
 					"link" : 
 					{
 						"title" : "Trajectory query",
-						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/20080805T063100/trajectory",
+						"href" : "http://smartmet.fmi.fi/edr/collections/pal_skandinavia/instances/2008-08-05T06:31:00Z/trajectory",
 						"hreflang" : "en",
 						"rel" : "data",
+						"type" : "application/vnd.cov+json",
 						"variables" : 
 						{
 							"title" : "Trajectory query",
@@ -207,6 +358,14 @@
 								{
 									"crs" : "OGC:CRS84",
 									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+								},
+								{
+									"crs" : "EPSG:3067",
+									"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+								},
+								{
+									"crs" : "EPSG:4326",
+									"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
 								}
 							],
 							"default_output_format" : "CoverageJSON",
@@ -264,7 +423,7 @@
 							"2008-08-09T06:00:00Z"
 						]
 					],
-					"trs" : "TIMECRS[\"DateTime\",TDATUM[\"Gregorian Calendar\"],CS[TemporalDateTime,1],AXIS[\"Time (T)\",future]",
+					"trs" : "Gregorian",
 					"values" : 
 					[
 						"R99/2008-08-05T03:00:00Z/PT60M"
@@ -439,6 +598,11 @@
 					{
 						"id" : "Pressure",
 						"label" : "Pressure"
+					},
+					"unit" : 
+					{
+						"label" : "hehtopascal",
+						"symbol" : "hPa"
 					}
 				},
 				"probabilitythunderstorm" : 
@@ -490,11 +654,12 @@
 					},
 					"unit" : 
 					{
+						"id" : "http://codes.wmo.int/common/unit/_degC",
 						"label" : "Celsius",
 						"symbol" : 
 						{
-							"type" : "http://codes.wmo.int/common/unit/_degC",
-							"value" : "˚C"
+							"type" : "https://qudt.org/vocab/unit/DEG_C",
+							"value" : "°C"
 						}
 					}
 				},

@@ -1,0 +1,8 @@
+Status: 413
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 413,
+  "detail" : "Too many grid positions 1000000 requested with resolution-x and resolution-y, the maximum is 250000"
+}

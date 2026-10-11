@@ -1,0 +1,2 @@
+GET /edr/collections/pal_skandinavia/cube?bbox=24,60,25,61&resolution-z=3&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0
+X-Test-Headers: Content-Type

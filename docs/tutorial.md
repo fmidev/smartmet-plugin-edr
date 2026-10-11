@@ -352,7 +352,7 @@ The example request yields the first case. The expected output begins:
     ],
     "axes" : { "t" : { "values" : ["2008-08-05T09:00:00Z"] }, "x" : { "values" : [24.93840] }, "y" : { "values" : [60.16990] } }
   },
-  "parameters" : { "temperature" : { "id" : "Temperature", "description" : { "fi" : "Ilman lämpötila" }, "unit" : { "symbol" : { "value" : "˚C", "type" : "http://codes.wmo.int/common/unit/_degC" } }, "...": "..." } },
+  "parameters" : { "temperature" : { "id" : "Temperature", "description" : { "fi" : "Ilman lämpötila" }, "unit" : { "id" : "http://codes.wmo.int/common/unit/_degC", "symbol" : { "value" : "°C", "type" : "https://qudt.org/vocab/unit/DEG_C" } }, "...": "..." } },
   "ranges" : { "temperature" : { "axisNames" : ["t","x","y"], "dataType" : "float", "shape" : [1,1,1], "type" : "NdArray", "values" : [14.9] } }
 }
 ```

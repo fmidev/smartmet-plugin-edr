@@ -1,5 +1,11 @@
 #include "AviEngineQuery.h"
 #include "LocationTools.h"
+#include "EDRException.h"
+#include "UtilityFunctions.h"
+#include <macgyver/TimeParser.h>
+#include <spine/HTTP.h>
+#include <optional>
+#include <tuple>
 
 using namespace boost::algorithm;
 
@@ -353,6 +359,327 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
     auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
 
     storeAviData(state, aviData, fetchIcao, outputData);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+namespace
+{
+struct AviItem
+{
+  Fmi::DateTime time;
+  std::string icao;
+  std::string id;
+  std::string message;
+  double lon = 0;
+  double lat = 0;
+};
+
+std::string avi_time(const Fmi::DateTime &t)
+{
+  return "timestamptz '" + Fmi::date_time::to_iso_string(t) + "Z'";
+}
+
+std::string item_id(const std::string &icao, const Fmi::DateTime &t, long messageid)
+{
+  return icao + "_" + Fmi::date_time::to_iso_string(t) + "Z_" + Fmi::to_string(messageid);
+}
+
+// The time range of an items query, the temporal extent of the collection by default
+std::pair<Fmi::DateTime, Fmi::DateTime> items_time_range(const EDRQuery &edr_query,
+                                                        const EDRMetaData &emd)
+{
+  const auto now = Fmi::SecondClock::universal_time();
+  Fmi::DateTime start = now - Fmi::Hours(24);
+  Fmi::DateTime end = now;
+  const auto &periods = emd.temporal_extent.time_periods;
+  if (!periods.empty())
+    start = periods.front().start_time;
+
+  auto parse = [](const std::string &str)
+  {
+    try
+    {
+      return Fmi::TimeParser::parse(str);
+    }
+    catch (...)
+    {
+      throw EDRException("Invalid 'datetime' value '" + str + "'");
+    }
+  };
+
+  const auto &datetime = edr_query.datetime;
+  if (datetime.empty())
+    return {start, end};
+
+  auto pos = datetime.find('/');
+  if (pos == std::string::npos)
+  {
+    auto t = parse(datetime);
+    return {t, t};
+  }
+  auto first = datetime.substr(0, pos);
+  auto second = datetime.substr(pos + 1);
+  const std::optional<Fmi::DateTime> extent_start =
+      (periods.empty() ? std::optional<Fmi::DateTime>() : start);
+  if (first != "..")
+    start = parse(first);
+  if (second != "..")
+    end = parse(second);
+  if (end < start)
+    throw EDRException("Invalid 'datetime' value '" + datetime + "', the end is before the start");
+
+  // The messages are searched within the temporal extent of the collection only, or within
+  // 31 days if the extent is unknown, so that a request cannot make the engine read all
+  // messages
+  end = std::min(end, now);
+  if (extent_start)
+    start = std::max(start, *extent_start);
+  else
+    start = std::max(start, end - Fmi::Hours(31 * 24));
+  return {start, end};
+}
+
+Json::Value item_feature(const AviItem &item,
+                         const EDRMetaData &emd,
+                         const std::string &collection_url)
+{
+  auto feature = Json::Value(Json::ValueType::objectValue);
+  feature["type"] = Json::Value("Feature");
+  feature["id"] = Json::Value(item.id);
+
+  auto geometry = Json::Value(Json::ValueType::objectValue);
+  if (!emd.getGeometry(item.icao, geometry))
+  {
+    geometry["type"] = Json::Value("Point");
+    auto coordinates = Json::Value(Json::ValueType::arrayValue);
+    coordinates[0] = Json::Value(item.lon, emd.getPrecision("longitude"));
+    coordinates[1] = Json::Value(item.lat, emd.getPrecision("latitude"));
+    geometry["coordinates"] = coordinates;
+  }
+  feature["geometry"] = geometry;
+
+  auto properties = Json::Value(Json::ValueType::objectValue);
+  const auto time = Fmi::date_time::to_iso_extended_string(item.time) + "Z";
+  properties["datetime"] = Json::Value(time);
+  properties["icao"] = Json::Value(item.icao);
+  properties["message"] = Json::Value(item.message);
+  feature["properties"] = properties;
+
+  auto links = Json::Value(Json::ValueType::arrayValue);
+  auto link = Json::Value(Json::ValueType::objectValue);
+  link["href"] = Json::Value(collection_url + "/items/" + item.id);
+  link["rel"] = Json::Value("self");
+  link["type"] = Json::Value("application/geo+json");
+  links.append(link);
+  feature["links"] = links;
+  return feature;
+}
+
+}  // namespace
+
+Json::Value AviEngineQuery::processItemsQuery(const Config &config,
+                                              const State &state,
+                                              const EDRQuery &edr_query,
+                                              Links *response_links) const
+{
+  try
+  {
+    const auto producer = trim_copy(to_lower_copy(edr_query.collection_id));
+    const auto &edrProducerMetaData = state.getAviMetaData();
+    const auto edrMetaData = edrProducerMetaData.find(producer);
+    const auto &aviCollection = get_avi_collection(producer, config.getAviCollections());
+
+    if ((edrMetaData == edrProducerMetaData.end()) || edrMetaData->second.empty() ||
+        aviCollection.getName().empty())
+      throw EDRNotFound("Collection '" + producer + "' has no items");
+    const auto &emd = edrMetaData->second.front();
+
+    SmartMet::Engine::Avi::QueryOptions queryOptions;
+
+    // A single item is identified by ICAO_messagetime_messageid
+    std::optional<long> wanted_messageid;
+    Fmi::DateTime start;
+    Fmi::DateTime end;
+    if (!edr_query.item_id.empty())
+    {
+      std::vector<std::string> parts;
+      boost::algorithm::split(parts, edr_query.item_id, boost::algorithm::is_any_of("_"));
+      try
+      {
+        if (parts.size() != 3 || parts[0].empty())
+          throw std::runtime_error("");
+        start = end = Fmi::TimeParser::parse(parts[1]);
+        wanted_messageid = std::stol(parts[2]);
+      }
+      catch (...)
+      {
+        throw EDRNotFound("Item '" + edr_query.item_id + "' not found");
+      }
+      queryOptions.itsLocationOptions.itsIcaos.push_back(parts[0]);
+    }
+    else
+    {
+      std::tie(start, end) = items_time_range(edr_query, emd);
+
+      if (!edr_query.bbox.empty())
+      {
+        auto parts = UtilityFunctions::parseBBox(edr_query.bbox, true);
+        queryOptions.itsLocationOptions.itsBBoxes.emplace_back(
+            Fmi::stod(parts[0]), Fmi::stod(parts[2]), Fmi::stod(parts[1]), Fmi::stod(parts[3]));
+      }
+      else if (emd.locations)
+      {
+        for (const auto &item : *emd.locations)
+          queryOptions.itsLocationOptions.itsIcaos.push_back(item.first);
+      }
+    }
+
+    queryOptions.itsParameters.emplace_back("icao");
+    queryOptions.itsParameters.emplace_back("messageid");
+    queryOptions.itsParameters.emplace_back("messagetime");
+    queryOptions.itsParameters.emplace_back("message");
+    queryOptions.itsParameters.emplace_back("longitude");
+    queryOptions.itsParameters.emplace_back("latitude");
+
+    queryOptions.itsValidity = SmartMet::Engine::Avi::Validity::Accepted;
+    queryOptions.itsMessageTypes.push_back(to_upper_copy(producer));
+    queryOptions.itsMessageFormat = TAC_FORMAT;
+
+    // The items are selected by their message time
+    queryOptions.itsTimeOptions.itsQueryValidRangeMessages = false;
+    queryOptions.itsTimeOptions.itsClosedTimeRange = true;
+    queryOptions.itsTimeOptions.itsMessageTimeChecks = false;
+    queryOptions.itsTimeOptions.itsStartTime = avi_time(start);
+    queryOptions.itsTimeOptions.itsEndTime = avi_time(end);
+    queryOptions.itsTimeOptions.itsTimeFormat = "iso";
+    queryOptions.itsDistinctMessages = true;
+    queryOptions.itsMaxMessageStations = -1;
+    queryOptions.itsMaxMessageRows = -1;
+    queryOptions.itsFilterMETARs = true;
+    queryOptions.itsExcludeSPECIs = config.excludeAviSPECI();
+    if ((!queryOptions.itsExcludeSPECIs) && (producer == METAR))
+      queryOptions.itsMessageTypes.emplace_back("SPECI");
+
+    if (!aviCollection.getCountries().empty())
+      queryOptions.itsLocationOptions.itsIncludeCountryFilters.assign(
+          aviCollection.getCountries().begin(), aviCollection.getCountries().end());
+    if (!aviCollection.getIcaos().empty())
+      queryOptions.itsLocationOptions.itsIncludeIcaoFilters.assign(
+          aviCollection.getIcaos().begin(), aviCollection.getIcaos().end());
+    if (!aviCollection.getExcludeIcaoFilters().empty())
+      queryOptions.itsLocationOptions.itsExcludeIcaoFilters.assign(
+          aviCollection.getExcludeIcaoFilters().begin(),
+          aviCollection.getExcludeIcaoFilters().end());
+
+    std::vector<AviItem> items;
+    if ((!queryOptions.itsLocationOptions.itsIcaos.empty() ||
+         !queryOptions.itsLocationOptions.itsBBoxes.empty()) &&
+        start <= end)
+    {
+      auto aviData = itsPlugin.getEngines().aviEngine->queryStationsAndMessages(queryOptions);
+
+      for (auto stationId : aviData.itsStationIds)
+      {
+        auto &values = aviData.itsValues[stationId];
+        const auto &times = values["messagetime"];
+        const auto &ids = values["messageid"];
+        const auto &messages = values["message"];
+        const auto &icaos = values["icao"];
+        const auto &lons = values["longitude"];
+        const auto &lats = values["latitude"];
+        for (std::size_t i = 0; i < times.size(); i++)
+        {
+          const auto *t = std::get_if<Fmi::LocalDateTime>(&times[i]);
+          if (!t || i >= ids.size() || i >= messages.size())
+            continue;
+          AviItem item;
+          item.time = t->utc_time();
+          item.icao = (i < icaos.size() && std::holds_alternative<std::string>(icaos[i])
+                           ? std::get<std::string>(icaos[i])
+                           : std::string());
+          long messageid = 0;
+          if (const auto *n = std::get_if<int>(&ids[i]))
+            messageid = *n;
+          else if (const auto *d = std::get_if<double>(&ids[i]))
+            messageid = static_cast<long>(*d);
+          if (wanted_messageid && messageid != *wanted_messageid)
+            continue;
+          item.id = item_id(item.icao, item.time, messageid);
+          if (const auto *m = std::get_if<std::string>(&messages[i]))
+            item.message = *m;
+          if (!lons.empty() && std::holds_alternative<double>(lons.front()))
+            item.lon = std::get<double>(lons.front());
+          if (!lats.empty() && std::holds_alternative<double>(lats.front()))
+            item.lat = std::get<double>(lats.front());
+          items.push_back(std::move(item));
+        }
+      }
+    }
+
+    std::sort(items.begin(),
+              items.end(),
+              [](const AviItem &a, const AviItem &b)
+              { return std::tie(a.time, a.icao, a.id) < std::tie(b.time, b.icao, b.id); });
+
+    const auto collection_url = edr_query.host + "/collections/" + edr_query.collection_id;
+
+    if (!edr_query.item_id.empty())
+    {
+      if (items.empty())
+        throw EDRNotFound("Item '" + edr_query.item_id + "' not found");
+      auto feature = item_feature(items.front(), emd, collection_url);
+      Links links{{collection_url + "/items/" + items.front().id, "self", "application/geo+json"},
+                  {collection_url, "collection", "application/json"}};
+      feature["links"] = links_json(links);
+      if (response_links)
+        *response_links = links;
+      return feature;
+    }
+
+    // Paging
+    const auto matched = items.size();
+    const auto first = std::min(edr_query.offset, matched);
+    const auto count = std::min(edr_query.limit.value_or(matched), matched - first);
+
+    auto features = Json::Value(Json::ValueType::arrayValue);
+    for (std::size_t i = first; i < first + count; i++)
+      features.append(item_feature(items[i], emd, collection_url));
+
+    auto href = [&](std::size_t offset)
+    {
+      std::string url = collection_url + "/items?limit=" + Fmi::to_string(*edr_query.limit);
+      if (offset > 0)
+        url += "&offset=" + Fmi::to_string(offset);
+      if (!edr_query.bbox.empty())
+        url += "&bbox=" + Spine::HTTP::urlencode(edr_query.bbox);
+      if (!edr_query.datetime.empty())
+        url += "&datetime=" + Spine::HTTP::urlencode(edr_query.datetime);
+      return url;
+    };
+
+    Links links;
+    links.push_back({href(first), "self", "application/geo+json"});
+    if (first + count < matched)
+      links.push_back({href(first + count), "next", "application/geo+json"});
+    if (first > 0)
+      links.push_back({href(first > *edr_query.limit ? first - *edr_query.limit : 0),
+                       "prev",
+                       "application/geo+json"});
+    links.push_back({collection_url, "collection", "application/json"});
+    if (response_links)
+      *response_links = links;
+
+    auto result = Json::Value(Json::ValueType::objectValue);
+    result["type"] = Json::Value("FeatureCollection");
+    result["features"] = features;
+    result["numberMatched"] = Json::Value(matched);
+    result["numberReturned"] = Json::Value(count);
+    result["links"] = links_json(links);
+    return result;
   }
   catch (...)
   {

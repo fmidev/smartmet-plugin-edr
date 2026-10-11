@@ -1,0 +1,238 @@
+{
+	"coverages" : 
+	[
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T12:00:00Z",
+								23.67692,
+								60.15677
+							],
+							[
+								"2008-09-09T12:00:00Z",
+								24.17444,
+								60.40677
+							],
+							[
+								"2008-09-09T12:00:00Z",
+								24.67191,
+								60.65676
+							]
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							600,
+							700,
+							800
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"z",
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						3,
+						3
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-6.3,
+						-6.1,
+						-6.0,
+						0.1,
+						0.2,
+						0.3,
+						2.6,
+						2.0,
+						2.0
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"composite" : 
+					{
+						"coordinates" : 
+						[
+							"t",
+							"x",
+							"y"
+						],
+						"dataType" : "tuple",
+						"values" : 
+						[
+							[
+								"2008-09-09T12:00:00Z",
+								24.32003,
+								59.84245
+							],
+							[
+								"2008-09-09T12:00:00Z",
+								24.82245,
+								60.09244
+							],
+							[
+								"2008-09-09T12:00:00Z",
+								25.32492,
+								60.34244
+							]
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							600,
+							700,
+							800
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"z",
+						"composite"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						3,
+						3
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-5.9,
+						-5.8,
+						-5.8,
+						0.5,
+						0.5,
+						0.5,
+						3.4,
+						2.7,
+						2.4
+					]
+				}
+			}
+		}
+	],
+	"domainType" : "Section",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"x",
+				"y"
+			],
+			"system" : 
+			{
+				"id" : "OGC:CRS84",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"type" : "VerticalCRS",
+				"description" : 
+				{
+					"en" : "Pressure level in hPa"
+				}
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "Temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	}
+}

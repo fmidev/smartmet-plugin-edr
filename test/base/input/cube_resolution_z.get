@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta/cube?bbox=24.5,60,25,60.5&z=500/1000&resolution-z=3&datetime=2008-09-09T12:00:00Z&parameter-name=Temperature HTTP/1.0

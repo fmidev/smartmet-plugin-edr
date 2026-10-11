@@ -3542,25 +3542,23 @@
           {
             "name": "resolution-x",
             "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
             "name": "resolution-y",
             "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
@@ -3740,25 +3738,23 @@
           {
             "name": "resolution-x",
             "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
             "name": "resolution-y",
             "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
@@ -3777,6 +3773,17 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the z range (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],
@@ -3862,6 +3869,17 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the z range (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],
@@ -4132,42 +4150,6 @@
             }
           },
           {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-z",
-            "in": "query",
-            "description": "Number of data points along z-axis.\n\nFor example, `resolution-z=10` would retrieve 10 values along the z-axis:\na value at both the minimum z and maximum z coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
             "name": "crs",
             "in": "query",
             "description": "Identifier of the coordinate reference system (CRS) to return data in.\nAlso specifies the CRS of the `coords` parameter.\n\nValid identifiers are listed in the collection's/instance's metadata.\n\nIf not supplied, CRS will default to native coordinate system of data\n",
@@ -4183,6 +4165,39 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-x",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions along the corridor path including both ends (2-1000), 0 means the native resolution. Requires resolution-y.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions across the corridor from one edge to the other (1-1000, 1 is the centre line only), 0 means the native resolution. Requires resolution-x.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the corridor height band (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],
@@ -4268,6 +4283,39 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-x",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions along the corridor path including both ends (2-1000), 0 means the native resolution. Requires resolution-y.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions across the corridor from one edge to the other (1-1000, 1 is the centre line only), 0 means the native resolution. Requires resolution-x.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the corridor height band (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],
@@ -7559,25 +7607,23 @@
           {
             "name": "resolution-x",
             "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
             "name": "resolution-y",
             "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
@@ -7775,25 +7821,23 @@
           {
             "name": "resolution-x",
             "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the x-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
             "name": "resolution-y",
             "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
+            "description": "Number of grid positions along the y-axis of the bounding box, including the minimum and the maximum. Requires the other resolution parameter too. The data is interpolated to a regular longitude/latitude grid and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). Valid values: 0 or 2-1000.\n",
             "required": false,
             "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           },
           {
@@ -7812,6 +7856,17 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the z range (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],
@@ -7906,6 +7961,17 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the z range (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],
@@ -8203,42 +8269,6 @@
             }
           },
           {
-            "name": "resolution-x",
-            "in": "query",
-            "description": "Number of data points along x-axis.\n\nFor example, `resolution-x=10` would retrieve 10 values along the x-axis:\na value at both the minimum x and maximum x coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-y",
-            "in": "query",
-            "description": "Number of data points along y-axis.\n\nFor example, `resolution-y=10` would retrieve 10 values along the y-axis:\na value at both the minimum y and maximum y coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
-            "name": "resolution-z",
-            "in": "query",
-            "description": "Number of data points along z-axis.\n\nFor example, `resolution-z=10` would retrieve 10 values along the z-axis:\na value at both the minimum z and maximum z coordinates and 8 values between.\n",
-            "required": false,
-            "schema": {
-              "items": {
-                "type": "integer",
-                "minimum": 1
-              }
-            }
-          },
-          {
             "name": "crs",
             "in": "query",
             "description": "Identifier of the coordinate reference system (CRS) to return data in.\nAlso specifies the CRS of the `coords` parameter.\n\nValid identifiers are listed in the collection's/instance's metadata.\n\nIf not supplied, CRS will default to native coordinate system of data\n",
@@ -8254,6 +8284,39 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-x",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions along the corridor path including both ends (2-1000), 0 means the native resolution. Requires resolution-y.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions across the corridor from one edge to the other (1-1000, 1 is the centre line only), 0 means the native resolution. Requires resolution-x.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the corridor height band (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],
@@ -8348,6 +8411,39 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "resolution-x",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions along the corridor path including both ends (2-1000), 0 means the native resolution. Requires resolution-y.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-y",
+            "in": "query",
+            "required": false,
+            "description": "Number of positions across the corridor from one edge to the other (1-1000, 1 is the centre line only), 0 means the native resolution. Requires resolution-x.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
+            }
+          },
+          {
+            "name": "resolution-z",
+            "in": "query",
+            "required": false,
+            "description": "Number of levels from the minimum to the maximum of the corridor height band (2-1000), the data is interpolated vertically. 0 means the levels of the data.\n",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000
             }
           }
         ],

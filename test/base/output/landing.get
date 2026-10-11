@@ -18,7 +18,7 @@
     {
       "href": "http://smartmet.fmi.fi/edr/api?f=JSON",
       "rel": "service-desc",
-      "type": "application/json",
+      "type": "application/vnd.oai.openapi+json;version=3.1",
       "title": "API description in JSON"
     },
     {

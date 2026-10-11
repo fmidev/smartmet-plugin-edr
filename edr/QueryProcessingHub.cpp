@@ -1,4 +1,9 @@
 #include "QueryProcessingHub.h"
+#include "UtilityFunctions.h"
+#include <ogr_geometry.h>
+#include <cstring>
+#include <optional>
+#include "CRSSupport.h"
 #include "CoverageJson.h"
 #include "GeoJson.h"
 #include "GridInterface.h"
@@ -324,6 +329,118 @@ void fetch_static_location_values(const CommonQuery& query,
   }
 }
 
+// Transforms the longitude and latitude columns of the output to the requested CRS
+void reproject_output(TS::OutputData& outputData,
+                      const TS::OptionParsers::ParameterList& parameters,
+                      const CRSInfo& crs)
+{
+  std::optional<std::size_t> lon_index;
+  std::optional<std::size_t> lat_index;
+  for (std::size_t i = 0; i < parameters.size(); i++)
+  {
+    auto name = boost::algorithm::to_lower_copy(parameters[i].name());
+    if (name == "longitude" && !lon_index)
+      lon_index = i;
+    else if (name == "latitude" && !lat_index)
+      lat_index = i;
+  }
+  if (!lon_index || !lat_index)
+    return;
+
+  auto transform = [&crs](TS::TimeSeries& lons, TS::TimeSeries& lats)
+  {
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<std::size_t> positions;
+    for (std::size_t k = 0; k < std::min(lons.size(), lats.size()); k++)
+    {
+      const auto* lon = std::get_if<double>(&lons[k].value);
+      const auto* lat = std::get_if<double>(&lats[k].value);
+      if (lon && lat)
+      {
+        x.push_back(*lon);
+        y.push_back(*lat);
+        positions.push_back(k);
+      }
+    }
+    if (positions.empty())
+      return;
+    crs.fromWGS84(x, y);
+    for (std::size_t n = 0; n < positions.size(); n++)
+    {
+      lons[positions[n]].value = x[n];
+      lats[positions[n]].value = y[n];
+    }
+  };
+
+  for (auto& item : outputData)
+  {
+    auto& columns = item.second;
+    if (std::max(*lon_index, *lat_index) >= columns.size())
+      continue;
+    auto& lon_data = columns[*lon_index];
+    auto& lat_data = columns[*lat_index];
+
+    if (auto* lon = std::get_if<TS::TimeSeriesPtr>(&lon_data))
+    {
+      auto* lat = std::get_if<TS::TimeSeriesPtr>(&lat_data);
+      if (lat && *lon && *lat)
+        transform(**lon, **lat);
+    }
+    else if (auto* lonv = std::get_if<TS::TimeSeriesVectorPtr>(&lon_data))
+    {
+      auto* latv = std::get_if<TS::TimeSeriesVectorPtr>(&lat_data);
+      if (latv && *lonv && *latv)
+        for (std::size_t k = 0; k < std::min((*lonv)->size(), (*latv)->size()); k++)
+          transform((**lonv)[k], (**latv)[k]);
+    }
+    else if (auto* long_group = std::get_if<TS::TimeSeriesGroupPtr>(&lon_data))
+    {
+      auto* latg = std::get_if<TS::TimeSeriesGroupPtr>(&lat_data);
+      if (latg && *long_group && *latg)
+        for (std::size_t k = 0; k < std::min((*long_group)->size(), (*latg)->size()); k++)
+          transform((**long_group)[k].timeseries, (**latg)[k].timeseries);
+    }
+  }
+}
+
+// Remove the values whose time is not in the given list of times (EDR datetime lists)
+void filter_times(TS::TimeSeries& ts, const std::set<Fmi::DateTime>& times)
+{
+  ts.erase(std::remove_if(ts.begin(),
+                          ts.end(),
+                          [&times](const TS::TimedValue& tv)
+                          { return times.find(tv.time.utc_time()) == times.end(); }),
+           ts.end());
+}
+
+void filter_times(TS::OutputData& outputData, const std::set<Fmi::DateTime>& times)
+{
+  for (auto& item : outputData)
+  {
+    for (auto& tsdata : item.second)
+    {
+      if (auto* ts = std::get_if<TS::TimeSeriesPtr>(&tsdata))
+      {
+        if (*ts)
+          filter_times(**ts, times);
+      }
+      else if (auto* tsv = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata))
+      {
+        if (*tsv)
+          for (auto& ts : **tsv)
+            filter_times(ts, times);
+      }
+      else if (auto* tsg = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+      {
+        if (*tsg)
+          for (auto& llts : **tsg)
+            filter_times(llts.timeseries, times);
+      }
+    }
+  }
+}
+
 void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, const std::string& producer)
 {
   try
@@ -361,6 +478,51 @@ void check_timestep(const CommonQuery& masterquery, const EDRMetaData& emd, cons
 // A location without data is left out of a multi-location result. Only if no location got
 // any data does the request fail, with the same error a single location used to get
 // (BRAINSTORM-3500).
+// The location of a 'No data available for <place>' exception, if the exception is one
+std::optional<std::string> no_data_place(const Fmi::Exception& exception)
+{
+  const std::string prefix = "No data available for ";
+  for (const auto* e = &exception; e != nullptr; e = e->getPrevException())
+  {
+    const char* what = e->getWhat();
+    if (what != nullptr && std::strncmp(what, prefix.c_str(), prefix.size()) == 0)
+      return std::string(what + prefix.size());
+  }
+  return {};
+}
+
+// True if some location of the query is inside the spatial extent of the collection
+bool inside_spatial_extent(const CommonQuery& query, const EDRMetaData& emd)
+{
+  const auto& extent = emd.spatial_extent;
+  OGREnvelope bbox;
+  bbox.MinX = extent.bbox_xmin;
+  bbox.MaxX = extent.bbox_xmax;
+  bbox.MinY = extent.bbox_ymin;
+  bbox.MaxY = extent.bbox_ymax;
+
+  for (const auto& tloc : query.loptions->locations())
+  {
+    if (!tloc.loc)
+      continue;
+    // EDR coordinates are WKT geometries, other locations are points
+    OGREnvelope envelope;
+    const auto* geometry = (tloc.loc->type == Spine::Location::Wkt
+                                ? query.wktGeometries.getGeometry(tloc.loc->name)
+                                : nullptr);
+    if (geometry)
+      geometry->getEnvelope(&envelope);
+    else
+    {
+      envelope.MinX = envelope.MaxX = tloc.loc->longitude;
+      envelope.MinY = envelope.MaxY = tloc.loc->latitude;
+    }
+    if (envelope.Intersects(bbox))
+      return true;
+  }
+  return false;
+}
+
 void require_some_data(const std::vector<std::string>& theNoDataLocations)
 {
   std::string names;
@@ -388,7 +550,24 @@ QueryProcessingHub::QueryProcessingHub(const PluginImpl& thePlugin)
 {
 }
 
-Json::Value QueryProcessingHub::processMetaDataQuery(const State& state, const EDRQuery& edr_query)
+Links QueryProcessingHub::dataQueryLinks(const EDRQuery& edr_query,
+                                         const std::string& output_format)
+{
+  Links links;
+  for (const auto& item : edr_query.format_urls)
+    links.push_back({item.second,
+                     item.first == output_format ? "self" : "alternate",
+                     UtilityFunctions::output_format_mime_type(item.first)});
+  links.push_back(
+      {edr_query.host + "/collections/" + edr_query.collection_id,
+       "collection",
+       "application/json"});
+  return links;
+}
+
+Json::Value QueryProcessingHub::processMetaDataQuery(const State& state,
+                                                     const EDRQuery& edr_query,
+                                                     Links* response_links)
 {
   try
   {
@@ -397,7 +576,8 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state, const E
     auto licenses = state.getPlugin().itsConfig.allProducerLicenses();
     auto const &custom_dim_refs = state.getPlugin().itsConfig.getCustomDimReferences();
 
-    return CoverageJson::parseEDRMetaData(edr_query, *metadata, licenses, custom_dim_refs);
+    return CoverageJson::parseEDRMetaData(
+        edr_query, *metadata, licenses, custom_dim_refs, response_links);
   }
   catch (...)
   {
@@ -406,7 +586,7 @@ Json::Value QueryProcessingHub::processMetaDataQuery(const State& state, const E
 }
 
 std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const State& state,
-                                                                      const Query& masterquery,
+                                                                      Query& masterquery,
                                                                       Spine::Table& table)
 {
   try
@@ -418,9 +598,18 @@ std::shared_ptr<std::string> QueryProcessingHub::processMetaDataQuery(const Stat
           state.getPlugin().itsConfig.getEDRAPI().getAPI(edr_query.instance_id, edr_query.host);
       table.set(0, 0, result);
     }
+#ifndef WITHOUT_AVI
+    else if (edr_query.query_id == EDRQueryId::SpecifiedCollectionItems)
+    {
+      AviEngineQuery aviEngineQuery(state.getPlugin());
+      auto result = aviEngineQuery.processItemsQuery(
+          state.getPlugin().itsConfig, state, edr_query, &masterquery.responseLinks);
+      table.set(0, 0, result.toStyledString(state.pretty()));
+    }
+#endif
     else
     {
-      auto result = processMetaDataQuery(state, edr_query);
+      auto result = processMetaDataQuery(state, edr_query, &masterquery.responseLinks);
       table.set(0, 0, result.toStyledString(state.pretty()));
     }
     return {};
@@ -725,9 +914,26 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       if (process_qengine_query)
       {
-        auto skipped = itsQEngineQuery.processQEngineQuery(
-            state, q, outputData, areaproducers, producerDataPeriod);
-        no_data_locations.insert(no_data_locations.end(), skipped.begin(), skipped.end());
+        try
+        {
+          auto skipped = itsQEngineQuery.processQEngineQuery(
+              state, q, outputData, areaproducers, producerDataPeriod);
+          no_data_locations.insert(no_data_locations.end(), skipped.begin(), skipped.end());
+        }
+        catch (...)
+        {
+          // A location whose data could not be found after all (e.g. no point data station
+          // within the requested distance) is handled like the locations skipped above
+          Fmi::Exception ex(BCP, "Operation failed!", nullptr);
+          auto place = no_data_place(ex);
+          if (!place)
+            throw;
+          no_data_locations.push_back(*place);
+          outputData.erase(std::remove_if(outputData.begin(),
+                                          outputData.end(),
+                                          [](const auto& item) { return item.second.empty(); }),
+                           outputData.end());
+        }
       }
 
       // get the latestTimestep from previous query
@@ -741,7 +947,11 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       ++producer_group;
     }
 
-    if (outputData.empty() && !no_data_locations.empty())
+    // MetOcean profile /req/core/error_handling: a query inside the extent of the collection
+    // which finds no data is answered with 204 No Content, only queries completely outside the
+    // extent are errors
+    if (outputData.empty() && !no_data_locations.empty() &&
+        !inside_spatial_extent(masterquery, emd))
       require_some_data(no_data_locations);
 
 #ifndef WITHOUT_OBSERVATION
@@ -749,6 +959,21 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 #endif
 
     setPrecisions(emd, masterquery);
+
+    if (!masterquery.dateTimeList().empty())
+      filter_times(outputData, masterquery.dateTimeList());
+
+    // Output coordinates in the requested CRS, GeoJSON output is always CRS84
+    if (edr_query.crs && masterquery.output_format != GEO_JSON_FORMAT)
+    {
+      reproject_output(outputData, masterquery.poptions.parameters(), *edr_query.crs);
+      emd.output_crs = edr_query.crs;
+      if (!edr_query.crs->geographic)
+      {
+        emd.parameter_precisions["longitude"] = 2;
+        emd.parameter_precisions["latitude"] = 2;
+      }
+    }
 
     // CoordinateFilter::accept() requires an exact (lon,lat) match against the literal
     // coordinates given in the request (LINESTRINGZ/ZM/M, MULTIPOINTZ); it only works when the
@@ -776,6 +1001,16 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
         (skipCoordinateFilterForOutput ? emptyCoordinateFilter
                                        : masterquery.coordinateFilter());
 
+    // Levels interpolated with resolution-z are given as pressures or heights
+    std::set<int> output_levels = masterquery.levels;
+    if (output_levels.empty())
+    {
+      for (auto pressure : masterquery.pressures)
+        output_levels.insert(static_cast<int>(std::lround(pressure)));
+      for (auto height : masterquery.heights)
+        output_levels.insert(static_cast<int>(std::lround(height)));
+    }
+
     if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT ||
         masterquery.output_format == IWXXMZIP_FORMAT)
     {
@@ -789,12 +1024,37 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       processIWXXMAndTACData(thePlugin.itsConfig, outputData, masterquery, table);
     }
+    else if (masterquery.output_format == COVERAGE_JSON_FORMAT &&
+             edr_query.corridor_grid.active())
+    {
+      Json::Value result =
+          CoverageJson::formatCorridorOutputData(outputData,
+                                                 emd,
+                                                 edr_query.corridor_grid,
+                                                 output_levels,
+                                                 effective_query_parameters(masterquery),
+                                                 custom_dim_refs,
+                                                 edr_query.language);
+      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
+    }
+    else if (masterquery.output_format == COVERAGE_JSON_FORMAT && edr_query.grid.active())
+    {
+      Json::Value result =
+          CoverageJson::formatGridOutputData(outputData,
+                                             emd,
+                                             edr_query.grid,
+                                             output_levels,
+                                             effective_query_parameters(masterquery),
+                                             custom_dim_refs,
+                                             edr_query.language);
+      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
+    }
     else if (masterquery.output_format == COVERAGE_JSON_FORMAT)
     {
       Json::Value result = CoverageJson::formatOutputData(outputData,
                                                           emd,
                                                           edr_query.query_type,
-                                                          masterquery.levels,
+                                                          output_levels,
                                                           coordinateFilterForOutput,
                                                           effective_query_parameters(masterquery),
                                                           producer == SOUNDING_PRODUCER,
@@ -807,11 +1067,13 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
       Json::Value result = GeoJson::formatOutputData(outputData,
                                                      emd,
                                                      edr_query.query_type,
-                                                     masterquery.levels,
+                                                     output_levels,
                                                      coordinateFilterForOutput,
                                                      effective_query_parameters(masterquery),
                                                      custom_dim_refs,
                                                      edr_query.language);
+      if (!result.isNullOrEmpty())
+        result["links"] = links_json(dataQueryLinks(edr_query, masterquery.output_format));
       table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
     }
 
@@ -986,10 +1248,19 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
     // EDR resource has to be fully included in the hash
     Fmi::hash_combine(hash, Fmi::hash_value(request.getResource()));
 
+    // The output format may have been selected with the Accept header
+    Fmi::hash_combine(hash, Fmi::hash_value(masterquery.output_format));
+
+    // Items (aviation messages) change continuously, they are not cached
+    if (masterquery.edrQuery().query_id == EDRQueryId::SpecifiedCollectionItems)
+      return Fmi::bad_hash;
+
     if (masterquery.isEDRMetaDataQuery())
     {
       auto metadata = state.getPlugin().itsMetaData.load();
       Fmi::hash_combine(hash, Fmi::hash_value(metadata->getMetaDataUpdateTime()));
+      // e.g. the paging of the locations listing
+      parameters_hash_value(request, hash);
       return hash;
     }
 
@@ -1208,8 +1479,9 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
       ++producer_group;
     }
 
+    // No data: not cached, processQuery decides between 204 No Content and an error
     if (locations_with_data == 0 && !no_data_locations.empty())
-      require_some_data(no_data_locations);
+      return Fmi::bad_hash;
 
     return hash;
   }

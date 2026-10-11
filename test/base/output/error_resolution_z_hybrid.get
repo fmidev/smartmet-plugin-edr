@@ -1,0 +1,8 @@
+Status: 400
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "Query parameter 'resolution-z' cannot be used, the levels of collection 'harmonie_hybrid' cannot be interpolated"
+}
