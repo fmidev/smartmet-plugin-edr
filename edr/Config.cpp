@@ -908,6 +908,9 @@ void Config::parse_config_avi_collections()
 
 void Config::parse_config_grid_geometries()
 {
+  if (!itsConfig.exists("defaultGridGeometries"))
+    return;
+
   const libconfig::Setting &gridGeometries = itsConfig.lookup("defaultGridGeometries");
   if (!gridGeometries.isArray())
     throw Fmi::Exception(BCP, "Configured value of 'defaultGridGeometries' must be an array");
@@ -917,10 +920,14 @@ void Config::parse_config_grid_geometries()
     uint geomId = gridGeometries[i];
     itsDefaultGridGeometries.push_back(geomId);
   }
+  return;
 }
 
 void Config::parse_config_parameter_aliases(const std::string &configfile)
 {
+  if (!itsConfig.exists("parameterAliasFiles"))
+    return;
+
   const libconfig::Setting &aliasFiles = itsConfig.lookup("parameterAliasFiles");
 
   if (!aliasFiles.isArray())
@@ -1303,18 +1310,9 @@ Config::Config(const string &configfile)
     // creating it from scratch for every request is very expensive
     itsDefaultLocale.reset(new std::locale(itsDefaultLocaleName.c_str()));
 
-    itsLastAliasCheck = time(nullptr);
-    try
-    {
-      itsConfig.lookupValue("defaultProducerMappingName", itsDefaultProducerMappingName);
-      parse_config_grid_geometries();
-      parse_config_parameter_aliases(configfile);
-    }
-    catch (const libconfig::SettingNotFoundException & /* e */)
-    {
-      // throw Fmi::Exception(BCP, "Setting not found").addParameter("Setting
-      // path", e.getPath());
-    }
+    itsConfig.lookupValue("defaultProducerMappingName", itsDefaultProducerMappingName);
+    parse_config_grid_geometries();
+    parse_config_parameter_aliases(configfile);
   }
   catch (const libconfig::SettingNotFoundException &e)
   {
