@@ -185,8 +185,9 @@ rm -rf $RPM_BUILD_ROOT
 - Use emplace and C++ standard library headers where clang-tidy suggests it, no functional changes
 - Use range-based for loops where clang-tidy suggests it, no functional changes
 - Replaced the MAX_TIME_PERIODS and DEFAULT_PRECISION macros with constants
+- Configuration groups are checked for presence instead of relying on lookup errors
 
-* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-6.fmi
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-7.fmi
 - A location without data no longer fails a multi-location querydata request; it is left out, and the request fails only if no location has data (BRAINSTORM-3500)
 
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-5.fmi
