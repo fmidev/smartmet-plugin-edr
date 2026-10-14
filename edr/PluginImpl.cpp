@@ -1827,10 +1827,8 @@ void PluginImpl::updateParameterInfo()
             (pinfo.metocean.standard_name.empty() != level_key.empty())
            )
           throw Fmi::Exception(BCP, pname_key + " standard_name and level settings are required");
-        else if (
-                 (! pinfo.metocean.standard_name.empty()) &&
-                 (pinfo.metocean.method.empty() || pinfo.metocean.duration.empty())
-                )
+        if ((!pinfo.metocean.standard_name.empty()) &&
+            (pinfo.metocean.method.empty() || pinfo.metocean.duration.empty()))
           throw Fmi::Exception(BCP, meastype_key + " method and duration settings are required");
       }
 
