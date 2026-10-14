@@ -80,7 +80,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-spine >= 26.10.3
 #TestRequires: smartmet-library-spine-plugin-test >= 26.9.29
 #TestRequires: smartmet-library-newbase-devel >= 26.10.8
-#TestRequires: redis
+#TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-library-grid-files-test >= 26.10.6
