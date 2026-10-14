@@ -1680,7 +1680,7 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
               T::GridValue val;
 
               auto* rec = gridQuery->mQueryParameterList[pid].getValueListRecord(col, t);
-              if (rec && (rec->mValue != ParamValueMissing || !rec->mValueString.empty()))
+              if (rec && (ai == 0 || rec->mValue != ParamValueMissing || !rec->mValueString.empty()))
               {
                 pidList.insert(std::pair<UInt64, uint>(((UInt64)pIdx << 32) + t, pp));
               }
