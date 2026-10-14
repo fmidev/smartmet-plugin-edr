@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.11
+Version: 26.10.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -120,6 +120,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-1.fmi
+- Return the @-detail parameters (@I, @P, @G etc) of grid timeseries queries also for rows
+  whose value is missing, as the timeseries plugin does
+- Added the @F, @LAT, @LON, @LATLON and @LONLAT details supported by the timeseries plugin
+- Malformed @-detail parameter names no longer throw from std::stoi
+
 * Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-1.fmi
 - Generated OpenAPI 3.1 definitions instead of the static api.json template:
   - /edr/api describes the query types, parameters, output formats, instances and

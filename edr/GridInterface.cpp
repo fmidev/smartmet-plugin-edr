@@ -161,6 +161,52 @@ void check_result_limits(const QueryServer::Query& gridQuery,
   TS::check_request_limit(
       limits, elements + TS::number_of_elements(outputData), TS::RequestLimitMember::ELEMENTS);
 }
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Format the grid value coordinates for the @LON, @LAT, @LATLON and @LONLAT details
+ *
+ * Multiple coordinates are output as a bracketed list. A missing value is returned when
+ * there are no grid values so that the time series stays aligned with the times.
+ */
+// ----------------------------------------------------------------------
+
+TS::Value format_coordinates(const T::GridValueList& values,
+                             const Fmi::ValueFormatter& formatter,
+                             const std::string& detail)
+{
+  const uint vlen = values.getLength();
+  if (vlen == 0)
+    return TS::None();
+
+  std::string output;
+  if (vlen > 1)
+    output += '[';
+
+  for (uint v = 0; v < vlen; v++)
+  {
+    T::GridValue val;
+    if (values.getGridValueByIndex(v, val))
+    {
+      // mX is the longitude and mY the latitude
+      if (detail == "LON")
+        output += formatter.format(val.mX, 7);
+      else if (detail == "LAT")
+        output += formatter.format(val.mY, 7);
+      else if (detail == "LATLON")
+        output += formatter.format(val.mY, 7) + ',' + formatter.format(val.mX, 7);
+      else
+        output += formatter.format(val.mX, 7) + ',' + formatter.format(val.mY, 7);
+      if ((v + 1) < vlen)
+        output += ' ';
+    }
+  }
+
+  if (vlen > 1)
+    output += ']';
+
+  return output;
+}
 }  // namespace
 
 GridInterface::GridInterface(Engine::Grid::Engine* engine,
@@ -1594,6 +1640,9 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
   FUNCTION_TRACE
   try
   {
+    std::shared_ptr<ContentServer::ServiceInterface> contentServer =
+        itsGridEngine->getContentServer_sptr();
+
     TS::Value missing_value = TS::None();
     AdditionalParameters additionalParameters(itsTimezones,
                                               masterquery.outlocale,
@@ -1680,7 +1729,10 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
               T::GridValue val;
 
               auto* rec = gridQuery->mQueryParameterList[pid].getValueListRecord(col, t);
-              if (rec && (rec->mValue != ParamValueMissing || !rec->mValueString.empty()))
+              // Register the record also for missing values so that the @-detail parameters
+              // (@I, @P, @G etc) are available for every row unless an alternative exists
+              if (rec &&
+                  (ai == 0 || rec->mValue != ParamValueMissing || !rec->mValueString.empty()))
               {
                 pidList.insert(std::pair<UInt64, uint>(((UInt64)pIdx << 32) + t, pp));
               }
@@ -2040,15 +2092,12 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
               std::string n;
               int idx = -1;
 
-              if (gridQuery->mQueryParameterList[pid].mParam.substr(2, 1) == "-")
+              const std::string& pstr = gridQuery->mQueryParameterList[pid].mParam;
+              const auto dash = pstr.find('-');
+              if (dash != std::string::npos)
               {
-                n = gridQuery->mQueryParameterList[pid].mParam.substr(1, 1);
-                idx = std::stoi(gridQuery->mQueryParameterList[pid].mParam.substr(3));
-              }
-              else if (gridQuery->mQueryParameterList[pid].mParam.substr(3, 1) == "-")
-              {
-                n = gridQuery->mQueryParameterList[pid].mParam.substr(1, 2);
-                idx = std::stoi(gridQuery->mQueryParameterList[pid].mParam.substr(4));
+                n = pstr.substr(1, dash - 1);
+                idx = Fmi::stoi_opt(pstr.substr(dash + 1)).value_or(-1);
               }
 
               if (idx >= 0 && idx < pLen)
@@ -2082,10 +2131,23 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                     TS::TimedValue tsValue(queryTime, producerName);
                     tsForNonGridParam->emplace_back(tsValue);
                   }
+                  else if (n == "F")  // File
+                  {
+                    std::string fileName;
+                    T::FileInfo fInfo;
+                    const auto fileId = gridQuery->mQueryParameterList[i].mValueList[t]->mFileId[0];
+                    if (contentServer->getFileInfoById(0, fileId, fInfo) == 0)
+                      fileName = fInfo.mName;
+
+                    TS::TimedValue tsValue(queryTime, fileName);
+                    tsForNonGridParam->emplace_back(tsValue);
+                  }
                   else if (n == "G")  // Generation
                   {
                     T::GenerationInfo info;
-                    if (itsGridEngine->getGenerationInfoById(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId,info))
+                    if (itsGridEngine->getGenerationInfoById(
+                            C_INT64(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId),
+                            info))
                     {
                       TS::TimedValue tsValue(queryTime, info.mName);
                       tsForNonGridParam->emplace_back(tsValue);
@@ -2093,7 +2155,8 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                     else
                     {
                       TS::TimedValue tsValue(
-                          queryTime,gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId);
+                          queryTime,
+                          C_INT64(gridQuery->mQueryParameterList[i].mValueList[t]->mGenerationId));
                       tsForNonGridParam->emplace_back(tsValue);
                     }
                   }
@@ -2136,6 +2199,16 @@ void GridInterface::extractQueryResult(std::shared_ptr<QueryServer::Query>& grid
                   {
                     TS::TimedValue tsValue(
                         queryTime, gridQuery->mQueryParameterList[i].mValueList[t]->mAnalysisTime);
+                    tsForNonGridParam->emplace_back(tsValue);
+                  }
+                  else if (n == "LON" || n == "LAT" || n == "LATLON" || n == "LONLAT")
+                  {
+                    TS::TimedValue tsValue(
+                        queryTime,
+                        format_coordinates(
+                            gridQuery->mQueryParameterList[i].mValueList[t]->mValueList,
+                            masterquery.valueformatter,
+                            n));
                     tsForNonGridParam->emplace_back(tsValue);
                   }
                   else
