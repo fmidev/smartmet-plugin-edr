@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.9
-Release: 7%{?dist}.fmi
+Version: 26.10.14
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-1.fmi
+- Reapply earlier fix made to TimeSeries plugin: Returning additional parameter information also when the parameter value is NaN.
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-7.fmi
 - A location without data no longer fails a multi-location querydata request; it is left out, and the request fails only if no location has data (BRAINSTORM-3500)
 
