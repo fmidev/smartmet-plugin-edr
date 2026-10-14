@@ -153,9 +153,8 @@ Fmi::ValueFormatterParam valueformatter_params(const Spine::HTTP::Request& req)
  */
 // ----------------------------------------------------------------------
 
-CommonQuery::CommonQuery(const State& state, const Spine::HTTP::Request& req, Config& config)
-    : ObsQueryParams(req),
-      valueformatter(valueformatter_params(req))
+CommonQuery::CommonQuery(const State& /*state*/, const Spine::HTTP::Request& req, Config& config)
+    : ObsQueryParams(req), valueformatter(valueformatter_params(req))
 {
   try
   {

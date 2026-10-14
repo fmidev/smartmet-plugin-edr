@@ -1955,28 +1955,14 @@ std::unique_ptr<Spine::Table> PluginImpl::getEDRInternalInformation(
   Spine::Reactor& reactor,
   const Spine::HTTP::Request& request) const
 {
-  std::map
-  <
-    std::string,
-    std::pair<
-      std::function<std::unique_ptr<Spine::Table>(
-        Spine::Reactor& reactor,
-        const Spine::HTTP::Request& request)>,
-      std::string>
-  >
-  info =
-  {
-    {
-      "geometrystorage",
-      {
-        [this](Spine::Reactor& reactor, const Spine::HTTP::Request& request)
-        {
-           return itsGeometryStorage.dumpContents();
-        },
-        "Contents of the geometry storage"
-      }
-    }
-  };
+  std::map<std::string,
+           std::pair<std::function<std::unique_ptr<Spine::Table>(
+                         Spine::Reactor & reactor, const Spine::HTTP::Request& request)>,
+                     std::string>>
+      info = {{"geometrystorage",
+               {[this](Spine::Reactor& /*reactor*/, const Spine::HTTP::Request& /*request*/)
+                { return itsGeometryStorage.dumpContents(); },
+                "Contents of the geometry storage"}}};
 
   const std::string request_param = Fmi::ascii_tolower_copy(
     Spine::optional_string(request.getParameter("request"), "?"));

@@ -102,7 +102,7 @@ bool is_data_query(const Spine::HTTP::Request& req,
       // 'locations' with no LOCID path part is a listing (metadata) query, unless a
       // locationId query parameter is given instead - then it's still a data query
       //
-      return Spine::optional_string(req.getParameter("locationId"), "").empty() == false;
+      return !Spine::optional_string(req.getParameter("locationId"), "").empty();
     }
 
     return true;
@@ -915,7 +915,7 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
     const std::string dims =
         geometry_name.substr(std::min(geometry_name.size(), std::size_t(multi ? 15 : 10)));
     if ((geometry_name != (multi ? "MULTILINESTRING" : "LINESTRING") + dims) ||
-        (dims != "" && dims != "Z" && dims != "M" && dims != "ZM"))
+        (!dims.empty() && dims != "Z" && dims != "M" && dims != "ZM"))
       throw EDRException(
           "Trajectory and corridor coords must be a LINESTRING or MULTILINESTRING, optionally "
           "with Z, M or ZM values: " +
@@ -2353,10 +2353,7 @@ bool EDRQueryParams::CustomDimensions::matches(const std::string &parameterName,
 
     auto level = it->second.metocean.level;
 
-    if ((! levels.empty()) && (std::find(levels.begin(), levels.end(), level) == levels.end()))
-      return false;
-
-    return true;
+    return !((!levels.empty()) && (std::find(levels.begin(), levels.end(), level) == levels.end()));
   }
   catch (...)
   {

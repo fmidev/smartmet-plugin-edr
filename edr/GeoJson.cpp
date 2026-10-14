@@ -295,10 +295,9 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
   }
 }
 
-Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter> &query_parameters,
-                                      const EDRMetaData &metadata,
-                                      const CustomDimReferences &custom_dim_refs,
-                                      const std::string &language)
+Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter>& query_parameters,
+                                      const EDRMetaData& metadata,
+                                      const CustomDimReferences& custom_dim_refs)
 {
   try
   {
@@ -577,7 +576,7 @@ Json::Value format_output_data_one_point(const TS::OutputData &outputData,
 
     feature_collection["type"] = Json::Value("FeatureCollection");
     feature_collection["parameters"] =
-        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs);
     auto coordinates = get_coordinates(outputData, query_parameters);
     if (coordinates.empty())
       return feature_collection;
@@ -727,7 +726,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
 
     feature_collection["type"] = Json::Value("FeatureCollection");
     feature_collection["parameters"] =
-        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs);
 
     if (query_parameters.empty())
       return feature_collection;
@@ -1044,7 +1043,7 @@ Json::Value format_output_data_feature_collection(
 
     feature_collection["type"] = Json::Value("FeatureCollection");
     feature_collection["parameters"] =
-        get_edr_series_parameters(query_parameters, emd, custom_dim_refs, language);
+        get_edr_series_parameters(query_parameters, emd, custom_dim_refs);
     const auto &lon_precision = emd.getPrecision("longitude");
     const auto &lat_precision = emd.getPrecision("latitude");
     auto level_precision = 0;
@@ -1116,14 +1115,14 @@ Json::Value format_output_data_feature_collection(
 
 }  // namespace
 
-Json::Value formatOutputData(const TS::OutputData &outputData,
-                             const EDRMetaData &emd,
-                             EDRQueryType query_type,
-                             const std::set<int> &levels,
-                             const CoordinateFilter &coordinate_filter,
-                             const std::vector<Spine::Parameter> &query_parameters,
-                             const CustomDimReferences &custom_dim_refs,
-                             const std::string &language)
+Json::Value formatOutputData(const TS::OutputData& outputData,
+                             const EDRMetaData& emd,
+                             EDRQueryType /*query_type*/,
+                             const std::set<int>& levels,
+                             const CoordinateFilter& coordinate_filter,
+                             const std::vector<Spine::Parameter>& query_parameters,
+                             const CustomDimReferences& custom_dim_refs,
+                             const std::string& language)
 {
   try
   {

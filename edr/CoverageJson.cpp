@@ -1197,7 +1197,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
             collection_emd, name, stdnames, methods, durations, levels, custom_dim_refs);
     }
 
-    if (stdnames->size() > 0)
+    if (!stdnames->empty())
     {
       auto stdname_interval = Json::Value(Json::ValueType::arrayValue);
       stdname_interval[0] = Json::Value(*(stdnames->begin()));
@@ -1210,7 +1210,7 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
         stdname_values[stdname_values.size()] = Json::Value(name);
       }
       auto stdname_dim = Json::Value(Json::ValueType::objectValue);
-      auto dim = "standard_name";
+      const auto* dim = "standard_name";
       stdname_dim["id"] = Json::Value(dim);
       stdname_dim["interval"] = stdname_interval_arr;
       stdname_dim["values"] = stdname_values;
@@ -1460,7 +1460,7 @@ void add_timestep_dimension(const edr_temporal_extent &temporal_extent,
       interval_arr[0] = interval;
 
       auto timestepdim = Json::Value(Json::ValueType::objectValue);
-      auto dim = "timestep";
+      const auto* dim = "timestep";
       timestepdim["id"] = Json::Value(dim);
       timestepdim["interval"] = interval_arr;
       timestepdim["values"] = timesteps;
@@ -3089,9 +3089,9 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
     bool levels_present = !levels.empty();
 
     // Get indexes of longitude, latitude, level
-    unsigned int longitude_index;
-    unsigned int latitude_index;
-    unsigned int level_index;
+    unsigned int longitude_index = 0;
+    unsigned int latitude_index = 0;
+    unsigned int level_index = 0;
     if (levels_present)
     {
       level_index = (query_parameters.size() - 1);

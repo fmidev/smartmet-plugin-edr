@@ -1052,6 +1052,8 @@ const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
   return NOT_A_DATE_TIME;
 }
 
+namespace
+{
 std::string latin1_to_utf8(const std::string& s)
 {
   std::string out;
@@ -1068,6 +1070,7 @@ std::string latin1_to_utf8(const std::string& s)
 
   return out;
 }
+}  // namespace
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
                                         const ProducerLicenses & /* licenses */,
