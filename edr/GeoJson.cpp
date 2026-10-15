@@ -482,7 +482,7 @@ void add_value(const TS::TimedValue &tv,
     else if (const auto* ptr = std::get_if<int>(&val))
     {
       if (values_index == 0)
-        data_type = Json::Value("int");
+        data_type = Json::Value("integer");
       values_array[values_index] = Json::Value(*ptr);
     }
     else if (const auto* ptr = std::get_if<std::string>(&val))

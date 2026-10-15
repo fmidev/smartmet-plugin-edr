@@ -227,8 +227,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "float",
 			"shape" : 
@@ -284,10 +284,10 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
-			"dataType" : "int",
+			"dataType" : "integer",
 			"shape" : 
 			[
 				37,
@@ -341,8 +341,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "string",
 			"shape" : 
@@ -398,8 +398,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "string",
 			"shape" : 
@@ -455,8 +455,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "string",
 			"shape" : 
@@ -512,8 +512,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "string",
 			"shape" : 

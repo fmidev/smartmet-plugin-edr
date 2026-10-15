@@ -121,6 +121,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-2.fmi
+- CoverageJSON and GeoJSON report integer parameters with dataType integer instead of the invalid int
 - Fixed mechanical clang-tidy findings (internal linkage, unused parameters, initialization, redundant code), no functional changes
 - Requires 26.10.15 versions of newbase, spine, grid-files, grid-content, observation, grid due to their ABI changes
 - Fixed clang-tidy style findings (loops, nested conditionals, dead code)

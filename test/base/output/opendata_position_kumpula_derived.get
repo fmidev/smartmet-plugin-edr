@@ -143,8 +143,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "string",
 			"shape" : 
@@ -200,8 +200,8 @@
 			"axisNames" : 
 			[
 				"t",
-				"x",
-				"y"
+				"y",
+				"x"
 			],
 			"dataType" : "string",
 			"shape" : 
