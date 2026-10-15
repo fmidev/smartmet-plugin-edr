@@ -110,7 +110,7 @@ class Config : private boost::noncopyable
   bool enableConfigurationPolling() const { return itsEnableConfigurationPolling; }
 
   QueryServer::AliasFileCollection itsAliasFileCollection;
-  time_t itsLastAliasCheck;
+  time_t itsLastAliasCheck = 0;
 
   const AviCollections &getAviCollections() const { return itsAviCollections; }
   const Spine::OpenAPI::Settings &openAPISettings() const { return itsOpenAPISettings; }

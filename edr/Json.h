@@ -90,6 +90,7 @@ class Value
   Value(Value &&value) noexcept;
   Value &operator=(const Value &value);
   Value &operator=(Value &&value);
+  ~Value() = default;
   Value &operator[](const std::string &key);
   Value &operator[](ArrayIndex index);
   std::string toStyledString(bool pretty) const;

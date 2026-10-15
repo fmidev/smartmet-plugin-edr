@@ -20,8 +20,8 @@ namespace
 struct time_coord_value
 {
   std::string time;
-  double lon;
-  double lat;
+  double lon = 0.0;
+  double lat = 0.0;
   std::optional<TS::Value> value;
 };
 
@@ -2495,9 +2495,9 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
       // that is what lets us merge them into a single Coverage's "ranges".
       struct param_level_data
       {
-        const std::string *output_name;
-        int precision;
-        const std::vector<time_coord_value> *values;
+        const std::string *output_name = nullptr;
+        int precision = 0;
+        const std::vector<time_coord_value> *values = nullptr;
         std::vector<point_group> groups;
       };
 

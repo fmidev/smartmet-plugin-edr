@@ -892,19 +892,18 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
             thePlugin.itsConfig, state, q, producerName, outputData);
         process_qengine_query = false;
       }
-      else
 #endif
 #ifndef WITHOUT_OBSERVATION
-          if (!areaproducers.empty() && !thePlugin.itsConfig.obsEngineDisabled() &&
-              itsObsEngineQuery.isObsProducer(areaproducers.front()))
+      if (process_qengine_query && !areaproducers.empty() &&
+          !thePlugin.itsConfig.obsEngineDisabled() &&
+          itsObsEngineQuery.isObsProducer(areaproducers.front()))
       {
         itsObsEngineQuery.processObsEngineQuery(
             state, q, outputData, areaproducers, producerDataPeriod, obsParameters);
         process_qengine_query = false;
       }
-      else
 #endif
-          if (itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
+      if (process_qengine_query && itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
       {
         bool processed = itsGridEngineQuery.processGridEngineQuery(
             state, q, outputData, queryStreamer, areaproducers, producerDataPeriod);
@@ -1162,9 +1161,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
             state, q, outputData, areaproducers, producerDataPeriod, obsParameters);
         process_qengine_query = false;
       }
-      else
 #endif
-          if (itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
+      if (process_qengine_query && itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
       {
         bool processed = itsGridEngineQuery.processGridEngineQuery(
             state, q, outputData, queryStreamer, areaproducers, producerDataPeriod);

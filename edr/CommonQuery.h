@@ -84,7 +84,7 @@ class CommonQuery : public ObsQueryParams
   Pressures pressures;
   Heights heights;
   bool levelRange = false;  // Set if querying level/pressure/height range
-  bool is_timeseries_query;
+  bool is_timeseries_query = false;
 
   // Grid engine (param,level) request names (Spine::Parameter::originalName()) which returned
   // no data at all, e.g. a parameter which only has data on some of the levels implied by the

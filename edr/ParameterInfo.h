@@ -18,7 +18,7 @@ struct metocean_config
   std::string standard_name;
   std::string method;
   std::string duration;
-  float       level;
+  float       level = 0.0F;
 };
 struct parameter_info_config
 {
