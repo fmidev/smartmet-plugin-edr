@@ -1000,14 +1000,14 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
       bool first = true;
       while (true)
       {
-        pos = geometry_values.find_first_not_of(" ", pos);
+        pos = geometry_values.find_first_not_of(' ', pos);
         if (pos == std::string::npos)
           break;
         if (!first)
         {
           if (geometry_values[pos] != ',')
             throw EDRException("Invalid " + geometry_name + " definition: " + coords);
-          pos = geometry_values.find_first_not_of(" ", pos + 1);
+          pos = geometry_values.find_first_not_of(' ', pos + 1);
           if (pos == std::string::npos)
             throw EDRException("Invalid " + geometry_name + " definition: " + coords);
         }

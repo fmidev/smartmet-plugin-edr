@@ -1170,7 +1170,7 @@ Config::Config(const string &configfile)
         throw Fmi::Exception(BCP, "Configuration file error. 'crs' must be an array of strings");
       std::vector<std::string> crs_list;
       for (int i = 0; i < crs_setting.getLength(); i++)
-        crs_list.push_back(static_cast<const char *>(crs_setting[i]));
+        crs_list.emplace_back(static_cast<const char*>(crs_setting[i]));
       itsCRSRegistry.init(crs_list);
     }
 
