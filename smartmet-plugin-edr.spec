@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.14
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -81,7 +81,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-spine >= 26.10.11
 #TestRequires: smartmet-library-spine-plugin-test >= 26.10.11
 #TestRequires: smartmet-library-newbase-devel >= 26.10.11
-#TestRequires: redis
+#TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-library-grid-files-test >= 26.10.11
@@ -120,11 +120,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
-* Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-1.fmi
+* Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-2.fmi
 - Return the @-detail parameters (@I, @P, @G etc) of grid timeseries queries also for rows
   whose value is missing, as the timeseries plugin does
 - Added the @F, @LAT, @LON, @LATLON and @LONLAT details supported by the timeseries plugin
 - Malformed @-detail parameter names no longer throw from std::stoi
+
+* Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-1.fmi
+- Reapply earlier fix made to TimeSeries plugin: Returning additional parameter information also when the parameter value is NaN.
 
 * Sun Oct 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.11-1.fmi
 - Generated OpenAPI 3.1 definitions instead of the static api.json template:

@@ -27,7 +27,7 @@ start-redis-db:
 	@echo "*** Creating the Redis configuration file."
 	smartmet-grid-test-config-creator cnf/environment.conf cnf/grid/redis/redis-template.conf cnf/grid/redis/redis.conf
 	@echo "*** Starting the Redis database."
-	@redis-server cnf/grid/redis/redis.conf
+	@valkey-server cnf/grid/redis/redis.conf
 
 stop-redis-db:
 	@if [ -f cnf/grid/redis/redis-server.pid ] ; then \
