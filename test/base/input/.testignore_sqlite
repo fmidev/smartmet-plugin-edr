@@ -15,3 +15,9 @@ timeseries/fmi_copernicus_observations.get
 timeseries/place_fmisid_lpnn_wmo_wsi_t2m.get
 timeseries/opendata-smartsymboltext-en.get
 timeseries/opendata-smartsymboltext-fi.get
+fmi_locations_100968_cloudceiling.get
+opendata_locations_101004_derived.get
+opendata_locations_101004_derived_geojson.get
+opendata_position_kumpula_derived.get
+timeseries/fmi-cloudceiling.get
+timeseries/opendata-windcompass-feelslike.get

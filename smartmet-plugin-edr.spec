@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.14
+Version: 26.10.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -41,11 +41,11 @@ BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
 BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
 BuildRequires: smartmet-library-newbase-devel >= 26.10.8
 BuildRequires: smartmet-library-gis-devel >= 26.10.3
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.8
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.15
 BuildRequires: smartmet-engine-avi-devel >= 26.10.3
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.3
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.10.3
+BuildRequires: smartmet-engine-observation-devel >= 26.10.15-2
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 26.10.3
 BuildRequires: smartmet-engine-gis-devel >= 26.9.26
@@ -61,7 +61,7 @@ Requires: smartmet-library-locus >= 26.10.3
 Requires: smartmet-library-macgyver >= 26.10.3
 Requires: smartmet-library-newbase >= 26.10.8
 Requires: smartmet-library-spine >= 26.10.3
-Requires: smartmet-library-timeseries >= 26.10.8
+Requires: smartmet-library-timeseries >= 26.10.15
 Requires: smartmet-library-gis >= 26.10.3
 Requires: smartmet-library-grid-files >= 26.9.26
 Requires: smartmet-engine-avi >= 26.10.3
@@ -90,7 +90,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 26.9.26
 #TestRequires: smartmet-engine-querydata >= 26.10.3
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.3
+#TestRequires: smartmet-engine-observation >= 26.10.15-2
 %endif
 #TestRequires: smartmet-engine-grid >= 26.10.3
 #TestRequires: gdal312-libs
@@ -121,6 +121,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/edr/*json
 
 %changelog
+* Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-1.fmi
+- Observation collections now publish the derived parameters (windcompass8/16/32, feelslike, smartsymbol, smartsymboltext, cloudceiling/ft/hft) whose source measurements are available
+
 * Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-1.fmi
 - Reapply earlier fix made to TimeSeries plugin: Returning additional parameter information also when the parameter value is NaN.
 

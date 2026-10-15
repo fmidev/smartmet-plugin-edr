@@ -400,6 +400,58 @@ void process_parameters(const std::string &producer,
   }
 }
 
+// Add the derived parameters the observation engine can calculate for the producer
+void add_derived_parameters(const Engine::Observation::Engine &obsEngine,
+                            const std::string &producer,
+                            const ProducerParameters &prodParams,
+                            EDRMetaData &producer_emd)
+{
+  try
+  {
+    // name -> description, unit
+    static const std::map<std::string, std::pair<std::string, std::string>> derived_info = {
+        {"windcompass8", {"Wind direction as an 8-point compass direction", ""}},
+        {"windcompass16", {"Wind direction as a 16-point compass direction", ""}},
+        {"windcompass32", {"Wind direction as a 32-point compass direction", ""}},
+        {"feelslike", {"Feels like temperature", "degC"}},
+        {"smartsymbol", {"Weather symbol (SmartSymbol)", ""}},
+        {"smartsymboltext", {"Weather symbol (SmartSymbol) as text", ""}},
+        {"cloudceiling", {"Height of the cloud base covering at least 5/8 of the sky", "m"}},
+        {"cloudceilingft",
+         {"Height of the cloud base covering at least 5/8 of the sky in feet", "ft"}},
+        {"cloudceilinghft",
+         {"Height of the cloud base covering at least 5/8 of the sky in hundreds of feet",
+          "hft"}}};
+
+    const bool restricted = prodParams.parametersDefined(producer);
+
+    for (const auto &name : obsEngine.getDerivedParameters(producer))
+    {
+      if (producer_emd.parameters.find(name) != producer_emd.parameters.end())
+        continue;
+      if (restricted && !prodParams.isValidParameter(producer, name))
+        continue;
+
+      std::string description = name;
+      std::string unit;
+      const auto it = derived_info.find(name);
+      if (it != derived_info.end())
+      {
+        description = it->second.first;
+        unit = it->second.second;
+      }
+
+      producer_emd.parameter_names.insert(name);
+      producer_emd.parameters.insert(
+          std::make_pair(name, edr_parameter(name, description, unit, name)));
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!").addParameter("Producer", producer);
+  }
+}
+
 #ifndef WITHOUT_AVI
 std::vector<TimePeriod> get_time_periods(
     const std::set<Fmi::LocalDateTime> &timesteps,
@@ -1583,6 +1635,7 @@ EDRProducerMetaData get_edr_metadata_obs(
                          producer_measurand_info,
                          default_language,
                          producer_emd);
+      add_derived_parameters(obsEngine, producer, prodParam, producer_emd);
 
       producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
       producer_emd.language = default_language;

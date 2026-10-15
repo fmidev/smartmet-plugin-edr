@@ -1,0 +1,1 @@
+GET /edr/collections/opendata/locations/101004?datetime=2013-08-05T12:00:00Z/2013-08-05T18:00:00Z&parameter-name=windcompass8,windcompass16,windcompass32,feelslike,smartsymbol,smartsymboltext&lang=en HTTP/1.0
