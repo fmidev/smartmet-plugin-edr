@@ -193,6 +193,25 @@ _Example 2 - Multiple parameters_
 ```
 parameter-name=Temperature,Pressure
 ```
+
+Observation collections also offer parameters derived from the measured ones, provided that
+the collection has the measurements they are calculated from:
+
+| Parameter | Calculated from |
+|-----------|-----------------|
+| windcompass8, windcompass16, windcompass32 | wind direction |
+| feelslike | temperature, wind speed and relative humidity |
+| smartsymbol, smartsymboltext | wawa code, total cloud cover and temperature |
+| cloudceiling, cloudceilingft, cloudceilinghft | ceilometer cloud layer amounts and heights |
+
+The derived parameters are listed in the collection metadata like the measured parameters.
+The language of smartsymboltext is selected with the _lang_ option.
+
+_Example 3 - Derived observation parameters_
+
+```
+parameter-name=windcompass8,smartsymboltext&lang=en
+```
 ### **Parameter z**
 
 Parameter z defines vertical level(s) to return data from i.e. z=level. Lever may be for example pressure level or hybrid level.

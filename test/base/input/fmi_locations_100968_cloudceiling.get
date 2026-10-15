@@ -1,0 +1,1 @@
+GET /edr/collections/fmi/locations/100968?datetime=2026-10-02T00:00:00Z/2026-10-02T02:00:00Z&parameter-name=cloudceiling,cloudceilingft,cloudceilinghft,windcompass8 HTTP/1.0

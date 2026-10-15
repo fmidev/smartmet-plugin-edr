@@ -1,0 +1,568 @@
+{
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "PointSeries",
+		"referencing" : 
+		[
+			{
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
+				{
+					"id" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+					"type" : "GeographicCRS"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
+				{
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
+				}
+			}
+		],
+		"type" : "Domain",
+		"axes" : 
+		{
+			"t" : 
+			{
+				"values" : 
+				[
+					"2013-08-05T12:00:00Z",
+					"2013-08-05T12:10:00Z",
+					"2013-08-05T12:20:00Z",
+					"2013-08-05T12:30:00Z",
+					"2013-08-05T12:40:00Z",
+					"2013-08-05T12:50:00Z",
+					"2013-08-05T13:00:00Z",
+					"2013-08-05T13:10:00Z",
+					"2013-08-05T13:20:00Z",
+					"2013-08-05T13:30:00Z",
+					"2013-08-05T13:40:00Z",
+					"2013-08-05T13:50:00Z",
+					"2013-08-05T14:00:00Z",
+					"2013-08-05T14:10:00Z",
+					"2013-08-05T14:20:00Z",
+					"2013-08-05T14:30:00Z",
+					"2013-08-05T14:40:00Z",
+					"2013-08-05T14:50:00Z",
+					"2013-08-05T15:00:00Z",
+					"2013-08-05T15:10:00Z",
+					"2013-08-05T15:20:00Z",
+					"2013-08-05T15:30:00Z",
+					"2013-08-05T15:40:00Z",
+					"2013-08-05T15:50:00Z",
+					"2013-08-05T16:00:00Z",
+					"2013-08-05T16:10:00Z",
+					"2013-08-05T16:20:00Z",
+					"2013-08-05T16:30:00Z",
+					"2013-08-05T16:40:00Z",
+					"2013-08-05T16:50:00Z",
+					"2013-08-05T17:00:00Z",
+					"2013-08-05T17:10:00Z",
+					"2013-08-05T17:20:00Z",
+					"2013-08-05T17:30:00Z",
+					"2013-08-05T17:40:00Z",
+					"2013-08-05T17:50:00Z",
+					"2013-08-05T18:00:00Z"
+				]
+			},
+			"x" : 
+			{
+				"values" : 
+				[
+					24.96131
+				]
+			},
+			"y" : 
+			{
+				"values" : 
+				[
+					60.20307
+				]
+			}
+		}
+	},
+	"parameters" : 
+	{
+		"feelslike" : 
+		{
+			"id" : "feelslike",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "Feels like temperature"
+			},
+			"label" : 
+			{
+				"en" : "feelslike"
+			},
+			"observedProperty" : 
+			{
+				"id" : "feelslike",
+				"label" : 
+				{
+					"en" : "feelslike"
+				}
+			}
+		},
+		"smartsymbol" : 
+		{
+			"id" : "smartsymbol",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "Weather symbol (SmartSymbol)"
+			},
+			"label" : 
+			{
+				"en" : "smartsymbol"
+			},
+			"observedProperty" : 
+			{
+				"id" : "smartsymbol",
+				"label" : 
+				{
+					"en" : "smartsymbol"
+				}
+			}
+		},
+		"smartsymboltext" : 
+		{
+			"id" : "smartsymboltext",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "Weather symbol (SmartSymbol) as text"
+			},
+			"label" : 
+			{
+				"en" : "smartsymboltext"
+			},
+			"observedProperty" : 
+			{
+				"id" : "smartsymboltext",
+				"label" : 
+				{
+					"en" : "smartsymboltext"
+				}
+			}
+		},
+		"windcompass16" : 
+		{
+			"id" : "windcompass16",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "Wind direction as a 16-point compass direction"
+			},
+			"label" : 
+			{
+				"en" : "windcompass16"
+			},
+			"observedProperty" : 
+			{
+				"id" : "windcompass16",
+				"label" : 
+				{
+					"en" : "windcompass16"
+				}
+			}
+		},
+		"windcompass32" : 
+		{
+			"id" : "windcompass32",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "Wind direction as a 32-point compass direction"
+			},
+			"label" : 
+			{
+				"en" : "windcompass32"
+			},
+			"observedProperty" : 
+			{
+				"id" : "windcompass32",
+				"label" : 
+				{
+					"en" : "windcompass32"
+				}
+			}
+		},
+		"windcompass8" : 
+		{
+			"id" : "windcompass8",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"en" : "Wind direction as an 8-point compass direction"
+			},
+			"label" : 
+			{
+				"en" : "windcompass8"
+			},
+			"observedProperty" : 
+			{
+				"id" : "windcompass8",
+				"label" : 
+				{
+					"en" : "windcompass8"
+				}
+			}
+		}
+	},
+	"ranges" : 
+	{
+		"feelslike" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				37,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				22,
+				22,
+				22,
+				21,
+				22,
+				22,
+				22,
+				22,
+				23,
+				22,
+				24,
+				24,
+				22,
+				22,
+				23,
+				23,
+				25,
+				23,
+				22,
+				22,
+				22,
+				22,
+				21,
+				21,
+				21,
+				23,
+				22,
+				22,
+				22,
+				22,
+				22,
+				21,
+				21,
+				21,
+				21,
+				21,
+				22
+			]
+		},
+		"smartsymbol" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "int",
+			"shape" : 
+			[
+				37,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				4,
+				4,
+				2,
+				2,
+				2,
+				2,
+				1,
+				1,
+				1,
+				2,
+				2,
+				2,
+				4,
+				4,
+				6,
+				34,
+				34,
+				21,
+				4,
+				4,
+				4,
+				6,
+				34,
+				11,
+				11,
+				11,
+				24,
+				6,
+				4,
+				6,
+				6,
+				6,
+				4,
+				6,
+				6,
+				6,
+				4
+			]
+		},
+		"smartsymboltext" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "string",
+			"shape" : 
+			[
+				37,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				"partly cloudy",
+				"partly cloudy",
+				"mostly clear",
+				"mostly clear",
+				"mostly clear",
+				"mostly clear",
+				"clear",
+				"clear",
+				"clear",
+				"mostly clear",
+				"mostly clear",
+				"mostly clear",
+				"partly cloudy",
+				"partly cloudy",
+				"mostly cloudy",
+				"periods of light rain",
+				"periods of light rain",
+				"isolated showers",
+				"partly cloudy",
+				"partly cloudy",
+				"partly cloudy",
+				"mostly cloudy",
+				"periods of light rain",
+				"drizzle",
+				"drizzle",
+				"drizzle",
+				"scattered showers",
+				"mostly cloudy",
+				"partly cloudy",
+				"mostly cloudy",
+				"mostly cloudy",
+				"mostly cloudy",
+				"partly cloudy",
+				"mostly cloudy",
+				"mostly cloudy",
+				"mostly cloudy",
+				"partly cloudy"
+			]
+		},
+		"windcompass16" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "string",
+			"shape" : 
+			[
+				37,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				"S",
+				"SSW",
+				"SSW",
+				"SW",
+				"SW",
+				"SW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SW",
+				"SW",
+				"SSW",
+				"SW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"S",
+				"SSW",
+				"SSW",
+				"SSW",
+				"S",
+				"SW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SW",
+				"SW",
+				"SW",
+				"WSW",
+				"SW",
+				"SW",
+				"SSE"
+			]
+		},
+		"windcompass32" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "string",
+			"shape" : 
+			[
+				37,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				"SbW",
+				"SSW",
+				"SWbS",
+				"SW",
+				"SWbS",
+				"SWbS",
+				"SWbS",
+				"SWbS",
+				"SWbS",
+				"SSW",
+				"SSW",
+				"SW",
+				"SWbS",
+				"SSW",
+				"SW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SSW",
+				"SbW",
+				"SbW",
+				"SSW",
+				"SWbS",
+				"SSW",
+				"SbW",
+				"SWbS",
+				"SSW",
+				"SWbS",
+				"SSW",
+				"SWbS",
+				"SWbS",
+				"SWbS",
+				"SW",
+				"SWbW",
+				"SW",
+				"SW",
+				"SbE"
+			]
+		},
+		"windcompass8" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"x",
+				"y"
+			],
+			"dataType" : "string",
+			"shape" : 
+			[
+				37,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				"S",
+				"S",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"S",
+				"SW",
+				"SW",
+				"S",
+				"S",
+				"SW",
+				"S",
+				"S",
+				"S",
+				"SW",
+				"SW",
+				"S",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"SW",
+				"S"
+			]
+		}
+	}
+}

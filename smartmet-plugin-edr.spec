@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.15
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -45,7 +45,7 @@ BuildRequires: smartmet-library-timeseries-devel >= 26.10.15
 BuildRequires: smartmet-engine-avi-devel >= 26.10.15
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.15
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.10.15
+BuildRequires: smartmet-engine-observation-devel >= 26.10.15-3
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 26.10.15
 BuildRequires: smartmet-engine-gis-devel >= 26.10.15
@@ -91,7 +91,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 26.10.15
 #TestRequires: smartmet-engine-querydata >= 26.10.15
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.15
+#TestRequires: smartmet-engine-observation >= 26.10.15-3
 %endif
 #TestRequires: smartmet-engine-grid >= 26.10.15
 #TestRequires: gdal312-libs
@@ -120,11 +120,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
-* Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-1.fmi
+* Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-2.fmi
 - Fixed mechanical clang-tidy findings (internal linkage, unused parameters, initialization, redundant code), no functional changes
 - Requires 26.10.15 versions of newbase, spine, grid-files, grid-content, observation, grid due to their ABI changes
 - Fixed clang-tidy style findings (loops, nested conditionals, dead code)
 - Fixed clang-tidy correctness findings (member initialization, rule of five, printf formats, dead stores)
+
+* Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-1.fmi
+- Observation collections now publish the derived parameters (windcompass8/16/32, feelslike, smartsymbol, smartsymboltext, cloudceiling/ft/hft) whose source measurements are available
 
 * Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-2.fmi
 - Return the @-detail parameters (@I, @P, @G etc) of grid timeseries queries also for rows
