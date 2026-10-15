@@ -29,6 +29,9 @@ class CommonQuery : public ObsQueryParams
 {
  public:
   CommonQuery() = delete;
+  virtual ~CommonQuery() = default;
+  CommonQuery(const CommonQuery&) = default;
+  CommonQuery& operator=(const CommonQuery&) = delete;
   CommonQuery(const State& state, const Spine::HTTP::Request& req, Config& config);
 
   using ParamPrecisions = std::vector<int>;
