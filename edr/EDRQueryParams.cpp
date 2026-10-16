@@ -439,6 +439,203 @@ std::optional<Fmi::DateTime> try_parse_time(const std::string& datetime)
 
 }  // anonymous namespace
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Handle the landing page and the conformance declaration queries
+ *
+ * Returns true if the query is one of them.
+ */
+// ----------------------------------------------------------------------
+
+bool EDRQueryParams::parseDocumentQuery(const std::string& resource, const Config& config)
+{
+  std::string path = resource;
+  while (path.size() > 1 && path.back() == '/')
+    path.pop_back();
+  const auto& root = config.defaultUrl();
+  if (path == root || path == root + "/conformance")
+  {
+    itsEDRQuery.query_id = EDRQueryId::APIQuery;
+    itsEDRQuery.instance_id = (path == root ? "landing" : "conformance");
+    return true;
+  }
+  return false;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check the query type is supported by the collection
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::checkQueryType(const std::string& invalid_query_type,
+                                    const Config& config) const
+{
+  const auto& supportedDataQueries = config.getSupportedDataQueries(itsEDRQuery.collection_id);
+
+  if (!invalid_query_type.empty() || (itsEDRQuery.query_id == EDRQueryId::DataQuery &&
+                                      supportedDataQueries.find(to_string(
+                                          itsEDRQuery.query_type)) == supportedDataQueries.end()))
+  {
+    auto data_query_list = boost::algorithm::join(supportedDataQueries, ",");
+    auto requested_query_type =
+        (!invalid_query_type.empty() ? invalid_query_type : to_string(itsEDRQuery.query_type));
+    throw EDRNotFound("Invalid query type '" + requested_query_type +
+                       "'. The following queries are supported for collection " +
+                       itsEDRQuery.collection_id + ": " + data_query_list);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the options of a metadata query
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::parseMetaDataQueryOptions()
+{
+  if (itsEDRQuery.query_type == EDRQueryType::Locations)
+    parseLimitAndOffset();
+
+  // BRAINSTORM-3267; if mime_type is left empty, plugin sets the type usíng output format
+  //
+  if (itsEDRQuery.query_type == EDRQueryType::Locations)
+    mime_type = "application/geo+json";
+  else
+    mime_type = "application/json";
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the requested crs
+ *
+ * OGC API-EDR: crs must be one of the CRSs listed in the collection metadata
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::parseCRS(const Config& config)
+{
+  auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
+  if (!is_crs84(crs))
+  {
+    itsEDRQuery.crs = config.getCRSRegistry().find(crs);
+    if (itsEDRQuery.crs)
+    {
+      // MetOcean profile: the output referencing system id is the requested crs value
+      auto info = std::make_shared<CRSInfo>(*itsEDRQuery.crs);
+      info->request_name = crs;
+      itsEDRQuery.crs = info;
+    }
+    if (!itsEDRQuery.crs)
+    {
+      std::string supported = "OGC:CRS84";
+      for (const auto& info : config.getCRSRegistry().all())
+        supported += ", " + info->id;
+      throw EDRException("Invalid crs: " + crs + ". Supported values are " + supported);
+    }
+    // Output coordinates of projected CRSs are compared with the requested ones in metres
+    if (!itsEDRQuery.crs->geographic)
+      itsCoordinateFilter.setTolerance(1.0);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the location options. Position, radius, area, trajectory and
+ *        corridor queries require coords
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::parseLocationOptions(const EDRMetaData& emd)
+{
+  auto coords = Spine::optional_string(req.getParameter("coords"), "");
+  if (!coords.empty())
+  {
+    parseCoords(emd, coords);
+  }
+  else if (itsEDRQuery.query_type == EDRQueryType::Locations)
+  {
+    parseLocations(emd, coords);
+  }
+  else if (itsEDRQuery.query_type == EDRQueryType::Cube)
+  {
+    parseCube(emd);
+  }
+  else if ((itsEDRQuery.query_type == EDRQueryType::Position) ||
+           (itsEDRQuery.query_type == EDRQueryType::Radius) ||
+           (itsEDRQuery.query_type == EDRQueryType::Area) ||
+           (itsEDRQuery.query_type == EDRQueryType::Trajectory) ||
+           (itsEDRQuery.query_type == EDRQueryType::Corridor))
+    throw EDRException("Missing coords option!");
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the output format
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::parseOutputFormat(const Config& config, const EDRMetaData& emd)
+{
+  const auto& supportedOutputFormats =
+      config.getSupportedOutputFormats(itsEDRQuery.collection_id);
+
+  // The f option overrides content negotiation, the format names are case insensitive
+  auto f_option = req.getParameter("f");
+  if (f_option)
+  {
+    output_format = *f_option;
+    for (const auto& format : supportedOutputFormats)
+      if (boost::algorithm::iequals(format, output_format))
+        output_format = format;
+  }
+  else
+    output_format = negotiate_output_format(
+        req.getHeader("Accept"), supportedOutputFormats, emd.default_output_format);
+
+  if (supportedOutputFormats.find(output_format) == supportedOutputFormats.end())
+  {
+    auto output_format_list = boost::algorithm::join(supportedOutputFormats, ",");
+    throw EDRException("Invalid output format '" + output_format +
+                       "'. The following output formats are supported for collection " +
+                       itsEDRQuery.collection_id + ": " + output_format_list);
+  }
+
+  // RFC 7946: GeoJSON coordinates are always WGS84 longitude/latitude. A geographic CRS
+  // such as EPSG:4326 can be used for the input coordinates, the output stays CRS84.
+  if (itsEDRQuery.crs && output_format == GEO_JSON_FORMAT && !itsEDRQuery.crs->geographic)
+    throw EDRException("GeoJSON output is available in geographic coordinates only, crs '" +
+                       itsEDRQuery.crs->id + "' can be used with CoverageJSON");
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Request URLs in each output format for the links of the response
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::setFormatUrls(const std::string& resource,
+                                   const Spine::HTTP::Request& request,
+                                   const Config& config)
+{
+  const auto& supportedOutputFormats =
+      config.getSupportedOutputFormats(itsEDRQuery.collection_id);
+  const auto& base_url = config.defaultUrl();
+  const auto pos = resource.find(base_url);
+  const auto path =
+      (pos == std::string::npos ? resource : resource.substr(pos + base_url.size()));
+  for (const auto& format : supportedOutputFormats)
+  {
+    auto format_request = request;
+    format_request.setParameter("f", format);
+    // Credentials are never echoed as parameters, resolve_host adds the apikey to the
+    // host part of the URL when the client allows it
+    format_request.removeParameter("fmi-apikey");
+    format_request.removeParameter("access-token");
+    itsEDRQuery.format_urls[format] = itsEDRQuery.host + path + format_request.getQueryString();
+  }
+}
+
 EDRQueryParams::EDRQueryParams(const State& state,
                                const Spine::HTTP::Request& request,
                                const Config& config)
@@ -452,18 +649,8 @@ EDRQueryParams::EDRQueryParams(const State& state,
 
     // The landing page and the conformance declaration are generated documents. The API
     // definition (<root>/api) is answered before the query is parsed.
-    {
-      std::string path = resource;
-      while (path.size() > 1 && path.back() == '/')
-        path.pop_back();
-      const auto& root = config.defaultUrl();
-      if (path == root || path == root + "/conformance")
-      {
-        itsEDRQuery.query_id = EDRQueryId::APIQuery;
-        itsEDRQuery.instance_id = (path == root ? "landing" : "conformance");
-        return;
-      }
-    }
+    if (parseDocumentQuery(resource, config))
+      return;
 
     std::vector<std::string> resource_parts;
     boost::algorithm::split(resource_parts, resource, boost::algorithm::is_any_of("/"));
@@ -495,33 +682,12 @@ EDRQueryParams::EDRQueryParams(const State& state,
       itsEDRQuery.query_id = EDRQueryId::DataQuery;
     }
 
-    const auto& supportedDataQueries = config.getSupportedDataQueries(itsEDRQuery.collection_id);
-
-    if (!invalid_query_type.empty() || (itsEDRQuery.query_id == EDRQueryId::DataQuery &&
-                                        supportedDataQueries.find(to_string(
-                                            itsEDRQuery.query_type)) == supportedDataQueries.end()))
-    {
-      auto data_query_list = boost::algorithm::join(supportedDataQueries, ",");
-      auto requested_query_type =
-          (!invalid_query_type.empty() ? invalid_query_type : to_string(itsEDRQuery.query_type));
-      throw EDRNotFound("Invalid query type '" + requested_query_type +
-                         "'. The following queries are supported for collection " +
-                         itsEDRQuery.collection_id + ": " + data_query_list);
-    }
+    checkQueryType(invalid_query_type, config);
 
     // If meta data query return from here
     if (itsEDRQuery.query_id != EDRQueryId::DataQuery)
     {
-      if (itsEDRQuery.query_type == EDRQueryType::Locations)
-        parseLimitAndOffset();
-
-      // BRAINSTORM-3267; if mime_type is left empty, plugin sets the type usíng output format
-      //
-      if (itsEDRQuery.query_type == EDRQueryType::Locations)
-        mime_type = "application/geo+json";
-      else
-        mime_type = "application/json";
-
+      parseMetaDataQueryOptions();
       return;
     }
 
@@ -533,49 +699,10 @@ EDRQueryParams::EDRQueryParams(const State& state,
       req.addParameter("producer", itsEDRQuery.collection_id);
 
     // OGC API-EDR: crs must be one of the CRSs listed in the collection metadata
-    auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
-    if (!is_crs84(crs))
-    {
-      itsEDRQuery.crs = config.getCRSRegistry().find(crs);
-      if (itsEDRQuery.crs)
-      {
-        // MetOcean profile: the output referencing system id is the requested crs value
-        auto info = std::make_shared<CRSInfo>(*itsEDRQuery.crs);
-        info->request_name = crs;
-        itsEDRQuery.crs = info;
-      }
-      if (!itsEDRQuery.crs)
-      {
-        std::string supported = "OGC:CRS84";
-        for (const auto& info : config.getCRSRegistry().all())
-          supported += ", " + info->id;
-        throw EDRException("Invalid crs: " + crs + ". Supported values are " + supported);
-      }
-      // Output coordinates of projected CRSs are compared with the requested ones in metres
-      if (!itsEDRQuery.crs->geographic)
-        itsCoordinateFilter.setTolerance(1.0);
-    }
+    parseCRS(config);
 
     // If query_type is position, radius, trajectory -> coords is required
-    auto coords = Spine::optional_string(req.getParameter("coords"), "");
-    if (!coords.empty())
-    {
-      parseCoords(emd, coords);
-    }
-    else if (itsEDRQuery.query_type == EDRQueryType::Locations)
-    {
-      parseLocations(emd, coords);
-    }
-    else if (itsEDRQuery.query_type == EDRQueryType::Cube)
-    {
-      parseCube(emd);
-    }
-    else if ((itsEDRQuery.query_type == EDRQueryType::Position) ||
-             (itsEDRQuery.query_type == EDRQueryType::Radius) ||
-             (itsEDRQuery.query_type == EDRQueryType::Area) ||
-             (itsEDRQuery.query_type == EDRQueryType::Trajectory) ||
-             (itsEDRQuery.query_type == EDRQueryType::Corridor))
-      throw EDRException("Missing coords option!");
+    parseLocationOptions(emd);
 
     // resolution-z for cube and corridor queries
     parseResolutionZ(emd, config);
@@ -602,53 +729,10 @@ EDRQueryParams::EDRQueryParams(const State& state,
       throw EDRException("No matching parameter names given!");
     }
 
-    const auto& supportedOutputFormats =
-        config.getSupportedOutputFormats(itsEDRQuery.collection_id);
-
-    // The f option overrides content negotiation, the format names are case insensitive
-    auto f_option = req.getParameter("f");
-    if (f_option)
-    {
-      output_format = *f_option;
-      for (const auto& format : supportedOutputFormats)
-        if (boost::algorithm::iequals(format, output_format))
-          output_format = format;
-    }
-    else
-      output_format = negotiate_output_format(
-          req.getHeader("Accept"), supportedOutputFormats, emd.default_output_format);
-
-    if (supportedOutputFormats.find(output_format) == supportedOutputFormats.end())
-    {
-      auto output_format_list = boost::algorithm::join(supportedOutputFormats, ",");
-      throw EDRException("Invalid output format '" + output_format +
-                         "'. The following output formats are supported for collection " +
-                         itsEDRQuery.collection_id + ": " + output_format_list);
-    }
-
-    // RFC 7946: GeoJSON coordinates are always WGS84 longitude/latitude. A geographic CRS
-    // such as EPSG:4326 can be used for the input coordinates, the output stays CRS84.
-    if (itsEDRQuery.crs && output_format == GEO_JSON_FORMAT && !itsEDRQuery.crs->geographic)
-      throw EDRException("GeoJSON output is available in geographic coordinates only, crs '" +
-                         itsEDRQuery.crs->id + "' can be used with CoverageJSON");
+    parseOutputFormat(config, emd);
 
     // Request URLs in each output format for the links of the response
-    {
-      const auto& base_url = config.defaultUrl();
-      const auto pos = resource.find(base_url);
-      const auto path =
-          (pos == std::string::npos ? resource : resource.substr(pos + base_url.size()));
-      for (const auto& format : supportedOutputFormats)
-      {
-        auto format_request = request;
-        format_request.setParameter("f", format);
-        // Credentials are never echoed as parameters, resolve_host adds the apikey to the
-        // host part of the URL when the client allows it
-        format_request.removeParameter("fmi-apikey");
-        format_request.removeParameter("access-token");
-        itsEDRQuery.format_urls[format] = itsEDRQuery.host + path + format_request.getQueryString();
-      }
-    }
+    setFormatUrls(resource, request, config);
 
     if (output_format == COVERAGE_JSON_FORMAT)
       mime_type = COVERAGE_JSON_MIME_TYPE;

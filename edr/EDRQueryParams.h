@@ -80,6 +80,15 @@ class EDRQueryParams
   void checkModelTimeStep(const EDRMetaData& emd, const Fmi::DateTime& t) const;
   void parseLimitAndOffset();
   void parseItemsQuery(const EDRMetaData& emd, const Config& config);
+  bool parseDocumentQuery(const std::string& resource, const Config& config);
+  void checkQueryType(const std::string& invalid_query_type, const Config& config) const;
+  void parseMetaDataQueryOptions();
+  void parseCRS(const Config& config);
+  void parseLocationOptions(const EDRMetaData& emd);
+  void parseOutputFormat(const Config& config, const EDRMetaData& emd);
+  void setFormatUrls(const std::string& resource,
+                     const Spine::HTTP::Request& request,
+                     const Config& config);
   void parseResolution(const EDRMetaData& emd, const Config& config);
   void parseResolutionZ(const EDRMetaData& emd, const Config& config);
   void parseCorridorResolution(std::size_t nx, std::size_t ny);
