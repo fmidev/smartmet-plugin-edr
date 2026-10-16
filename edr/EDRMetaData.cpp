@@ -158,6 +158,26 @@ void remove_duplicate_collection(const std::string &collection_name,
   }
 }
 
+// Add the multiples of the day-dividing timesteps which also divide the day
+void add_day_divisor_multiples(std::set<int> &time_steps)
+{
+  std::set<int> tss;
+
+  for (auto timestep : time_steps)
+  {
+    if ((timestep < 1440) && ((1440 % timestep) == 0))
+    {
+      for (auto ts = 2 * timestep; (ts <= 1440); ts += timestep)
+      {
+        if ((1440 % ts) == 0)
+          tss.insert(ts);
+      }
+    }
+  }
+
+  time_steps.insert(tss.begin(), tss.end());
+}
+
 bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
                                      edr_temporal_extent &temporal_extent)
 {
@@ -222,21 +242,7 @@ bool extract_temporal_extent_periods(const std::list<Fmi::DateTime> &times,
       }
     }
 
-    std::set<int> tss;
-
-    for (auto timestep : temporal_extent.time_steps)
-    {
-      if ((timestep < 1440) && ((1440 % timestep) == 0))
-      {
-        for (auto ts = 2 * timestep; (ts <= 1440); ts += timestep)
-        {
-          if ((1440 % ts) == 0)
-            tss.insert(ts);
-        }
-      }
-    }
-
-    temporal_extent.time_steps.insert(tss.begin(), tss.end());
+    add_day_divisor_multiples(temporal_extent.time_steps);
 
     return true;
   }
