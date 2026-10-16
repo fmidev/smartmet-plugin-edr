@@ -201,6 +201,7 @@ class Config : private boost::noncopyable
   // Private helper functions
   void add_default_precisions();
   void parse_config_precisions();
+  void parse_config_timeseries_precisions();
   void parse_config_precision(const std::string &name);
   void parse_config_locations();
   void parse_config_data_queries();

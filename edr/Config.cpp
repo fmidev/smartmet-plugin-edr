@@ -197,63 +197,76 @@ void Config::parse_config_precisions()
   try
   {
     if (!itsConfig.exists("precision"))
-      add_default_precisions();  // set sensible defaults
-    else
     {
-      // Require available precisions in
-
-      if (!itsConfig.exists("precision.enabled"))
-        throw Fmi::Exception(BCP, "precision.enabled missing from EDR configuration file");
-
-      libconfig::Setting &enabled = itsConfig.lookup("precision.enabled");
-      if (!enabled.isArray())
-      {
-        throw Fmi::Exception(BCP,
-                             "precision.enabled must be an array in "
-                             "pointforecast configuration file line " +
-                                 Fmi::to_string(enabled.getSourceLine()));
-      }
-
-      for (int i = 0; i < enabled.getLength(); ++i)
-      {
-        const char *name = enabled[i];
-        if (i == 0)
-          itsDefaultPrecision = name;
-        parse_config_precision(name);
-      }
-
-      if (itsPrecisions.empty())
-        throw Fmi::Exception(BCP, "No precisions defined in pointforecast precision: datablock!");
-
-      // Optional timeseries-specific override. The first entry becomes the default
-      // precision for timeseries-style requests. Entries not already parsed via
-      // precision.enabled are parsed here too, so groups defined only for the
-      // timeseries case are picked up.
-      if (itsConfig.exists("precision.enabled_timeseries"))
-      {
-        libconfig::Setting &enabled_ts = itsConfig.lookup("precision.enabled_timeseries");
-        if (!enabled_ts.isArray())
-        {
-          throw Fmi::Exception(BCP,
-                               "precision.enabled_timeseries must be an array in "
-                               "EDR configuration file line " +
-                                   Fmi::to_string(enabled_ts.getSourceLine()));
-        }
-
-        for (int i = 0; i < enabled_ts.getLength(); ++i)
-        {
-          const char *name = enabled_ts[i];
-          if (i == 0)
-            itsDefaultTimeSeriesPrecision = name;
-          if (itsPrecisions.find(name) == itsPrecisions.end())
-            parse_config_precision(name);
-        }
-      }
+      add_default_precisions();  // set sensible defaults
+      return;
     }
+
+    // Require available precisions in
+
+    if (!itsConfig.exists("precision.enabled"))
+      throw Fmi::Exception(BCP, "precision.enabled missing from EDR configuration file");
+
+    libconfig::Setting &enabled = itsConfig.lookup("precision.enabled");
+    if (!enabled.isArray())
+    {
+      throw Fmi::Exception(BCP,
+                           "precision.enabled must be an array in "
+                           "pointforecast configuration file line " +
+                               Fmi::to_string(enabled.getSourceLine()));
+    }
+
+    for (int i = 0; i < enabled.getLength(); ++i)
+    {
+      const char *name = enabled[i];
+      if (i == 0)
+        itsDefaultPrecision = name;
+      parse_config_precision(name);
+    }
+
+    if (itsPrecisions.empty())
+      throw Fmi::Exception(BCP, "No precisions defined in pointforecast precision: datablock!");
+
+    parse_config_timeseries_precisions();
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse precisions listed in precision.enabled_timeseries
+ *
+ * Optional timeseries-specific override. The first entry becomes the default
+ * precision for timeseries-style requests. Entries not already parsed via
+ * precision.enabled are parsed here too, so groups defined only for the
+ * timeseries case are picked up.
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_timeseries_precisions()
+{
+  if (!itsConfig.exists("precision.enabled_timeseries"))
+    return;
+
+  libconfig::Setting &enabled_ts = itsConfig.lookup("precision.enabled_timeseries");
+  if (!enabled_ts.isArray())
+  {
+    throw Fmi::Exception(BCP,
+                         "precision.enabled_timeseries must be an array in "
+                         "EDR configuration file line " +
+                             Fmi::to_string(enabled_ts.getSourceLine()));
+  }
+
+  for (int i = 0; i < enabled_ts.getLength(); ++i)
+  {
+    const char *name = enabled_ts[i];
+    if (i == 0)
+      itsDefaultTimeSeriesPrecision = name;
+    if (itsPrecisions.find(name) == itsPrecisions.end())
+      parse_config_precision(name);
   }
 }
 
