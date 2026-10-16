@@ -413,6 +413,39 @@ void parse_wmos(const std::optional<std::string>& wmo,
 
 }  // namespace
 
+namespace
+{
+// Test whether the grid engine is the forecast source
+bool is_grid_enabled(const std::string& forecastSource, const std::string& primaryForecastSource)
+{
+  return (strcasecmp(forecastSource.c_str(), "grid") == 0 ||
+          (forecastSource.empty() && strcasecmp(primaryForecastSource.c_str(), "grid") == 0));
+}
+
+// The mime type of an output format when the formatter does not define one
+std::string default_mime_type(const std::string& output_format)
+{
+  if (output_format == IWXXM_FORMAT)
+    return "text/xml";
+  if (output_format == IWXXMZIP_FORMAT)
+    return "application/zip";
+  if (output_format == TAC_FORMAT)
+    return "text/plain";
+  return "application/json";
+}
+
+// Recommendation 11 B: the links are left out of the header when there are too many of
+// them or they are long (e.g. the coords of a long trajectory), proxies limit header sizes
+void set_link_header(Spine::HTTP::Response& response, const Links& links)
+{
+  if (links.empty())
+    return;
+  const auto header = link_header(links);
+  if (header.size() <= max_link_header_size)
+    response.setHeader("Link", header);
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Perform a EDR query
@@ -472,26 +505,13 @@ void PluginImpl::query(const State& state,
     // The formatter knows which mimetype to send
     Spine::TableFormatter* fmt = get_formatter_and_qstreamer(q, queryStreamer);
 
-    bool gridEnabled = false;
-    if (strcasecmp(q.forecastSource.c_str(), "grid") == 0 ||
-        (q.forecastSource.empty() &&
-         strcasecmp(itsConfig.primaryForecastSource().c_str(), "grid") == 0))
-      gridEnabled = true;
+    bool gridEnabled = is_grid_enabled(q.forecastSource, itsConfig.primaryForecastSource());
 
     formatter.reset(fmt);
     std::string mime(q.mimeType());
 
     if (mime.empty())
-    {
-      if (q.output_format == IWXXM_FORMAT)
-        mime = "text/xml";
-      else if (q.output_format == IWXXMZIP_FORMAT)
-        mime = "application/zip";
-      else if (q.output_format == TAC_FORMAT)
-        mime = "text/plain";
-      else
-        mime = "application/json";
-    }
+      mime = default_mime_type(q.output_format);
     response.setHeader("Content-Type", mime);
 
     // The output format of a data query is negotiated with the Accept header unless the f
@@ -530,14 +550,7 @@ void PluginImpl::query(const State& state,
     const Links links = (q.isEDRMetaDataQuery()
                              ? q.responseLinks
                              : QueryProcessingHub::dataQueryLinks(q.edrQuery(), q.output_format));
-    // Recommendation 11 B: the links are left out of the header when there are too many of
-    // them or they are long (e.g. the coords of a long trajectory), proxies limit header sizes
-    if (!links.empty())
-    {
-      const auto header = link_header(links);
-      if (header.size() <= max_link_header_size)
-        response.setHeader("Link", header);
-    }
+    set_link_header(response, links);
 
     if (obj)
     {
