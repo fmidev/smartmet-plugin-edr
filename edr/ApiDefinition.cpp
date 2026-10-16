@@ -9,6 +9,7 @@
 #include <macgyver/StringConversion.h>
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <map>
 #include <set>
 #include <string>
@@ -1058,6 +1059,26 @@ struct TSParameter
 
 // clang-format off
 const std::vector<TSParameter> ts_parameters{
+    // The model first: it determines the available parameters, times and areas. The
+    // param option is inserted after these.
+    {"producer", "Data", "string", "Producer(s) of the data. A comma separates producers by area, a semicolon by time."},
+    {"model", "Data", "string", "Alias of producer"},
+    {"source", "Data", "string", "Data source: querydata or grid"},
+    // Time
+    {"starttime", "Time", "string", "Start time: ISO 8601, YYYYMMDDHHMI, a relative time like +2h or -1d, or 'data' for the first time of the data. The default is the next full hour."},
+    {"endtime", "Time", "string", "End time in the formats of starttime, or 'data'. The default is starttime plus 24 hours."},
+    {"timestep", "Time", "string", "Time step in minutes, or 'data' to select the times of the data. The default is 60."},
+    {"timesteps", "Time", "integer", "Number of times to return, an alternative to endtime"},
+    {"startstep", "Time", "integer", "Number of time steps to skip from the start"},
+    {"hour", "Time", "array", "Comma separated list of hours to select, e.g. 12,18"},
+    {"time", "Time", "array", "Comma separated list of times HHMI to select, e.g. 1200,1230"},
+    {"day", "Time", "array", "Comma separated list of days of the month to select"},
+    {"weekday", "Time", "array", "Comma separated list of weekdays to select"},
+    {"now", "Time", "string", "Override the current time"},
+    {"tz", "Time", "string", "Time zone of the request and the response times, the default is 'localtime'"},
+    {"origintime", "Time", "string", "Origin time of the model run to use, the latest by default"},
+    {"usecurrenttime", "Time", "boolean", "Use the current time instead of the next full hour as the default start time"},
+    {"interval", "Time", "string", "Time interval for observation queries"},
     // Locations
     {"place", "Location", "string", "Location name, optionally with a radius in km: place=Helsinki or place=Helsinki:20"},
     {"places", "Location", "array", "Comma separated list of location names"},
@@ -1094,25 +1115,7 @@ const std::vector<TSParameter> ts_parameters{
     {"grouplocations", "Location", "boolean", "Group the given locations as one area"},
     {"areasource", "Location", "string", "Source of the area geometries"},
     {"step", "Location", "number", "Distance in kilometers between the points sampled along a path"},
-    // Time
-    {"starttime", "Time", "string", "Start time: ISO 8601, YYYYMMDDHHMI, a relative time like +2h or -1d, or 'data' for the first time of the data. The default is the next full hour."},
-    {"endtime", "Time", "string", "End time in the formats of starttime, or 'data'. The default is starttime plus 24 hours."},
-    {"timestep", "Time", "string", "Time step in minutes, or 'data' to select the times of the data. The default is 60."},
-    {"timesteps", "Time", "integer", "Number of times to return, an alternative to endtime"},
-    {"startstep", "Time", "integer", "Number of time steps to skip from the start"},
-    {"hour", "Time", "array", "Comma separated list of hours to select, e.g. 12,18"},
-    {"time", "Time", "array", "Comma separated list of times HHMI to select, e.g. 1200,1230"},
-    {"day", "Time", "array", "Comma separated list of days of the month to select"},
-    {"weekday", "Time", "array", "Comma separated list of weekdays to select"},
-    {"now", "Time", "string", "Override the current time"},
-    {"tz", "Time", "string", "Time zone of the request and the response times, the default is 'localtime'"},
-    {"origintime", "Time", "string", "Origin time of the model run to use, the latest by default"},
-    {"usecurrenttime", "Time", "boolean", "Use the current time instead of the next full hour as the default start time"},
-    {"interval", "Time", "string", "Time interval for observation queries"},
     // Data
-    {"producer", "Data", "string", "Producer(s) of the data. A comma separates producers by area, a semicolon by time."},
-    {"model", "Data", "string", "Alias of producer"},
-    {"source", "Data", "string", "Data source: querydata or grid"},
     {"level", "Data", "string", "Model level"},
     {"levels", "Data", "array", "Comma separated list of model levels"},
     {"levelrange", "Data", "string", "Range of model levels min,max"},
@@ -1352,10 +1355,16 @@ Spine::OpenAPI::Document timeseries(const Config& config,
           "geoid",      "fmisid", "wmo",        "elevation", "localtz",     "utctime", "localtime",
           "timestring", "level",  "model",      "producer",  "stationname", "distance"})
       param["x-meta-parameters"].append(meta);
-    params.append(param);
 
     for (const auto& p : ts_parameters)
     {
+      // The values to return follow the model, which determines what is available
+      if (std::strcmp(p.group, "Time") == 0 && param.isObject())
+      {
+        params.append(param);
+        param = JsonValue();
+      }
+
       JsonValue schema;
       const std::string name = p.name;
       if (name == "producer" || name == "model")
@@ -1392,6 +1401,9 @@ Spine::OpenAPI::Document timeseries(const Config& config,
       }
       params.append(parameter);
     }
+
+    if (param.isObject())
+      params.append(param);
 
     auto& ok = op["responses"]["200"];
     ok["description"] = "The time series in the requested format";
