@@ -684,6 +684,48 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
   }
 }
 
+// The standard name vocabulary URL without a trailing slash
+std::string get_standard_name_vocabulary(const CustomDimReferences &custom_dim_refs)
+{
+  std::string standard_name_vocabulary;
+
+  auto it = custom_dim_refs.find("standard_name");
+  if (it != custom_dim_refs.end())
+  {
+    standard_name_vocabulary = it->second;
+    if (!standard_name_vocabulary.empty() && standard_name_vocabulary.back() == '/')
+      standard_name_vocabulary.pop_back();
+  }
+  return standard_name_vocabulary;
+}
+
+// Description field: 1) from config 2) from engine 3) standard name and level 4) parameter name
+std::string parameter_description(const parameter_info &pinfo,
+                                  const edr_parameter &edr_parameter,
+                                  const std::string &edr_parameter_name)
+{
+  if (!pinfo.description.empty())
+    return pinfo.description;
+  if (!edr_parameter.description.empty())
+    return edr_parameter.description;
+  const std::string &standard_name = pinfo.metocean.standard_name;
+  if (!standard_name.empty())
+    return standard_name + " " + Fmi::to_string(pinfo.metocean.level) + "m";
+  return edr_parameter_name;
+}
+
+// A plain text value, or a language object {lang: text} if a language was requested
+Json::Value language_value(const std::string &language,
+                           const std::string &lang,
+                           const std::string &text)
+{
+  if (language.empty())
+    return Json::Value(text);
+  auto lang_value = Json::Value(Json::ValueType::objectValue);
+  lang_value[lang] = Json::Value(text);
+  return lang_value;
+}
+
 Json::Value parameter_metadata(const EDRMetaData &metadata,
                                const std::string &parameter_name,
                                std::optional<std::set<std::string>> &stdnames,
@@ -699,15 +741,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
 
     const auto &engine_parameter_info = metadata.parameters;
     const auto &config_parameter_info = *metadata.parameter_info;
-    std::string standard_name_vocabulary;
-
-    auto it = custom_dim_refs.find("standard_name");
-    if (it != custom_dim_refs.end())
-    {
-      standard_name_vocabulary = it->second;
-      if (!standard_name_vocabulary.empty() && standard_name_vocabulary.back() == '/')
-        standard_name_vocabulary.pop_back();
-    }
+    const std::string standard_name_vocabulary = get_standard_name_vocabulary(custom_dim_refs);
 
     // BRAINSTORM-3029; when fetching flash 'data_source' -parameter, expanded parameters
     // ('<column>_data_source') do not (currently) have engine_parameter info
@@ -722,7 +756,6 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
 
     // Description field: 1) from config 2) from engine 3) parameter name
 
-    std::string desc;
     std::string observed_property_id;
     const std::string &label = (pinfo.label.empty() ? edr_parameter_name : pinfo.label);
     const std::string &observed_property_label =
@@ -734,14 +767,7 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
     else
       observed_property_id = edr_parameter_name;
 
-    if (!pinfo.description.empty())
-      desc = pinfo.description;
-    else if (!edr_parameter.description.empty())
-      desc = edr_parameter.description;
-    else if (! standard_name.empty())
-      desc = standard_name + " " + Fmi::to_string(pinfo.metocean.level) + "m";
-    else
-      desc = edr_parameter_name;
+    const std::string desc = parameter_description(pinfo, edr_parameter, edr_parameter_name);
 
     // The unit reported by the engine is used if the configuration does not define one
     if (pinfo.unit_symbol_value.empty() && !edr_parameter.unit.empty() &&
@@ -761,34 +787,14 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
     // QEngine returns parameter description in finnish and skandinavian
     // characters cause problems metoffice test interface uses description
     // field -> set parameter name to description field
-    if (language.empty())
-      parameter["description"] = Json::Value(desc);
-    else
-    {
-      auto lang_desc = Json::Value(Json::ValueType::objectValue);
-      lang_desc[lang] = Json::Value(desc);
-      parameter["description"] = lang_desc;
-    }
+    parameter["description"] = language_value(language, lang, desc);
     if (!pinfo.unit_symbol_value.empty())
       parameter["unit"] = pinfo.unit(unit_label, language.empty() ? std::string() : lang);
-    if (language.empty())
-      parameter["label"] = Json::Value(label);
-    else
-    {
-      auto lang_label = Json::Value(Json::ValueType::objectValue);
-      lang_label[lang] = Json::Value(label);
-      parameter["label"] = lang_label;
-    }
+    parameter["label"] = language_value(language, lang, label);
     parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
     parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
-    if (language.empty())
-      parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
-    else
-    {
-      auto lang_label = Json::Value(Json::ValueType::objectValue);
-      lang_label[lang] = Json::Value(observed_property_label);
-      parameter["observedProperty"]["label"] = lang_label;
-    }
+    parameter["observedProperty"]["label"] =
+        language_value(language, lang, observed_property_label);
 
     if (! standard_name.empty())
     {
