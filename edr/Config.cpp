@@ -270,6 +270,95 @@ void Config::parse_config_timeseries_precisions()
   }
 }
 
+namespace
+{
+// Add the formats of an array setting for the producer, all formats must be supported. No
+// entry is created for the producer if there are no formats.
+void add_output_formats(const libconfig::Setting &formats,
+                        const std::set<std::string> &supportedFormats,
+                        const std::string &kind,
+                        SupportedOutputFormats &target,
+                        const std::string &producer)
+{
+  for (int i = 0; i < formats.getLength(); i++)
+  {
+    std::string format = formats[i];
+    if (supportedFormats.find(format) == supportedFormats.end())
+      throw Fmi::Exception(BCP, kind + " output format '" + format + "' is not supported");
+
+    target[producer].insert(format);
+  }
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the default and producer specific supported output formats
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_supported_output_formats(const std::set<std::string> &supportedFormats)
+{
+  if (itsConfig.exists("output_formats.default"))
+  {
+    const libconfig::Setting &defaultOutputFormats = itsConfig.lookup("output_formats.default");
+    if (!defaultOutputFormats.isArray())
+      throw Fmi::Exception(BCP, "Configured value of 'output_formats.default' must be an array");
+    add_output_formats(defaultOutputFormats,
+                       supportedFormats,
+                       "Default",
+                       itsSupportedOutputFormats,
+                       DEFAULT_OUTPUT_FORMATS);
+  }
+
+  if (itsConfig.exists("output_formats.override"))
+  {
+    const libconfig::Setting &overriddenOutputFormats = itsConfig.lookup("output_formats.override");
+
+    for (int i = 0; i < overriddenOutputFormats.getLength(); i++)
+    {
+      std::string producer = overriddenOutputFormats[i].getName();
+      const libconfig::Setting &overrides = itsConfig.lookup("output_formats.override." + producer);
+      if (!overrides.isArray())
+        throw Fmi::Exception(BCP,
+                             "Configured overridden output_formats for "
+                             "producer must be an array");
+      add_output_formats(
+          overrides, supportedFormats, "Override", itsSupportedOutputFormats, producer);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the default and producer specific default output format
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_default_output_formats()
+{
+  if (itsConfig.exists("output_formats.default_output_format"))
+  {
+    std::string defaultFormat;
+    itsConfig.lookupValue("output_formats.default_output_format", defaultFormat);
+    itsDefaultOutputFormats[DEFAULT_OUTPUT_FORMAT] = defaultFormat;
+  }
+
+  if (itsConfig.exists("output_formats.output_format_override"))
+  {
+    const libconfig::Setting &overriddenDefaultFormats =
+        itsConfig.lookup("output_formats.output_format_override");
+
+    for (int i = 0; i < overriddenDefaultFormats.getLength(); i++)
+    {
+      std::string producer = overriddenDefaultFormats[i].getName();
+      std::string defaultFormat;
+      itsConfig.lookupValue("output_formats.output_format_override." + producer, defaultFormat);
+      itsDefaultOutputFormats[producer] = defaultFormat;
+    }
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse locations settings
@@ -378,67 +467,8 @@ void Config::parse_config_output_formats()
 
     if (itsConfig.exists("output_formats"))
     {
-      if (itsConfig.exists("output_formats.default"))
-      {
-        const libconfig::Setting &defaultOutputFormats = itsConfig.lookup("output_formats.default");
-        if (!defaultOutputFormats.isArray())
-          throw Fmi::Exception(BCP,
-                               "Configured value of 'output_formats.default' must be an array");
-        for (int i = 0; i < defaultOutputFormats.getLength(); i++)
-        {
-          std::string format = defaultOutputFormats[i];
-          if (supportedFormats.find(format) == supportedFormats.end())
-            throw Fmi::Exception(BCP, "Default output format '" + format + "' is not supported");
-
-          itsSupportedOutputFormats[DEFAULT_OUTPUT_FORMATS].insert(format);
-        }
-      }
-
-      if (itsConfig.exists("output_formats.override"))
-      {
-        const libconfig::Setting &overriddenOutputFormats =
-            itsConfig.lookup("output_formats.override");
-
-        for (int i = 0; i < overriddenOutputFormats.getLength(); i++)
-        {
-          std::string producer = overriddenOutputFormats[i].getName();
-          const libconfig::Setting &overrides =
-              itsConfig.lookup("output_formats.override." + producer);
-          if (!overrides.isArray())
-            throw Fmi::Exception(BCP,
-                                 "Configured overridden output_formats for "
-                                 "producer must be an array");
-          for (int j = 0; j < overrides.getLength(); j++)
-          {
-            std::string format = overrides[j];
-            if (supportedFormats.find(format) == supportedFormats.end())
-              throw Fmi::Exception(BCP, "Override output format '" + format + "' is not supported");
-
-            itsSupportedOutputFormats[producer].insert(format);
-          }
-        }
-      }
-
-      if (itsConfig.exists("output_formats.default_output_format"))
-      {
-        std::string defaultFormat;
-        itsConfig.lookupValue("output_formats.default_output_format", defaultFormat);
-        itsDefaultOutputFormats[DEFAULT_OUTPUT_FORMAT] = defaultFormat;
-      }
-
-      if (itsConfig.exists("output_formats.output_format_override"))
-      {
-        const libconfig::Setting &overriddenDefaultFormats =
-            itsConfig.lookup("output_formats.output_format_override");
-
-        for (int i = 0; i < overriddenDefaultFormats.getLength(); i++)
-        {
-          std::string producer = overriddenDefaultFormats[i].getName();
-          std::string defaultFormat;
-          itsConfig.lookupValue("output_formats.output_format_override." + producer, defaultFormat);
-          itsDefaultOutputFormats[producer] = defaultFormat;
-        }
-      }
+      parse_config_supported_output_formats(supportedFormats);
+      parse_config_default_output_formats();
     }
 
     if (itsSupportedOutputFormats.find(DEFAULT_OUTPUT_FORMATS) == itsSupportedOutputFormats.end())

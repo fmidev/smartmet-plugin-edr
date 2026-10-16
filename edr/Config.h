@@ -202,6 +202,8 @@ class Config : private boost::noncopyable
   void add_default_precisions();
   void parse_config_precisions();
   void parse_config_crs();
+  void parse_config_supported_output_formats(const std::set<std::string> &supportedFormats);
+  void parse_config_default_output_formats();
   void parse_config_url();
   void parse_config_timeseries_urls();
   void append_timeseries_url(std::string url, int sourceLine);
