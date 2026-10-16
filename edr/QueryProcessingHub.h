@@ -59,6 +59,30 @@ class QueryProcessingHub
                                                            Spine::Table& table);
 
   static void setPrecisions(EDRMetaData& emd, const CommonQuery& masterquery);
+  bool processAviQuery(const State& state,
+                       Query& q,
+                       const Query& masterquery,
+                       bool producerMissing,
+                       TS::OutputData& outputData) const;
+  bool processGridQuery(const State& state,
+                        Query& q,
+                        const Query& masterquery,
+                        TS::OutputData& outputData,
+                        const QueryServer::QueryStreamer_sptr& queryStreamer,
+                        const AreaProducers& areaproducers,
+                        const ProducerDataPeriod& producerDataPeriod,
+                        std::size_t& product_hash) const;
+  void formatOutput(const State& state,
+                    Spine::Table& table,
+                    const Query& masterquery,
+                    const TS::OutputData& outputData,
+                    const EDRMetaData& emd);
+  void processQEngineQueryNoDataLocations(const State& state,
+                                          Query& q,
+                                          TS::OutputData& outputData,
+                                          const AreaProducers& areaproducers,
+                                          const ProducerDataPeriod& producerDataPeriod,
+                                          std::vector<std::string>& no_data_locations) const;
   void processIWXXMAndTACData(const Config& config,
                               const TS::OutputData& outputData,
                               const Query& masterquery,

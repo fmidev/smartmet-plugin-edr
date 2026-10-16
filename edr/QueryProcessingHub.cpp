@@ -541,6 +541,48 @@ void require_some_data(const std::vector<std::string>& theNoDataLocations)
   throw ex;
 }
 
+// Output coordinates in the requested CRS
+void reproject_to_requested_crs(TS::OutputData& outputData,
+                                const Query& masterquery,
+                                const CRSInfoPtr& crs,
+                                EDRMetaData& emd)
+{
+  reproject_output(outputData, masterquery.poptions.parameters(), *crs);
+  emd.output_crs = crs;
+  if (!crs->geographic)
+  {
+    emd.parameter_precisions["longitude"] = 2;
+    emd.parameter_precisions["latitude"] = 2;
+  }
+}
+
+// Test whether the output coordinates may differ from the literal requested coordinates,
+// in which case the coordinate filter must not be applied to the output
+bool skip_coordinate_filter(const EDRQuery& edr_query,
+                            const EDRMetaData& emd,
+                            const Query& masterquery)
+{
+  return edr_query.query_type == EDRQueryType::Corridor ||
+         (edr_query.query_type == EDRQueryType::Trajectory &&
+          (emd.isObsProducer() || masterquery.step != 0)) ||
+         (edr_query.query_type == EDRQueryType::Position && emd.isObsProducer());
+}
+
+// The output levels: the requested levels, or the pressures or heights interpolated with
+// resolution-z
+std::set<int> get_output_levels(const Query& masterquery)
+{
+  std::set<int> output_levels = masterquery.levels;
+  if (output_levels.empty())
+  {
+    for (auto pressure : masterquery.pressures)
+      output_levels.insert(static_cast<int>(std::lround(pressure)));
+    for (auto height : masterquery.heights)
+      output_levels.insert(static_cast<int>(std::lround(height)));
+  }
+  return output_levels;
+}
+
 }  // namespace
 
 QueryProcessingHub::QueryProcessingHub(const PluginImpl& thePlugin)
@@ -797,6 +839,195 @@ void QueryProcessingHub::processIWXXMAndTACData(const Config& config,
   }
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Format the collected data into the table in the requested output format
+ */
+// ----------------------------------------------------------------------
+
+void QueryProcessingHub::formatOutput(const State& state,
+                                      Spine::Table& table,
+                                      const Query& masterquery,
+                                      const TS::OutputData& outputData,
+                                      const EDRMetaData& emd)
+{
+  const auto& thePlugin = state.getPlugin();
+  const auto& edr_query = masterquery.edrQuery();
+  const auto& producer = edr_query.collection_id;
+  auto const& custom_dim_refs = thePlugin.itsConfig.getCustomDimReferences();
+
+  // CoordinateFilter::accept() requires an exact (lon,lat) match against the literal
+  // coordinates given in the request (LINESTRINGZ/ZM/M, MULTIPOINTZ); it only works when the
+  // output points are guaranteed to be those exact coordinates. That guarantee fails for:
+  //  - Corridor: always resolved via a grid-cell buffer expansion (MaskExpand), never the
+  //    literal path vertices.
+  //  - Trajectory against an observation-backed producer: resolved to nearby station
+  //    coordinates (resolveStationsForPath), never the literal path vertices.
+  //  - Trajectory with a non-zero 'step': the path is resampled at 'step'-km intervals
+  //    (get_location_list), producing interpolated coordinates.
+  //  - Position (MULTIPOINTZ) against an observation-backed producer: resolved to the nearest
+  //    station's coordinates (handleLocationSettings), never the literal requested point. The
+  //    "longitude"/"latitude" special parameters report the station's own coordinates
+  //    (SpecialParameters.cpp), not the requested ones.
+  // In all these cases the requested levels/times are already enforced upstream via the
+  // "levels"/"z" query parameters, so skip the filter rather than have it silently empty the
+  // response.
+  const CoordinateFilter emptyCoordinateFilter;
+  const bool skipCoordinateFilterForOutput = skip_coordinate_filter(edr_query, emd, masterquery);
+  const CoordinateFilter& coordinateFilterForOutput =
+      (skipCoordinateFilterForOutput ? emptyCoordinateFilter
+                                     : masterquery.coordinateFilter());
+
+  // Levels interpolated with resolution-z are given as pressures or heights
+  const std::set<int> output_levels = get_output_levels(masterquery);
+
+  if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT ||
+      masterquery.output_format == IWXXMZIP_FORMAT)
+  {
+    if (masterquery.output_format == IWXXMZIP_FORMAT)
+    {
+      auto datetime = Fmi::SecondClock::universal_time().to_iso_string();
+      std::replace(datetime.begin(), datetime.end(), 'T', '_');
+
+      zipFileName = producer + "_" + datetime + ".zip";
+    }
+
+    processIWXXMAndTACData(thePlugin.itsConfig, outputData, masterquery, table);
+  }
+  else if (masterquery.output_format == COVERAGE_JSON_FORMAT &&
+           edr_query.corridor_grid.active())
+  {
+    Json::Value result =
+        CoverageJson::formatCorridorOutputData(outputData,
+                                               emd,
+                                               edr_query.corridor_grid,
+                                               output_levels,
+                                               effective_query_parameters(masterquery),
+                                               custom_dim_refs,
+                                               edr_query.language);
+    table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
+  }
+  else if (masterquery.output_format == COVERAGE_JSON_FORMAT && edr_query.grid.active())
+  {
+    Json::Value result =
+        CoverageJson::formatGridOutputData(outputData,
+                                           emd,
+                                           edr_query.grid,
+                                           output_levels,
+                                           effective_query_parameters(masterquery),
+                                           custom_dim_refs,
+                                           edr_query.language);
+    table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
+  }
+  else if (masterquery.output_format == COVERAGE_JSON_FORMAT)
+  {
+    Json::Value result = CoverageJson::formatOutputData(outputData,
+                                                        emd,
+                                                        edr_query.query_type,
+                                                        output_levels,
+                                                        coordinateFilterForOutput,
+                                                        effective_query_parameters(masterquery),
+                                                        producer == SOUNDING_PRODUCER,
+                                                        custom_dim_refs,
+                                                        edr_query.language);
+    table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
+  }
+  else if (masterquery.output_format == GEO_JSON_FORMAT)
+  {
+    Json::Value result = GeoJson::formatOutputData(outputData,
+                                                   emd,
+                                                   edr_query.query_type,
+                                                   output_levels,
+                                                   coordinateFilterForOutput,
+                                                   effective_query_parameters(masterquery),
+                                                   custom_dim_refs,
+                                                   edr_query.language);
+    if (!result.isNullOrEmpty())
+      result["links"] = links_json(dataQueryLinks(edr_query, masterquery.output_format));
+    table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
+  }
+}
+
+#ifndef WITHOUT_AVI
+// Process the query with the AVI engine if the producer is an AVI producer. Returns true if
+// the query was processed.
+bool QueryProcessingHub::processAviQuery(const State& state,
+                                         Query& q,
+                                         const Query& masterquery,
+                                         bool producerMissing,
+                                         TS::OutputData& outputData) const
+{
+  const auto& thePlugin = state.getPlugin();
+  std::string producerName;
+  if (!producerMissing && !masterquery.timeproducers.front().empty())
+    producerName = masterquery.timeproducers.front().front();
+  if (itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
+  {
+    itsAviEngineQuery.processAviEngineQuery(
+        thePlugin.itsConfig, state, q, producerName, outputData);
+    return true;
+  }
+  return false;
+}
+#endif
+
+// Process the query with the grid engine if it is a grid engine query. Returns true if the
+// query was processed.
+bool QueryProcessingHub::processGridQuery(const State& state,
+                                          Query& q,
+                                          const Query& masterquery,
+                                          TS::OutputData& outputData,
+                                          const QueryServer::QueryStreamer_sptr& queryStreamer,
+                                          const AreaProducers& areaproducers,
+                                          const ProducerDataPeriod& producerDataPeriod,
+                                          std::size_t& product_hash) const
+{
+  if (!itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
+    return false;
+
+  bool processed = itsGridEngineQuery.processGridEngineQuery(
+      state, q, outputData, queryStreamer, areaproducers, producerDataPeriod);
+
+  if (processed)
+  {
+    // We need different hash calculcations for the grid requests.
+    product_hash = Fmi::bad_hash;
+  }
+  return processed;
+}
+
+// Process a QEngine query. Locations without data are collected into no_data_locations
+// instead of failing the request.
+void QueryProcessingHub::processQEngineQueryNoDataLocations(
+    const State& state,
+    Query& q,
+    TS::OutputData& outputData,
+    const AreaProducers& areaproducers,
+    const ProducerDataPeriod& producerDataPeriod,
+    std::vector<std::string>& no_data_locations) const
+{
+  try
+  {
+    auto skipped =
+        itsQEngineQuery.processQEngineQuery(state, q, outputData, areaproducers, producerDataPeriod);
+    no_data_locations.insert(no_data_locations.end(), skipped.begin(), skipped.end());
+  }
+  catch (...)
+  {
+    // A location whose data could not be found after all (e.g. no point data station
+    // within the requested distance) is handled like the locations skipped above
+    Fmi::Exception ex(BCP, "Operation failed!", nullptr);
+    auto place = no_data_place(ex);
+    if (!place)
+      throw;
+    no_data_locations.push_back(*place);
+    outputData.erase(std::remove_if(outputData.begin(),
+                                    outputData.end(),
+                                    [](const auto& item) { return item.second.empty(); }),
+                     outputData.end());
+  }
+}
+
 std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     const State& state,
     Spine::Table& table,
@@ -854,7 +1085,6 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     const auto& edr_query = masterquery.edrQuery();
     const auto& producer = edr_query.collection_id;
     EDRMetaData emd = thePlugin.getProducerMetaData(producer);
-    auto const &custom_dim_refs = thePlugin.itsConfig.getCustomDimReferences();
 
     if (masterquery.toptions.timeStep)
       check_timestep(masterquery, emd, producer);
@@ -883,15 +1113,8 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
       bool process_qengine_query = true;
 #ifndef WITHOUT_AVI
-      std::string producerName;
-      if (!producerMissing && !masterquery.timeproducers.front().empty())
-        producerName = masterquery.timeproducers.front().front();
-      if (itsAviEngineQuery.isAviProducer(producerName) && !thePlugin.itsConfig.aviEngineDisabled())
-      {
-        itsAviEngineQuery.processAviEngineQuery(
-            thePlugin.itsConfig, state, q, producerName, outputData);
+      if (processAviQuery(state, q, masterquery, producerMissing, outputData))
         process_qengine_query = false;
-      }
 #endif
 #ifndef WITHOUT_OBSERVATION
       if (process_qengine_query && !areaproducers.empty() &&
@@ -903,43 +1126,20 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
         process_qengine_query = false;
       }
 #endif
-      if (process_qengine_query && itsGridEngineQuery.isGridEngineQuery(areaproducers, masterquery))
-      {
-        bool processed = itsGridEngineQuery.processGridEngineQuery(
-            state, q, outputData, queryStreamer, areaproducers, producerDataPeriod);
-
-        if (processed)
-        {
-          // We need different hash calculcations for the grid requests.
-          product_hash = Fmi::bad_hash;
-          process_qengine_query = false;
-        }
-        // If the query was not processed then we will call the QEngine instead.
-      }
+      // If the query was not processed by the grid engine then we will call the QEngine instead.
+      if (process_qengine_query && processGridQuery(state,
+                                                    q,
+                                                    masterquery,
+                                                    outputData,
+                                                    queryStreamer,
+                                                    areaproducers,
+                                                    producerDataPeriod,
+                                                    product_hash))
+        process_qengine_query = false;
 
       if (process_qengine_query)
-      {
-        try
-        {
-          auto skipped = itsQEngineQuery.processQEngineQuery(
-              state, q, outputData, areaproducers, producerDataPeriod);
-          no_data_locations.insert(no_data_locations.end(), skipped.begin(), skipped.end());
-        }
-        catch (...)
-        {
-          // A location whose data could not be found after all (e.g. no point data station
-          // within the requested distance) is handled like the locations skipped above
-          Fmi::Exception ex(BCP, "Operation failed!", nullptr);
-          auto place = no_data_place(ex);
-          if (!place)
-            throw;
-          no_data_locations.push_back(*place);
-          outputData.erase(std::remove_if(outputData.begin(),
-                                          outputData.end(),
-                                          [](const auto& item) { return item.second.empty(); }),
-                           outputData.end());
-        }
-      }
+        processQEngineQueryNoDataLocations(
+            state, q, outputData, areaproducers, producerDataPeriod, no_data_locations);
 
       // get the latestTimestep from previous query
       latestTimestep = q.latestTimestep;
@@ -970,117 +1170,9 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
     // Output coordinates in the requested CRS, GeoJSON output is always CRS84
     if (edr_query.crs && masterquery.output_format != GEO_JSON_FORMAT)
-    {
-      reproject_output(outputData, masterquery.poptions.parameters(), *edr_query.crs);
-      emd.output_crs = edr_query.crs;
-      if (!edr_query.crs->geographic)
-      {
-        emd.parameter_precisions["longitude"] = 2;
-        emd.parameter_precisions["latitude"] = 2;
-      }
-    }
+      reproject_to_requested_crs(outputData, masterquery, edr_query.crs, emd);
 
-    // CoordinateFilter::accept() requires an exact (lon,lat) match against the literal
-    // coordinates given in the request (LINESTRINGZ/ZM/M, MULTIPOINTZ); it only works when the
-    // output points are guaranteed to be those exact coordinates. That guarantee fails for:
-    //  - Corridor: always resolved via a grid-cell buffer expansion (MaskExpand), never the
-    //    literal path vertices.
-    //  - Trajectory against an observation-backed producer: resolved to nearby station
-    //    coordinates (resolveStationsForPath), never the literal path vertices.
-    //  - Trajectory with a non-zero 'step': the path is resampled at 'step'-km intervals
-    //    (get_location_list), producing interpolated coordinates.
-    //  - Position (MULTIPOINTZ) against an observation-backed producer: resolved to the nearest
-    //    station's coordinates (handleLocationSettings), never the literal requested point. The
-    //    "longitude"/"latitude" special parameters report the station's own coordinates
-    //    (SpecialParameters.cpp), not the requested ones.
-    // In all these cases the requested levels/times are already enforced upstream via the
-    // "levels"/"z" query parameters, so skip the filter rather than have it silently empty the
-    // response.
-    const CoordinateFilter emptyCoordinateFilter;
-    const bool skipCoordinateFilterForOutput =
-        edr_query.query_type == EDRQueryType::Corridor ||
-        (edr_query.query_type == EDRQueryType::Trajectory &&
-         (emd.isObsProducer() || masterquery.step != 0)) ||
-        (edr_query.query_type == EDRQueryType::Position && emd.isObsProducer());
-    const CoordinateFilter& coordinateFilterForOutput =
-        (skipCoordinateFilterForOutput ? emptyCoordinateFilter
-                                       : masterquery.coordinateFilter());
-
-    // Levels interpolated with resolution-z are given as pressures or heights
-    std::set<int> output_levels = masterquery.levels;
-    if (output_levels.empty())
-    {
-      for (auto pressure : masterquery.pressures)
-        output_levels.insert(static_cast<int>(std::lround(pressure)));
-      for (auto height : masterquery.heights)
-        output_levels.insert(static_cast<int>(std::lround(height)));
-    }
-
-    if (masterquery.output_format == TAC_FORMAT || masterquery.output_format == IWXXM_FORMAT ||
-        masterquery.output_format == IWXXMZIP_FORMAT)
-    {
-      if (masterquery.output_format == IWXXMZIP_FORMAT)
-      {
-        auto datetime = Fmi::SecondClock::universal_time().to_iso_string();
-        std::replace(datetime.begin(), datetime.end(), 'T', '_');
-
-        zipFileName = producer + "_" + datetime + ".zip";
-      }
-
-      processIWXXMAndTACData(thePlugin.itsConfig, outputData, masterquery, table);
-    }
-    else if (masterquery.output_format == COVERAGE_JSON_FORMAT &&
-             edr_query.corridor_grid.active())
-    {
-      Json::Value result =
-          CoverageJson::formatCorridorOutputData(outputData,
-                                                 emd,
-                                                 edr_query.corridor_grid,
-                                                 output_levels,
-                                                 effective_query_parameters(masterquery),
-                                                 custom_dim_refs,
-                                                 edr_query.language);
-      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
-    }
-    else if (masterquery.output_format == COVERAGE_JSON_FORMAT && edr_query.grid.active())
-    {
-      Json::Value result =
-          CoverageJson::formatGridOutputData(outputData,
-                                             emd,
-                                             edr_query.grid,
-                                             output_levels,
-                                             effective_query_parameters(masterquery),
-                                             custom_dim_refs,
-                                             edr_query.language);
-      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
-    }
-    else if (masterquery.output_format == COVERAGE_JSON_FORMAT)
-    {
-      Json::Value result = CoverageJson::formatOutputData(outputData,
-                                                          emd,
-                                                          edr_query.query_type,
-                                                          output_levels,
-                                                          coordinateFilterForOutput,
-                                                          effective_query_parameters(masterquery),
-                                                          producer == SOUNDING_PRODUCER,
-                                                          custom_dim_refs,
-                                                          edr_query.language);
-      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
-    }
-    else if (masterquery.output_format == GEO_JSON_FORMAT)
-    {
-      Json::Value result = GeoJson::formatOutputData(outputData,
-                                                     emd,
-                                                     edr_query.query_type,
-                                                     output_levels,
-                                                     coordinateFilterForOutput,
-                                                     effective_query_parameters(masterquery),
-                                                     custom_dim_refs,
-                                                     edr_query.language);
-      if (!result.isNullOrEmpty())
-        result["links"] = links_json(dataQueryLinks(edr_query, masterquery.output_format));
-      table.set(0, 0, (result.isNullOrEmpty() ? "" : result.toStyledString(state.pretty())));
-    }
+    formatOutput(state, table, masterquery, outputData, emd);
 
     return {};
   }
