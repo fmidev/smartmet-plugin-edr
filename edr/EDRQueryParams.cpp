@@ -1775,6 +1775,57 @@ LonLatPoint destination(const LonLatPoint& p, double brng, double dist)
   return {std::remainder(to_deg(lon2), 360.0), to_deg(lat2)};
 }
 
+// Parse the corridor path, which must be a LINESTRING
+std::vector<LonLatPoint> parse_corridor_path(const std::string& wkt)
+{
+  OGRGeometry* geom = nullptr;
+  if (OGRGeometryFactory::createFromWkt(wkt.c_str(), nullptr, &geom) != OGRERR_NONE || !geom)
+    throw EDRException("Failed to parse the corridor path: " + wkt);
+  std::unique_ptr<OGRGeometry> geometry(geom);
+  if (wkbFlatten(geometry->getGeometryType()) != wkbLineString)
+    throw EDRException(
+        "Query parameters 'resolution-x' and 'resolution-y' require a LINESTRING corridor");
+
+  std::vector<LonLatPoint> path;
+  const auto* line = geometry->toLineString();
+  for (int k = 0; k < line->getNumPoints(); k++)
+    path.push_back({line->getX(k), line->getY(k)});
+  return path;
+}
+
+// Set the ny positions across the corridor at path position i, at equal offsets
+// perpendicular to the path
+void set_corridor_cross_section(const LonLatPoint& p,
+                                double brng,
+                                double width,
+                                std::size_t i,
+                                std::size_t nx,
+                                std::size_t ny,
+                                std::vector<double>& xs,
+                                std::vector<double>& ys)
+{
+  for (std::size_t j = 0; j < ny; j++)
+  {
+    const double offset = (ny == 1 ? 0.0 : -width / 2 + width * double(j) / double(ny - 1));
+    const auto q = (offset == 0 ? p : destination(p, brng + 90, offset));
+    xs[j * nx + i] = q.lon;
+    ys[j * nx + i] = q.lat;
+  }
+}
+
+// Comma separated "(x y)" list of the points
+std::string point_list(const std::vector<double>& xs, const std::vector<double>& ys)
+{
+  std::string points;
+  for (std::size_t k = 0; k < xs.size(); k++)
+  {
+    if (!points.empty())
+      points += ',';
+    points += fmt::format("({} {})", xs[k], ys[k]);
+  }
+  return points;
+}
+
 }  // namespace
 
 void EDRQueryParams::parseCorridorResolution(std::size_t nx, std::size_t ny)
@@ -1794,18 +1845,7 @@ void EDRQueryParams::parseCorridorResolution(std::size_t nx, std::size_t ny)
           "Query parameters 'resolution-x' and 'resolution-y' cannot be used with "
           "LINESTRINGM or LINESTRINGZM coordinates");
 
-    OGRGeometry* geom = nullptr;
-    if (OGRGeometryFactory::createFromWkt(wkt.c_str(), nullptr, &geom) != OGRERR_NONE || !geom)
-      throw EDRException("Failed to parse the corridor path: " + wkt);
-    std::unique_ptr<OGRGeometry> geometry(geom);
-    if (wkbFlatten(geometry->getGeometryType()) != wkbLineString)
-      throw EDRException(
-          "Query parameters 'resolution-x' and 'resolution-y' require a LINESTRING corridor");
-
-    std::vector<LonLatPoint> path;
-    const auto* line = geometry->toLineString();
-    for (int k = 0; k < line->getNumPoints(); k++)
-      path.push_back({line->getX(k), line->getY(k)});
+    const std::vector<LonLatPoint> path = parse_corridor_path(wkt);
 
     std::vector<double> cumulative{0};
     for (std::size_t k = 1; k < path.size(); k++)
@@ -1833,24 +1873,10 @@ void EDRQueryParams::parseCorridorResolution(std::size_t nx, std::size_t ny)
       // Linear interpolation within a segment and the initial bearing of the segment are
       // accurate enough for corridor sized segments
       const LonLatPoint p{a.lon + fraction * (b.lon - a.lon), a.lat + fraction * (b.lat - a.lat)};
-      const double brng = bearing(a, b);
-
-      for (std::size_t j = 0; j < ny; j++)
-      {
-        const double offset = (ny == 1 ? 0.0 : -width / 2 + width * double(j) / double(ny - 1));
-        const auto q = (offset == 0 ? p : destination(p, brng + 90, offset));
-        xs[j * nx + i] = q.lon;
-        ys[j * nx + i] = q.lat;
-      }
+      set_corridor_cross_section(p, bearing(a, b), width, i, nx, ny, xs, ys);
     }
 
-    std::string points;
-    for (std::size_t k = 0; k < xs.size(); k++)
-    {
-      if (!points.empty())
-        points += ',';
-      points += fmt::format("({} {})", xs[k], ys[k]);
-    }
+    const std::string points = point_list(xs, ys);
     req.removeParameter("wkt");
     req.addParameter("wkt", "MULTIPOINT(" + points + ")");
 
