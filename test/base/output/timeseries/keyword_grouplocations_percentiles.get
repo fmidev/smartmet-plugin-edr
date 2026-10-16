@@ -1,0 +1,1 @@
+[{"name":"MULTIPOINT((23.4243 68.3626),( ...","time":"2008-08-06T00:00:00","nanpercentile_a[10](temperature)":2,"nanmedian_a(temperature)":8,"nanpercentile_a[90](temperature)":12},{"name":"MULTIPOINT((23.4243 68.3626),( ...","time":"2008-08-06T01:00:00","nanpercentile_a[10](temperature)":3,"nanmedian_a(temperature)":7,"nanpercentile_a[90](temperature)":11}]

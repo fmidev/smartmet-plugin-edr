@@ -736,6 +736,7 @@ over a given geographical area
 | Function                    | Description                                                                                                                                                                   |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | median(field)               | The median value of the field evaluated over the given area.                                                                                                                  |
+| percentile\[p](field)       | The p:th percentile (0...100) of the field values over the given area, interpolated linearly between the ranks: percentile\[90](temperature) is exceeded by a tenth of the values. |
 | mean(field)                 | The mean value of the field evaluated over the given area.                                                                                                                    |
 | circlemean(field)           | The circular mean value of a direction parameter over the given area or time.                                                                                                 |
 | min(field)                  | The minimum value of the field in the given area.                                                                                                                             |
@@ -785,6 +786,7 @@ necessary returned to the user.
 | interpolatedir_t(field/btime/atime)  | Same as above but for direction parameters in range 0...360.                                                                                                                            |
 | nearest_t(field/btime/atime)         | Replaces the missing value with nearest value inside given time interval.                                                                                                               |
 | median_t(field/btime/atime)          | The median value of the field evaluated over the given time interval.                                                                                                                   |
+| percentile_t\[p](field/btime/atime)  | The p:th percentile (0...100) of the field values in the given time interval, interpolated linearly between the ranks.                                                                  |
 | amean_t(field/btime/atime)           | The arithmetic mean value of the field evaluated over the given time interval.                                                                                                          |
 | mean_t(field/btime/atime)            | The mean value of the field evaluated over the given time interval by using the trapezoidal rule.                                                                                       |
 | meandir_t(field/btime/atime)         | Same as above but for direction parameters in range 0...360.                                                                                                                            |
@@ -797,7 +799,7 @@ necessary returned to the user.
 | trend_t(field/btime/atime)           | The trend of the field values calculated over the given time interval.                                                                                                                  |
 | change_t(field/btime/atime)          | The change of the field values calculated over the given time interval.                                                                                                                 |
 | count_t\[min:max](field/btime/atime) | The number of the field values in the given range (min..max) calculated  over the given time interval. The function returns the total number of the field values if no range is given . |
-| percentage_\[min:max](field)         | The percentage of the field values in the given range (min..max) calculated over the given time interval.                                                                               |
+| percentage_t\[min:max](field)        | The percentage of the field values in the given range (min..max) calculated over the given time interval.                                                                               |
 
 Example
 
@@ -1046,6 +1048,17 @@ weather station and not the area. Grouping the results is the default and it is
 not necessary to use `groupareas=1` in the querystring.
 
 ![Result of groupareas example](img/groupareas.png)
+
+### Statistics of Several Locations
+
+`grouplocations=1` treats the given locations as one area, so that the area
+functions summarize them: the locations of `lonlat(s)`, `latlon(s)`,
+`place(s)`, `keyword`, `fmisid`, `lpnn` or `wmo`. For example the median and
+the 10 % and 90 % percentiles of the temperatures at the stations of a keyword:
+
+```text
+/timeseries?producer=pal_skandinavia&keyword=finavia&grouplocations=1&param=time,nanpercentile_a[10](temperature),nanmedian_a(temperature),nanpercentile_a[90](temperature)
+```
 
 
 ## Observations

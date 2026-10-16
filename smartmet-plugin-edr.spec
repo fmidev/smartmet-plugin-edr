@@ -41,7 +41,7 @@ BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
 BuildRequires: smartmet-library-grid-files-devel >= 26.10.16
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
 BuildRequires: smartmet-library-gis-devel >= 26.10.16
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.16
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.16-2
 BuildRequires: smartmet-engine-avi-devel >= 26.10.16
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
 %if %{with observation}
@@ -62,7 +62,7 @@ Requires: smartmet-library-macgyver >= 26.10.16
 Requires: smartmet-library-newbase >= 26.10.16
 Requires: smartmet-library-spine >= 26.10.16-3
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-timeseries >= 26.10.16
+Requires: smartmet-library-timeseries >= 26.10.16-2
 Requires: smartmet-library-gis >= 26.10.16
 Requires: smartmet-library-grid-files >= 26.10.16
 Requires: smartmet-engine-avi >= 26.10.16
@@ -121,6 +121,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-3.fmi
+- grouplocations=1 also groups the locations of a keyword and of place; an empty group is
+  reported instead of failing with an invalid WKT
+- Tests of the new percentile functions, requires smartmet-library-timeseries 26.10.16-2
+- TimeSeries errors are sent as text/plain with nosniff, since the messages may repeat request
+  parameters; debug stack traces as text/html
 - New <timeseries_url>/api/producers: the producers of the TimeSeries API with their
   parameters, areas, times and levels, for the data explorer
 - TimeSeries OpenAPI parameters in the order producer, param, time, locations, data, output

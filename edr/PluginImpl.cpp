@@ -654,6 +654,9 @@ void PluginImpl::grouplocations(Spine::HTTP::Request& request) const
     if (!latlons)
       latlons = request.getParameter("latlon");
     auto places = request.getParameter("places");
+    if (!places)
+      places = request.getParameter("place");
+    auto keyword = request.getParameter("keyword");
     auto fmisid = request.getParameter("fmisid");
     auto lpnn = request.getParameter("lpnn");
     auto wmo = request.getParameter("wmo");
@@ -661,7 +664,25 @@ void PluginImpl::grouplocations(Spine::HTTP::Request& request) const
     std::string wkt_multipoint = "MULTIPOINT(";
     parse_lonlats(lonlats, request, wkt_multipoint);
     parse_latlons(latlons, request, wkt_multipoint);
+    if (places)
+      request.removeParameter("place");
     parse_places(places, request, wkt_multipoint, itsEngines.geoEngine.get());
+
+    // The locations of a keyword
+    if (keyword)
+    {
+      request.removeParameter("keyword");
+      Locus::QueryOptions opts;
+      opts.SetLanguage(
+          Spine::optional_string(request.getParameter("lang"), itsConfig.defaultLanguage()));
+      for (const auto& loc : itsEngines.geoEngine->keywordSearch(opts, *keyword))
+      {
+        if (wkt_multipoint != "MULTIPOINT(")
+          wkt_multipoint += ",";
+        wkt_multipoint +=
+            "(" + Fmi::to_string(loc->longitude) + " " + Fmi::to_string(loc->latitude) + ")";
+      }
+    }
 
     std::vector<int> fmisids;
     std::vector<int> lpnns;
@@ -683,6 +704,11 @@ void PluginImpl::grouplocations(Spine::HTTP::Request& request) const
                           Fmi::to_string(lopt.loc->latitude) + ")";
       }
     }
+
+    if (wkt_multipoint == "MULTIPOINT(")
+      throw Fmi::Exception(BCP,
+                           "grouplocations needs locations: lonlat(s), latlon(s), place(s), "
+                           "keyword, fmisid, lpnn or wmo");
 
     wkt_multipoint += ")";
     request.addParameter("wkt", wkt_multipoint);
@@ -889,6 +915,7 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
     std::string firstMessage = ex.what();
     if (isdebug)
     {
+      theResponse.setHeader("Content-Type", "text/html; charset=UTF-8");
       theResponse.setContent(ex.getHtmlStackTrace());
       theResponse.setStatus(Spine::HTTP::Status::ok);
     }
@@ -899,6 +926,9 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
       else
         theResponse.setStatus(Spine::HTTP::Status::bad_request);
 
+      // The message may repeat request parameters: it must never be taken for HTML
+      theResponse.setHeader("Content-Type", "text/plain; charset=UTF-8");
+      theResponse.setHeader("X-Content-Type-Options", "nosniff");
       theResponse.setContent(firstMessage);
     }
 
@@ -1006,6 +1036,7 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
     {
       // Delivering the exception information as HTTP content
       std::string fullMessage = ex.getHtmlStackTrace();
+      theResponse.setHeader("Content-Type", "text/html; charset=UTF-8");
       theResponse.setContent(fullMessage);
       theResponse.setStatus(Spine::HTTP::Status::ok);
     }

@@ -1,0 +1,1 @@
+GET /timeseries?producer=pal_skandinavia&param=name,time,nanpercentile_a[10](temperature),percentile_a[50](temperature),nanmedian_a(temperature),nanpercentile_a[90](temperature)&starttime=2008-08-06T00:00:00Z&timesteps=3&bbox=21,60,27,63&format=json&tz=UTC&timeformat=xml HTTP/1.0
