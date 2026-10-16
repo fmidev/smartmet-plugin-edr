@@ -274,6 +274,138 @@ Json::Value height_units_json(const std::string &level_type)
   return ret;
 }
 
+// Describe the query type in the query link and its variables. Returns the name of the
+// query type, or an empty string for an unknown type.
+std::string describe_query_type(EDRQueryType query_type,
+                                const std::string &base_url,
+                                bool levels_exist,
+                                const std::string &level_type,
+                                Json::Value &query_info_link,
+                                Json::Value &query_info_variables)
+{
+  if (query_type == EDRQueryType::Position)
+  {
+    query_info_link["title"] = Json::Value("Position query");
+    query_info_link["href"] =
+        Json::Value((base_url + "/position"));
+    query_info_variables["title"] = Json::Value("Position query");
+    query_info_variables["description"] = Json::Value("Data at point location");
+    query_info_variables["query_type"] = Json::Value("position");
+    query_info_variables["coords"] =
+        Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
+    return "position";
+  }
+  if (query_type == EDRQueryType::Radius)
+  {
+    query_info_link["title"] = Json::Value("Radius query");
+    query_info_link["href"] =
+        Json::Value((base_url + "/radius"));
+    query_info_variables["title"] = Json::Value("Radius query");
+    query_info_variables["description"] = Json::Value(
+        "Data at the area specified with a geographic position "
+        "and radial distance");
+    query_info_variables["query_type"] = Json::Value("radius");
+    query_info_variables["coords"] =
+        Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
+    auto within_units = Json::Value(Json::ValueType::arrayValue);
+    within_units[0] = Json::Value("m");
+    within_units[1] = Json::Value("km");
+    within_units[2] = Json::Value("mi");
+    query_info_variables["within_units"] = within_units;
+    return "radius";
+  }
+  if (query_type == EDRQueryType::Area)
+  {
+    query_info_link["title"] = Json::Value("Area query");
+    query_info_link["href"] =
+        Json::Value((base_url + "/area"));
+    query_info_variables["title"] = Json::Value("Area query");
+    query_info_variables["description"] = Json::Value("Data at the requested area");
+    query_info_variables["query_type"] = Json::Value("area");
+    query_info_variables["coords"] = Json::Value(
+        "Well Known Text POLYGON value i.e. POLYGON((24 61,24 "
+        "61.5,24.5 61.5,24.5 61,24 61))");
+    return "area";
+  }
+  if (query_type == EDRQueryType::Cube)
+  {
+    query_info_link["title"] = Json::Value("Cube query");
+    query_info_link["href"] =
+        Json::Value((base_url + "/cube"));
+    query_info_variables["title"] = Json::Value("Cube query");
+    query_info_variables["description"] = Json::Value("Data inside requested bounding box");
+    query_info_variables["query_type"] = Json::Value("cube");
+    // Cube z values are not converted, they must be in the unit of the levels
+    query_info_variables["height_units"] = Json::Value(Json::ValueType::arrayValue);
+    if (levels_exist)
+      query_info_variables["height_units"].append(
+          Json::Value(VerticalReference::native_height_unit(level_type)));
+    return "cube";
+  }
+  if (query_type == EDRQueryType::Locations)
+  {
+    query_info_link["title"] = Json::Value("Locations query");
+    query_info_link["href"] =
+        Json::Value((base_url + "/locations"));
+    query_info_variables["title"] = Json::Value("Locations query");
+    query_info_variables["description"] =
+        Json::Value("Data at point location defined by a unique identifier");
+    query_info_variables["query_type"] = Json::Value("locations");
+    // A comma separated list of location ids is not supported
+    query_info_variables["multiple_locations"] = Json::Value(false);
+    return "locations";
+  }
+  if (query_type == EDRQueryType::Trajectory)
+  {
+    query_info_link["title"] = Json::Value("Trajectory query");
+    query_info_link["href"] =
+        Json::Value((base_url + "/trajectory"));
+    query_info_variables["title"] = Json::Value("Trajectory query");
+    query_info_variables["description"] = Json::Value("Data along trajectory");
+    query_info_variables["query_type"] = Json::Value("trajectory");
+    query_info_variables["coords"] = Json::Value(
+        "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
+        "61,24.2 61.2,24.3 61.3)");
+    return "trajectory";
+  }
+  if (query_type == EDRQueryType::Corridor)
+  {
+    query_info_link["title"] = Json::Value("Corridor query");
+    query_info_link["href"] =
+        Json::Value((base_url + "/corridor"));
+    query_info_variables["title"] = Json::Value("Corridor query");
+    query_info_variables["description"] = Json::Value("Data within corridor");
+    query_info_variables["query_type"] = Json::Value("corridor");
+    auto width_units = Json::Value(Json::ValueType::arrayValue);
+    width_units[0] = Json::Value("m");
+    width_units[1] = Json::Value("km");
+    width_units[2] = Json::Value("mi");
+    query_info_variables["width_units"] = width_units;
+    // Mandatory, but corridor-height can be used only if the collection has levels
+    query_info_variables["height_units"] =
+        (levels_exist ? height_units_json(level_type)
+                      : Json::Value(Json::ValueType::arrayValue));
+    query_info_variables["coords"] = Json::Value(
+        "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
+        "61,24.2 61.2,24.3 61.3)");
+    return "corridor";
+  }
+  return "";
+}
+
+// OGC API-EDR /req/core/rc-md-query-links: append a link to the query end point
+void append_query_link(Json::Value *query_links, Json::Value &query_info_link)
+{
+  if (!query_links)
+    return;
+  auto query_link = Json::Value(Json::ValueType::objectValue);
+  query_link["href"] = query_info_link["href"];
+  query_link["rel"] = Json::Value("data");
+  query_link["type"] = query_info_link["type"];
+  query_link["title"] = query_info_link["title"];
+  query_links->append(query_link);
+}
+
 Json::Value get_data_queries(const std::string &host,
                              const std::string &producer,
                              const std::set<std::string> &data_query_set,
@@ -304,7 +436,6 @@ Json::Value get_data_queries(const std::string &host,
     query_info_link["hreflang"] = Json::Value("en");
     //      query_info_link["templated"] = Json::Value(true);
 
-    std::string query_type_string;
     if (query_type == EDRQueryType::Items)
     {
       // Items (aviation messages) are GeoJSON features in CRS84
@@ -329,113 +460,12 @@ Json::Value get_data_queries(const std::string &host,
       }
       continue;
     }
-    if (query_type == EDRQueryType::Position)
-    {
-      query_info_link["title"] = Json::Value("Position query");
-      query_info_link["href"] =
-          Json::Value((host + "/collections/" + producer + instance_str + "/position"));
-      query_info_variables["title"] = Json::Value("Position query");
-      query_info_variables["description"] = Json::Value("Data at point location");
-      query_info_variables["query_type"] = Json::Value("position");
-      query_info_variables["coords"] =
-          Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
-      query_type_string = "position";
-    }
-    else if (query_type == EDRQueryType::Radius)
-    {
-      query_info_link["title"] = Json::Value("Radius query");
-      query_info_link["href"] =
-          Json::Value((host + "/collections/" + producer + instance_str + "/radius"));
-      query_info_variables["title"] = Json::Value("Radius query");
-      query_info_variables["description"] = Json::Value(
-          "Data at the area specified with a geographic position "
-          "and radial distance");
-      query_info_variables["query_type"] = Json::Value("radius");
-      query_info_variables["coords"] =
-          Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
-      auto within_units = Json::Value(Json::ValueType::arrayValue);
-      within_units[0] = Json::Value("m");
-      within_units[1] = Json::Value("km");
-      within_units[2] = Json::Value("mi");
-      query_info_variables["within_units"] = within_units;
-      query_type_string = "radius";
-    }
-    else if (query_type == EDRQueryType::Area)
-    {
-      query_info_link["title"] = Json::Value("Area query");
-      query_info_link["href"] =
-          Json::Value((host + "/collections/" + producer + instance_str + "/area"));
-      query_info_variables["title"] = Json::Value("Area query");
-      query_info_variables["description"] = Json::Value("Data at the requested area");
-      query_info_variables["query_type"] = Json::Value("area");
-      query_info_variables["coords"] = Json::Value(
-          "Well Known Text POLYGON value i.e. POLYGON((24 61,24 "
-          "61.5,24.5 61.5,24.5 61,24 61))");
-      query_type_string = "area";
-    }
-    else if (query_type == EDRQueryType::Cube)
-    {
-      query_info_link["title"] = Json::Value("Cube query");
-      query_info_link["href"] =
-          Json::Value((host + "/collections/" + producer + instance_str + "/cube"));
-      query_info_variables["title"] = Json::Value("Cube query");
-      query_info_variables["description"] = Json::Value("Data inside requested bounding box");
-      query_info_variables["query_type"] = Json::Value("cube");
-      // Cube z values are not converted, they must be in the unit of the levels
-      query_info_variables["height_units"] = Json::Value(Json::ValueType::arrayValue);
-      if (levels_exist)
-        query_info_variables["height_units"].append(
-            Json::Value(VerticalReference::native_height_unit(level_type)));
-      query_type_string = "cube";
-    }
-    else if (query_type == EDRQueryType::Locations)
-    {
-      query_info_link["title"] = Json::Value("Locations query");
-      query_info_link["href"] =
-          Json::Value((host + "/collections/" + producer + instance_str + "/locations"));
-      query_info_variables["title"] = Json::Value("Locations query");
-      query_info_variables["description"] =
-          Json::Value("Data at point location defined by a unique identifier");
-      query_info_variables["query_type"] = Json::Value("locations");
-      // A comma separated list of location ids is not supported
-      query_info_variables["multiple_locations"] = Json::Value(false);
-      query_type_string = "locations";
-    }
-    else if (query_type == EDRQueryType::Trajectory)
-    {
-      query_info_link["title"] = Json::Value("Trajectory query");
-      query_info_link["href"] =
-          Json::Value((host + "/collections/" + producer + instance_str + "/trajectory"));
-      query_info_variables["title"] = Json::Value("Trajectory query");
-      query_info_variables["description"] = Json::Value("Data along trajectory");
-      query_info_variables["query_type"] = Json::Value("trajectory");
-      query_info_variables["coords"] = Json::Value(
-          "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
-          "61,24.2 61.2,24.3 61.3)");
-      query_type_string = "trajectory";
-    }
-    else if (query_type == EDRQueryType::Corridor)
-    {
-      query_info_link["title"] = Json::Value("Corridor query");
-      query_info_link["href"] =
-          Json::Value((host + "/collections/" + producer + instance_str + "/corridor"));
-      query_info_variables["title"] = Json::Value("Corridor query");
-      query_info_variables["description"] = Json::Value("Data within corridor");
-      query_info_variables["query_type"] = Json::Value("corridor");
-      auto width_units = Json::Value(Json::ValueType::arrayValue);
-      width_units[0] = Json::Value("m");
-      width_units[1] = Json::Value("km");
-      width_units[2] = Json::Value("mi");
-      query_info_variables["width_units"] = width_units;
-      // Mandatory, but corridor-height can be used only if the collection has levels
-      query_info_variables["height_units"] =
-          (levels_exist ? height_units_json(level_type)
-                        : Json::Value(Json::ValueType::arrayValue));
-      query_info_variables["coords"] = Json::Value(
-          "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
-          "61,24.2 61.2,24.3 61.3)");
-      query_type_string = "corridor";
-    }
+    std::string query_type_string = describe_query_type(query_type,
+                                                        host + "/collections/" + producer + instance_str,
+                                                        levels_exist,
+                                                        level_type,
+                                                        query_info_link,
+                                                        query_info_variables);
 
     auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
     query_info_output_formats[0] = Json::Value("CoverageJSON");
@@ -448,15 +478,7 @@ Json::Value get_data_queries(const std::string &host,
         Json::Value(UtilityFunctions::output_format_mime_type(default_output_format));
 
     // OGC API-EDR /req/core/rc-md-query-links: links to the query end points
-    if (query_links)
-    {
-      auto query_link = Json::Value(Json::ValueType::objectValue);
-      query_link["href"] = query_info_link["href"];
-      query_link["rel"] = Json::Value("data");
-      query_link["type"] = query_info_link["type"];
-      query_link["title"] = query_info_link["title"];
-      query_links->append(query_link);
-    }
+    append_query_link(query_links, query_info_link);
 
     query_info_variables["crs_details"] = crs_details(crs_registry);
 
@@ -487,15 +509,7 @@ Json::Value get_data_queries(const std::string &host,
         Json::Value(UtilityFunctions::output_format_mime_type(default_output_format));
 
     // OGC API-EDR /req/core/rc-md-query-links: links to the query end points
-    if (query_links)
-    {
-      auto query_link = Json::Value(Json::ValueType::objectValue);
-      query_link["href"] = query_info_link["href"];
-      query_link["rel"] = Json::Value("data");
-      query_link["type"] = query_info_link["type"];
-      query_link["title"] = query_info_link["title"];
-      query_links->append(query_link);
-    }
+    append_query_link(query_links, query_info_link);
 
     query_info_variables["output_formats"] = query_info_output_formats;
     query_info_variables["crs_details"] = crs_details(crs_registry);
