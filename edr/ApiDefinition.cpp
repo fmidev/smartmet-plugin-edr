@@ -1426,6 +1426,30 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     doc.addCommonComponents();
     OA::Document::addErrorResponses(op, false);
 
+    // The producers and their parameters, times and areas for clients building queries
+    auto& producers_op = doc.operation(url + "/api/producers", "get");
+    producers_op["tags"].append(TAG_CAPABILITIES);
+    producers_op["summary"] = "Producers and their parameters";
+    producers_op["description"] =
+        "The producers the API reads, with their parameters, areas, times and levels, and a "
+        "dictionary of the parameter descriptions and units. Parameter names are lower case.";
+    producers_op["operationId"] = "getProducers" + component_name(url);
+    producers_op["parameters"].append(
+        OA::parameter("source",
+                      "query",
+                      "Only the producers of this source",
+                      OA::enumSchema({"querydata", "grid", "observation"}, max_enum)));
+    auto& producers_ok = producers_op["responses"]["200"];
+    producers_ok["description"] = "The producers";
+    JsonValue producers_schema;
+    producers_schema["type"] = "object";
+    producers_schema["required"].append("producers");
+    producers_schema["required"].append("parameters");
+    producers_schema["properties"]["producers"]["type"] = "array";
+    producers_schema["properties"]["parameters"]["type"] = "object";
+    producers_ok["content"]["application/json"]["schema"] = producers_schema;
+    OA::Document::addErrorResponses(producers_op, false);
+
     // The definition and its documentation
     doc.addApiOperations(TAG_CAPABILITIES, url);
 

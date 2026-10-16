@@ -7,14 +7,15 @@
 #include "PluginImpl.h"
 #include "ApiDefinition.h"
 #include "EDRException.h"
+#include "ProducerCatalog.h"
 #include "QueryProcessingHub.h"
 #include "State.h"
 #include "TimeSeriesQuery.h"
 #include "UtilityFunctions.h"
 #include <engines/gis/Engine.h>
 #include <fmt/format.h>
-#include <macgyver/StringConversion.h>
 #include <macgyver/Hash.h>
+#include <macgyver/StringConversion.h>
 #include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
@@ -1384,6 +1385,23 @@ void PluginImpl::publishApiDefinitions() const
 
     for (const auto& item : itsTimeSeriesApis)
       item.second->publish(ApiDefinition::timeseries(itsConfig, *metadata, item.first));
+
+    if (!itsTimeSeriesApis.empty())
+    {
+      ::Json::StreamWriterBuilder builder;
+      builder["indentation"] = "";
+      const auto store = [&builder](ProducerDocument& doc, const ::Json::Value& json)
+      {
+        doc.json = ::Json::writeString(builder, json);
+        doc.etag = fmt::format("\"{:x}-producers\"", Fmi::hash_value(doc.json));
+      };
+      auto docs = std::make_shared<ProducerDocuments>();
+      const auto catalog = ProducerCatalog::build(*metadata);
+      store((*docs)[""], catalog);
+      for (const auto& source : ProducerCatalog::sources())
+        store((*docs)[source], ProducerCatalog::filter(catalog, source));
+      itsProducerDocuments.store(docs);
+    }
   }
   catch (...)
   {
@@ -1413,6 +1431,11 @@ bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
 
     for (const auto& item : itsTimeSeriesApis)
     {
+      if (resource == item.first + "/api/producers")
+      {
+        handleProducers(theRequest, theResponse);
+        return true;
+      }
       if (Spine::OpenAPI::Publisher::isApiResource(resource, item.first))
       {
         // The paths of the TimeSeries definition are absolute
@@ -1423,6 +1446,66 @@ bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
       }
     }
     return false;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Answer <timeseries_url>/api/producers
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::handleProducers(const Spine::HTTP::Request& theRequest,
+                                 Spine::HTTP::Response& theResponse) const
+{
+  try
+  {
+    auto docs = itsProducerDocuments.load();
+    theResponse.setHeader("Access-Control-Allow-Origin", "*");
+
+    const auto source = Spine::optional_string(theRequest.getParameter("source"), "");
+    const ProducerDocument* doc = nullptr;
+    if (docs)
+    {
+      auto pos = docs->find(source);
+      if (pos == docs->end())
+      {
+        theResponse.setStatus(Spine::HTTP::Status::bad_request);
+        theResponse.setHeader("Content-Type", "application/problem+json");
+        theResponse.setContent(
+            R"({"title":"Bad Request","status":400,"detail":"source must be querydata, grid or observation"})");
+        return;
+      }
+      doc = &pos->second;
+    }
+    if (doc == nullptr)
+    {
+      theResponse.setStatus(Spine::HTTP::Status::service_unavailable);
+      theResponse.setHeader("Content-Type", "application/problem+json");
+      theResponse.setContent(
+          R"({"title":"Service Unavailable","status":503,"detail":"The metadata is not available yet"})");
+      return;
+    }
+
+    theResponse.setHeader("Cache-Control", "public, max-age=60");
+    theResponse.setHeader("ETag", doc->etag);
+    if (theRequest.getHeader("X-Request-ETag"))
+    {
+      theResponse.setStatus(Spine::HTTP::Status::no_content);
+      return;
+    }
+    if (auto status = Spine::HTTP::conditionalResponseStatus(theRequest, doc->etag))
+    {
+      theResponse.setStatus(*status);
+      return;
+    }
+    theResponse.setStatus(Spine::HTTP::Status::ok);
+    theResponse.setHeader("Content-Type", "application/json");
+    theResponse.setContent(doc->json);
   }
   catch (...)
   {

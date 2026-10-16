@@ -132,6 +132,18 @@ class PluginImpl
   std::unique_ptr<Spine::OpenAPI::Publisher> itsEdrApi;
   std::map<std::string, std::unique_ptr<Spine::OpenAPI::Publisher>> itsTimeSeriesApis;
 
+  // The producers of the TimeSeries API (<timeseries_url>/api/producers), regenerated with
+  // the definitions
+  struct ProducerDocument
+  {
+    std::string json;
+    std::string etag;
+  };
+  using ProducerDocuments = std::map<std::string, ProducerDocument>;  // by source, "" for all
+  mutable Fmi::AtomicSharedPtr<const ProducerDocuments> itsProducerDocuments;
+  void handleProducers(const Spine::HTTP::Request& theRequest,
+                       Spine::HTTP::Response& theResponse) const;
+
   SupportedProducerLocations itsSupportedLocations;
   ParameterInfo itsConfigParameterInfo;
   Fmi::AtomicSharedPtr<EngineMetaData> itsMetaData;

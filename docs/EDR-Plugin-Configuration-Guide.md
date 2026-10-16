@@ -62,6 +62,7 @@ changes:
 | `/edr/api` | OpenAPI definition (`application/vnd.oai.openapi+json;version=3.1`); with `f=html`, or when the client prefers `text/html`, the documentation page |
 | `/edr/api/docs` | Documentation page rendered by Swagger UI |
 | `/timeseries/api`, `/timeseries/api/docs` | The same for the TimeSeries API (each `timeseries_url`) |
+| `/timeseries/api/producers` | The producers of the TimeSeries API with their parameters, areas, times and levels, and a dictionary of parameter descriptions and units; `source=querydata`, `grid` or `observation` selects one source. Used by the data explorer to build queries. |
 
 The landing page links the definition (`rel=service-desc`) and the documentation
 (`rel=service-doc`).
