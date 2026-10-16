@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.15
-Release: 2%{?dist}.fmi
+Version: 26.10.16
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -34,43 +34,43 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.10.15
-BuildRequires: smartmet-library-locus-devel >= 26.10.15
-BuildRequires: smartmet-library-macgyver-devel >= 26.10.15
-BuildRequires: smartmet-library-grid-content-devel >= 26.10.15
-BuildRequires: smartmet-library-grid-files-devel >= 26.10.15
-BuildRequires: smartmet-library-newbase-devel >= 26.10.15
-BuildRequires: smartmet-library-gis-devel >= 26.10.15
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.15
-BuildRequires: smartmet-engine-avi-devel >= 26.10.15
-BuildRequires: smartmet-engine-geonames-devel >= 26.10.15
+BuildRequires: smartmet-library-spine-devel >= 26.10.16
+BuildRequires: smartmet-library-locus-devel >= 26.10.16
+BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
+BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
+BuildRequires: smartmet-library-grid-files-devel >= 26.10.16
+BuildRequires: smartmet-library-newbase-devel >= 26.10.16
+BuildRequires: smartmet-library-gis-devel >= 26.10.16
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.16
+BuildRequires: smartmet-engine-avi-devel >= 26.10.16
+BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.10.15-3
+BuildRequires: smartmet-engine-observation-devel >= 26.10.16
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 26.10.15
-BuildRequires: smartmet-engine-gis-devel >= 26.10.15
-BuildRequires: smartmet-engine-grid-devel >= 26.10.15
+BuildRequires: smartmet-engine-querydata-devel >= 26.10.16
+BuildRequires: smartmet-engine-gis-devel >= 26.10.16
+BuildRequires: smartmet-engine-grid-devel >= 26.10.16
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 26.10.11
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 26.10.15
-Requires: smartmet-library-locus >= 26.10.15
-Requires: smartmet-library-macgyver >= 26.10.15
-Requires: smartmet-library-newbase >= 26.10.15
-Requires: smartmet-library-spine >= 26.10.15
+Requires: smartmet-library-gis >= 26.10.16
+Requires: smartmet-library-locus >= 26.10.16
+Requires: smartmet-library-macgyver >= 26.10.16
+Requires: smartmet-library-newbase >= 26.10.16
+Requires: smartmet-library-spine >= 26.10.16
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-timeseries >= 26.10.15
-Requires: smartmet-library-gis >= 26.10.15
-Requires: smartmet-library-grid-files >= 26.10.15
-Requires: smartmet-engine-avi >= 26.10.15
-Requires: smartmet-engine-geonames >= 26.10.15
-Requires: smartmet-engine-querydata >= 26.10.15
-Requires: smartmet-engine-gis >= 26.10.15
-Requires: smartmet-engine-grid >= 26.10.15
-Requires: smartmet-server >= 26.10.15
+Requires: smartmet-library-timeseries >= 26.10.16
+Requires: smartmet-library-gis >= 26.10.16
+Requires: smartmet-library-grid-files >= 26.10.16
+Requires: smartmet-engine-avi >= 26.10.16
+Requires: smartmet-engine-geonames >= 26.10.16
+Requires: smartmet-engine-querydata >= 26.10.16
+Requires: smartmet-engine-gis >= 26.10.16
+Requires: smartmet-engine-grid >= 26.10.16
+Requires: smartmet-server >= 26.10.16
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -78,22 +78,22 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.15
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.15
-#TestRequires: smartmet-library-newbase-devel >= 26.10.15
+#TestRequires: smartmet-library-spine >= 26.10.16
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.16
+#TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
-#TestRequires: smartmet-library-grid-files-test >= 26.10.15
-#TestRequires: smartmet-library-gis >= 26.10.15
-#TestRequires: smartmet-engine-avi >= 26.10.15
-#TestRequires: smartmet-engine-geonames >= 26.10.15
-#TestRequires: smartmet-engine-gis >= 26.10.15
-#TestRequires: smartmet-engine-querydata >= 26.10.15
+#TestRequires: smartmet-library-grid-files-test >= 26.10.16
+#TestRequires: smartmet-library-gis >= 26.10.16
+#TestRequires: smartmet-engine-avi >= 26.10.16
+#TestRequires: smartmet-engine-geonames >= 26.10.16
+#TestRequires: smartmet-engine-gis >= 26.10.16
+#TestRequires: smartmet-engine-querydata >= 26.10.16
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.15-3
+#TestRequires: smartmet-engine-observation >= 26.10.16
 %endif
-#TestRequires: smartmet-engine-grid >= 26.10.15
+#TestRequires: smartmet-engine-grid >= 26.10.16
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
@@ -120,6 +120,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
+- CommonQuery has a virtual destructor
+- Fixed compiler warnings and clang-tidy findings (unused code, unreachable code, empty statements, member initialization, parameter passing, noexcept), no functional changes
+
 * Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-2.fmi
 - CoverageJSON and GeoJSON report integer parameters with dataType integer instead of the invalid int
 - Fixed mechanical clang-tidy findings (internal linkage, unused parameters, initialization, redundant code), no functional changes
