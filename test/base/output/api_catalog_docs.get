@@ -1,0 +1,40 @@
+Status: 200
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartMet Server APIs - API documentation</title>
+<link rel="icon" type="image/png" href="docs/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="docs/favicon-16x16.png" sizes="16x16">
+<link rel="stylesheet" href="docs/swagger-ui.css">
+<style>body { margin: 0; } .swagger-ui .topbar .link { display: none; }</style>
+</head>
+<body>
+<div id="swagger-ui"></div>
+<script src="docs/swagger-ui-bundle.js"></script>
+<script src="docs/swagger-ui-standalone-preset.js"></script>
+<script src="docs/smartmet-swagger-ui.js"></script>
+<script>
+window.onload = function () {
+  var urls = [{"name":"FMI EDR Server (/edr)","url":"../edr/api"},{"name":"SmartMet TimeSeries API (/timeseries)","url":"../timeseries/api"}];
+  urls.forEach(function (u) { u.url = new URL(u.url, window.location.href).href; });
+  window.ui = SwaggerUIBundle({
+    urls: urls,
+    dom_id: "#swagger-ui",
+    deepLinking: true,
+    validatorUrl: null,
+    queryConfigEnabled: false,
+    tryItOutEnabled: true,
+    requestSnippetsEnabled: true,
+    requestSnippets: SmartMetSwaggerUI.snippetConfig,
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+    plugins: [SmartMetSwaggerUI.plugin],
+    layout: "StandaloneLayout"
+  });
+};
+</script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.16
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -34,7 +34,7 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.10.16
+BuildRequires: smartmet-library-spine-devel >= 26.10.16-2
 BuildRequires: smartmet-library-locus-devel >= 26.10.16
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
 BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
@@ -60,7 +60,7 @@ Requires: smartmet-library-gis >= 26.10.16
 Requires: smartmet-library-locus >= 26.10.16
 Requires: smartmet-library-macgyver >= 26.10.16
 Requires: smartmet-library-newbase >= 26.10.16
-Requires: smartmet-library-spine >= 26.10.16
+Requires: smartmet-library-spine >= 26.10.16-2
 Requires: smartmet-swagger-ui
 Requires: smartmet-library-timeseries >= 26.10.16
 Requires: smartmet-library-gis >= 26.10.16
@@ -78,8 +78,8 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.16
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.16
+#TestRequires: smartmet-library-spine >= 26.10.16-2
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.16-2
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -120,6 +120,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-2.fmi
+- The EDR API and each TimeSeries URL are listed in the API catalog of the server (/api)
+
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
 - CommonQuery has a virtual destructor
 - Fixed compiler warnings and clang-tidy findings (unused code, unreachable code, empty statements, member initialization, parameter passing, noexcept), no functional changes

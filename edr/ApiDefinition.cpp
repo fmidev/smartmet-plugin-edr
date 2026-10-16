@@ -22,6 +22,12 @@ namespace EDR
 {
 namespace ApiDefinition
 {
+const char* const TIMESERIES_TITLE = "SmartMet TimeSeries API";
+const char* const TIMESERIES_DESCRIPTION =
+    "Time series of forecasts and observations at locations, areas and paths. The values to "
+    "return are selected with the param option, see the documentation for the parameter names "
+    "and functions.";
+
 namespace
 {
 namespace OA = Spine::OpenAPI;
@@ -1301,12 +1307,8 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     const auto& settings = config.openAPISettings();
     const auto max_enum = settings.max_enum;
 
-    OA::Document doc("SmartMet TimeSeries API",
-                     "Time series of forecasts and observations at locations, areas and paths. "
-                     "The values to return are selected with the param option, see the "
-                     "documentation for the parameter names and functions.",
-                     config.landingPage().version,
-                     settings);
+    OA::Document doc(
+        TIMESERIES_TITLE, TIMESERIES_DESCRIPTION, config.landingPage().version, settings);
     doc.addTag("TimeSeries", "Time series queries");
     doc.addTag(TAG_CAPABILITIES, "The API definition");
     doc.json()["externalDocs"]["description"] = "Using the TimeSeries API";

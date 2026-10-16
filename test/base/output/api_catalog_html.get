@@ -1,0 +1,40 @@
+Status: 200
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartMet Server APIs</title>
+<style>
+:root { color-scheme: light dark; --fg: #1b1f23; --muted: #57606a; --line: #d0d7de; --bg: #ffffff; --head: #f6f8fa; --link: #0969da; }
+@media (prefers-color-scheme: dark) { :root { --fg: #e6edf3; --muted: #9198a1; --line: #3d444d; --bg: #0d1117; --head: #151b23; --link: #4493f8; } }
+body { margin: 0; padding: 24px 16px; font: 15px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+main { max-width: 960px; margin: 0 auto; }
+h1 { font-size: 1.6em; margin: 0 0 4px; }
+p { color: var(--muted); margin: 0 0 16px; }
+a { color: var(--link); }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { background: var(--head); font-weight: 600; }
+.root { font-family: ui-monospace, monospace; font-size: 0.85em; color: var(--muted); }
+.links { white-space: nowrap; }
+@media (max-width: 600px) { .links { white-space: normal; } th, td { padding: 6px; } }
+</style>
+</head>
+<body>
+<main>
+<h1>SmartMet Server APIs</h1>
+<p></p>
+<table>
+<thead><tr><th>API</th><th>Description</th><th>Links</th></tr></thead>
+<tbody>
+<tr><td><a href="edr/api/docs">FMI EDR Server</a><div class="root">/edr</div></td><td>API for querying meteorological datasets. Conforms to OGC API Environmental Data Retrieval specification</td><td class="links"><a href="edr/api">OpenAPI definition</a><br><a href="edr/api/docs">Documentation</a></td></tr>
+<tr><td><a href="timeseries/api/docs">SmartMet TimeSeries API</a><div class="root">/timeseries</div></td><td>Time series of forecasts and observations at locations, areas and paths. The values to return are selected with the param option, see the documentation for the parameter names and functions.</td><td class="links"><a href="timeseries/api">OpenAPI definition</a><br><a href="timeseries/api/docs">Documentation</a></td></tr>
+</tbody>
+</table>
+<p><a href="api/docs">All APIs in one documentation page</a> · <a href=".well-known/api-catalog">API catalog (RFC 9727 linkset)</a></p>
+</main>
+</body>
+</html>
