@@ -201,6 +201,11 @@ class Config : private boost::noncopyable
   // Private helper functions
   void add_default_precisions();
   void parse_config_precisions();
+  void parse_config_crs();
+  void parse_config_url();
+  void parse_config_timeseries_urls();
+  void append_timeseries_url(std::string url, int sourceLine);
+  void warn_deprecated_settings() const;
   void parse_config_timeseries_precisions();
   void parse_config_precision(const std::string &name);
   void parse_config_locations();

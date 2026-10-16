@@ -1134,6 +1134,132 @@ void Config::parse_config_licenses()
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Parse the supported CRSs in addition to CRS84
+ *
+ * For example crs = ["EPSG:3067","EPSG:3857"];
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_crs()
+{
+  if (!itsConfig.exists("crs"))
+    return;
+
+  const auto &crs_setting = itsConfig.lookup("crs");
+  if (!crs_setting.isArray())
+    throw Fmi::Exception(BCP, "Configuration file error. 'crs' must be an array of strings");
+  std::vector<std::string> crs_list;
+  for (int i = 0; i < crs_setting.getLength(); i++)
+    crs_list.emplace_back(static_cast<const char*>(crs_setting[i]));
+  itsCRSRegistry.init(crs_list);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the base url. Ensure it starts with '/' but does not end with it
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_url()
+{
+  itsConfig.lookupValue("url", itsDefaultUrl);
+  Fmi::trim(itsDefaultUrl);
+  if (!itsDefaultUrl.empty() && (itsDefaultUrl.front() != '/'))
+    itsDefaultUrl = "/" + itsDefaultUrl;
+  if (itsDefaultUrl.size() < 2)
+    throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");
+  if (itsDefaultUrl.back() == '/')
+    itsDefaultUrl.pop_back();
+}
+
+namespace
+{
+// Canonicalize an url to start with '/' and not to end with it
+std::string canonicalize_url(std::string url)
+{
+  Fmi::trim(url);
+  if (!url.empty() && url.front() != '/')
+    url = "/" + url;
+  if (!url.empty() && url.back() == '/')
+    url.pop_back();
+  return url;
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Append a timeseries url unless it is empty, duplicates are errors
+ */
+// ----------------------------------------------------------------------
+
+void Config::append_timeseries_url(std::string url, int sourceLine)
+{
+  url = canonicalize_url(std::move(url));
+  if (url.empty())
+    return;
+  if (std::find(itsTimeSeriesUrls.begin(), itsTimeSeriesUrls.end(), url) !=
+      itsTimeSeriesUrls.end())
+    throw Fmi::Exception(BCP,
+                         "Duplicate timeseries_url '" + url +
+                             "' in EDR configuration file line " + Fmi::to_string(sourceLine));
+  itsTimeSeriesUrls.push_back(std::move(url));
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the timeseries url(s)
+ */
+// ----------------------------------------------------------------------
+
+void Config::parse_config_timeseries_urls()
+{
+  if (!itsConfig.exists("timeseries_url"))
+    return;
+
+  const libconfig::Setting &setting = itsConfig.lookup("timeseries_url");
+
+  if (setting.isArray())
+  {
+    for (int i = 0; i < setting.getLength(); ++i)
+    {
+      if (setting[i].getType() != libconfig::Setting::Type::TypeString)
+        throw Fmi::Exception(BCP,
+                             "timeseries_url array entries must be strings, line " +
+                                 Fmi::to_string(setting[i].getSourceLine()));
+      append_timeseries_url(static_cast<const char *>(setting[i]), setting[i].getSourceLine());
+    }
+  }
+  else if (setting.getType() == libconfig::Setting::Type::TypeString)
+  {
+    append_timeseries_url(static_cast<const char *>(setting), setting.getSourceLine());
+  }
+  else
+  {
+    throw Fmi::Exception(BCP,
+                         "timeseries_url must be a string or an array of strings, line " +
+                             Fmi::to_string(setting.getSourceLine()));
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Warn about deprecated settings
+ */
+// ----------------------------------------------------------------------
+
+void Config::warn_deprecated_settings() const
+{
+  using Spine::log_time_str;
+  if (itsConfig.exists("cache.memory_bytes"))
+    std::cerr << log_time_str() << " Warning: cache.memory_bytes setting is deprecated\n";
+  if (itsConfig.exists("cache.filesystem_bytes"))
+    std::cerr << log_time_str() << " Warning: cache.filesystem_bytes setting is deprecated\n";
+  if (itsConfig.exists("cache.directory"))
+    std::cerr << log_time_str() << " Warning: cache.directory setting is deprecated\n";
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Constructor
  */
 // ----------------------------------------------------------------------
@@ -1176,76 +1302,11 @@ Config::Config(const string &configfile)
     // Optional settings. Ensure base url starts with '/' but does not end with it
     itsConfig.lookupValue("timeformat", itsDefaultTimeFormat);
     // Supported CRSs in addition to CRS84, for example crs = ["EPSG:3067","EPSG:3857"];
-    if (itsConfig.exists("crs"))
-    {
-      const auto &crs_setting = itsConfig.lookup("crs");
-      if (!crs_setting.isArray())
-        throw Fmi::Exception(BCP, "Configuration file error. 'crs' must be an array of strings");
-      std::vector<std::string> crs_list;
-      for (int i = 0; i < crs_setting.getLength(); i++)
-        crs_list.emplace_back(static_cast<const char*>(crs_setting[i]));
-      itsCRSRegistry.init(crs_list);
-    }
+    parse_config_crs();
 
-    itsConfig.lookupValue("url", itsDefaultUrl);
-    Fmi::trim(itsDefaultUrl);
-    if (!itsDefaultUrl.empty() && (itsDefaultUrl.front() != '/'))
-      itsDefaultUrl = "/" + itsDefaultUrl;
-    if (itsDefaultUrl.size() < 2)
-      throw Fmi::Exception(BCP, "EDR url '" + itsDefaultUrl + "' is not valid");
-    if (itsDefaultUrl.back() == '/')
-      itsDefaultUrl.pop_back();
+    parse_config_url();
 
-    if (itsConfig.exists("timeseries_url"))
-    {
-      const libconfig::Setting &setting = itsConfig.lookup("timeseries_url");
-
-      auto canonicalize = [](std::string url) -> std::string
-      {
-        Fmi::trim(url);
-        if (!url.empty() && url.front() != '/')
-          url = "/" + url;
-        if (!url.empty() && url.back() == '/')
-          url.pop_back();
-        return url;
-      };
-
-      auto append_url = [&](std::string url, int sourceLine)
-      {
-        url = canonicalize(std::move(url));
-        if (url.empty())
-          return;
-        if (std::find(itsTimeSeriesUrls.begin(), itsTimeSeriesUrls.end(), url) !=
-            itsTimeSeriesUrls.end())
-          throw Fmi::Exception(BCP,
-                               "Duplicate timeseries_url '" + url +
-                                   "' in EDR configuration file line " +
-                                   Fmi::to_string(sourceLine));
-        itsTimeSeriesUrls.push_back(std::move(url));
-      };
-
-      if (setting.isArray())
-      {
-        for (int i = 0; i < setting.getLength(); ++i)
-        {
-          if (setting[i].getType() != libconfig::Setting::Type::TypeString)
-            throw Fmi::Exception(BCP,
-                                 "timeseries_url array entries must be strings, line " +
-                                     Fmi::to_string(setting[i].getSourceLine()));
-          append_url(static_cast<const char *>(setting[i]), setting[i].getSourceLine());
-        }
-      }
-      else if (setting.getType() == libconfig::Setting::Type::TypeString)
-      {
-        append_url(static_cast<const char *>(setting), setting.getSourceLine());
-      }
-      else
-      {
-        throw Fmi::Exception(BCP,
-                             "timeseries_url must be a string or an array of strings, line " +
-                                 Fmi::to_string(setting.getSourceLine()));
-      }
-    }
+    parse_config_timeseries_urls();
 
     itsConfig.lookupValue("expires", itsExpirationTime);
     itsConfig.lookupValue("aviengine_disabled", itsAviEngineDisabled);
@@ -1284,13 +1345,7 @@ Config::Config(const string &configfile)
     itsConfig.lookupValue("maxradius", itsRequestLimits.maxradius);
 
     // TODO: Remove deprecated settings detection
-    using Spine::log_time_str;
-    if (itsConfig.exists("cache.memory_bytes"))
-      std::cerr << log_time_str() << " Warning: cache.memory_bytes setting is deprecated\n";
-    if (itsConfig.exists("cache.filesystem_bytes"))
-      std::cerr << log_time_str() << " Warning: cache.filesystem_bytes setting is deprecated\n";
-    if (itsConfig.exists("cache.directory"))
-      std::cerr << log_time_str() << " Warning: cache.directory setting is deprecated\n";
+    warn_deprecated_settings();
 
     itsConfig.lookupValue("cache.timeseries_size", itsMaxTimeSeriesCacheSize);
     itsFormatterOptions = Spine::TableFormatterOptions(itsConfig);
