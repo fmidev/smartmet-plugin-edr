@@ -49,9 +49,11 @@ bool levelsInParameters(const SmartMet::Plugin::EDR::CommonQuery& masterquery)
   bool found = false;
   for (const auto& param : masterquery.poptions.parameters())
   {
-    if (param.type() == SmartMet::Spine::Parameter::Type::DataIndependent)
-      continue;
+    // @AT-N etc. tell details of the data of another column
     const auto& name = param.name();
+    if (param.type() == SmartMet::Spine::Parameter::Type::DataIndependent ||
+        SmartMet::TimeSeries::is_special_parameter(name) || (!name.empty() && name[0] == '@'))
+      continue;
     if (name.find_first_of("({[") != std::string::npos)
       return false;
     std::vector<std::string> parts;
