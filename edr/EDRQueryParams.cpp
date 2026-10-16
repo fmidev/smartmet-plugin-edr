@@ -423,6 +423,20 @@ std::string nearestTimeNow(const EDRMetaData& emd, const std::string& datetime =
   return nearest_time_in_period(*tp1, now);
 }
 
+// Parse the time, returning nothing if it is not valid
+std::optional<Fmi::DateTime> try_parse_time(const std::string& datetime)
+{
+  std::optional<Fmi::DateTime> t;
+  try
+  {
+    t = Fmi::TimeParser::parse(datetime);
+  }
+  catch (...)
+  {
+  }
+  return t;
+}
+
 }  // anonymous namespace
 
 EDRQueryParams::EDRQueryParams(const State& state,
@@ -1516,6 +1530,58 @@ void EDRQueryParams::parseCube(const EDRMetaData& emd)
   }
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief The datetime used when none is given
+ *
+ * The current time for avi collections and the nearest metadata time instant
+ * to the current time for others.
+ */
+// ----------------------------------------------------------------------
+
+std::string EDRQueryParams::defaultDateTime(const EDRMetaData& emd)
+{
+  if (emd.temporal_extent.time_periods.empty())
+    return utcDateTime(Fmi::SecondClock::universal_time());
+
+  // Using current time for avi collections and neareast metadata time instant
+  // to current time for others
+
+  if (emd.isAviProducer())
+  {
+    req.addParameter("usecurrenttime", "1");
+    return Fmi::SecondClock::universal_time().to_iso_string();
+  }
+  return nearestTimeNow(emd);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse a datetime interval start/end
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::parseDateTimeInterval(const std::string& datetime)
+{
+  std::vector<std::string> datetime_parts;
+  boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
+  if (datetime_parts.size() != 2)
+    throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
+
+  const auto starttime = Fmi::trim_copy(datetime_parts.at(0));
+  const auto endtime = Fmi::trim_copy(datetime_parts.at(1));
+
+  // Durations are not allowed
+  if (starttime.empty() || std::toupper(starttime[0]) == 'P')
+    throw EDRException("Invalid 'datetime' interval start '" + starttime + "'");
+  if (endtime.empty() || std::toupper(endtime[0]) == 'P')
+    throw EDRException("Invalid 'datetime' interval end '" + endtime + "'");
+
+  // Open ends (..) extend to the start or the end of the data
+  req.addParameter("starttime", starttime == ".." ? "data" : starttime);
+  req.addParameter("endtime", endtime == ".." ? "data" : endtime);
+}
+
 void EDRQueryParams::parseDateTime(const State& /* state */,
                                    const std::string& /* producer */,
                                    const EDRMetaData& emd)
@@ -1535,25 +1601,7 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
       datetime = itsCoordinateFilter.getDatetime();
 
     if (datetime.empty())
-    {
-      if (emd.temporal_extent.time_periods.empty())
-      {
-        datetime = utcDateTime(Fmi::SecondClock::universal_time());
-      }
-      else
-      {
-        // Using current time for avi collections and neareast metadata time instant
-        // to current time for others
-
-        if (emd.isAviProducer())
-        {
-          datetime = Fmi::SecondClock::universal_time().to_iso_string();
-          req.addParameter("usecurrenttime", "1");
-        }
-        else
-          datetime = nearestTimeNow(emd);
-      }
-    }
+      datetime = defaultDateTime(emd);
 
     if (datetime.empty())
       throw EDRException("Missing datetime option");
@@ -1581,23 +1629,7 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
 
     if (datetime.find('/') != std::string::npos)
     {
-      std::vector<std::string> datetime_parts;
-      boost::algorithm::split(datetime_parts, datetime, boost::algorithm::is_any_of("/"));
-      if (datetime_parts.size() != 2)
-        throw EDRException("Invalid 'datetime' parameter value '" + datetime + "'");
-
-      const auto starttime = Fmi::trim_copy(datetime_parts.at(0));
-      const auto endtime = Fmi::trim_copy(datetime_parts.at(1));
-
-      // Durations are not allowed
-      if (starttime.empty() || std::toupper(starttime[0]) == 'P')
-        throw EDRException("Invalid 'datetime' interval start '" + starttime + "'");
-      if (endtime.empty() || std::toupper(endtime[0]) == 'P')
-        throw EDRException("Invalid 'datetime' interval end '" + endtime + "'");
-
-      // Open ends (..) extend to the start or the end of the data
-      req.addParameter("starttime", starttime == ".." ? "data" : starttime);
-      req.addParameter("endtime", endtime == ".." ? "data" : endtime);
+      parseDateTimeInterval(datetime);
       return;
     }
 
@@ -1606,14 +1638,7 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
 
     if (requested_datetime)
     {
-      std::optional<Fmi::DateTime> t;
-      try
-      {
-        t = Fmi::TimeParser::parse(datetime);
-      }
-      catch (...)
-      {
-      }
+      std::optional<Fmi::DateTime> t = try_parse_time(datetime);
       if (t)
         checkModelTimeStep(emd, *t);
     }
