@@ -1715,6 +1715,61 @@ void add_parameter_names_into_keywords(const EDRMetaData &collection_emd, Json::
   }
 }
 
+// Keywords of a collection: the configured keywords followed by the parameter names
+Json::Value collection_keywords(const EDRMetaData &collection_emd,
+                                const std::set<std::string> &keyword_set)
+{
+  auto keywords = Json::Value(Json::ValueType::arrayValue);
+  for (const auto &kword : keyword_set)
+    keywords[keywords.size()] = kword;
+
+  // Add parameter names into keywords
+  add_parameter_names_into_keywords(collection_emd, keywords);
+  return keywords;
+}
+
+// The link to the collection itself
+Json::Value collection_link(const EDRQuery &edr_query, const std::string &producer)
+{
+  auto collection_link = Json::Value(Json::ValueType::objectValue);
+  collection_link["href"] = Json::Value((edr_query.host + "/collections/" + producer));
+  collection_link["hreflang"] = Json::Value("en");
+  if (edr_query.query_id == EDRQueryId::SpecifiedCollection)
+    collection_link["rel"] = Json::Value("self");
+  else
+    collection_link["rel"] = Json::Value("data");
+  collection_link["type"] = Json::Value("application/json");
+  //    collection_link["title"] = Json::Value("Collection metadata in JSON");
+  return collection_link;
+}
+
+// The spatial, temporal and vertical extent of a collection
+Json::Value collection_extent(const EDRMetaData &collection_emd)
+{
+  auto extent = Json::Value(Json::ValueType::objectValue);
+  // Spatial (mandatory)
+  auto spatial = Json::Value(Json::ValueType::objectValue);
+  // BBOX (mandatory)
+  auto bbox = Json::Value(Json::ValueType::arrayValue);
+  bbox[0] = Json::Value(collection_emd.spatial_extent.bbox_xmin);
+  bbox[1] = Json::Value(collection_emd.spatial_extent.bbox_ymin);
+  bbox[2] = Json::Value(collection_emd.spatial_extent.bbox_xmax);
+  bbox[3] = Json::Value(collection_emd.spatial_extent.bbox_ymax);
+  spatial["bbox"] = Json::Value(Json::ValueType::arrayValue);
+  spatial["bbox"][0] = bbox;
+  // CRS (mandatory)
+  //      spatial["crs"] = Json::Value("EPSG:4326");
+  spatial["crs"] = Json::Value("OGC:CRS84");
+  extent["spatial"] = spatial;
+  // Temporal (optional)
+  // The temporal extent is optional, it is unknown if there are no time periods
+  if (!collection_emd.temporal_extent.time_periods.empty())
+    extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
+  // Vertical (optional)
+  parse_vertical_extent(collection_emd, extent);
+  return extent;
+}
+
 Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                            const EDRQuery &edr_query,
                                            const ProducerLicenses &licenses,
@@ -1759,29 +1814,14 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       value["title"] = Json::Value(title.empty() ? producer : title);
       if (! description.empty())
         value["description"] = Json::Value(description);
-      auto keywords = Json::Value(Json::ValueType::arrayValue);
-      for (const auto &kword : keyword_set)
-        keywords[keywords.size()] = kword;
-
-      // Add parameter names into keywords
-      add_parameter_names_into_keywords(collection_emd, keywords);
+      auto keywords = collection_keywords(collection_emd, keyword_set);
 
       if (keywords.size() > 0)
         value["keywords"] = keywords;
 
       // Array of links (mandatory)
-      auto collection_link = Json::Value(Json::ValueType::objectValue);
-      collection_link["href"] = Json::Value((edr_query.host + "/collections/" + producer));
-      collection_link["hreflang"] = Json::Value("en");
-      if (edr_query.query_id == EDRQueryId::SpecifiedCollection)
-        collection_link["rel"] = Json::Value("self");
-      else
-        collection_link["rel"] = Json::Value("data");
-      collection_link["type"] = Json::Value("application/json");
-      //    collection_link["title"] = Json::Value("Collection metadata in JSON");
-
       auto links = Json::Value(Json::ValueType::arrayValue);
-      links[0] = collection_link;
+      links[0] = collection_link(edr_query, producer);
       parse_instance_link(instances_exist, edr_query, producer, links);
 
       if (!edr_query.collection_id.empty())
@@ -1792,29 +1832,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       }
 
       // Extent (mandatory)
-      auto extent = Json::Value(Json::ValueType::objectValue);
-      // Spatial (mandatory)
-      auto spatial = Json::Value(Json::ValueType::objectValue);
-      // BBOX (mandatory)
-      auto bbox = Json::Value(Json::ValueType::arrayValue);
-      bbox[0] = Json::Value(collection_emd.spatial_extent.bbox_xmin);
-      bbox[1] = Json::Value(collection_emd.spatial_extent.bbox_ymin);
-      bbox[2] = Json::Value(collection_emd.spatial_extent.bbox_xmax);
-      bbox[3] = Json::Value(collection_emd.spatial_extent.bbox_ymax);
-      spatial["bbox"] = Json::Value(Json::ValueType::arrayValue);
-      spatial["bbox"][0] = bbox;
-      // CRS (mandatory)
-      //      spatial["crs"] = Json::Value("EPSG:4326");
-      spatial["crs"] = Json::Value("OGC:CRS84");
-      extent["spatial"] = spatial;
-      // Temporal (optional)
-      // The temporal extent is optional, it is unknown if there are no time periods
-      if (!collection_emd.temporal_extent.time_periods.empty())
-        extent["temporal"] = parse_temporal_extent(collection_emd.temporal_extent);
-      // Vertical (optional)
-      parse_vertical_extent(collection_emd, extent);
-
-      value["extent"] = extent;
+      value["extent"] = collection_extent(collection_emd);
       // Optional: data_queries
       value["data_queries"] = get_data_queries(edr_query.host,
                                                producer,
