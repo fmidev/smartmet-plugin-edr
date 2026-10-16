@@ -295,6 +295,115 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
   }
 }
 
+// The standard name vocabulary URL without a trailing slash
+std::string get_standard_name_vocabulary(const CustomDimReferences& custom_dim_refs)
+{
+  std::string standard_name_vocabulary;
+
+  auto it = custom_dim_refs.find("standard_name");
+  if (it != custom_dim_refs.end())
+  {
+    standard_name_vocabulary = it->second;
+    if (!standard_name_vocabulary.empty() && standard_name_vocabulary.back() == '/')
+      standard_name_vocabulary.pop_back();
+  }
+  return standard_name_vocabulary;
+}
+
+// Description field: 1) from config 2) from engine 3) standard name and level 4) parameter name
+std::string parameter_description(const parameter_info& pinfo,
+                                  const edr_parameter& edr_parameter,
+                                  const std::string& edr_parameter_name)
+{
+  if (!pinfo.description.empty())
+    return pinfo.description;
+  if (!edr_parameter.description.empty())
+    return edr_parameter.description;
+  const std::string& standard_name = pinfo.metocean.standard_name;
+  if (!standard_name.empty())
+    return standard_name + " " + Fmi::to_string(pinfo.metocean.level) + "m";
+  return edr_parameter_name;
+}
+
+// The metadata of a single parameter of a series
+Json::Value series_parameter_json(const std::string& parameter_name,
+                                  const EDRMetaData& metadata,
+                                  const std::string& standard_name_vocabulary)
+{
+  static const edr_parameter emptyEDRParameterInfo("", "");
+
+  const auto &engine_parameter_info = metadata.parameters;
+  const auto &config_parameter_info = *metadata.parameter_info;
+
+  // BRAINSTORM-3029; when fetching flash 'data_source' -parameter, expanded parameters
+  // ('<column>_data_source') do not (currently) have engine_parameter info
+  //
+  // PAK-6315: Code copied from CoverageJSON output (MetOcean profile changes, missing
+  // engine_parameter info was not handled)
+
+  bool hasParam = (engine_parameter_info.find(parameter_name) != engine_parameter_info.end());
+  const auto &edr_parameter =
+      (hasParam ? engine_parameter_info.at(parameter_name) : emptyEDRParameterInfo);
+  const auto &edr_parameter_name = (hasParam ? edr_parameter.name : parameter_name);
+
+  auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
+
+  // Description field: 1) from config 2) from engine 3) parameter name
+
+  std::string observed_property_id;
+  const std::string &label = (pinfo.label.empty() ? edr_parameter_name : pinfo.label);
+  const std::string &observed_property_label =
+      (pinfo.observed_property_label.empty() ? label : pinfo.observed_property_label);
+
+  const std::string &standard_name = pinfo.metocean.standard_name;
+  if (! standard_name.empty())
+    observed_property_id = standard_name_vocabulary + "/" + standard_name;
+  else
+    observed_property_id = edr_parameter_name;
+
+  const std::string desc = parameter_description(pinfo, edr_parameter, edr_parameter_name);
+
+  // The unit reported by the engine is used if the configuration does not define one
+  if (pinfo.unit_symbol_value.empty() && !edr_parameter.unit.empty() &&
+      !boost::algorithm::iequals(edr_parameter.unit, "No Unit"))
+  {
+    pinfo.unit_symbol_value = edr_parameter.unit;
+    if (pinfo.unit_label.empty())
+      pinfo.unit_label = edr_parameter.unit;
+  }
+
+  auto unit_label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter_name);
+
+  auto parameter = Json::Value(Json::ValueType::objectValue);
+  parameter["id"] = Json::Value(edr_parameter_name);
+  parameter["type"] = Json::Value("Parameter");
+  // Description field is optional
+  // QEngine returns parameter description in finnish and skandinavian
+  // characters cause problems metoffice test interface uses description
+  // field -> set parameter name to description field
+  // OGC API-EDR /req/edr/rc-parameters: labels and descriptions are plain strings
+  parameter["description"] = Json::Value(desc);
+  if (!pinfo.unit_symbol_value.empty())
+    parameter["unit"] = pinfo.unit(unit_label, "");
+  parameter["label"] = Json::Value(label);
+  parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
+  parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
+  parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
+
+  if (! standard_name.empty())
+  {
+    parameter["metocean:standard_name"] = Json::Value(standard_name);
+    parameter["metocean:level"] = Json::Value(pinfo.metocean.level);
+
+    parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
+    parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
+    auto duration = boost::algorithm::to_upper_copy(pinfo.metocean.duration);
+    parameter["measurementType"]["duration"] = Json::Value(duration);
+  }
+
+  return parameter;
+}
+
 Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter>& query_parameters,
                                       const EDRMetaData& metadata,
                                       const CustomDimReferences& custom_dim_refs)
@@ -303,19 +412,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter>& query
   {
     auto parameters = Json::Value(Json::ValueType::arrayValue);
 
-    static const edr_parameter emptyEDRParameterInfo("", "");
-
-    const auto &engine_parameter_info = metadata.parameters;
-    const auto &config_parameter_info = *metadata.parameter_info;
-    std::string standard_name_vocabulary;
-
-    auto it = custom_dim_refs.find("standard_name");
-    if (it != custom_dim_refs.end())
-    {
-      standard_name_vocabulary = it->second;
-      if (!standard_name_vocabulary.empty() && standard_name_vocabulary.back() == '/')
-        standard_name_vocabulary.pop_back();
-    }
+    const std::string standard_name_vocabulary = get_standard_name_vocabulary(custom_dim_refs);
 
     for (const auto &p : query_parameters)
     {
@@ -324,80 +421,7 @@ Json::Value get_edr_series_parameters(const std::vector<Spine::Parameter>& query
       if (lon_lat_level_param(parameter_name))
         continue;
 
-      // BRAINSTORM-3029; when fetching flash 'data_source' -parameter, expanded parameters
-      // ('<column>_data_source') do not (currently) have engine_parameter info
-      //
-      // PAK-6315: Code copied from CoverageJSON output (MetOcean profile changes, missing
-      // engine_parameter info was not handled)
-
-      bool hasParam = (engine_parameter_info.find(parameter_name) != engine_parameter_info.end());
-      const auto &edr_parameter =
-          (hasParam ? engine_parameter_info.at(parameter_name) : emptyEDRParameterInfo);
-      const auto &edr_parameter_name = (hasParam ? edr_parameter.name : parameter_name);
-
-      auto pinfo = config_parameter_info.get_parameter_info(parameter_name, metadata.language);
-
-      // Description field: 1) from config 2) from engine 3) parameter name
-
-      std::string desc;
-      std::string observed_property_id;
-      const std::string &label = (pinfo.label.empty() ? edr_parameter_name : pinfo.label);
-      const std::string &observed_property_label =
-          (pinfo.observed_property_label.empty() ? label : pinfo.observed_property_label);
-
-      const std::string &standard_name = pinfo.metocean.standard_name;
-      if (! standard_name.empty())
-        observed_property_id = standard_name_vocabulary + "/" + standard_name;
-      else
-        observed_property_id = edr_parameter_name;
-
-      if (!pinfo.description.empty())
-        desc = pinfo.description;
-      else if (!edr_parameter.description.empty())
-        desc = edr_parameter.description;
-      else if (! standard_name.empty())
-        desc = standard_name + " " + Fmi::to_string(pinfo.metocean.level) + "m";
-      else
-        desc = edr_parameter_name;
-
-      // The unit reported by the engine is used if the configuration does not define one
-      if (pinfo.unit_symbol_value.empty() && !edr_parameter.unit.empty() &&
-          !boost::algorithm::iequals(edr_parameter.unit, "No Unit"))
-      {
-        pinfo.unit_symbol_value = edr_parameter.unit;
-        if (pinfo.unit_label.empty())
-          pinfo.unit_label = edr_parameter.unit;
-      }
-
-      auto unit_label = (!pinfo.unit_label.empty() ? pinfo.unit_label : edr_parameter_name);
-
-      auto parameter = Json::Value(Json::ValueType::objectValue);
-      parameter["id"] = Json::Value(edr_parameter_name);
-      parameter["type"] = Json::Value("Parameter");
-      // Description field is optional
-      // QEngine returns parameter description in finnish and skandinavian
-      // characters cause problems metoffice test interface uses description
-      // field -> set parameter name to description field
-      // OGC API-EDR /req/edr/rc-parameters: labels and descriptions are plain strings
-      parameter["description"] = Json::Value(desc);
-      if (!pinfo.unit_symbol_value.empty())
-        parameter["unit"] = pinfo.unit(unit_label, "");
-      parameter["label"] = Json::Value(label);
-      parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
-      parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
-      parameter["observedProperty"]["label"] = Json::Value(observed_property_label);
-
-      if (! standard_name.empty())
-      {
-        parameter["metocean:standard_name"] = Json::Value(standard_name);
-        parameter["metocean:level"] = Json::Value(pinfo.metocean.level);
-
-        parameter["measurementType"] = Json::Value(Json::ValueType::objectValue);
-        parameter["measurementType"]["method"] = Json::Value(pinfo.metocean.method);
-        auto duration = boost::algorithm::to_upper_copy(pinfo.metocean.duration);
-        parameter["measurementType"]["duration"] = Json::Value(duration);
-      }
-
+      auto parameter = series_parameter_json(parameter_name, metadata, standard_name_vocabulary);
       parameters[parameters.size()] = parameter;
     }
 
