@@ -1146,12 +1146,14 @@ void PluginImpl::init()
     {
       const auto& page = itsConfig.landingPage();
       itsEdrApi = std::make_unique<Spine::OpenAPI::Publisher>(openapi);
-      itsEdrApi->addToCatalog(itsConfig.defaultUrl(), page.title, page.description);
+      itsEdrApi->addToCatalog(itsConfig.defaultUrl(), page.title, page.description, "edr");
       for (const auto& url : itsConfig.timeSeriesUrls())
       {
         auto publisher = std::make_unique<Spine::OpenAPI::Publisher>(openapi);
-        publisher->addToCatalog(
-            url, ApiDefinition::TIMESERIES_TITLE, ApiDefinition::TIMESERIES_DESCRIPTION);
+        publisher->addToCatalog(url,
+                                ApiDefinition::TIMESERIES_TITLE,
+                                ApiDefinition::TIMESERIES_DESCRIPTION,
+                                "timeseries");
         itsTimeSeriesApis.emplace(url, std::move(publisher));
       }
       publishApiDefinitions();
