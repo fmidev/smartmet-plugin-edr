@@ -120,6 +120,72 @@ std::unique_ptr<OGRGeometry> get_ogr_geometry(const std::string& wktString, doub
   }
 }
 
+namespace
+{
+// Read the SVG path of an area from the geometry storage
+void read_area_svg_path(const Engine::Gis::GeometryStorage& geometryStorage,
+                        const std::string& place,
+                        NFmiSvgPath& svgPath)
+{
+  if (geometryStorage.isPolygon(place))
+  {
+    std::stringstream svgStringStream(geometryStorage.getSVGPath(place));
+    svgPath.Read(svgStringStream);
+  }
+  else if (geometryStorage.isPoint(place))
+  {
+    std::pair<double, double> thePoint = geometryStorage.getPoint(place);
+    NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
+  }
+  else
+  {
+    throw Fmi::Exception(BCP, "Area '" + place + "' not found in PostGIS database!");
+  }
+}
+
+// Read the SVG path of a path given as coordinates or stored in the geometry storage
+void read_path_svg_path(const Engine::Gis::GeometryStorage& geometryStorage,
+                        const std::string& place,
+                        NFmiSvgPath& svgPath)
+{
+  if (place.find(',') != std::string::npos)
+  {
+    // path given as a query parameter in format "lon,lat,lon,lat,lon,lat,..."
+    std::vector<std::string> lonLatVector;
+    boost::algorithm::split(lonLatVector, place, boost::algorithm::is_any_of(","));
+    if (lonLatVector.size() % 2)
+      throw Fmi::Exception(
+          BCP, "Path '" + place + "' is invalid, because it has odd number of coordinates!");
+
+    for (unsigned int i = 0; i < lonLatVector.size(); i += 2)
+    {
+      auto longitude = Fmi::stod(lonLatVector[i]);
+      auto latitude = Fmi::stod(lonLatVector[i + 1]);
+      svgPath.push_back(NFmiSvgPath::Element(
+          (i == 0 ? NFmiSvgPath::kElementMoveto : NFmiSvgPath::kElementLineto),
+          longitude,
+          latitude));
+    }
+  }
+  else
+  {
+    // path fetched from PostGIS database
+    if (geometryStorage.isPolygon(place) || geometryStorage.isLine(place))
+    {
+      std::stringstream svgStringStream(geometryStorage.getSVGPath(place));
+      svgPath.Read(svgStringStream);
+    }
+    else if (geometryStorage.isPoint(place))
+    {
+      std::pair<double, double> thePoint = geometryStorage.getPoint(place);
+      NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
+    }
+    else
+      throw Fmi::Exception(BCP, "Path '" + place + "' not found in PostGIS database!");
+  }
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Fetch geometry as NFmiSvgPath from database
@@ -141,58 +207,11 @@ void get_svg_path(const Spine::TaggedLocation& tloc,
     }
     else if (loc->type == Spine::Location::Area)
     {
-      if (geometryStorage.isPolygon(place))
-      {
-        std::stringstream svgStringStream(geometryStorage.getSVGPath(place));
-        svgPath.Read(svgStringStream);
-      }
-      else if (geometryStorage.isPoint(place))
-      {
-        std::pair<double, double> thePoint = geometryStorage.getPoint(place);
-        NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
-      }
-      else
-      {
-        throw Fmi::Exception(BCP, "Area '" + place + "' not found in PostGIS database!");
-      }
+      read_area_svg_path(geometryStorage, place, svgPath);
     }
     else if (loc->type == Spine::Location::Path)
     {
-      if (place.find(',') != std::string::npos)
-      {
-        // path given as a query parameter in format "lon,lat,lon,lat,lon,lat,..."
-        std::vector<std::string> lonLatVector;
-        boost::algorithm::split(lonLatVector, place, boost::algorithm::is_any_of(","));
-        if (lonLatVector.size() % 2)
-          throw Fmi::Exception(
-              BCP, "Path '" + place + "' is invalid, because it has odd number of coordinates!");
-
-        for (unsigned int i = 0; i < lonLatVector.size(); i += 2)
-        {
-          auto longitude = Fmi::stod(lonLatVector[i]);
-          auto latitude = Fmi::stod(lonLatVector[i + 1]);
-          svgPath.push_back(NFmiSvgPath::Element(
-              (i == 0 ? NFmiSvgPath::kElementMoveto : NFmiSvgPath::kElementLineto),
-              longitude,
-              latitude));
-        }
-      }
-      else
-      {
-        // path fetched from PostGIS database
-        if (geometryStorage.isPolygon(place) || geometryStorage.isLine(place))
-        {
-          std::stringstream svgStringStream(geometryStorage.getSVGPath(place));
-          svgPath.Read(svgStringStream);
-        }
-        else if (geometryStorage.isPoint(place))
-        {
-          std::pair<double, double> thePoint = geometryStorage.getPoint(place);
-          NFmiSvgTools::PointToSvgPath(svgPath, thePoint.first, thePoint.second);
-        }
-        else
-          throw Fmi::Exception(BCP, "Path '" + place + "' not found in PostGIS database!");
-      }
+      read_path_svg_path(geometryStorage, place, svgPath);
     }
   }
   catch (...)
