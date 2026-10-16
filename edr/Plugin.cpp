@@ -94,7 +94,8 @@ void Plugin::init()
         for (const auto& api_url :
              {ts_url + "/api", ts_url + "/api/docs", ts_url + "/api/producers"})
         {
-          const bool prefix = (api_url == ts_url + "/api/docs");
+          const bool prefix =
+              (api_url == ts_url + "/api/docs" || api_url == ts_url + "/api/producers");
           if (!itsReactor->addContentHandler(
                   this,
                   api_url,

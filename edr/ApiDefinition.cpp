@@ -1450,6 +1450,49 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     producers_ok["content"]["application/json"]["schema"] = producers_schema;
     OA::Document::addErrorResponses(producers_op, false);
 
+    // What the requests of one producer may contain: for grid producers the model runs,
+    // geometries, levels and ensemble members of the parameter keys
+    auto& producer_op = doc.operation(url + "/api/producers/{producer}", "get");
+    producer_op["tags"].append(TAG_CAPABILITIES);
+    producer_op["summary"] = "One producer and the parameter keys of its grid data";
+    producer_op["description"] =
+        "The producer as listed by /api/producers, with a dictionary of its parameters. For grid "
+        "producers also the model runs, and for the chosen run the geometries and per parameter "
+        "the level types and levels, forecast types and ensemble members, aggregation and number "
+        "of times, from which parameter keys name:producer:geometry:levelId:level:forecastType:"
+        "forecastNumber are built. The level values are in the units of the levels option (hPa "
+        "for pressure), the keys in the units of the parameter keys (Pa).";
+    producer_op["operationId"] = "getProducer" + component_name(url);
+    JsonValue string_schema;
+    string_schema["type"] = "string";
+    auto producer_param = OA::parameter("producer", "path", "Name of the producer", string_schema);
+    producer_param["required"] = true;
+    producer_op["parameters"].append(producer_param);
+    producer_op["parameters"].append(
+        OA::parameter("source",
+                      "query",
+                      "The source of the producer when several have the same name",
+                      OA::enumSchema({"querydata", "grid", "observation"}, max_enum)));
+    JsonValue time_schema = string_schema;
+    time_schema["format"] = "date-time";
+    producer_op["parameters"].append(
+        OA::parameter("origintime",
+                      "query",
+                      "The model run of a grid producer, the latest by default",
+                      time_schema));
+    auto& producer_ok = producer_op["responses"]["200"];
+    producer_ok["description"] = "The producer";
+    JsonValue producer_schema;
+    producer_schema["type"] = "object";
+    producer_schema["required"].append("name");
+    producer_schema["required"].append("source");
+    producer_schema["required"].append("parameters");
+    producer_schema["properties"]["parameters"]["type"] = "object";
+    producer_schema["properties"]["runs"]["type"] = "array";
+    producer_schema["properties"]["run"]["type"] = "object";
+    producer_ok["content"]["application/json"]["schema"] = producer_schema;
+    OA::Document::addErrorResponses(producer_op, false);
+
     // The definition and its documentation
     doc.addApiOperations(TAG_CAPABILITIES, url);
 

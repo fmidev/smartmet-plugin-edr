@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.16
-Release: 3%{?dist}.fmi
+Release: 4%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -120,6 +120,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-4.fmi
+- <timeseries_url>/api/producers/{producer}: one producer with its parameter descriptions,
+  and for grid producers the model runs, geometries, and per parameter the levels, forecast
+  types, ensemble members, aggregation and number of times, from the grid content server
+- The producer listing names level types alike for all sources (pressure, hybrid, ...) and
+  gives grid pressure levels in hPa, the unit of the levels option
+- A grid parameter key naming its level no longer repeats its values once per level of the
+  producer
+- The grid tests refuse to start when the Redis port is already in use
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-3.fmi
 - The spatial extents of grid collections had their west edge at 0: it was never set. Global
   grids get -180...180, grids scanned from north to south their real latitudes, and

@@ -123,6 +123,15 @@ The name(s) of the producer(s) can be defined using the 'producer' parameter in
 the request. If no producer is defined then the QEngine/ObsEngine module tries
 to find a valid data based on the requested location.
 
+The producers the interface reads are listed at `/timeseries/api/producers` with their
+parameters, areas, times and levels; `source=querydata`, `grid` or `observation` selects one
+source. The level types are named alike for all sources (`pressure`, `hybrid`, `height`,
+`depth`, ...) and the level values are those of the `levels` option, for example hPa for
+pressure levels. `/timeseries/api/producers/{producer}` gives one producer with the
+descriptions of its parameters, and for grid producers what their parameter keys may contain
+(see [Unique Parameter Keys](#unique-parameter-keys)). When several sources have a producer of
+the same name, `source` selects one, both here and in data requests.
+
 The timeseries interface can fetch data from several producers using a single request
 by giving the names of the producers separated by a comma (e.g.
 producer=fmi,hirlam') or a semicolon(e.g. producer=fmi;road). The semicolon is
@@ -623,7 +632,20 @@ Notice, that we can also leave some field empty when there are no multiple value
 
 It is also good to notice that if we are using "traditional" parameter names like "Temperature" instead of new names like "T-K", it usually means that the original data (= Temperature in Kelvins) is converted (Kelvin => Celcius) during the request. These conversions are defined in the SmartMet Server configuration / mapping files. The same files are used in order to define interpolation methods for different parameters. For example, temperature values are usully interpolated linearly, meanwhile direction parameters (like wind directions) are not necessary interpolated at all (i.e. the request picks the value from the nearest grid point).
 
-The easies way to find out unique parameter keys is to use the grid-gui-plugin.
+The easies way to find out unique parameter keys is to use the grid-gui-plugin, or
+`/timeseries/api/producers/{producer}?source=grid`, which lists the model runs of the producer
+and, for the latest run (or the one given with `origintime`), the geometries and per parameter
+the level types and levels, the forecast types and ensemble members, the aggregation and the
+number of times. Its level `values` are in the units of the `levels` option (hPa for pressure
+levels) and its level `keys` in the units of the parameter keys (Pa):
+
+```text
+smartmet.fmi.fi/timeseries/api/producers/ecmwf_skandinavia_painepinta?source=grid
+```
+
+A key that names one level gives one row per time; a parameter without a level gives a row per
+level of the producer, which the `level` parameter tells apart. The levels of a parameter
+without a key can also be chosen with the `levels` option, e.g. `levels=850,500`.
 
 
 ### Additional Parameters

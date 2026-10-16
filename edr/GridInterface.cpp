@@ -40,6 +40,29 @@ Fmi::DateTime y2100(Fmi::Date(2100, 1, 1));
 Fmi::TimeZonePtr utc("Etc/UTC");
 
 const uint TimeseriesFunctionFlag = 1 << 31;
+
+// True if every data parameter names one level in the key name:producer:geometry:levelId:level.
+// The level column then comes from the data, and looping over the levels of the producer would
+// only repeat the same values.
+bool levelsInParameters(const SmartMet::Plugin::EDR::CommonQuery& masterquery)
+{
+  bool found = false;
+  for (const auto& param : masterquery.poptions.parameters())
+  {
+    if (param.type() == SmartMet::Spine::Parameter::Type::DataIndependent)
+      continue;
+    const auto& name = param.name();
+    if (name.find_first_of("({[") != std::string::npos)
+      return false;
+    std::vector<std::string> parts;
+    SmartMet::splitString(name, ':', parts);
+    if (parts.size() < 5 || parts[4].empty() ||
+        parts[4].find_first_not_of("0123456789.") != std::string::npos)
+      return false;
+    found = true;
+  }
+  return found;
+}
 }  // anonymous namespace
 
 namespace SmartMet
@@ -1467,7 +1490,7 @@ void GridInterface::findLevels(CommonQuery& masterquery,
           // we should deliver all levels from the current level type from the given producer.
 
           if (areaproducers.size() == 1 && masterquery.pressures.empty() &&
-              masterquery.heights.empty())
+              masterquery.heights.empty() && !levelsInParameters(masterquery))
           {
             std::string producerName = *areaproducers.begin();
 

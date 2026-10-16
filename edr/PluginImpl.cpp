@@ -1431,6 +1431,7 @@ void PluginImpl::publishApiDefinitions() const
       auto docs = std::make_shared<ProducerDocuments>();
       const auto catalog = ProducerCatalog::build(*metadata);
       store((*docs)[""], catalog);
+      (*docs)[""].catalog = catalog;
       for (const auto& source : ProducerCatalog::sources())
         store((*docs)[source], ProducerCatalog::filter(catalog, source));
       itsProducerDocuments.store(docs);
@@ -1464,9 +1465,16 @@ bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
 
     for (const auto& item : itsTimeSeriesApis)
     {
-      if (resource == item.first + "/api/producers")
+      const auto producers = item.first + "/api/producers";
+      if (resource == producers)
       {
         handleProducers(theRequest, theResponse);
+        return true;
+      }
+      if (resource.size() > producers.size() + 1 &&
+          resource.compare(0, producers.size() + 1, producers + "/") == 0)
+      {
+        handleProducer(theRequest, theResponse, resource.substr(producers.size() + 1));
         return true;
       }
       if (Spine::OpenAPI::Publisher::isApiResource(resource, item.first))
@@ -1539,6 +1547,131 @@ void PluginImpl::handleProducers(const Spine::HTTP::Request& theRequest,
     theResponse.setStatus(Spine::HTTP::Status::ok);
     theResponse.setHeader("Content-Type", "application/json");
     theResponse.setContent(doc->json);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Answer <timeseries_url>/api/producers/{name}
+ *
+ * The producer as listed, and for grid producers the model runs and what
+ * the parameter keys of the chosen run may contain.
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::handleProducer(const Spine::HTTP::Request& theRequest,
+                                Spine::HTTP::Response& theResponse,
+                                const std::string& name) const
+{
+  const auto problem = [&theResponse](Spine::HTTP::Status status, const std::string& detail)
+  {
+    ::Json::Value json;
+    json["title"] = (status == Spine::HTTP::Status::not_found ? "Not Found" : "Bad Request");
+    json["status"] = static_cast<int>(status);
+    json["detail"] = detail;
+    ::Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    theResponse.setStatus(status);
+    theResponse.setHeader("Content-Type", "application/problem+json");
+    theResponse.setContent(::Json::writeString(builder, json));
+  };
+
+  try
+  {
+    theResponse.setHeader("Access-Control-Allow-Origin", "*");
+    auto docs = itsProducerDocuments.load();
+    if (!docs || docs->find("") == docs->end())
+    {
+      theResponse.setStatus(Spine::HTTP::Status::service_unavailable);
+      theResponse.setHeader("Content-Type", "application/problem+json");
+      theResponse.setContent(
+          R"({"title":"Service Unavailable","status":503,"detail":"The metadata is not available yet"})");
+      return;
+    }
+
+    // Without a source the first one listed, as in a request without one
+    const auto source = Spine::optional_string(theRequest.getParameter("source"), "");
+    const auto& catalog = docs->at("").catalog;
+    const ::Json::Value* entry = nullptr;
+    for (const auto& p : catalog["producers"])
+      if (p["name"].asString() == Fmi::ascii_tolower_copy(name) &&
+          (source.empty() || p["source"].asString() == source))
+      {
+        entry = &p;
+        break;
+      }
+    if (entry == nullptr)
+    {
+      problem(Spine::HTTP::Status::not_found,
+              "Unknown producer " + name + (source.empty() ? "" : " of source " + source));
+      return;
+    }
+
+    ::Json::Value result = *entry;
+    result["parameters"] = ::Json::Value(::Json::objectValue);
+    for (const auto& p : (*entry)["parameters"])
+    {
+      const auto& info = catalog["parameters"][p.asString()];
+      result["parameters"][p.asString()] =
+          (info.isObject() ? info : ::Json::Value(::Json::objectValue));
+    }
+
+    if ((*entry)["source"].asString() == "grid" && itsEngines.gridEngine)
+    {
+      const auto origintime = Spine::optional_string(theRequest.getParameter("origintime"), "");
+      ::Json::Value grid;
+      try
+      {
+        grid =
+            ProducerDetails::grid(*itsEngines.gridEngine, *itsGridDetailsCache, name, origintime);
+      }
+      catch (...)
+      {
+        problem(Spine::HTTP::Status::not_found,
+                "No model run " + origintime + " of grid producer " + name);
+        return;
+      }
+      result["producer"] = grid["producer"];
+      result["runs"] = grid["runs"];
+      if (grid.isMember("run"))
+      {
+        // The descriptions of the listing, what the keys may contain from the run
+        for (const auto& key : grid["run"]["parameters"].getMemberNames())
+        {
+          auto& p = grid["run"]["parameters"][key];
+          for (const auto& field : result["parameters"][key].getMemberNames())
+            if (!p.isMember(field))
+              p[field] = result["parameters"][key][field];
+        }
+        result["parameters"] = grid["run"]["parameters"];
+        grid["run"].removeMember("parameters");
+        result["run"] = grid["run"];
+      }
+    }
+
+    ::Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    const auto json = ::Json::writeString(builder, result);
+    const auto etag = fmt::format("\"{:x}-producer\"", Fmi::hash_value(json));
+    theResponse.setHeader("Cache-Control", "public, max-age=60");
+    theResponse.setHeader("ETag", etag);
+    if (theRequest.getHeader("X-Request-ETag"))
+    {
+      theResponse.setStatus(Spine::HTTP::Status::no_content);
+      return;
+    }
+    if (auto status = Spine::HTTP::conditionalResponseStatus(theRequest, etag))
+    {
+      theResponse.setStatus(*status);
+      return;
+    }
+    theResponse.setStatus(Spine::HTTP::Status::ok);
+    theResponse.setHeader("Content-Type", "application/json");
+    theResponse.setContent(json);
   }
   catch (...)
   {

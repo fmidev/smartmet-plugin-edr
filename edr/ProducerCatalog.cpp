@@ -1,6 +1,8 @@
 #include "ProducerCatalog.h"
+#include <fmt/format.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
+#include <macgyver/StringConversion.h>
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -37,6 +39,51 @@ const char* sourceName(SourceEngine source)
       return "observation";
     default:
       return "";
+  }
+}
+
+// The level types of querydata and grid in one vocabulary, with the unit the TimeSeries levels
+// option takes. Grid pressure levels are in Pa, the request takes hPa.
+struct LevelKind
+{
+  const char* type;
+  const char* unit;
+  double scale;
+};
+
+LevelKind levelKind(SourceEngine source, const std::string& type)
+{
+  static const std::map<std::string, LevelKind> kinds = {
+      {"pressurelevel", {"pressure", "hPa", 1}},
+      {"pressure", {"pressure", "hPa", 1}},
+      {"hybridlevel", {"hybrid", "", 1}},
+      {"hybrid", {"hybrid", "", 1}},
+      {"heightlevel", {"height", "m", 1}},
+      {"height", {"height", "m", 1}},
+      {"altitude", {"altitude", "m", 1}},
+      {"depth", {"depth", "m", 1}},
+      {"depthlevel", {"depth", "m", 1}},
+      {"ground_depth", {"ground depth", "m", 1}}};
+  auto it = kinds.find(Fmi::ascii_tolower_copy(type));
+  if (it == kinds.end())
+    return {nullptr, "", 1};
+  auto kind = it->second;
+  if (source == SourceEngine::Grid && std::string(kind.type) == "pressure")
+    kind.scale = 0.01;
+  return kind;
+}
+
+std::string scaledLevel(const std::string& value, double scale)
+{
+  if (scale == 1)
+    return value;
+  try
+  {
+    return fmt::format("{}", std::stod(value) * scale);
+  }
+  catch (...)
+  {
+    return value;
   }
 }
 
@@ -190,9 +237,14 @@ JsonValue build(const EngineMetaData& metadata)
       for (const auto& level : e.levels)
       {
         JsonValue l;
-        l["type"] = level.first;
+        const auto kind = levelKind(e.source, level.first);
+        l["type"] = (kind.type != nullptr ? std::string(kind.type) : level.first);
+        if (*kind.unit != '\0')
+          l["unit"] = kind.unit;
         // Numeric order where possible
-        std::vector<std::string> values(level.second.begin(), level.second.end());
+        std::vector<std::string> values;
+        for (const auto& v : level.second)
+          values.push_back(scaledLevel(v, kind.scale));
         std::sort(values.begin(),
                   values.end(),
                   [](const std::string& a, const std::string& b)

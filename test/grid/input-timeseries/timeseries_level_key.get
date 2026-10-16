@@ -1,0 +1,2 @@
+GET /timeseries?producer=ecmwf_skandinavia_painepinta&source=grid&place=Helsinki&starttime=2008-09-09T00:00:00Z&timesteps=2&format=json&tz=UTC&param=name,time,level,T-K:ECMWF_SKANDINAVIA_PAINEPINTA::2:85000 HTTP/1.0
+
