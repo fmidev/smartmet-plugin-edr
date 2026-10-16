@@ -68,8 +68,9 @@ struct Entry
         title = info->title;
         description = info->description;
       }
-      else
+      else if (!md.isGridProducer())
       {
+        // The engine titles of grid collections name one geometry and level of the producer
         title = md.collection_info_engine.title;
         description = md.collection_info_engine.description;
       }
@@ -109,12 +110,17 @@ struct Entry
   }
 };
 
-// The TimeSeries name of an EDR collection: grid collections are named producer.geometry.level
+// The TimeSeries name of an EDR collection: grid collections are named producer.geometry.level,
+// and the producer name may contain dots itself
 std::string producerName(SourceEngine source, const std::string& collection)
 {
   if (source != SourceEngine::Grid)
     return collection;
-  return collection.substr(0, collection.find('.'));
+  auto pos = collection.rfind('.');
+  if (pos == std::string::npos || pos == 0)
+    return collection;
+  pos = collection.rfind('.', pos - 1);
+  return (pos == std::string::npos ? collection : collection.substr(0, pos));
 }
 
 }  // namespace

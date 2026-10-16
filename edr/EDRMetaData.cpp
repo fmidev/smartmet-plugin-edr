@@ -1370,12 +1370,36 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
           producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level));
       }
 
-      producer_emd.spatial_extent.bbox_ymin =
-          std::min(gmd.latlon_bottomLeft.y(), gmd.latlon_bottomRight.y());
-      producer_emd.spatial_extent.bbox_xmax =
-          std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
-      producer_emd.spatial_extent.bbox_ymax =
-          std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
+      // The west edge from the left corners and the east edge from the right ones. A global
+      // grid has its corners at 0 and 359.9 (= -0.1) degrees, and a grid crossing the
+      // antimeridian gets minx > maxx, as in OGC API - Common.
+      double west = std::min(gmd.latlon_bottomLeft.x(), gmd.latlon_topLeft.x());
+      double east = std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
+      // Without the corners of the geometry there is no extent
+      const auto same = [](const T::Coordinate& a, const T::Coordinate& b)
+      { return a.x() == b.x() && a.y() == b.y(); };
+      const bool known = !(same(gmd.latlon_bottomLeft, gmd.latlon_topRight) &&
+                           same(gmd.latlon_topLeft, gmd.latlon_bottomRight) &&
+                           same(gmd.latlon_bottomLeft, gmd.latlon_topLeft));
+      if (!known)
+        west = east = 0;
+      else if (east <= west && east + 360 - west >= 359)
+      {
+        west = -180;
+        east = 180;
+      }
+      // The latitudes from all the corners: grids scanned from north to south have their
+      // "bottom" corners in the north
+      producer_emd.spatial_extent.bbox_xmin = west;
+      producer_emd.spatial_extent.bbox_ymin = std::min({gmd.latlon_bottomLeft.y(),
+                                                        gmd.latlon_bottomRight.y(),
+                                                        gmd.latlon_topLeft.y(),
+                                                        gmd.latlon_topRight.y()});
+      producer_emd.spatial_extent.bbox_xmax = east;
+      producer_emd.spatial_extent.bbox_ymax = std::max({gmd.latlon_bottomLeft.y(),
+                                                        gmd.latlon_bottomRight.y(),
+                                                        gmd.latlon_topLeft.y(),
+                                                        gmd.latlon_topRight.y()});
 
       edr_temporal_extent temporal_extent;
       try

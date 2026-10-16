@@ -8,7 +8,7 @@ test test-grid:	start-redis-db
 	if $(MAKE) DB_TYPE=$(DB_TYPE) test-impl; then ok=true; else ok=false; fi; $(MAKE) stop-redis-db; $$ok
 
 clean:
-	rm -rf failures
+	rm -rf failures failures-timeseries
 	rm -rf cnf/grid
 
 test-impl:
@@ -18,6 +18,14 @@ test-impl:
 		--handler /edr \
 		--reactor-config cnf/reactor.conf \
 		$(foreach fn, input/.testignore_$(DB_TYPE), --ignore $(fn)) \
+		--timeout 300 || ok=false; \
+	$(TEST_RUNNER) \
+	smartmet-plugin-test \
+		--handler /timeseries \
+		--reactor-config cnf/reactor.conf \
+		--input-dir input-timeseries \
+		--expected-output-dir output-timeseries \
+		--failures-dir failures-timeseries \
 		--timeout 300 || ok=false; \
 	$$ok
 

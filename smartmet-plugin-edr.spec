@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-3.fmi
+- The spatial extents of grid collections had their west edge at 0: it was never set. Global
+  grids get -180...180, grids scanned from north to south their real latitudes, and
+  geometries without corners no extent
+- Grid producers whose names contain dots are listed by their full names in the producer list
 - grouplocations=1 also groups the locations of a keyword and of place; an empty group is
   reported instead of failing with an invalid WKT
 - Tests of the new percentile functions, requires smartmet-library-timeseries 26.10.16-2
