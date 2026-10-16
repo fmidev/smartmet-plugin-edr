@@ -276,6 +276,103 @@ std::string utcDateTime(const Fmi::DateTime& datetime)
   return Fmi::to_iso_string(datetime) + "Z";
 }
 
+// Locate the time period(s) within or between which the current time is. Returns the
+// result directly if it is already known.
+std::optional<std::string> find_nearest_periods(
+    const std::vector<edr_temporal_extent_period>& time_periods,
+    const Fmi::DateTime& now,
+    const edr_temporal_extent_period*& tp1,
+    const edr_temporal_extent_period*& tp2)
+{
+  // After (or match) last time period (start or) end ?
+  //
+  if (now >= time_periods.back().start_time)
+  {
+    if (time_periods.back().end_time.is_not_a_date_time())
+      return utcDateTime(time_periods.back().start_time);
+
+    if (now >= time_periods.back().end_time)
+      return utcDateTime(time_periods.back().end_time);
+
+    tp1 = tp2 = &time_periods.back();
+    return {};
+  }
+
+  // Search for time period(s) within or between which current time is
+
+  for (const auto& tp : time_periods)
+  {
+    auto const& t1 = tp.start_time;
+    auto const& t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
+
+    // After period's end ?
+    //
+    if (t2 < now)
+    {
+      tp1 = &tp;
+      continue;
+    }
+
+    // Match start or end ?
+    //
+    if ((t1 == now) || (t2 == now))
+      return utcDateTime(now);
+
+    // Before period's end
+    //
+    tp2 = &tp;
+
+    break;
+  }
+
+  // No time period(s) found (never) ?
+  //
+  if ((!tp1) && (!tp2))
+    return utcDateTime(now);
+
+  if (!tp1)
+    tp1 = tp2;
+  else if (!tp2)
+    tp2 = tp1;
+
+  return {};
+}
+
+// The nearest time within a time period
+std::string nearest_time_in_period(const edr_temporal_extent_period& tp, const Fmi::DateTime& now)
+{
+  // No period end time ?
+  //
+  if (tp.end_time.is_not_a_date_time())
+    return utcDateTime(tp.start_time);
+
+  // No time step ?
+  //
+  if (tp.timestep <= 0)
+  {
+    auto td1 = now - tp.start_time;
+    auto td2 = tp.end_time - now;
+
+    return utcDateTime((td1 > td2) ? tp.end_time : tp.start_time);
+  }
+
+  // Nearest timestep
+
+  auto diffminutes = (now - tp.start_time).total_minutes();
+  auto stepminutes = (diffminutes / tp.timestep) * tp.timestep;
+  auto t = tp.start_time + Fmi::date_time::Minutes(stepminutes);
+
+  if ((2 * (diffminutes - stepminutes)) >= tp.timestep)
+  {
+    auto t2 = t + Fmi::date_time::Minutes(tp.timestep);
+
+    if (t2 <= tp.end_time)
+      t = t2;
+  }
+
+  return utcDateTime(t);
+}
+
 std::string nearestTimeNow(const EDRMetaData& emd, const std::string& datetime = "")
 {
   Fmi::DateTime now;
@@ -304,57 +401,9 @@ std::string nearestTimeNow(const EDRMetaData& emd, const std::string& datetime =
   const edr_temporal_extent_period* tp1 = nullptr;
   const edr_temporal_extent_period* tp2 = nullptr;
 
-  // After (or match) last time period (start or) end ?
-  //
-  if (now >= time_periods.back().start_time)
-  {
-    if (time_periods.back().end_time.is_not_a_date_time())
-      return utcDateTime(time_periods.back().start_time);
-
-    if (now >= time_periods.back().end_time)
-      return utcDateTime(time_periods.back().end_time);
-
-    tp1 = tp2 = &time_periods.back();
-  }
-  else
-  {
-    // Search for time period(s) within or between which current time is
-
-    for (const auto& tp : time_periods)
-    {
-      auto const& t1 = tp.start_time;
-      auto const& t2 = (tp.end_time.is_not_a_date_time() ? t1 : tp.end_time);
-
-      // After period's end ?
-      //
-      if (t2 < now)
-      {
-        tp1 = &tp;
-        continue;
-      }
-
-      // Match start or end ?
-      //
-      if ((t1 == now) || (t2 == now))
-        return utcDateTime(now);
-
-      // Before period's end
-      //
-      tp2 = &tp;
-
-      break;
-    }
-
-    // No time period(s) found (never) ?
-    //
-    if ((!tp1) && (!tp2))
-      return utcDateTime(now);
-
-    if (!tp1)
-      tp1 = tp2;
-    else if (!tp2)
-      tp2 = tp1;
-  }
+  auto result = find_nearest_periods(time_periods, now, tp1, tp2);
+  if (result)
+    return *result;
 
   // Between 2 time periods ?
   //
@@ -371,36 +420,7 @@ std::string nearestTimeNow(const EDRMetaData& emd, const std::string& datetime =
 
   // Within time period or after last time instant
   //
-  // No period end time ?
-  //
-  if (tp1->end_time.is_not_a_date_time())
-    return utcDateTime(tp1->start_time);
-
-  // No time step ?
-  //
-  if (tp1->timestep <= 0)
-  {
-    auto td1 = now - tp1->start_time;
-    auto td2 = tp1->end_time - now;
-
-    return utcDateTime((td1 > td2) ? tp1->end_time : tp1->start_time);
-  }
-
-  // Nearest timestep
-
-  auto diffminutes = (now - tp1->start_time).total_minutes();
-  auto stepminutes = (diffminutes / tp1->timestep) * tp1->timestep;
-  auto t = tp1->start_time + Fmi::date_time::Minutes(stepminutes);
-
-  if ((2 * (diffminutes - stepminutes)) >= tp1->timestep)
-  {
-    auto t2 = t + Fmi::date_time::Minutes(tp1->timestep);
-
-    if (t2 <= tp1->end_time)
-      t = t2;
-  }
-
-  return utcDateTime(t);
+  return nearest_time_in_period(*tp1, now);
 }
 
 }  // anonymous namespace
