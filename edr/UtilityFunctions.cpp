@@ -295,6 +295,94 @@ Json::Value json_value(const TS::Value& val, int precision)
   }
 }
 
+namespace
+{
+const int maxRepeat = 999;
+
+// Parse the repeat count of a repeating interval Rn/start/step, which is removed from the
+// parts. Returns 0 if the value is not a repeating interval.
+int parseRepeat(std::vector<std::string>& parts)
+{
+  if (parts.size() != 3)
+    return 0;
+
+  // Repeating interval Rn/start/step
+
+  if (parts[0].empty() || toupper(parts[0].front()) != 'R')
+    throw Fmi::Exception(BCP, "");
+
+  parts[0].erase(parts[0].begin());
+  boost::algorithm::trim(parts[0]);
+  int repeat = Fmi::stoi(parts[0]);
+
+  if (repeat <= 0)
+    throw Fmi::Exception(BCP, "");
+
+  parts.erase(parts.begin());
+
+  return repeat;
+}
+
+// Expand a repeating interval into a list of values
+void expandRepeatingInterval(std::string& valueStr,
+                             const std::string& loValue,
+                             std::string& hiValue,
+                             int repeat)
+{
+  auto z = Fmi::stod(loValue);
+  auto v = z;
+  auto step = Fmi::stod(hiValue);
+
+  valueStr.clear();
+
+  for (int r = 0; (r < repeat); r++, z += step)
+  {
+    v = z;
+    valueStr += (Fmi::to_string(z) + ",");
+  }
+
+  valueStr.pop_back();
+
+  hiValue = Fmi::to_string(v);
+}
+
+// Parse a range lo/hi or a repeating interval Rn/start/step
+bool parseRangeValue(std::vector<std::string>& parts,
+                     std::string& valueStr,
+                     bool& isRange,
+                     std::string& loValue,
+                     std::string& hiValue)
+{
+  int repeat = parseRepeat(parts);
+
+  if (parts.size() != 2)
+    throw Fmi::Exception(BCP, "");
+
+  loValue = boost::algorithm::trim_copy(parts[0]);
+  hiValue = boost::algorithm::trim_copy(parts[1]);
+
+  // Open ranges ../hi and lo/.. (OGC API-EDR z parameter) extend to all levels
+  if (repeat == 0)
+  {
+    if (loValue == "..")
+      loValue = "-1e10";
+    if (hiValue == "..")
+      hiValue = "1e10";
+  }
+
+  if (loValue.empty() || hiValue.empty() || (repeat > maxRepeat) ||
+      ((repeat == 0) && (Fmi::stod(loValue) > Fmi::stod(hiValue))))
+    throw Fmi::Exception(BCP, "");
+
+  if (repeat > 0)
+    expandRepeatingInterval(valueStr, loValue, hiValue, repeat);
+
+  isRange = (repeat == 0);
+
+  return true;
+}
+}  // namespace
+
 //
 // Parse range/list/repeat/value. If isRange is set (cube query), only value range (lo/hi)
 // is accepted. Values are validated by converting to double. Throws on invalid or missing values.
@@ -312,7 +400,6 @@ bool parseRangeListValue(std::string& valueStr,
                          std::string& loValue,
                          std::string& hiValue)
 {
-  const int maxRepeat = 999;
   auto onlyRange = isRange;
 
   try
@@ -352,68 +439,7 @@ bool parseRangeListValue(std::string& valueStr,
     }
 
     if (!isList)
-    {
-      int repeat = 0;
-
-      if (parts.size() == 3)
-      {
-        // Repeating interval Rn/start/step
-
-        if (parts[0].empty() || toupper(parts[0].front()) != 'R')
-          throw Fmi::Exception(BCP, "");
-
-        parts[0].erase(parts[0].begin());
-        boost::algorithm::trim(parts[0]);
-        repeat = Fmi::stoi(parts[0]);
-
-        if (repeat <= 0)
-          throw Fmi::Exception(BCP, "");
-
-        parts.erase(parts.begin());
-      }
-
-      if (parts.size() != 2)
-        throw Fmi::Exception(BCP, "");
-
-      loValue = boost::algorithm::trim_copy(parts[0]);
-      hiValue = boost::algorithm::trim_copy(parts[1]);
-
-      // Open ranges ../hi and lo/.. (OGC API-EDR z parameter) extend to all levels
-      if (repeat == 0)
-      {
-        if (loValue == "..")
-          loValue = "-1e10";
-        if (hiValue == "..")
-          hiValue = "1e10";
-      }
-
-      if (loValue.empty() || hiValue.empty() || (repeat > maxRepeat) ||
-          ((repeat == 0) && (Fmi::stod(loValue) > Fmi::stod(hiValue))))
-        throw Fmi::Exception(BCP, "");
-
-      if (repeat > 0)
-      {
-        auto z = Fmi::stod(loValue);
-        auto v = z;
-        auto step = Fmi::stod(hiValue);
-
-        valueStr.clear();
-
-        for (int r = 0; (r < repeat); r++, z += step)
-        {
-          v = z;
-          valueStr += (Fmi::to_string(z) + ",");
-        }
-
-        valueStr.pop_back();
-
-        hiValue = Fmi::to_string(v);
-      }
-
-      isRange = (repeat == 0);
-
-      return true;
-    }
+      return parseRangeValue(parts, valueStr, isRange, loValue, hiValue);
 
     for (auto& part : parts)
     {
