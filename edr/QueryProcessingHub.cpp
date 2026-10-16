@@ -1008,8 +1008,8 @@ void QueryProcessingHub::processQEngineQueryNoDataLocations(
 {
   try
   {
-    auto skipped =
-        itsQEngineQuery.processQEngineQuery(state, q, outputData, areaproducers, producerDataPeriod);
+    auto skipped = itsQEngineQuery.processQEngineQuery(
+        state, q, outputData, areaproducers, producerDataPeriod);
     no_data_locations.insert(no_data_locations.end(), skipped.begin(), skipped.end());
   }
   catch (...)

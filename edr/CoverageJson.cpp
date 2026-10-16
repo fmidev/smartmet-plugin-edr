@@ -460,12 +460,13 @@ Json::Value get_data_queries(const std::string &host,
       }
       continue;
     }
-    std::string query_type_string = describe_query_type(query_type,
-                                                        host + "/collections/" + producer + instance_str,
-                                                        levels_exist,
-                                                        level_type,
-                                                        query_info_link,
-                                                        query_info_variables);
+    std::string query_type_string =
+        describe_query_type(query_type,
+                            host + "/collections/" + producer + instance_str,
+                            levels_exist,
+                            level_type,
+                            query_info_link,
+                            query_info_variables);
 
     auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
     query_info_output_formats[0] = Json::Value("CoverageJSON");
