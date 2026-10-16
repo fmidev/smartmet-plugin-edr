@@ -2495,6 +2495,84 @@ Json::Value build_point_range(const std::vector<time_coord_value> &values,
   }
 }
 
+// For every parameter that has data at a level, its point groups (runs of consecutive
+// same-coordinate entries). All parameters share the same underlying station set and
+// ordering, so the Nth point group of every parameter refers to the same point -- that is
+// what lets us merge them into a single Coverage's "ranges".
+struct ParamLevelData
+{
+  const std::string *output_name = nullptr;
+  int precision = 0;
+  const std::vector<time_coord_value> *values = nullptr;
+  std::vector<point_group> groups;
+};
+
+// Levels that occur for any parameter
+std::set<double> collect_levels(const DataPerParameter &dpp)
+{
+  std::set<double> levels;
+  for (const auto &dpp_item : dpp)
+    for (const auto &dpl_item : dpp_item.second)
+      levels.insert(dpl_item.first);
+  return levels;
+}
+
+// The parameters with data at the level and their point groups. max_points is set to the
+// maximum number of point groups.
+std::vector<ParamLevelData> get_params_at_level(const DataPerParameter &dpp,
+                                                const ParameterNames &dpn,
+                                                const EDRMetaData &emd,
+                                                double level,
+                                                std::size_t &max_points)
+{
+  std::vector<ParamLevelData> params_at_level;
+  for (const auto &dpp_item : dpp)
+  {
+    const auto &parameter_name = dpp_item.first;
+    auto lvl_it = dpp_item.second.find(level);
+    if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
+      continue;
+
+    ParamLevelData pld;
+    pld.output_name = &dpn.at(parameter_name);
+    pld.precision = emd.getPrecision(parameter_name);
+    pld.values = &lvl_it->second;
+    pld.groups = group_by_point(*pld.values);
+    max_points = std::max(max_points, pld.groups.size());
+    params_at_level.push_back(pld);
+  }
+  return params_at_level;
+}
+
+// The first parameter which has the point
+const ParamLevelData *find_domain_source(const std::vector<ParamLevelData> &params_at_level,
+                                         std::size_t point_idx)
+{
+  for (const auto &pld : params_at_level)
+  {
+    if (point_idx < pld.groups.size())
+      return &pld;
+  }
+  return nullptr;
+}
+
+// The ranges of all parameters at the point
+Json::Value build_point_ranges(const std::vector<ParamLevelData> &params_at_level,
+                               std::size_t point_idx,
+                               bool isAviProducer,
+                               bool levels_present)
+{
+  auto ranges = Json::Value(Json::ValueType::objectValue);
+  for (const auto &pld : params_at_level)
+  {
+    if (point_idx >= pld.groups.size())
+      continue;
+    ranges[*pld.output_name] = build_point_range(
+        *pld.values, pld.groups[point_idx], pld.precision, isAviProducer, levels_present);
+  }
+  return ranges;
+}
+
 Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
                                              const ParameterNames &dpn,
                                              const EDRMetaData &emd,
@@ -2520,42 +2598,13 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
     auto coverages = Json::Value(Json::ValueType::arrayValue);
 
     // Levels that occur for any parameter
-    std::set<double> levels;
-    for (const auto &dpp_item : dpp)
-      for (const auto &dpl_item : dpp_item.second)
-        levels.insert(dpl_item.first);
+    const std::set<double> levels = collect_levels(dpp);
 
     for (double level : levels)
     {
-      // For every parameter that has data at this level, precompute its point groups (runs of
-      // consecutive same-coordinate entries). All parameters share the same underlying station
-      // set and ordering, so the Nth point group of every parameter refers to the same point --
-      // that is what lets us merge them into a single Coverage's "ranges".
-      struct param_level_data
-      {
-        const std::string *output_name = nullptr;
-        int precision = 0;
-        const std::vector<time_coord_value> *values = nullptr;
-        std::vector<point_group> groups;
-      };
-
-      std::vector<param_level_data> params_at_level;
       std::size_t max_points = 0;
-      for (const auto &dpp_item : dpp)
-      {
-        const auto &parameter_name = dpp_item.first;
-        auto lvl_it = dpp_item.second.find(level);
-        if (lvl_it == dpp_item.second.end() || lvl_it->second.empty())
-          continue;
-
-        param_level_data pld;
-        pld.output_name = &dpn.at(parameter_name);
-        pld.precision = emd.getPrecision(parameter_name);
-        pld.values = &lvl_it->second;
-        pld.groups = group_by_point(*pld.values);
-        max_points = std::max(max_points, pld.groups.size());
-        params_at_level.push_back(pld);
-      }
+      const std::vector<ParamLevelData> params_at_level =
+          get_params_at_level(dpp, dpn, emd, level, max_points);
 
       if (params_at_level.empty())
         continue;
@@ -2564,15 +2613,7 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 
       for (std::size_t point_idx = 0; point_idx < max_points; point_idx++)
       {
-        const param_level_data *domain_source = nullptr;
-        for (const auto &pld : params_at_level)
-        {
-          if (point_idx < pld.groups.size())
-          {
-            domain_source = &pld;
-            break;
-          }
-        }
+        const ParamLevelData *domain_source = find_domain_source(params_at_level, point_idx);
         if (!domain_source)
           continue;
 
@@ -2586,15 +2627,8 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
                                longitude_precision, latitude_precision, levels_present,
                                static_cast<int>(level));
 
-        auto ranges = Json::Value(Json::ValueType::objectValue);
-        for (const auto &pld : params_at_level)
-        {
-          if (point_idx >= pld.groups.size())
-            continue;
-          ranges[*pld.output_name] = build_point_range(
-              *pld.values, pld.groups[point_idx], pld.precision, isAviProducer, levels_present);
-        }
-        coverage["ranges"] = std::move(ranges);
+        coverage["ranges"] =
+            build_point_ranges(params_at_level, point_idx, isAviProducer, levels_present);
 
         coverages[coverages.size()] = std::move(coverage);
       }
