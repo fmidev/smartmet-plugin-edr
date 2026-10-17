@@ -63,7 +63,8 @@ LevelKind levelKind(SourceEngine source, const std::string& type)
       {"altitude", {"altitude", "m", 1}},
       {"depth", {"depth", "m", 1}},
       {"depthlevel", {"depth", "m", 1}},
-      {"ground_depth", {"ground depth", "m", 1}}};
+      {"ground_depth", {"ground depth", "m", 1}},
+      {"soundinglevel", {"sounding", "", 1}}};
   auto it = kinds.find(Fmi::ascii_tolower_copy(type));
   if (it == kinds.end())
     return {nullptr, "", 1};

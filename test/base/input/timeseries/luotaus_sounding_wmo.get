@@ -1,0 +1,2 @@
+GET /timeseries?producer=luotaus&wmo=2963&starttime=2008-12-05T12:00:00Z&timesteps=1&format=json&tz=UTC&param=name,time,level,pressure,geopheight,temperature,dewpoint2m,windspeedms,winddirection HTTP/1.0
+

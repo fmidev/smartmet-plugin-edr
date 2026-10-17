@@ -1268,7 +1268,8 @@ std::set<std::string> load_locations_qd(const Engine::Querydata::Engine &qEngine
 
         auto info = q->info();
         info->FirstParam();
-        if (info->Area() != nullptr)
+        // Point data may have an area (observed soundings do), only a grid makes it gridded
+        if (info->Grid() != nullptr)
           continue;  // defensive; isGrid() already filtered gridded data
 
         SupportedLocations sls;

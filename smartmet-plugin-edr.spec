@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.17
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -89,7 +89,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-avi >= 26.10.16
 #TestRequires: smartmet-engine-geonames >= 26.10.16
 #TestRequires: smartmet-engine-gis >= 26.10.16
-#TestRequires: smartmet-engine-querydata >= 26.10.16
+#TestRequires: smartmet-engine-querydata >= 26.10.17
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 26.10.16
 %endif
@@ -120,6 +120,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-3.fmi
+- Observed soundings: sounding levels are listed as the level type 'sounding', and the
+  stations of point querydata that has an area are listed as its locations
 * Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-2.fmi
 - EDR requests of a querydata collection were read from the grid engine when the grid engine
   had a producer of the same name, returning nothing or wrong values; the collection now
