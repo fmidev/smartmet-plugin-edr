@@ -1025,6 +1025,126 @@ std::string EDRQueryParams::parsePosition(const std::string& coords)
   }
 }
 
+namespace
+{
+// OGC API EDR: the coords are a LINESTRING or, if supported, a MULTILINESTRING, with
+// optional Z (height) and M (epoch time) values. Other geometries get a 400 error.
+void check_trajectory_geometry(const std::string& geometry_name,
+                               const std::string& dims,
+                               bool multi,
+                               const std::string& coords)
+{
+  if ((geometry_name != (multi ? "MULTILINESTRING" : "LINESTRING") + dims) ||
+      (!dims.empty() && dims != "Z" && dims != "M" && dims != "ZM"))
+    throw EDRException(
+        "Trajectory and corridor coords must be a LINESTRING or MULTILINESTRING, optionally "
+        "with Z, M or ZM values: " +
+        coords);
+}
+
+// Report a coordinate with a wrong number of values
+[[noreturn]] void throw_invalid_trajectory_coordinate(const std::string& geometry_name,
+                                                      const std::string& dims,
+                                                      const std::string& coords)
+{
+  if (dims == "ZM")
+    throw EDRException("Invalid " + geometry_name +
+                       " definition, longitude, latitude, level, epoch time expected: " + coords);
+  if (dims == "Z")
+    throw EDRException("Invalid " + geometry_name +
+                       " definition, longitude, latitude, level expected: " + coords);
+  throw EDRException("Invalid " + geometry_name +
+                     " definition, longitude, latitude, epoch time expected: " + coords);
+}
+
+// Converts the coordinates of one line into 2D coordinates, storing the levels and times
+// given as Z and M values into the coordinate filter
+std::string parse_trajectory_line(const std::string& line,
+                                  const std::string& dims,
+                                  const std::string& geometry_name,
+                                  const std::string& coords,
+                                  CoordinateFilter& coordinate_filter)
+{
+  if (dims.empty())
+    return line;
+
+  const std::size_t expected = (dims == "ZM" ? 4 : 3);
+  std::string ret;
+  std::vector<std::string> coordinates;
+  boost::algorithm::split(coordinates, line, boost::algorithm::is_any_of(","));
+  for (auto coordinate : coordinates)
+  {
+    boost::algorithm::trim(coordinate);
+    std::vector<std::string> parts;
+    boost::algorithm::split(
+        parts, coordinate, boost::algorithm::is_any_of(" "), boost::algorithm::token_compress_on);
+    if (parts.size() != expected)
+      throw_invalid_trajectory_coordinate(geometry_name, dims, coords);
+
+    if (!ret.empty())
+      ret += ',';
+    ret += parts[0] + " " + parts[1];
+
+    const double lon = Fmi::stod(parts[0]);
+    const double lat = Fmi::stod(parts[1]);
+    if (dims == "ZM")
+      coordinate_filter.add(
+          lon, lat, Fmi::stod(parts[2]), Fmi::date_time::from_time_t(Fmi::stod(parts[3])));
+    else if (dims == "Z")
+      coordinate_filter.add(lon, lat, Fmi::stod(parts[2]));
+    else
+      coordinate_filter.add(lon, lat, Fmi::date_time::from_time_t(Fmi::stod(parts[2])));
+  }
+  return ret;
+}
+
+// The 2D MULTILINESTRING of the values of the form (x y,...),(x y,...)
+std::string parse_trajectory_multiline(const std::string& geometry_values,
+                                       const std::string& dims,
+                                       const std::string& geometry_name,
+                                       const std::string& coords,
+                                       CoordinateFilter& coordinate_filter)
+{
+  std::string wkt = "MULTILINESTRING(";
+  std::size_t pos = 0;
+  bool first = true;
+  while (true)
+  {
+    pos = geometry_values.find_first_not_of(' ', pos);
+    if (pos == std::string::npos)
+      break;
+    if (!first)
+    {
+      if (geometry_values[pos] != ',')
+        throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+      pos = geometry_values.find_first_not_of(' ', pos + 1);
+      if (pos == std::string::npos)
+        throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+    }
+    const auto close = geometry_values.find(')', pos);
+    if (geometry_values[pos] != '(' || close == std::string::npos ||
+        geometry_values.find('(', pos + 1) < close)
+      throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+
+    if (!first)
+      wkt += ',';
+    wkt += "(" +
+           parse_trajectory_line(geometry_values.substr(pos + 1, close - pos - 1),
+                                 dims,
+                                 geometry_name,
+                                 coords,
+                                 coordinate_filter) +
+           ")";
+    first = false;
+    pos = close + 1;
+  }
+  if (first)
+    throw EDRException("Invalid " + geometry_name + " definition: " + coords);
+  wkt += ")";
+  return wkt;
+}
+}  // namespace
+
 std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords)
 {
   try
@@ -1043,12 +1163,7 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
     const bool multi = boost::algorithm::starts_with(geometry_name, "MULTILINESTRING");
     const std::string dims =
         geometry_name.substr(std::min(geometry_name.size(), std::size_t(multi ? 15 : 10)));
-    if ((geometry_name != (multi ? "MULTILINESTRING" : "LINESTRING") + dims) ||
-        (!dims.empty() && dims != "Z" && dims != "M" && dims != "ZM"))
-      throw EDRException(
-          "Trajectory and corridor coords must be a LINESTRING or MULTILINESTRING, optionally "
-          "with Z, M or ZM values: " +
-          coords);
+    check_trajectory_geometry(geometry_name, dims, multi, coords);
 
     if (wkt.find('(') == std::string::npos || wkt.rfind(')') == std::string::npos)
       throw EDRException("Invalid " + geometry_name + " definition: " + coords);
@@ -1070,91 +1185,14 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
     auto geometry_values = wkt.substr(wkt.find('(') + 1, len);
     auto radius = wkt.substr(wkt.rfind(')') + 1);
 
-    // Converts the coordinates of one line into 2D coordinates, storing the levels and times
-    // given as Z and M values into the coordinate filter
-    auto parse_line = [&](const std::string& line) -> std::string
-    {
-      if (dims.empty())
-        return line;
-
-      const std::size_t expected = (dims == "ZM" ? 4 : 3);
-      std::string ret;
-      std::vector<std::string> coordinates;
-      boost::algorithm::split(coordinates, line, boost::algorithm::is_any_of(","));
-      for (auto coordinate : coordinates)
-      {
-        boost::algorithm::trim(coordinate);
-        std::vector<std::string> parts;
-        boost::algorithm::split(parts,
-                                coordinate,
-                                boost::algorithm::is_any_of(" "),
-                                boost::algorithm::token_compress_on);
-        if (parts.size() != expected)
-        {
-          if (dims == "ZM")
-            throw EDRException("Invalid " + geometry_name +
-                               " definition, longitude, latitude, level, epoch time expected: " +
-                               coords);
-          if (dims == "Z")
-            throw EDRException("Invalid " + geometry_name +
-                               " definition, longitude, latitude, level expected: " + coords);
-          throw EDRException("Invalid " + geometry_name +
-                             " definition, longitude, latitude, epoch time expected: " + coords);
-        }
-
-        if (!ret.empty())
-          ret += ',';
-        ret += parts[0] + " " + parts[1];
-
-        const double lon = Fmi::stod(parts[0]);
-        const double lat = Fmi::stod(parts[1]);
-        if (dims == "ZM")
-          itsCoordinateFilter.add(
-              lon, lat, Fmi::stod(parts[2]), Fmi::date_time::from_time_t(Fmi::stod(parts[3])));
-        else if (dims == "Z")
-          itsCoordinateFilter.add(lon, lat, Fmi::stod(parts[2]));
-        else
-          itsCoordinateFilter.add(lon, lat, Fmi::date_time::from_time_t(Fmi::stod(parts[2])));
-      }
-      return ret;
-    };
-
     if (!multi)
-      wkt = "LINESTRING(" + parse_line(geometry_values) + ")";
+      wkt =
+          "LINESTRING(" +
+          parse_trajectory_line(geometry_values, dims, geometry_name, coords, itsCoordinateFilter) +
+          ")";
     else
-    {
-      // The values are of the form (x y,...),(x y,...)
-      wkt = "MULTILINESTRING(";
-      std::size_t pos = 0;
-      bool first = true;
-      while (true)
-      {
-        pos = geometry_values.find_first_not_of(' ', pos);
-        if (pos == std::string::npos)
-          break;
-        if (!first)
-        {
-          if (geometry_values[pos] != ',')
-            throw EDRException("Invalid " + geometry_name + " definition: " + coords);
-          pos = geometry_values.find_first_not_of(' ', pos + 1);
-          if (pos == std::string::npos)
-            throw EDRException("Invalid " + geometry_name + " definition: " + coords);
-        }
-        const auto close = geometry_values.find(')', pos);
-        if (geometry_values[pos] != '(' || close == std::string::npos ||
-            geometry_values.find('(', pos + 1) < close)
-          throw EDRException("Invalid " + geometry_name + " definition: " + coords);
-
-        if (!first)
-          wkt += ',';
-        wkt += "(" + parse_line(geometry_values.substr(pos + 1, close - pos - 1)) + ")";
-        first = false;
-        pos = close + 1;
-      }
-      if (first)
-        throw EDRException("Invalid " + geometry_name + " definition: " + coords);
-      wkt += ")";
-    }
+      wkt = parse_trajectory_multiline(
+          geometry_values, dims, geometry_name, coords, itsCoordinateFilter);
 
     if (!radius.empty())
       wkt.append(radius);
