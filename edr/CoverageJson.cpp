@@ -3708,6 +3708,9 @@ Json::Value format_output_data_vertical_profile(
 
       if (useDataLevels)
       {
+        // Without any data parameter (only 'level') the time steps never advance
+        if (step.tS <= step.tStep)
+          break;
         step.tStep = step.tS;
         step.timeIter = step.tI;
       }
