@@ -330,6 +330,60 @@ void fetch_static_location_values(const CommonQuery& query,
   }
 }
 
+// Transforms the numeric longitudes and latitudes of a time series to the requested CRS
+void reproject_timeseries(const CRSInfo& crs, TS::TimeSeries& lons, TS::TimeSeries& lats)
+{
+  std::vector<double> x;
+  std::vector<double> y;
+  std::vector<std::size_t> positions;
+  for (std::size_t k = 0; k < std::min(lons.size(), lats.size()); k++)
+  {
+    const auto* lon = std::get_if<double>(&lons[k].value);
+    const auto* lat = std::get_if<double>(&lats[k].value);
+    if (lon && lat)
+    {
+      x.push_back(*lon);
+      y.push_back(*lat);
+      positions.push_back(k);
+    }
+  }
+  if (positions.empty())
+    return;
+  crs.fromWGS84(x, y);
+  for (std::size_t n = 0; n < positions.size(); n++)
+  {
+    lons[positions[n]].value = x[n];
+    lats[positions[n]].value = y[n];
+  }
+}
+
+// Transforms the longitude and latitude data of a location to the requested CRS
+void reproject_columns(const CRSInfo& crs,
+                       TS::TimeSeriesData& lon_data,
+                       TS::TimeSeriesData& lat_data)
+{
+  if (auto* lon = std::get_if<TS::TimeSeriesPtr>(&lon_data))
+  {
+    auto* lat = std::get_if<TS::TimeSeriesPtr>(&lat_data);
+    if (lat && *lon && *lat)
+      reproject_timeseries(crs, **lon, **lat);
+  }
+  else if (auto* lonv = std::get_if<TS::TimeSeriesVectorPtr>(&lon_data))
+  {
+    auto* latv = std::get_if<TS::TimeSeriesVectorPtr>(&lat_data);
+    if (latv && *lonv && *latv)
+      for (std::size_t k = 0; k < std::min((*lonv)->size(), (*latv)->size()); k++)
+        reproject_timeseries(crs, (**lonv)[k], (**latv)[k]);
+  }
+  else if (auto* long_group = std::get_if<TS::TimeSeriesGroupPtr>(&lon_data))
+  {
+    auto* latg = std::get_if<TS::TimeSeriesGroupPtr>(&lat_data);
+    if (latg && *long_group && *latg)
+      for (std::size_t k = 0; k < std::min((*long_group)->size(), (*latg)->size()); k++)
+        reproject_timeseries(crs, (**long_group)[k].timeseries, (**latg)[k].timeseries);
+  }
+}
+
 // Transforms the longitude and latitude columns of the output to the requested CRS
 void reproject_output(TS::OutputData& outputData,
                       const TS::OptionParsers::ParameterList& parameters,
@@ -348,60 +402,12 @@ void reproject_output(TS::OutputData& outputData,
   if (!lon_index || !lat_index)
     return;
 
-  auto transform = [&crs](TS::TimeSeries& lons, TS::TimeSeries& lats)
-  {
-    std::vector<double> x;
-    std::vector<double> y;
-    std::vector<std::size_t> positions;
-    for (std::size_t k = 0; k < std::min(lons.size(), lats.size()); k++)
-    {
-      const auto* lon = std::get_if<double>(&lons[k].value);
-      const auto* lat = std::get_if<double>(&lats[k].value);
-      if (lon && lat)
-      {
-        x.push_back(*lon);
-        y.push_back(*lat);
-        positions.push_back(k);
-      }
-    }
-    if (positions.empty())
-      return;
-    crs.fromWGS84(x, y);
-    for (std::size_t n = 0; n < positions.size(); n++)
-    {
-      lons[positions[n]].value = x[n];
-      lats[positions[n]].value = y[n];
-    }
-  };
-
   for (auto& item : outputData)
   {
     auto& columns = item.second;
     if (std::max(*lon_index, *lat_index) >= columns.size())
       continue;
-    auto& lon_data = columns[*lon_index];
-    auto& lat_data = columns[*lat_index];
-
-    if (auto* lon = std::get_if<TS::TimeSeriesPtr>(&lon_data))
-    {
-      auto* lat = std::get_if<TS::TimeSeriesPtr>(&lat_data);
-      if (lat && *lon && *lat)
-        transform(**lon, **lat);
-    }
-    else if (auto* lonv = std::get_if<TS::TimeSeriesVectorPtr>(&lon_data))
-    {
-      auto* latv = std::get_if<TS::TimeSeriesVectorPtr>(&lat_data);
-      if (latv && *lonv && *latv)
-        for (std::size_t k = 0; k < std::min((*lonv)->size(), (*latv)->size()); k++)
-          transform((**lonv)[k], (**latv)[k]);
-    }
-    else if (auto* long_group = std::get_if<TS::TimeSeriesGroupPtr>(&lon_data))
-    {
-      auto* latg = std::get_if<TS::TimeSeriesGroupPtr>(&lat_data);
-      if (latg && *long_group && *latg)
-        for (std::size_t k = 0; k < std::min((*long_group)->size(), (*latg)->size()); k++)
-          transform((**long_group)[k].timeseries, (**latg)[k].timeseries);
-    }
+    reproject_columns(crs, columns[*lon_index], columns[*lat_index]);
   }
 }
 
