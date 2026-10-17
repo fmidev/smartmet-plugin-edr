@@ -2168,6 +2168,80 @@ void EDRQueryParams::parseCorridorResolution(std::size_t nx, std::size_t ny)
   }
 }
 
+namespace
+{
+// The number of positions of resolution-x or resolution-y: 0 for the native resolution,
+// otherwise min_positions-1000
+std::size_t parse_resolution_positions(const std::optional<std::string>& value,
+                                       const char* name,
+                                       long min_positions)
+{
+  const std::size_t max_positions = 1000;
+  if (!value)
+    throw EDRException(std::string("Query parameter '") + name +
+                       "' is required with resolution-x/resolution-y");
+  try
+  {
+    std::size_t pos = 0;
+    auto n = std::stol(*value, &pos);
+    if (pos == value->size() && (n == 0 || (n >= min_positions && n <= long(max_positions))))
+      return static_cast<std::size_t>(n);
+  }
+  catch (...)
+  {
+  }
+  throw EDRException(std::string("Invalid '") + name + "' value '" + *value +
+                     "', valid values are 0 for the native resolution and " +
+                     Fmi::to_string(min_positions) + "-" + Fmi::to_string(max_positions) +
+                     " for the number of positions including the minimum and maximum");
+}
+
+// True if the collection contains point data
+bool is_point_data(const EDRMetaData& emd)
+{
+  bool point_data = (emd.isObsProducer() || emd.isAviProducer());
+  if (emd.locations)
+    for (const auto& item : *emd.locations)
+      point_data = (point_data || item.second.type == "qdstation");
+  return point_data;
+}
+
+// The positions of the grid, for areas only the positions inside the area (cube positions
+// are always inside the bounding box)
+void grid_positions(const EDRGrid& grid,
+                    OGRGeometry& geometry,
+                    bool area,
+                    std::vector<double>& xs,
+                    std::vector<double>& ys)
+{
+  // A prepared geometry makes the test fast also for complex polygons.
+  std::unique_ptr<OGRPreparedGeometry, void (*)(OGRPreparedGeometry*)> prepared(
+      (area ? OGRCreatePreparedGeometry(OGRGeometry::ToHandle(&geometry)) : nullptr),
+      [](OGRPreparedGeometry* g)
+      {
+        if (g)
+          OGRDestroyPreparedGeometry(g);
+      });
+  for (std::size_t j = 0; j < grid.ny; j++)
+    for (std::size_t i = 0; i < grid.nx; i++)
+    {
+      const auto x = grid.x(i);
+      const auto y = grid.y(j);
+      if (area)
+      {
+        OGRPoint point(x, y);
+        const bool inside =
+            (prepared ? OGRPreparedGeometryIntersects(prepared.get(), OGRGeometry::ToHandle(&point))
+                      : geometry.Intersects(&point));
+        if (!inside)
+          continue;
+      }
+      xs.push_back(x);
+      ys.push_back(y);
+    }
+}
+}  // namespace
+
 void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& config)
 {
   try
@@ -2187,33 +2261,8 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
     // OGC API-EDR: the number of positions along the axis including the minimum and the
     // maximum, 0 means the native resolution of the data. For corridors x is along the path
     // and y across the corridor, where 1 means the centre line only.
-    const std::size_t max_positions = 1000;
-    auto parse = [max_positions](const std::optional<std::string>& value,
-                                 const char* name,
-                                 long min_positions)
-    {
-      if (!value)
-        throw EDRException(std::string("Query parameter '") + name +
-                           "' is required with resolution-x/resolution-y");
-      try
-      {
-        std::size_t pos = 0;
-        auto n = std::stol(*value, &pos);
-        if (pos == value->size() &&
-            (n == 0 || (n >= min_positions && n <= long(max_positions))))
-          return static_cast<std::size_t>(n);
-      }
-      catch (...)
-      {
-      }
-      throw EDRException(std::string("Invalid '") + name + "' value '" + *value +
-                         "', valid values are 0 for the native resolution and " +
-                         Fmi::to_string(min_positions) + "-" + Fmi::to_string(max_positions) +
-                         " for the number of positions including the minimum and maximum");
-    };
-
-    auto nx = parse(opt_x, "resolution-x", 2);
-    auto ny = parse(opt_y, "resolution-y", corridor ? 1 : 2);
+    auto nx = parse_resolution_positions(opt_x, "resolution-x", 2);
+    auto ny = parse_resolution_positions(opt_y, "resolution-y", corridor ? 1 : 2);
 
     if (nx == 0 && ny == 0)
       return;
@@ -2223,11 +2272,7 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
           "resolution) or both positive");
 
     // Interpolation to a regular grid is possible for gridded data only
-    bool point_data = (emd.isObsProducer() || emd.isAviProducer());
-    if (emd.locations)
-      for (const auto& item : *emd.locations)
-        point_data = (point_data || item.second.type == "qdstation");
-    if (point_data)
+    if (is_point_data(emd))
       throw EDRException("Collection '" + itsEDRQuery.collection_id +
                          "' contains point data, resolution-x and resolution-y can be used "
                          "with gridded data only");
@@ -2272,37 +2317,9 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
     grid.y0 = envelope.MinY;
     grid.y1 = envelope.MaxY;
 
-    // Positions inside the area (cube positions are always inside the bounding box). A
-    // prepared geometry makes the test fast also for complex polygons.
-    std::unique_ptr<OGRPreparedGeometry, void (*)(OGRPreparedGeometry*)> prepared(
-        (itsEDRQuery.query_type == EDRQueryType::Area
-             ? OGRCreatePreparedGeometry(OGRGeometry::ToHandle(geometry.get()))
-             : nullptr),
-        [](OGRPreparedGeometry* g)
-        {
-          if (g)
-            OGRDestroyPreparedGeometry(g);
-        });
     std::vector<double> xs;
     std::vector<double> ys;
-    for (std::size_t j = 0; j < ny; j++)
-      for (std::size_t i = 0; i < nx; i++)
-      {
-        const auto x = grid.x(i);
-        const auto y = grid.y(j);
-        if (itsEDRQuery.query_type == EDRQueryType::Area)
-        {
-          OGRPoint point(x, y);
-          const bool inside =
-              (prepared
-                   ? OGRPreparedGeometryIntersects(prepared.get(), OGRGeometry::ToHandle(&point))
-                   : geometry->Intersects(&point));
-          if (!inside)
-            continue;
-        }
-        xs.push_back(x);
-        ys.push_back(y);
-      }
+    grid_positions(grid, *geometry, itsEDRQuery.query_type == EDRQueryType::Area, xs, ys);
 
     if (itsEDRQuery.crs)
       itsEDRQuery.crs->toWGS84(xs, ys);
