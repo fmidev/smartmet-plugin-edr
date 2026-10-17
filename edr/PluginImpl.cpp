@@ -16,6 +16,7 @@
 #include <fmt/format.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
+#include <boost/algorithm/string.hpp>
 #include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
@@ -1664,6 +1665,79 @@ void PluginImpl::handleProducer(const Spine::HTTP::Request& theRequest,
         }
       }
     }
+
+#ifndef WITHOUT_OBSERVATION
+    // The sensors of observation stations: which sensors each parameter has at a station, which
+    // one is the default, and their periods
+    const auto fmisids = Spine::optional_string(theRequest.getParameter("fmisid"), "");
+    if ((*entry)["source"].asString() == "observation" && !fmisids.empty() && itsEngines.obsEngine)
+    {
+      Engine::Observation::SensorOptions options;
+      options.producer = (*entry)["name"].asString();
+      std::vector<std::string> parts;
+      boost::algorithm::split(parts, fmisids, boost::algorithm::is_any_of(","));
+      for (const auto& p : parts)
+        if (auto id = Fmi::stoi_opt(p))
+          options.fmisids.insert(*id);
+      const auto params = Spine::optional_string(theRequest.getParameter("param"), "");
+      if (!params.empty())
+      {
+        boost::algorithm::split(parts, params, boost::algorithm::is_any_of(","));
+        for (const auto& p : parts)
+          if (!p.empty())
+            options.parameters.insert(p);
+      }
+      const auto starttime = Spine::optional_string(theRequest.getParameter("starttime"), "");
+      const auto endtime = Spine::optional_string(theRequest.getParameter("endtime"), "");
+      try
+      {
+        if (!starttime.empty())
+          options.starttime = Fmi::TimeParser::parse(starttime);
+        if (!endtime.empty())
+          options.endtime = Fmi::TimeParser::parse(endtime);
+        const auto found = itsEngines.obsEngine->getSensors(options);
+        const auto iso = [](const Fmi::DateTime& t)
+        { return Fmi::date_time::to_iso_extended_string(t) + "Z"; };
+        ::Json::Value sensors(::Json::objectValue);
+        sensors["available"] = found.available;
+        sensors["note"] = found.note;
+        sensors["list"] = ::Json::Value(::Json::arrayValue);
+        for (const auto& s : found.sensors)
+        {
+          ::Json::Value item;
+          item["fmisid"] = s.fmisid;
+          item["measurand_id"] = s.measurand_id;
+          if (!s.measurand_code.empty())
+            item["code"] = s.measurand_code;
+          item["parameters"] = ::Json::Value(::Json::arrayValue);
+          for (const auto& name : s.parameters)
+            item["parameters"].append(name);
+          item["sensor"] = s.sensor_no;
+          item["default"] = s.is_default;
+          if (!s.configuration_start.is_not_a_date_time())
+            item["configuration_start"] = iso(s.configuration_start);
+          if (!s.configuration_end.is_not_a_date_time())
+            item["configuration_end"] = iso(s.configuration_end);
+          if (!s.first_data.is_not_a_date_time())
+            item["first"] = iso(s.first_data);
+          if (!s.last_data.is_not_a_date_time())
+            item["last"] = iso(s.last_data);
+          if (s.values > 0)
+            item["values"] = static_cast<::Json::UInt64>(s.values);
+          sensors["list"].append(item);
+        }
+        result["sensors"] = sensors;
+      }
+      catch (...)
+      {
+        // The first reason, e.g. an unknown parameter of the producer
+        Fmi::Exception e = Fmi::Exception::Trace(BCP, "Listing the sensors failed");
+        const auto* first = e.getFirstException();
+        problem(Spine::HTTP::Status::bad_request, first ? first->getWhat() : e.getWhat());
+        return;
+      }
+    }
+#endif
 
     if ((*entry)["source"].asString() == "grid" && itsEngines.gridEngine)
     {

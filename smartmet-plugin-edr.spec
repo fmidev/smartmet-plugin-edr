@@ -45,7 +45,7 @@ BuildRequires: smartmet-library-timeseries-devel >= 26.10.16-2
 BuildRequires: smartmet-engine-avi-devel >= 26.10.16
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.10.16
+BuildRequires: smartmet-engine-observation-devel >= 26.10.17-1
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 26.10.16
 BuildRequires: smartmet-engine-gis-devel >= 26.10.16
@@ -54,6 +54,8 @@ BuildRequires: smartmet-engine-grid-devel >= 26.10.16
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 26.10.11
 #%endif
+# Engine::getSensors is a new virtual method: older engines lack it
+Conflicts: smartmet-engine-observation < 26.10.17-1
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 26.10.16
@@ -91,7 +93,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 26.10.16
 #TestRequires: smartmet-engine-querydata >= 26.10.17
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.16
+#TestRequires: smartmet-engine-observation >= 26.10.17-1
 %endif
 #TestRequires: smartmet-engine-grid >= 26.10.16
 #TestRequires: gdal312-libs
@@ -121,6 +123,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
+- The details of an observation producer list the sensors of the stations given with fmisid
+  (optionally param, starttime, endtime): per station and parameter the sensor numbers, the
+  default sensor and the periods of the configurations and values
 - Grid parameter keys on pressure levels without a level of their own take the levels option in
   hPa, as named parameters of pressure level producers do (they returned no values)
 - The points of an area or a path are computed once per request, not again for every parameter

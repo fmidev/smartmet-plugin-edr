@@ -1462,7 +1462,9 @@ Spine::OpenAPI::Document timeseries(const Config& config,
         "the level types and levels, forecast types and ensemble members, aggregation and number "
         "of times, from which parameter keys name:producer:geometry:levelId:level:forecastType:"
         "forecastNumber are built. The level values are in the units of the levels option (hPa "
-        "for pressure), the keys in the units of the parameter keys (Pa).";
+        "for pressure), the keys in the units of the parameter keys (Pa). For observation "
+        "producers the sensors of the stations given with fmisid: per station and parameter the "
+        "sensor numbers, the default sensor and the periods of the configurations and values.";
     producer_op["operationId"] = "getProducer" + component_name(url);
     JsonValue string_schema;
     string_schema["type"] = "string";
@@ -1481,6 +1483,21 @@ Spine::OpenAPI::Document timeseries(const Config& config,
                       "query",
                       "The model run of a grid producer, the latest by default",
                       time_schema));
+    // The sensors of observation stations
+    producer_op["parameters"].append(
+        OA::parameter("fmisid",
+                      "query",
+                      "Comma separated observation stations whose sensors are listed",
+                      string_schema));
+    producer_op["parameters"].append(
+        OA::parameter("param",
+                      "query",
+                      "Comma separated parameters whose sensors are listed, all by default",
+                      string_schema));
+    producer_op["parameters"].append(OA::parameter(
+        "starttime", "query", "Start of the period of the sensors, now by default", time_schema));
+    producer_op["parameters"].append(OA::parameter(
+        "endtime", "query", "End of the period of the sensors, now by default", time_schema));
     auto& producer_ok = producer_op["responses"]["200"];
     producer_ok["description"] = "The producer";
     JsonValue producer_schema;
@@ -1492,6 +1509,7 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     producer_schema["properties"]["runs"]["type"] = "array";
     producer_schema["properties"]["locations"]["type"] = "array";
     producer_schema["properties"]["run"]["type"] = "object";
+    producer_schema["properties"]["sensors"]["type"] = "object";
     producer_ok["content"]["application/json"]["schema"] = producer_schema;
     OA::Document::addErrorResponses(producer_op, false);
 
