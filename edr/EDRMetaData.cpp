@@ -1128,6 +1128,107 @@ std::string latin1_to_utf8(const std::string& s)
 
   return out;
 }
+
+// The settings common to the collections of all sources: precision, language, parameter and
+// collection info, data queries and output formats
+void set_collection_settings(EDRMetaData& producer_emd,
+                             const std::string& default_language,
+                             const ParameterInfo* pinfo,
+                             const CollectionInfo* collection_info,
+                             const std::string& producer,
+                             const SupportedDataQueries& sdq,
+                             const SupportedOutputFormats& sofs,
+                             const DefaultOutputFormats& defs)
+{
+  producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
+  producer_emd.language = default_language;
+  producer_emd.parameter_info = pinfo;
+  producer_emd.collection_info = collection_info;
+  producer_emd.data_queries = get_supported_data_queries(producer, sdq);
+  producer_emd.output_formats = get_supported_output_formats(producer, sofs);
+  producer_emd.default_output_format = get_default_output_format(producer, defs);
+}
+
+// Update the latest data update time of a producer
+void update_latest_update_time(std::map<std::string, Fmi::DateTime>& latest_update_times,
+                               const std::string& producer,
+                               const Fmi::DateTime& origin_time)
+{
+  if (latest_update_times.find(producer) == latest_update_times.end() ||
+      latest_update_times.at(producer) < origin_time)
+    latest_update_times[producer] = origin_time;
+}
+
+// Set the latest data update time of all instances of the producers
+void set_latest_update_times(EDRProducerMetaData& epmd,
+                             const std::map<std::string, Fmi::DateTime>& latest_update_times)
+{
+  for (auto& item : epmd)
+  {
+    for (auto& producer_meta_data : item.second)
+      producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
+  }
+}
+
+// The levels of querydata
+void set_qd_vertical_extent(const Engine::Querydata::MetaData& qmd, EDRMetaData& producer_emd)
+{
+  if (qmd.levels.size() > 1)
+  {
+    producer_emd.vertical_extent.level_type = qmd.levels.front().type;
+    producer_emd.vertical_extent.vrs = VerticalReference::wkt(qmd.levels.front().type);
+    for (const auto& item : qmd.levels)
+      producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
+  }
+}
+
+// The parameters of querydata
+void set_qd_parameters(const Engine::Querydata::MetaData& qmd, EDRMetaData& producer_emd)
+{
+  for (const auto& p : qmd.parameters)
+  {
+    auto parameter_name = p.name;
+    boost::algorithm::to_lower(parameter_name);
+    producer_emd.parameter_names.insert(parameter_name);
+    auto utf8_description = latin1_to_utf8(p.description);
+    producer_emd.parameters.insert(
+        std::make_pair(parameter_name, edr_parameter(p.name, utf8_description)));
+  }
+}
+
+// The supported locations of a querydata producer, null if there are none
+SupportedLocationsPtr qd_producer_locations(
+    const Engine::Querydata::Engine& qEngine,
+    const Engine::Querydata::MetaData& qmd,
+    const std::string& qmdproducer,
+    const SupportedProducerLocations& spl,
+    std::map<std::string, SupportedLocationsPtr>& producer_locations)
+{
+  auto producer_key = (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
+  if (spl.find(producer_key) == spl.end())
+    return nullptr;
+
+  // Gridded data lists only the locations inside the grid. The area of a producer
+  // is the same for all instances, check it once.
+  auto pos = producer_locations.find(qmdproducer);
+  if (pos == producer_locations.end())
+  {
+    auto locations = spl.at(producer_key);
+    try
+    {
+      auto q = qEngine.get(qmd.producer);
+      if (q && q->isGrid())
+        locations = locations_inside(
+            locations, [&q](double lon, double lat) { return q->isInside(lon, lat, 0); });
+    }
+    catch (...)
+    {
+      // Data may have been removed since the metadata was fetched
+    }
+    pos = producer_locations.emplace(qmdproducer, locations).first;
+  }
+  return pos->second;
+}
 }  // namespace
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
@@ -1172,13 +1273,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Querydata;
 
-      if (qmd.levels.size() > 1)
-      {
-        producer_emd.vertical_extent.level_type = qmd.levels.front().type;
-        producer_emd.vertical_extent.vrs = VerticalReference::wkt(qmd.levels.front().type);
-        for (const auto &item : qmd.levels)
-          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
-      }
+      set_qd_vertical_extent(qmd, producer_emd);
 
       const auto &rangeLon = qmd.wgs84Envelope.getRangeLon();
       const auto &rangeLat = qmd.wgs84Envelope.getRangeLat();
@@ -1195,58 +1290,24 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 
       producer_emd.temporal_extent = temporal_extent;
 
-      for (const auto &p : qmd.parameters)
-      {
-        auto parameter_name = p.name;
-        boost::algorithm::to_lower(parameter_name);
-        producer_emd.parameter_names.insert(parameter_name);
-        auto utf8_description = latin1_to_utf8(p.description);
-        producer_emd.parameters.insert(
-            std::make_pair(parameter_name, edr_parameter(p.name, utf8_description)));
-      }
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-      producer_emd.language = default_language;
-      producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Querydata, qmdproducer);
-      producer_emd.data_queries = get_supported_data_queries(qmdproducer, sdq);
-      producer_emd.output_formats = get_supported_output_formats(qmdproducer, sofs);
-      producer_emd.default_output_format = get_default_output_format(qmdproducer, defs);
+      set_qd_parameters(qmd, producer_emd);
+      set_collection_settings(producer_emd,
+                              default_language,
+                              pinfo,
+                              &cic.getInfo(SourceEngine::Querydata, qmdproducer),
+                              qmdproducer,
+                              sdq,
+                              sofs,
+                              defs);
 
-      auto producer_key = (spl.find(qmdproducer) != spl.end() ? qmdproducer : DEFAULT_PRODUCER_KEY);
-      if (spl.find(producer_key) != spl.end())
-      {
-        // Gridded data lists only the locations inside the grid. The area of a producer
-        // is the same for all instances, check it once.
-        auto pos = producer_locations.find(qmdproducer);
-        if (pos == producer_locations.end())
-        {
-          auto locations = spl.at(producer_key);
-          try
-          {
-            auto q = qEngine.get(qmd.producer);
-            if (q && q->isGrid())
-              locations = locations_inside(
-                  locations, [&q](double lon, double lat) { return q->isInside(lon, lat, 0); });
-          }
-          catch (...)
-          {
-            // Data may have been removed since the metadata was fetched
-          }
-          pos = producer_locations.emplace(qmdproducer, locations).first;
-        }
-        producer_emd.locations = pos->second;
-      }
+      if (auto locations =
+              qd_producer_locations(qEngine, qmd, qmdproducer, spl, producer_locations))
+        producer_emd.locations = locations;
       epmd[qmdproducer].push_back(producer_emd);
       // Update latest data update time
-      if (latest_update_times.find(qmdproducer) == latest_update_times.end() ||
-          latest_update_times.at(qmdproducer) < qmd.originTime)
-        latest_update_times[qmdproducer] = qmd.originTime;
+      update_latest_update_time(latest_update_times, qmdproducer, qmd.originTime);
     }
-    for (auto &item : epmd)
-    {
-      for (auto &producer_meta_data : item.second)
-        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
-    }
+    set_latest_update_times(epmd, latest_update_times);
 
     return epmd;
   }
@@ -1313,6 +1374,89 @@ std::set<std::string> load_locations_qd(const Engine::Querydata::Engine &qEngine
   return populated;
 }
 
+namespace
+{
+// The levels of a grid collection
+void set_grid_vertical_extent(const Engine::Grid::MetaData& gmd, EDRMetaData& producer_emd)
+{
+  if (gmd.levels.size() > 1)
+  {
+    producer_emd.vertical_extent.vrs = VerticalReference::wkt(gmd.levelName);
+
+    /*
+      1;GROUND;Ground or water surface;
+      2;PRESSURE;Pressure level;
+      3;HYBRID;Hybrid level;
+      4;ALTITUDE;Altitude;
+      5;TOP;Top of atmosphere;
+      6;HEIGHT;Height above ground in meters;
+      7;MEANSEA;Mean sea level;
+      8;ENTATM;Entire atmosphere;
+      9;GROUND_DEPTH;Layer between two depths below land surface;
+      10;DEPTH;Depth below some surface;
+      11;PRESSURE_DELTA;Level at specified pressure difference from ground
+      to level; 12;MAXTHETAE;Level where maximum equivalent potential
+      temperature is found; 13;HEIGHT_LAYER;Layer between two metric heights
+      above ground; 14;DEPTH_LAYER;Layer between two depths below land
+      surface; 15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
+      16;MAXWIND;Maximum wind level;
+    */
+    producer_emd.vertical_extent.level_type = gmd.levelName;
+    for (const auto& level : gmd.levels)
+      producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level));
+  }
+}
+
+// The parameters of a grid collection
+void set_grid_parameters(const Engine::Grid::MetaData& gmd, EDRMetaData& producer_emd)
+{
+  for (const auto& p : gmd.parameters)
+  {
+    auto parameter_name = p.parameterName;
+    boost::algorithm::to_lower(parameter_name);
+    producer_emd.parameter_names.insert(parameter_name);
+    producer_emd.parameters.insert(std::make_pair(
+        parameter_name,
+        edr_parameter(parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
+  }
+}
+
+// The supported locations of a grid collection, null if there are none
+SupportedLocationsPtr grid_producer_locations(
+    const Engine::Grid::MetaData& gmd,
+    const std::string& producerId,
+    const SupportedProducerLocations& spl,
+    std::map<std::string, SupportedLocationsPtr>& producer_locations)
+{
+  auto producer_key =
+      (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
+  if (spl.find(producer_key) == spl.end())
+    return nullptr;
+
+  // Grid data lists only the locations inside the grid. The geometry of a collection
+  // is the same for all instances, check it once.
+  auto pos = producer_locations.find(producerId);
+  if (pos == producer_locations.end())
+  {
+    auto inside_grid = [&gmd](double lon, double lat)
+    {
+      uint cols = 0;
+      uint rows = 0;
+      double grid_i = 0;
+      double grid_j = 0;
+      return (Identification::gridDef.getGridDimensionsByGeometryId(gmd.geometryId, cols, rows) &&
+              Identification::gridDef.getGridPointByGeometryIdAndLatLonCoordinates(
+                  gmd.geometryId, lat, lon, grid_i, grid_j) &&
+              grid_i >= 0 && grid_j >= 0 && grid_i <= cols - 1 && grid_j <= rows - 1);
+    };
+    pos =
+        producer_locations.emplace(producerId, locations_inside(spl.at(producer_key), inside_grid))
+            .first;
+  }
+  return pos->second;
+}
+}  // namespace
+
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
                                           const ProducerLicenses & /* licenses */,
                                           const std::string &default_language,
@@ -1349,32 +1493,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Grid;
 
-      if (gmd.levels.size() > 1)
-      {
-        producer_emd.vertical_extent.vrs = VerticalReference::wkt(gmd.levelName);
-
-        /*
-          1;GROUND;Ground or water surface;
-          2;PRESSURE;Pressure level;
-          3;HYBRID;Hybrid level;
-          4;ALTITUDE;Altitude;
-          5;TOP;Top of atmosphere;
-          6;HEIGHT;Height above ground in meters;
-          7;MEANSEA;Mean sea level;
-          8;ENTATM;Entire atmosphere;
-          9;GROUND_DEPTH;Layer between two depths below land surface;
-          10;DEPTH;Depth below some surface;
-          11;PRESSURE_DELTA;Level at specified pressure difference from ground
-          to level; 12;MAXTHETAE;Level where maximum equivalent potential
-          temperature is found; 13;HEIGHT_LAYER;Layer between two metric heights
-          above ground; 14;DEPTH_LAYER;Layer between two depths below land
-          surface; 15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
-          16;MAXWIND;Maximum wind level;
-        */
-        producer_emd.vertical_extent.level_type = gmd.levelName;
-        for (const auto &level : gmd.levels)
-          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level));
-      }
+      set_grid_vertical_extent(gmd, producer_emd);
 
       producer_emd.spatial_extent.bbox_xmin =
           std::min(gmd.latlon_bottomLeft.x(), gmd.latlon_topLeft.x());
@@ -1409,16 +1528,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       producer_emd.temporal_extent = temporal_extent;
 
-      for (const auto &p : gmd.parameters)
-      {
-        auto parameter_name = p.parameterName;
-        boost::algorithm::to_lower(parameter_name);
-        producer_emd.parameter_names.insert(parameter_name);
-        producer_emd.parameters.insert(std::make_pair(
-            parameter_name,
-            edr_parameter(
-                parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
-      }
+      set_grid_parameters(gmd, producer_emd);
 
       producer_emd.collection_info_engine.title =
           ("Producer: " + gmd.producerName + "; Geometry id: " + Fmi::to_string(gmd.geometryId) +
@@ -1428,54 +1538,23 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       boost::algorithm::to_lower(producerId);
 
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-      producer_emd.language = default_language;
-      producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Grid, gmd.producerName);
-
-      producer_emd.data_queries = get_supported_data_queries(gmd.producerName, sdq);
-      producer_emd.output_formats = get_supported_output_formats(gmd.producerName, sofs);
-      producer_emd.default_output_format = get_default_output_format(gmd.producerName, defs);
-      auto producer_key =
-          (spl.find(gmd.producerName) != spl.end() ? gmd.producerName : DEFAULT_PRODUCER_KEY);
-      if (spl.find(producer_key) != spl.end())
-      {
-        // Grid data lists only the locations inside the grid. The geometry of a collection
-        // is the same for all instances, check it once.
-        auto pos = producer_locations.find(producerId);
-        if (pos == producer_locations.end())
-        {
-          auto inside_grid = [&gmd](double lon, double lat)
-          {
-            uint cols = 0;
-            uint rows = 0;
-            double grid_i = 0;
-            double grid_j = 0;
-            return (Identification::gridDef.getGridDimensionsByGeometryId(
-                        gmd.geometryId, cols, rows) &&
-                    Identification::gridDef.getGridPointByGeometryIdAndLatLonCoordinates(
-                        gmd.geometryId, lat, lon, grid_i, grid_j) &&
-                    grid_i >= 0 && grid_j >= 0 && grid_i <= cols - 1 && grid_j <= rows - 1);
-          };
-          pos = producer_locations
-                    .emplace(producerId, locations_inside(spl.at(producer_key), inside_grid))
-                    .first;
-        }
-        producer_emd.locations = pos->second;
-      }
+      set_collection_settings(producer_emd,
+                              default_language,
+                              pinfo,
+                              &cic.getInfo(SourceEngine::Grid, gmd.producerName),
+                              gmd.producerName,
+                              sdq,
+                              sofs,
+                              defs);
+      if (auto locations = grid_producer_locations(gmd, producerId, spl, producer_locations))
+        producer_emd.locations = locations;
 
       epmd[producerId].push_back(producer_emd);
       // Update latest data update time
       auto origin_time = Fmi::DateTime::from_iso_string(gmd.analysisTime);
-      if (latest_update_times.find(producerId) == latest_update_times.end() ||
-          latest_update_times.at(producerId) < origin_time)
-        latest_update_times[producerId] = origin_time;
+      update_latest_update_time(latest_update_times, producerId, origin_time);
     }
-    for (auto &item : epmd)
-    {
-      for (auto &producer_meta_data : item.second)
-        producer_meta_data.latest_data_update_time = latest_update_times.at(item.first);
-    }
+    set_latest_update_times(epmd, latest_update_times);
 
     return epmd;
   }
@@ -1484,6 +1563,118 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+namespace
+{
+// The metadata of the visible observation producers
+std::map<std::string, Engine::Observation::MetaData> read_observation_metadata(
+    Engine::Observation::Engine& obsEngine, const CollectionInfoContainer& cic)
+{
+  std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
+  auto producers = obsEngine.getValidStationTypes();
+
+  Engine::Observation::Settings settings;
+  /*
+  add_sql_data_filter(req, "sounding_type", dataFilter);
+  add_sql_data_filter(req, "significance", dataFilter);
+  */
+
+  for (const auto& prod : producers)
+  {
+    if (!cic.isVisibleCollection(SourceEngine::Observation, prod))
+      continue;
+    try
+    {
+      observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod, settings)));
+    }
+    catch (...)
+    {
+      // A station type without a working database driver must not prevent the other
+      // collections from being published
+      Fmi::Exception::Trace(BCP, "Failed to read the metadata of producer " + prod)
+          .disableStackTrace()
+          .printError();
+    }
+  }
+  return observation_meta_data;
+}
+
+// The level range of observations, e.g. sounding metadata has (pressure) level range
+void set_obs_level_range(const Engine::Observation::MetaData& obs_md, EDRMetaData& producer_emd)
+{
+  using Engine::Observation::ObsLevelType;
+  auto levelType = obs_md.levels().front().getLevelType();
+  std::string levelTypeStr;
+
+  producer_emd.vertical_extent.obs_level_type = levelType;
+
+  if (levelType == ObsLevelType::Pressure)
+    levelTypeStr = "PressureLevel";
+  /*
+  else if (levelType == ObsLevelType::Altitude)
+    levelTypeStr = "Altitude";
+  */
+  else
+    throw Fmi::Exception(BCP, ("Unknown observation level type " + std::to_string(levelType)));
+
+  producer_emd.vertical_extent.level_type = levelTypeStr;
+  producer_emd.vertical_extent.vrs = VerticalReference::wkt(levelTypeStr);
+  for (const auto& level : obs_md.levels())
+    producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level.getLevelValue()));
+
+  producer_emd.vertical_extent.is_level_range = true;
+
+  producer_emd.stationMetaData.insert(obs_md.stationMetaData.begin(), obs_md.stationMetaData.end());
+}
+
+// The temporal extent of observations: the given period in hours before the end of the data,
+// or the full period if the period is 0
+edr_temporal_extent obs_temporal_extent(const Engine::Observation::MetaData& obs_md,
+                                        bool is_level_range,
+                                        unsigned int producer_observation_period)
+{
+  edr_temporal_extent temporal_extent;
+  temporal_extent.origin_time = Fmi::SecondClock::universal_time();
+  edr_temporal_extent_period temporal_extent_period;
+  auto time_of_day = obs_md.period.last().time_of_day();
+  auto end_date = obs_md.period.last().date();
+  Fmi::DateTime end_time;
+  uint64_t periodLength = 0;
+
+  // No end_time adjustment and using full period length for soundings
+  //
+  // TODO: period is currently handled properly for soundings only
+  if (!is_level_range)
+  {
+    // In order to get rid of fractions of a second in end_time
+    end_time =
+        Fmi::DateTime(end_date, Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
+  }
+  else
+  {
+    end_time = obs_md.dbperiod().end();
+  }
+
+  if (producer_observation_period > 0)
+  {
+    temporal_extent_period.start_time = (end_time - Fmi::Hours(producer_observation_period));
+
+    Fmi::TimePeriod tp(temporal_extent_period.start_time, end_time);
+    periodLength = tp.length().total_minutes();
+  }
+  else
+  {
+    temporal_extent_period.start_time = obs_md.dbperiod().begin();
+    periodLength = obs_md.dbperiod().length().total_minutes();
+  }
+
+  temporal_extent_period.end_time = end_time;
+  temporal_extent_period.timestep = obs_md.timestep;
+  temporal_extent_period.timesteps = (periodLength / obs_md.timestep);
+  temporal_extent.time_periods.push_back(temporal_extent_period);
+  return temporal_extent;
+}
+}  // namespace
 
 EDRProducerMetaData get_edr_metadata_obs(
     Engine::Observation::Engine &obsEngine,
@@ -1503,32 +1694,7 @@ EDRProducerMetaData get_edr_metadata_obs(
 {
   try
   {
-    std::map<std::string, Engine::Observation::MetaData> observation_meta_data;
-    auto producers = obsEngine.getValidStationTypes();
-
-    Engine::Observation::Settings settings;
-    /*
-    add_sql_data_filter(req, "sounding_type", dataFilter);
-    add_sql_data_filter(req, "significance", dataFilter);
-    */
-
-    for (const auto &prod : producers)
-    {
-      if (!cic.isVisibleCollection(SourceEngine::Observation, prod))
-        continue;
-      try
-      {
-        observation_meta_data.insert(std::make_pair(prod, obsEngine.metaData(prod, settings)));
-      }
-      catch (...)
-      {
-        // A station type without a working database driver must not prevent the other
-        // collections from being published
-        Fmi::Exception::Trace(BCP, "Failed to read the metadata of producer " + prod)
-            .disableStackTrace()
-            .printError();
-      }
-    }
+    auto observation_meta_data = read_observation_metadata(obsEngine, cic);
 
     const auto &producer_measurand_info = obsEngine.getMeasurandInfo();
 
@@ -1562,79 +1728,16 @@ EDRProducerMetaData get_edr_metadata_obs(
       if (obs_md.hasLevelRange)
       {
         // e.g. sounding metadata has (pressure) level range
-
-        using Engine::Observation::ObsLevelType;
-        auto levelType = obs_md.levels().front().getLevelType();
-        std::string levelTypeStr;
-
-        producer_emd.vertical_extent.obs_level_type = levelType;
-
-        if (levelType == ObsLevelType::Pressure)
-          levelTypeStr = "PressureLevel";
-        /*
-        else if (levelType == ObsLevelType::Altitude)
-          levelTypeStr = "Altitude";
-        */
-        else
-          throw Fmi::Exception(BCP,
-                               ("Unknown observation level type " + std::to_string(levelType)));
-
-        producer_emd.vertical_extent.level_type = levelTypeStr;
-        producer_emd.vertical_extent.vrs = VerticalReference::wkt(levelTypeStr);
-        for (const auto &level : obs_md.levels())
-          producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level.getLevelValue()));
-
-        producer_emd.vertical_extent.is_level_range = true;
+        set_obs_level_range(obs_md, producer_emd);
         producer_observation_period = 0;
-
-        producer_emd.stationMetaData.insert(obs_md.stationMetaData.begin(),
-                                            obs_md.stationMetaData.end());
       }
 
       producer_emd.spatial_extent.bbox_xmin = obs_md.bbox.xMin;
       producer_emd.spatial_extent.bbox_ymin = obs_md.bbox.yMin;
       producer_emd.spatial_extent.bbox_xmax = obs_md.bbox.xMax;
       producer_emd.spatial_extent.bbox_ymax = obs_md.bbox.yMax;
-      edr_temporal_extent temporal_extent;
-      temporal_extent.origin_time = Fmi::SecondClock::universal_time();
-      edr_temporal_extent_period temporal_extent_period;
-      auto time_of_day = obs_md.period.last().time_of_day();
-      auto end_date = obs_md.period.last().date();
-      Fmi::DateTime end_time;
-      uint64_t periodLength = 0;
-
-      // No end_time adjustment and using full period length for soundings
-      //
-      // TODO: period is currently handled properly for soundings only
-      if (!producer_emd.vertical_extent.is_level_range)
-      {
-        // In order to get rid of fractions of a second in end_time
-        end_time = Fmi::DateTime(end_date,
-                                 Fmi::TimeDuration(time_of_day.hours(), time_of_day.minutes(), 0));
-      }
-      else
-      {
-        end_time = obs_md.dbperiod().end();
-      }
-
-      if (producer_observation_period > 0)
-      {
-        temporal_extent_period.start_time = (end_time - Fmi::Hours(producer_observation_period));
-
-        Fmi::TimePeriod tp(temporal_extent_period.start_time, end_time);
-        periodLength = tp.length().total_minutes();
-      }
-      else
-      {
-        temporal_extent_period.start_time = obs_md.dbperiod().begin();
-        periodLength = obs_md.dbperiod().length().total_minutes();
-      }
-
-      temporal_extent_period.end_time = end_time;
-      temporal_extent_period.timestep = obs_md.timestep;
-      temporal_extent_period.timesteps = (periodLength / obs_md.timestep);
-      temporal_extent.time_periods.push_back(temporal_extent_period);
-      producer_emd.temporal_extent = temporal_extent;
+      producer_emd.temporal_extent = obs_temporal_extent(
+          obs_md, producer_emd.vertical_extent.is_level_range, producer_observation_period);
 
       process_parameters(producer,
                          params,
@@ -1644,13 +1747,14 @@ EDRProducerMetaData get_edr_metadata_obs(
                          producer_emd);
       add_derived_parameters(obsEngine, producer, prodParam, producer_emd);
 
-      producer_emd.parameter_precisions["__DEFAULT_PRECISION__"] = DEFAULT_PRECISION;
-      producer_emd.language = default_language;
-      producer_emd.parameter_info = pinfo;
-      producer_emd.collection_info = &cic.getInfo(SourceEngine::Observation, producer);
-      producer_emd.data_queries = get_supported_data_queries(producer, sdq);
-      producer_emd.output_formats = get_supported_output_formats(producer, sofs);
-      producer_emd.default_output_format = get_default_output_format(producer, defs);
+      set_collection_settings(producer_emd,
+                              default_language,
+                              pinfo,
+                              &cic.getInfo(SourceEngine::Observation, producer),
+                              producer,
+                              sdq,
+                              sofs,
+                              defs);
       auto producer_key = (spl.find(producer) != spl.end() ? producer : DEFAULT_PRODUCER_KEY);
       if (spl.find(producer_key) != spl.end())
         producer_emd.locations = spl.at(producer_key);
