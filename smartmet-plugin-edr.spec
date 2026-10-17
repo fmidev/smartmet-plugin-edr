@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.16
+Version: 26.10.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -56,21 +56,21 @@ BuildRequires: smartmet-engine-grid-devel >= 26.10.16
 #%endif
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
-Requires: smartmet-library-gis >= 26.10.16
+Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-locus >= 26.10.16
-Requires: smartmet-library-macgyver >= 26.10.16
-Requires: smartmet-library-newbase >= 26.10.16
-Requires: smartmet-library-spine >= 26.10.16
+Requires: smartmet-library-macgyver >= 26.10.17
+Requires: smartmet-library-newbase >= 26.10.17
+Requires: smartmet-library-spine >= 26.10.17
 Requires: smartmet-swagger-ui
 Requires: smartmet-library-timeseries >= 26.10.16
-Requires: smartmet-library-gis >= 26.10.16
-Requires: smartmet-library-grid-files >= 26.10.16
-Requires: smartmet-engine-avi >= 26.10.16
-Requires: smartmet-engine-geonames >= 26.10.16
-Requires: smartmet-engine-querydata >= 26.10.16
-Requires: smartmet-engine-gis >= 26.10.16
-Requires: smartmet-engine-grid >= 26.10.16
-Requires: smartmet-server >= 26.10.16
+Requires: smartmet-library-gis >= 26.10.17
+Requires: smartmet-library-grid-files >= 26.10.17
+Requires: smartmet-engine-avi >= 26.10.17
+Requires: smartmet-engine-geonames >= 26.10.17
+Requires: smartmet-engine-querydata >= 26.10.17
+Requires: smartmet-engine-gis >= 26.10.17
+Requires: smartmet-engine-grid >= 26.10.17
+Requires: smartmet-server >= 26.10.17
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -78,22 +78,22 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.16
+#TestRequires: smartmet-library-spine >= 26.10.17
 #TestRequires: smartmet-library-spine-plugin-test >= 26.10.16
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-library-grid-files-test >= 26.10.16
-#TestRequires: smartmet-library-gis >= 26.10.16
-#TestRequires: smartmet-engine-avi >= 26.10.16
-#TestRequires: smartmet-engine-geonames >= 26.10.16
-#TestRequires: smartmet-engine-gis >= 26.10.16
-#TestRequires: smartmet-engine-querydata >= 26.10.16
+#TestRequires: smartmet-library-gis >= 26.10.17
+#TestRequires: smartmet-engine-avi >= 26.10.17
+#TestRequires: smartmet-engine-geonames >= 26.10.17
+#TestRequires: smartmet-engine-gis >= 26.10.17
+#TestRequires: smartmet-engine-querydata >= 26.10.17
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.16
+#TestRequires: smartmet-engine-observation >= 26.10.17
 %endif
-#TestRequires: smartmet-engine-grid >= 26.10.16
+#TestRequires: smartmet-engine-grid >= 26.10.17
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 
@@ -120,6 +120,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
+- Wrap lines longer than 100 columns in the refactored code
+- get_edr_metadata_grid: set the western edge of the bounding box too
+- QueryProcessingHub::hash_value: return Fmi::bad_hash instead of 0 for queries which cannot be
+  cached
+- EDRMetaData: guard only the observation and AVI code with WITHOUT_OBSERVATION and WITHOUT_AVI
+- obs_temporal_extent: no timestep count for observations without a timestep (division by zero)
+- Vertical profile coverages: stop when no data parameter advances the time steps
+- Split functions with a cognitive complexity above 25 into smaller helpers, no functional changes
+
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
 - CommonQuery has a virtual destructor
 - Fixed compiler warnings and clang-tidy findings (unused code, unreachable code, empty statements, member initialization, parameter passing, noexcept), no functional changes
