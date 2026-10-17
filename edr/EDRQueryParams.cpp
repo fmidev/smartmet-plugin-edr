@@ -2656,6 +2656,90 @@ bool EDRQueryParams::CustomDimensions::matches(const std::string &parameterName,
   }
 }
 
+namespace
+{
+// The producer, geometry and level ids of a grid collection id
+void split_grid_collection_id(const std::string& collection_id,
+                              std::string& producerId,
+                              std::string& geometryId,
+                              std::string& levelId)
+{
+  std::vector<std::string> producer_parts;
+  boost::algorithm::split(producer_parts, collection_id, boost::algorithm::is_any_of("."));
+
+  producerId = producer_parts[0];
+  if (producer_parts.size() > 1)
+    geometryId = producer_parts[1];
+  if (producer_parts.size() > 2)
+    levelId = producer_parts[2];
+}
+
+// A parameter-name value in lower case without the part starting with ':'
+std::string normalized_parameter_name(std::string p)
+{
+  boost::algorithm::trim(p);
+  boost::algorithm::to_lower(p);
+  if (p.find(':') != std::string::npos)
+    p = p.substr(0, p.find(':'));
+  return p;
+}
+
+// OGC API-EDR: the values must be from the parameter_names of the collection metadata
+void check_parameter_names(const std::list<std::string>& param_names,
+                           const EDRMetaData& emd,
+                           const std::string& collection_id)
+{
+  std::string unknown_names;
+  for (const auto& name : param_names)
+  {
+    auto p = normalized_parameter_name(name);
+    if (emd.parameters.find(p) == emd.parameters.end())
+      unknown_names += (unknown_names.empty() ? "'" : ", '") + p + "'";
+  }
+  if (!unknown_names.empty())
+    throw EDRException("Unknown parameter-name value(s) " + unknown_names + " for collection '" +
+                       collection_id + "', see the parameter_names of the collection metadata");
+}
+
+// Appends the levels of the vertical extent of the collection to z. If z was given, the levels
+// are floored and limited to the requested range.
+void append_vertical_extent_levels(const EDRMetaData& emd,
+                                   bool hasZParam,
+                                   bool range,
+                                   double min_level,
+                                   double max_level,
+                                   std::string& z)
+{
+  for (const auto& value : emd.vertical_extent.levels)
+  {
+    std::string level(value);
+
+    if (hasZParam)
+    {
+      double d_level = Fmi::stod(value);
+      level = std::to_string((int)floor(d_level));
+
+      if (!range)
+      {
+        if (d_level < min_level || d_level > max_level)
+          continue;
+      }
+      else if (z.empty())
+      {
+        if (d_level < min_level)
+          level = Fmi::to_string(min_level);
+      }
+      else if (d_level > max_level)
+        level = Fmi::to_string(max_level);
+    }
+
+    if (!z.empty())
+      z.append(",");
+    z.append(level);
+  }
+}
+}  // namespace
+
 std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_names,
                                                 const EDRMetaData& emd,
                                                 bool grid_producer,
@@ -2669,17 +2753,7 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
     std::string geometryId;
     std::string levelId;
     if (grid_producer)
-    {
-      std::vector<std::string> producer_parts;
-      boost::algorithm::split(
-          producer_parts, itsEDRQuery.collection_id, boost::algorithm::is_any_of("."));
-
-      producerId = producer_parts[0];
-      if (producer_parts.size() > 1)
-        geometryId = producer_parts[1];
-      if (producer_parts.size() > 2)
-        levelId = producer_parts[2];
-    }
+      split_grid_collection_id(itsEDRQuery.collection_id, producerId, geometryId, levelId);
 
     std::string cleaned_param_names;
 
@@ -2712,27 +2786,11 @@ std::string EDRQueryParams::cleanParameterNames(const std::string& parameter_nam
     boost::algorithm::split(param_names, parameter_names, boost::algorithm::is_any_of(","));
 
     // OGC API-EDR: the values must be from the parameter_names of the collection metadata
-    std::string unknown_names;
-    for (auto p : param_names)
-    {
-      boost::algorithm::trim(p);
-      boost::algorithm::to_lower(p);
-      if (p.find(':') != std::string::npos)
-        p = p.substr(0, p.find(':'));
-      if (emd.parameters.find(p) == emd.parameters.end())
-        unknown_names += (unknown_names.empty() ? "'" : ", '") + p + "'";
-    }
-    if (!unknown_names.empty())
-      throw EDRException("Unknown parameter-name value(s) " + unknown_names +
-                         " for collection '" + itsEDRQuery.collection_id +
-                         "', see the parameter_names of the collection metadata");
+    check_parameter_names(param_names, emd, itsEDRQuery.collection_id);
 
-    for (auto p : param_names)
+    for (const auto& name : param_names)
     {
-      boost::algorithm::trim(p);
-      boost::algorithm::to_lower(p);
-      if (p.find(':') != std::string::npos)
-        p = p.substr(0, p.find(':'));
+      auto p = normalized_parameter_name(name);
 
       if (! customDimensions.matches(p, parameterInfo))
         continue;
@@ -2807,34 +2865,7 @@ std::string EDRQueryParams::parseParameterNamesAndZ(const State& state,
       // (checking level 0 against numeric_limits<double>::min() would reject it)
 
       range = emd.vertical_extent.is_level_range;
-
-      for (const auto& value : emd.vertical_extent.levels)
-      {
-        std::string level(value);
-
-        if (hasZParam)
-        {
-          double d_level = Fmi::stod(value);
-          level = std::to_string((int)floor(d_level));
-
-          if (!range)
-          {
-            if (d_level < min_level || d_level > max_level)
-              continue;
-          }
-          else if (z.empty())
-          {
-            if (d_level < min_level)
-              level = Fmi::to_string(min_level);
-          }
-          else if (d_level > max_level)
-            level = Fmi::to_string(max_level);
-        }
-
-        if (!z.empty())
-          z.append(",");
-        z.append(level);
-      }
+      append_vertical_extent_levels(emd, hasZParam, range, min_level, max_level, z);
     }
 
     if (zWasRange && z.empty())
