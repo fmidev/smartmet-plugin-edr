@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.17
-Release: 4%{?dist}.fmi
+Release: 5%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -120,6 +120,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-5.fmi
+- TimeSeries requests of location parameters only (e.g. lon,lat) for a path, a bounding box, an
+  area or a radius list the points like data requests do, instead of 0,0 or null
 * Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-4.fmi
 - Querydata paths and areas on several levels: the names, times and coordinates are listed
   for each point and level like the values (they were listed per level only)

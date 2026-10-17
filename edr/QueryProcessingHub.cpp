@@ -271,13 +271,27 @@ void check_in_keyword_locations(CommonQuery& masterquery,
   }
 }
 
-bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams)
+bool is_static_location_query(const TS::OptionParsers::ParameterList& theParams,
+                              const Spine::TaggedLocationList& theLocations)
 {
-  return std::all_of(
-      theParams.begin(),
-      theParams.end(),
-      [](const Spine::Parameter& param)
-      { return TS::is_location_parameter(param.name()) || param.name() == "place"; });
+  // Areas, paths and radii are expanded into points by the data queries; listed here they would
+  // be represented by a center point, which a path or a bounding box does not even have
+  const bool points_only = std::none_of(theLocations.begin(),
+                                        theLocations.end(),
+                                        [](const Spine::TaggedLocation& tloc)
+                                        {
+                                          const auto& loc = *tloc.loc;
+                                          return loc.type == Spine::Location::Path ||
+                                                 loc.type == Spine::Location::BoundingBox ||
+                                                 loc.type == Spine::Location::Area ||
+                                                 loc.type == Spine::Location::Wkt ||
+                                                 loc.radius > 0;
+                                        });
+  return points_only &&
+         std::all_of(theParams.begin(),
+                     theParams.end(),
+                     [](const Spine::Parameter& param)
+                     { return TS::is_location_parameter(param.name()) || param.name() == "place"; });
 }
 
 void fetch_static_location_values(const CommonQuery& query,
@@ -817,7 +831,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
     check_in_keyword_locations(masterquery, thePlugin.itsGeometryStorage);
 
     // if only location related parameters queried, use shortcut
-    if (is_static_location_query(masterquery.poptions.parameters()))
+    if (is_static_location_query(masterquery.poptions.parameters(), masterquery.loptions->locations()))
     {
       fetch_static_location_values(
           masterquery, *theEngines.geoEngine, thePlugin.itsGeometryStorage, table);
@@ -1110,7 +1124,7 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
 
     check_in_keyword_locations(masterquery, thePlugin.itsGeometryStorage);
 
-    if (is_static_location_query(masterquery.poptions.parameters()))
+    if (is_static_location_query(masterquery.poptions.parameters(), masterquery.loptions->locations()))
     {
       fetch_static_location_values(
           masterquery, *theEngines.geoEngine, thePlugin.itsGeometryStorage, table);
