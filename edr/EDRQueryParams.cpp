@@ -2542,6 +2542,39 @@ void EDRQueryParams::handleGridParameter(std::string& p,
   }
 }
 
+namespace
+{
+// The trimmed values of a comma separated custom dimension option, empty values are not allowed
+std::vector<std::string> custom_dimension_values(const std::string& req_values, const char* name)
+{
+  std::vector<std::string> ret;
+  if (req_values.empty())
+    return ret;
+
+  std::vector<std::string> value_vec;
+  boost::algorithm::split(value_vec, req_values, boost::algorithm::is_any_of(","));
+
+  for (auto const& value : value_vec)
+  {
+    auto s = boost::algorithm::trim_copy(value);
+    if (s.empty())
+      throw EDRException(std::string("Empty ") + name + " value not allowed");
+    ret.emplace_back(s);
+  }
+  return ret;
+}
+
+// The trimmed values of a custom dimension option in lower case
+std::vector<std::string> lower_case_custom_dimension_values(const std::string& req_values,
+                                                            const char* name)
+{
+  auto ret = custom_dimension_values(req_values, name);
+  for (auto& value : ret)
+    boost::algorithm::to_lower(value);
+  return ret;
+}
+}  // namespace
+
 EDRQueryParams::CustomDimensions::CustomDimensions(const Spine::HTTP::Request& req)
 {
   try
@@ -2555,67 +2588,19 @@ EDRQueryParams::CustomDimensions::CustomDimensions(const Spine::HTTP::Request& r
     auto req_levels =
       boost::algorithm::trim_copy(Spine::optional_string(req.getParameter("custom_level"), ""));
 
-    if (! req_standard_names.empty())
-    {
-      std::vector<std::string> standard_name_vec;
-      boost::algorithm::split(
-          standard_name_vec, req_standard_names, boost::algorithm::is_any_of(","));
+    standard_names = lower_case_custom_dimension_values(req_standard_names, "standard_name");
+    methods = lower_case_custom_dimension_values(req_methods, "method");
+    durations = lower_case_custom_dimension_values(req_durations, "duration");
 
-      for (auto const &standard_name : standard_name_vec)
+    for (const auto& s : custom_dimension_values(req_levels, "level"))
+    {
+      try
       {
-        auto s = boost::algorithm::trim_copy(standard_name);
-        if (s.empty())
-          throw EDRException("Empty standard_name value not allowed");
-        standard_names.emplace_back(boost::algorithm::to_lower_copy(s));
+        levels.push_back(Fmi::stod(s));
       }
-    }
-
-    if (! req_methods.empty())
-    {
-      std::vector<std::string> method_vec;
-      boost::algorithm::split(method_vec, req_methods, boost::algorithm::is_any_of(","));
-
-      for (auto const &method : method_vec)
+      catch (...)
       {
-        auto s = boost::algorithm::trim_copy(method);
-        if (s.empty())
-          throw EDRException("Empty method value not allowed");
-        methods.emplace_back(boost::algorithm::to_lower_copy(s));
-      }
-    }
-
-    if (! req_durations.empty())
-    {
-      std::vector<std::string> duration_vec;
-      boost::algorithm::split(duration_vec, req_durations, boost::algorithm::is_any_of(","));
-
-      for (auto const &duration : duration_vec)
-      {
-        auto s = boost::algorithm::trim_copy(duration);
-        if (s.empty())
-          throw EDRException("Empty duration value not allowed");
-        durations.emplace_back(boost::algorithm::to_lower_copy(s));
-      }
-    }
-
-    if (! req_levels.empty())
-    {
-      std::vector<std::string> level_vec;
-      boost::algorithm::split(level_vec, req_levels, boost::algorithm::is_any_of(","));
-
-      for (auto const &level : level_vec)
-      {
-        auto s = boost::algorithm::trim_copy(level);
-        if (s.empty())
-          throw EDRException("Empty level value not allowed");
-        try
-        {
-          levels.push_back(Fmi::stod(s));
-        }
-        catch (...)
-        {
-          throw EDRException("Invalid level value '" + s + "'");
-        }
+        throw EDRException("Invalid level value '" + s + "'");
       }
     }
   }
