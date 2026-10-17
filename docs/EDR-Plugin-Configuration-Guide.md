@@ -15,14 +15,16 @@ This page describes more indepth EDR API
 - [Visible collections](#visible-collections)
 - [Collection info](#collection-info)
 - [Parameter info](#parameter-info)
+- [Coordinate reference systems](#coordinate-reference-systems)
 - [URL, language](#url-language)
+- [Metadata updates](#metadata-updates)
 - [Observation period](#observation-period)
 - [Timeseries interface settings](#timeseries-interface-settings)
 
 
 # Introduction
 
-Name of EDR plugin configuration file is erd.conf.
+Name of EDR plugin configuration file is edr.conf.
 
 # Landing page
 
@@ -145,7 +147,9 @@ avi:
         )
 };
 ```
-- period_length parameter tells how old messages can be requested.
+- period_length parameter tells how old messages can be requested (days, default 30).
+- exclude_speci (default true) leaves SPECI messages out of the METAR collection.
+- tmppath (default "/var/tmp") is the directory of the temporary files of the IWXXMZIP output format.
 
 
 Note! if avi-section is not defined no avi collections are visible.
@@ -185,7 +189,7 @@ output_formats:
 };
 ```
 
-Currently all collections support CoverageJSON and GeoJSON output formats. Additionally METAR, TAF, SIGMET collections support IWXXM and TAC output formats.
+Currently all collections support CoverageJSON and GeoJSON output formats. Additionally METAR, TAF, SIGMET collections support IWXXM, IWXXMZIP (the IWXXM messages as a zip archive) and TAC output formats.
 
 
 # Supported locations
@@ -340,6 +344,19 @@ language      = "fi";
 ```
 
 Effect of language setting can be seen in EDR metadata title and description fields of collections and parameters. Unfortunately, the language support is currently not comprehensive. Only the observation engine offers translations for parameters. Information about parameters can be added to the configuration file, in which case different language versions are also supported.
+
+# Metadata updates
+
+The metadata of the collections is updated periodically from the engines.
+
+```
+metadata_update_interval     = 30;     // seconds, default 30
+metadata_updates_disabled    = false;  // true: only the initial update at startup
+enable_configuration_polling = false;  // true: reload the plugin when the configuration file changes
+```
+
+`pretty = true` makes pretty printed JSON the default; the `pretty` request parameter
+overrides it.
 
 # Observation period
 

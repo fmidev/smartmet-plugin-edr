@@ -26,8 +26,8 @@ The build requires `REQUIRES = gdal configpp` via pkg-config and links against `
 
 Tests are integration tests using `smartmet-plugin-test` (not Boost.Test unit tests). The test harness starts a SmartMet server instance with the locally-built `edr.so`, sends HTTP requests from `test/*/input/*.get` files, and compares responses against `test/*/output/` expected results.
 
-- **`test/base/`** — main EDR and timeseries-style tests against querydata/observation/avi engines (32 test cases). DB backend is selected via `@DB_TYPE@` substitution in reactor.conf.
-- **`test/grid/`** — grid engine tests (10 test cases). Starts/stops a local Redis instance.
+- **`test/base/`** — main EDR and timeseries-style tests against querydata/observation/avi engines (about 170 test cases, plus the merged TimeSeries suite in `test/base/input/timeseries/`). DB backend is selected via `@DB_TYPE@` substitution in reactor.conf.
+- **`test/grid/`** — grid engine tests (20 test cases). Starts/stops a local Redis instance.
 - Failures go to `test/*/failures/` directory for diffing against expected output.
 - `.testignore_<dbtype>` files in `test/base/input/` skip tests not applicable to a given backend.
 
@@ -37,7 +37,7 @@ Tests are integration tests using `smartmet-plugin-test` (not Boost.Test unit te
 
 `Plugin::requestHandler` is the entry point. The plugin handles two distinct URL styles:
 1. **EDR API requests** (`/edr/collections/...`) — parsed by `EDRQueryParams` which decodes the OGC EDR REST path into query type, collection, instance, coordinates, etc.
-2. **TimeSeries-style requests** (optional, configured via `timeSeriesUrl`) — parsed by `TimeSeriesQuery`, providing backward-compatible timeseries plugin interface.
+2. **TimeSeries-style requests** (optional, configured via `timeseries_url`) — parsed by `TimeSeriesQuery`, providing backward-compatible timeseries plugin interface.
 
 Both inherit from `CommonQuery` (which inherits from `ObsQueryParams`), sharing parameter/time/location parsing.
 
@@ -57,20 +57,20 @@ Defined in `EDRQuery.h` as `EDRQueryType`: Position, Radius, Area, Cube, Traject
 
 ### Output formats
 
-- **CoverageJSON** (`CoverageJson.cpp`, ~3400 lines — the largest file) — primary EDR output format
+- **CoverageJSON** (`CoverageJson.cpp`, ~4500 lines — the largest file) — primary EDR output format
 - **GeoJSON** (`GeoJson.cpp`) — alternative spatial output
 - IWXXM/TAC — aviation-specific XML/text formats (ZIP packaging supported)
 - Standard timeseries formats via `Spine::TableFormatterFactory`
 
 ### Metadata system
 
-`EngineMetaData` (wrapped in `Fmi::AtomicSharedPtr`) holds per-engine `EDRProducerMetaData` maps. Updated periodically by a background thread (`metaDataUpdateLoop`), configurable interval via `metaDataUpdateInterval`. The atomic shared pointer pattern ensures thread-safe reads during updates.
+`EngineMetaData` (wrapped in `Fmi::AtomicSharedPtr`) holds per-engine `EDRProducerMetaData` maps. Updated periodically by a background thread (`metaDataUpdateLoop`), configurable interval via the `metadata_update_interval` setting. The atomic shared pointer pattern ensures thread-safe reads during updates.
 
 `EDRMetaData` contains spatial/temporal/vertical extents, parameter lists, and supported queries for each producer.
 
 ### Conditional compilation
 
-`WITHOUT_OBSERVATION` and `WITHOUT_AVI` preprocessor guards allow building without observation or aviation engine dependencies. These are controlled by RPM spec `%bcond_without observation`.
+`WITHOUT_OBSERVATION` and `WITHOUT_AVI` preprocessor guards allow building without observation or aviation engine dependencies. `WITHOUT_OBSERVATION` is controlled by RPM spec `%bcond_without observation`; `WITHOUT_AVI` has no spec switch.
 
 ### JSON handling
 
@@ -99,11 +99,11 @@ Declared in `Engines.h` — the plugin obtains shared pointers to all engines at
 - `Engine::Observation` — station observations (conditional)
 - `Engine::Avi` — aviation weather (conditional)
 
-## Timeseries integration (in progress on `develop`)
+## Timeseries integration
 
-The `/timeseries` URL handling was merged in from the standalone timeseries plugin (branch `ts-merge`, merged to `develop` in `dc089b5`). Shared parsing lives in `CommonQuery` (base for both `Query` and `TimeSeriesQuery`); all engine query classes take `CommonQuery&`. `CommonQuery::is_timeseries_query` flags which URL was hit; engine code branches on it where the two styles legitimately differ.
+The `/timeseries` URL handling was merged in from the standalone timeseries plugin (branch `ts-merge`, merged in `dc089b5`). Shared parsing lives in `CommonQuery` (base for both `Query` and `TimeSeriesQuery`); all engine query classes take `CommonQuery&`. `CommonQuery::is_timeseries_query` flags which URL was hit; engine code branches on it where the two styles legitimately differ.
 
-**Reference implementation.** The untouched timeseries plugin lives alongside this repo at `../4020-smartmet-plugin-timeseries/` (master branch). When hunting merge regressions, diff files against that tree — most behavioral regressions trace to divergences between the merged-in code in `edr/*.cpp` and the originals in `../4020-smartmet-plugin-timeseries/timeseries/*.cpp`.
+**Reference implementation.** The standalone timeseries plugin (`smartmet-plugin-timeseries`, in `../timeseries/` of the workspace) is maintained separately. When hunting merge regressions, diff files against that tree — most behavioral regressions trace to divergences between the merged-in code in `edr/*.cpp` and the originals in `../timeseries/timeseries/*.cpp`.
 
 **Config parity caveat.** Deployments comparing `/timeseries?…` responses between the legacy timeseries plugin and the new EDR-served endpoint must keep config-parity across both servers. In particular:
 - `primaryForecastSource` gates whether `producer=default` (and producer-unspecified) requests go to the grid engine or querydata. The legacy `timeseries.conf` uses `"grid"`; an `edr.conf` that defaults to `"querydata"` will silently pick different producers — `source=grid` in the URL bypasses this.

@@ -52,7 +52,7 @@ observation_disabled = true;
 ```
 
 ### geometry_tables
-The PostGIS shapes used for areas and paths are configured in the `geometry_tables` section. Leave the section out if PostGIS shapes are not used. Note that the standalone TimeSeries plugin used a `postgis` section for the same purpose.
+The PostGIS shapes used for areas and paths are configured in the `geometry_tables` section. Leave the section out if PostGIS shapes are not used. Very old versions of the TimeSeries plugin used a `postgis` section for the same purpose.
 ```
 geometry_tables:
 {

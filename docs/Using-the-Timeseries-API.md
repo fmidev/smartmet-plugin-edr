@@ -604,7 +604,7 @@ or by using other parameters. So we name the parameter of the first table as
 | localtz               | Time zone of the geographical location.                                                                                                                       | X        | X           |
 | gridnorth             | Direction of north in the grid location.                                                                                                                      | X        | -           |
 
-If option "findnearestvalidpoint=1" is used, and the data has been
+If option "findnearestvalid=1" is used, and the data has been
 marked in the querydata engine not to be full with "fullgrid=false",
 the nearest valid point in the data will be searched if necessary
 using the given "maxdistance" condition. The default "maxdistance" is
@@ -1054,7 +1054,7 @@ definitions are applied according to the field type.
 
 | Parameter   | Description                                                                                                                                                                                                                                                                                                       |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| missingtext | This parameter defines an alternative value for the data fields for which the values are missing or cannot be calculated. If the parameter is not given, then the “NaN" (not a number) is used as the default value.                                                                                              |
+| missingtext | This parameter defines an alternative value for the data fields for which the values are missing or cannot be calculated. If the parameter is not given, then "nan" (not a number) is used as the default value.                                                                                              |
 | lang        | This parameter defines the language that is used when fetching geographical names like cities, countries, etc. (e.g. “FI”)                                                                                                                                                                                        |
 | timeformat  | This parameter defines the format of the time fields used in the response. It can have the following values: "iso" (YYYYMMDDTHHMISS), "timestamp" (YYYYMMDDHHMI), "sql" (YYYY-MM-DD HH:MI:SS), "xml" (YYYY-MM-DDTHH:MI:SS)                                                                                        |
 | width       | <s>This parameter can be used to define the size of the numeric fields (e.g. “width=12”)</s>                                                                                                                                                                                                                      |
@@ -1238,6 +1238,6 @@ In addition to this, the meaning of these attributes are also defined on the par
 <tr><td> additional_tables </td><td>A list of additional geometry sources. Each entry may define name, server, schema, table and field; the default values above are used for the ones that are omitted.</td></tr>
 </table>
 
-**Note:** the geometry sources of the EDR plugin are configured with the
-`geometry_tables` attribute. In the standalone TimeSeries plugin the
-corresponding attribute was named `postgis`.
+**Note:** the geometry sources are configured with the `geometry_tables`
+attribute, as in the standalone TimeSeries plugin. Very old versions of the
+TimeSeries plugin used a `postgis` attribute instead.

@@ -426,7 +426,7 @@ For example define a radius of 20 Km from the position defined by the coords que
 ```
 within=20&within-units=km
 ```
-Within-units 'km' and 'mi' are supported.
+Within-units 'm', 'km' and 'mi' are supported.
 
 ## Area query
 
@@ -537,7 +537,7 @@ Other geometries are rejected with a 400 error. MULTILINESTRING is also accepted
 
 The Corridor query returns data along and around the path defined by the *coords* parameter.
 
-Currently EDR plugin supports 2D corridor queries 2D (x, y). The Linestring described by the coords parameter defines the center point of the corridor with corridor-width query parameter defining the breadth of the corridor.
+The LINESTRING (or MULTILINESTRING, with optional Z and M coordinates as in the trajectory query) described by the coords parameter defines the centre line of the corridor. The parameters corridor-width and width-units ('m', 'km' or 'mi') are required and define the breadth of the corridor. For collections with a vertical extent the optional corridor-height and height-units (for example 'hPa', 'Pa', 'mbar', 'm', 'km', 'mi', 'ft', or '1' for model levels) define the vertical band of the corridor around the levels of the path; pressures are converted between hPa and Pa as needed. See also the resolution parameters above.
 
 ### **Parameter coords - Corridor query**
 

@@ -14,8 +14,9 @@ EDR API is served.
 ## Features
 
 - OGC API-EDR compliant interface
-- Point, area, corridor, and trajectory queries
-- JSON and CoverageJSON output formats
+- Position, radius, area, cube, corridor, trajectory, locations and instances queries, and items of aviation collections
+- CoverageJSON and GeoJSON output formats, and IWXXM, IWXXMZIP and TAC for aviation messages
+- OpenAPI definitions with documentation pages, listed in the API catalog of the server
 - Optional timeseries interface with the query syntax of the TimeSeries plugin
 
 ## Documentation
