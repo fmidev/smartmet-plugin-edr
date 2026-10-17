@@ -21,6 +21,19 @@ namespace EDR
 {
 namespace
 {
+// The number of levels an area query appends: the data levels requested (all of them when none
+// are chosen and no pressures or heights are), and the pressures and heights
+std::size_t requestedLevelCount(const SmartMet::Plugin::EDR::CommonQuery& query,
+                                const SmartMet::Engine::Querydata::Q& q)
+{
+  std::size_t count = query.pressures.size() + query.heights.size();
+  if (!query.levels.empty())
+    count += query.levels.size();
+  else if (query.pressures.empty() && query.heights.empty())
+    count += q->info()->SizeLevels();
+  return count;
+}
+
 
 void require_producer(const std::string& producer, const std::string& place)
 {
@@ -1195,9 +1208,11 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
       if (!querydata_result->empty())
       {
         // if the value is not dependent on location inside area
-        // we just need to have the first one
+        // we just need to have the first one. Not when several levels are requested: their
+        // values are appended level by level, and one value per level would not line up with
+        // the values of every point at every level.
         if (!TS::parameter_is_arithmetic(theParamFunc.parameter) &&
-            theParamFunc.parameter.name() != "level")
+            theParamFunc.parameter.name() != "level" && requestedLevelCount(theQuery, theQ) <= 1)
         {
           auto dataIndependentValue = querydata_result->at(0);
           querydata_result->clear();

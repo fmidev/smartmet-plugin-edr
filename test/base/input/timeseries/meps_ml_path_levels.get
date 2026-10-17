@@ -1,0 +1,2 @@
+GET /timeseries?producer=meps_ml&source=querydata&path=24.7,60.1,25.1,60.3&step=10&levels=60,62,64&starttime=2026-10-15T06:00:00Z&timesteps=1&format=json&tz=UTC&param=name,time,lat,lon,level,pressure,temperature HTTP/1.0
+
