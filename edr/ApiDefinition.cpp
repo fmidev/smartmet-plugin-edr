@@ -87,6 +87,49 @@ const EDRMetaData& most_recent_instance(const std::vector<EDRMetaData>& emds)
   return *ret;
 }
 
+// The collection of the most recent instance emd of the producer, with all instances emds
+Collection make_collection(const std::string& id,
+                           const EDRMetaData& emd,
+                           const std::vector<EDRMetaData>& emds)
+{
+  Collection c;
+  c.id = id;
+  c.source = emd.metadata_source;
+  c.title = emd.collection_info_engine.title;
+  if (c.title.empty() && emd.collection_info != nullptr)
+    c.title = emd.collection_info->title;
+  c.levels = emd.vertical_extent.levels;
+  c.level_type = emd.vertical_extent.level_type;
+
+  // Cube queries are available without levels too, the bounding box selects the data
+  for (const auto& q : query_types)
+    if (emd.data_queries.count(q) > 0)
+      c.queries.push_back(q);
+  c.locations = (emd.data_queries.count("locations") > 0);
+  c.items = (emd.data_queries.count("items") > 0);
+
+  c.formats.assign(emd.output_formats.begin(), emd.output_formats.end());
+  c.default_format = emd.default_output_format;
+  c.parameters.assign(emd.parameter_names.begin(), emd.parameter_names.end());
+
+  if (emds.size() > 1)
+  {
+    std::set<std::string> ids;
+    for (const auto& instance : emds)
+      ids.insert(Fmi::to_iso_string(instance.temporal_extent.origin_time));
+    c.instances.assign(ids.begin(), ids.end());
+  }
+
+  if (emd.locations)
+  {
+    // 'all' selects all the locations
+    c.location_ids.emplace_back("all");
+    for (const auto& loc : *emd.locations)
+      c.location_ids.push_back(loc.first);
+  }
+  return c;
+}
+
 // Collections in the same order and with the same rules as the /collections listing
 std::vector<Collection> get_collections(const EngineMetaData& metadata)
 {
@@ -102,43 +145,7 @@ std::vector<Collection> get_collections(const EngineMetaData& metadata)
       if (emd.parameter_names.empty())
         continue;
 
-      Collection c;
-      c.id = producer_item.first;
-      c.source = emd.metadata_source;
-      c.title = emd.collection_info_engine.title;
-      if (c.title.empty() && emd.collection_info != nullptr)
-        c.title = emd.collection_info->title;
-      c.levels = emd.vertical_extent.levels;
-      c.level_type = emd.vertical_extent.level_type;
-
-      // Cube queries are available without levels too, the bounding box selects the data
-      for (const auto& q : query_types)
-        if (emd.data_queries.count(q) > 0)
-          c.queries.push_back(q);
-      c.locations = (emd.data_queries.count("locations") > 0);
-      c.items = (emd.data_queries.count("items") > 0);
-
-      c.formats.assign(emd.output_formats.begin(), emd.output_formats.end());
-      c.default_format = emd.default_output_format;
-      c.parameters.assign(emd.parameter_names.begin(), emd.parameter_names.end());
-
-      if (emds.size() > 1)
-      {
-        std::set<std::string> ids;
-        for (const auto& instance : emds)
-          ids.insert(Fmi::to_iso_string(instance.temporal_extent.origin_time));
-        c.instances.assign(ids.begin(), ids.end());
-      }
-
-      if (emd.locations)
-      {
-        // 'all' selects all the locations
-        c.location_ids.emplace_back("all");
-        for (const auto& loc : *emd.locations)
-          c.location_ids.push_back(loc.first);
-      }
-
-      ret.push_back(std::move(c));
+      ret.push_back(make_collection(producer_item.first, emd, emds));
     }
   }
   return ret;
@@ -1177,6 +1184,49 @@ JsonValue ts_schema(const TSParameter& p)
   return OA::stringSchema();
 }
 
+// The definition of a TimeSeries API option
+JsonValue ts_parameter(const TSParameter& p,
+                       const std::set<std::string>& producers,
+                       std::size_t max_enum,
+                       const std::string& url)
+{
+  JsonValue schema;
+  const std::string name = p.name;
+  if (name == "producer" || name == "model")
+  {
+    // Producers have aliases and may be combined, so the names are not an enum
+    schema = OA::stringSchema();
+    if (producers.size() <= max_enum)
+      for (const auto& producer : producers)
+        schema["x-known-values"].append(producer);
+  }
+  else if (name == "format")
+  {
+    std::vector<std::string> formats;
+    for (const auto& f : ts_formats)
+      formats.push_back(f.first);
+    schema = OA::enumSchema(formats, max_enum);
+    schema["default"] = "ascii";
+  }
+  else
+    schema = ts_schema(p);
+
+  auto parameter = OA::parameter(name, "query", p.description, schema);
+  parameter["x-group"] = p.group;
+  if (name == "keyword" || name == "inkeyword")
+  {
+    // The documentation page shows the locations of the keyword on a map
+    auto& locations = parameter["x-smartmet-locations"];
+    locations["path"] = url;
+    locations["parameter"] = "keyword";
+    locations["language"] = "lang";
+    locations["query"]["param"] = "name,geoid,fmisid,wmo,lat,lon,elevation,region,country,tz";
+    locations["query"]["timesteps"] = "1";
+    locations["query"]["format"] = "json";
+  }
+  return parameter;
+}
+
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -1353,43 +1403,7 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     params.append(param);
 
     for (const auto& p : ts_parameters)
-    {
-      JsonValue schema;
-      const std::string name = p.name;
-      if (name == "producer" || name == "model")
-      {
-        // Producers have aliases and may be combined, so the names are not an enum
-        schema = OA::stringSchema();
-        if (producers.size() <= max_enum)
-          for (const auto& producer : producers)
-            schema["x-known-values"].append(producer);
-      }
-      else if (name == "format")
-      {
-        std::vector<std::string> formats;
-        for (const auto& f : ts_formats)
-          formats.push_back(f.first);
-        schema = OA::enumSchema(formats, max_enum);
-        schema["default"] = "ascii";
-      }
-      else
-        schema = ts_schema(p);
-
-      auto parameter = OA::parameter(name, "query", p.description, schema);
-      parameter["x-group"] = p.group;
-      if (name == "keyword" || name == "inkeyword")
-      {
-        // The documentation page shows the locations of the keyword on a map
-        auto& locations = parameter["x-smartmet-locations"];
-        locations["path"] = url;
-        locations["parameter"] = "keyword";
-        locations["language"] = "lang";
-        locations["query"]["param"] = "name,geoid,fmisid,wmo,lat,lon,elevation,region,country,tz";
-        locations["query"]["timesteps"] = "1";
-        locations["query"]["format"] = "json";
-      }
-      params.append(parameter);
-    }
+      params.append(ts_parameter(p, producers, max_enum, url));
 
     auto& ok = op["responses"]["200"];
     ok["description"] = "The time series in the requested format";
