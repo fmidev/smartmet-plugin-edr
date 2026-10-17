@@ -3337,6 +3337,262 @@ void add_parameter(const std::string &parameter_name,
   }
 }
 
+// The values of the vertical profile per parameter, their data types and the level values.
+// Parameters' levels of grid producers are fetched as separate parameters, their data is
+// appended into single parameter.
+void collect_vertical_profile_values(const std::vector<TS::TimeSeriesData>& outdata,
+                                     const EDRMetaData& emd,
+                                     const std::vector<Spine::Parameter>& query_parameters,
+                                     unsigned int level_index,
+                                     int level_precision,
+                                     std::map<std::string, Json::Value>& parameter_data_values,
+                                     std::map<std::string, Json::Value>& parameter_data_type,
+                                     Json::Value& level_values)
+{
+  auto values_array = Json::Value(Json::ValueType::arrayValue);
+  std::string prev_param;
+  unsigned int data_index = 0;
+  auto isGridProducer = emd.isGridProducer();
+  // iterate columns (parameters)
+  for (unsigned int j = 0; j < outdata.size(); j++)
+  {
+    auto parameter_name = query_parameters[j].name();
+    const auto& parameter_precision = emd.getPrecision(parameter_name);
+    boost::algorithm::to_lower(parameter_name);
+    if (lon_lat_level_param(parameter_name))
+      continue;
+
+    auto firstParameter = prev_param.empty();
+    auto resetDataIndex = ((!firstParameter) && (!isGridProducer));
+    TS::TimeSeriesPtr ts_data = as_timeseries(outdata.at(j));
+    TS::TimeSeriesPtr ts_level = as_timeseries(outdata.at(level_index));
+
+    if (!ts_data)
+      continue;
+
+    parameter_name = parse_parameter_name(query_parameters[j].originalName());
+
+    if (isGridProducer)
+    {
+      // Parameter's levels are fetched as separate parameters, append their data
+      // into single parameter/values_array
+
+      if (parameter_name != prev_param)
+      {
+        if (!firstParameter)
+        {
+          parameter_data_values[prev_param] = values_array;
+          resetDataIndex = true;
+        }
+
+        prev_param = parameter_name;
+      }
+    }
+
+    if (resetDataIndex)
+    {
+      values_array = Json::Value(Json::ValueType::arrayValue);
+      data_index = 0;
+    }
+
+    add_parameter(parameter_name,
+                  parameter_precision,
+                  ts_data,
+                  ts_level,
+                  level_precision,
+                  firstParameter,
+                  data_index,
+                  values_array,
+                  level_values,
+                  parameter_data_type);
+
+    if (!isGridProducer)
+    {
+      parameter_data_values[parameter_name] = values_array;
+      prev_param = parameter_name;
+    }
+  }
+
+  if (isGridProducer && (!prev_param.empty()))
+    parameter_data_values[prev_param] = values_array;
+}
+
+// The x/y, z and time referencing of a vertical profile
+Json::Value vertical_profile_referencing(const EDRMetaData& emd)
+{
+  // Referencing x,y coordinates
+  auto referencing = Json::Value(Json::ValueType::arrayValue);
+  auto referencing_xy = xy_referencing(emd.output_crs);
+
+  // Referencing z coordinate
+  auto referencing_z = Json::Value(Json::ValueType::objectValue);
+  referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+  referencing_z["coordinates"][0] = Json::Value("z");
+  referencing_z["system"] = VerticalReference::covjson_system(emd.vertical_extent.level_type);
+
+  auto referencing_time = Json::Value(Json::ValueType::objectValue);
+  referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+  referencing_time["coordinates"][0] = Json::Value("t");
+  referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
+  referencing_time["system"]["type"] = Json::Value("TemporalRS");
+  referencing_time["system"]["calendar"] = Json::Value("Gregorian");
+
+  referencing[0] = referencing_xy;
+  referencing[1] = referencing_z;
+  referencing[2] = referencing_time;
+  return referencing;
+}
+
+// The position of the timestep iteration of a vertical profile
+struct ProfileTimeStep
+{
+  std::size_t tStep = 0;
+  TS::TimeSeries::iterator timeIter;
+  std::size_t tS = 0;
+  TS::TimeSeries::iterator tI;
+};
+
+// The domain of a vertical profile coverage without the z axis
+Json::Value vertical_profile_domain(const TS::TimedValue& lon_timed_value,
+                                    const TS::TimedValue& lat_timed_value,
+                                    int longitude_precision,
+                                    int latitude_precision,
+                                    const TS::TimedValue& time_value)
+{
+  auto domain = Json::Value(Json::ValueType::objectValue);
+
+  // The domain type is given by the coverage collection
+  domain["type"] = Json::Value("Domain");
+
+  domain["axes"] = Json::Value(Json::ValueType::objectValue);
+  domain["axes"]["x"] = Json::Value(Json::ValueType::objectValue);
+  domain["axes"]["x"]["values"] = Json::Value(Json::ValueType::arrayValue);
+  auto& x_array = domain["axes"]["x"]["values"];
+  domain["axes"]["y"] = Json::Value(Json::ValueType::objectValue);
+  domain["axes"]["y"]["values"] = Json::Value(Json::ValueType::arrayValue);
+  auto& y_array = domain["axes"]["y"]["values"];
+
+  // One position coordinates do not change
+  x_array[0] = UtilityFunctions::json_value(lon_timed_value.value, longitude_precision);
+  y_array[0] = UtilityFunctions::json_value(lat_timed_value.value, latitude_precision);
+
+  std::string timestep = (Fmi::date_time::to_iso_extended_string(time_value.time.utc_time()) + "Z");
+  auto t_array = Json::Value(Json::ValueType::arrayValue);
+  t_array[0] = Json::Value(timestep);
+  domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
+  domain["axes"]["t"]["values"] = t_array;
+  return domain;
+}
+
+// The requested levels of a vertical profile; empty for pressure levels taken from the data
+Json::Value vertical_profile_levels(const EDRMetaData& emd,
+                                    const std::set<int>& levels,
+                                    bool useDataLevels,
+                                    std::size_t& levelIdx)
+{
+  auto levelArray = Json::Value(Json::ValueType::arrayValue);
+  if (emd.vertical_extent.level_type == "PressureLevel")
+  {
+    if (!useDataLevels)
+    {
+      for (auto level = levels.crbegin(); (level != levels.crend()); level++)
+        levelArray[levelIdx++] = Json::Value(*level);
+    }
+  }
+  else
+  {
+    for (auto level : levels)
+      levelArray[levelIdx++] = Json::Value(level);
+  }
+  return levelArray;
+}
+
+// The values of the timestep of observation (sounding) data. Loads the levels too if none
+// are set yet.
+Json::Value data_level_values(Json::Value& values,
+                              Json::Value& level_values,
+                              std::size_t timeSteps,
+                              ProfileTimeStep& step,
+                              Json::Value& levelArray,
+                              std::size_t& levelIdx)
+{
+  // Observation (sounding) data is in timestep order and itemIdx runs every row (level)
+  // until time changes
+
+  auto valueArray = Json::Value(Json::ValueType::arrayValue);
+  size_t valIdx = 0;
+  size_t itemIdx = step.tStep;
+  step.tS = step.tStep;
+
+  bool loadLevels = (levelArray.size() == 0);
+
+  for (step.tI = step.timeIter; (itemIdx < timeSteps); itemIdx++, valIdx++, step.tI++)
+  {
+    if ((itemIdx != step.tS) && (step.tI->time != step.timeIter->time))
+      break;
+
+    valueArray[valIdx] = values[itemIdx];
+
+    if (loadLevels)
+      levelArray[levelIdx++] = level_values[itemIdx];
+  }
+
+  step.tS = itemIdx;
+  return valueArray;
+}
+
+// The ranges of the parameters of a vertical profile coverage
+Json::Value vertical_profile_ranges(std::map<std::string, Json::Value>& parameter_data_values,
+                                    const std::map<std::string, Json::Value>& parameter_data_type,
+                                    Json::Value& level_values,
+                                    const Json::Value& axis_names,
+                                    bool useDataLevels,
+                                    bool isGridProducer,
+                                    std::size_t lon_size,
+                                    std::size_t timeSteps,
+                                    ProfileTimeStep& step,
+                                    Json::Value& levelArray,
+                                    std::size_t& levelIdx)
+{
+  auto ranges = Json::Value(Json::ValueType::objectValue);
+  for (auto& item : parameter_data_values)
+  {
+    const auto& param_name = item.first;
+
+    // BRAINSTORM-3116 'level' kludge, FIXME !
+    //
+    if (param_name == EDR_OBSERVATION_LEVEL)
+      continue;
+
+    auto param_range = Json::Value(Json::ValueType::objectValue);
+    param_range["type"] = Json::Value("NdArray");
+    param_range["dataType"] = parameter_data_type.at(param_name);  // Json::Value("float");
+    param_range["axisNames"] = axis_names;
+
+    auto valueArray = Json::Value(Json::ValueType::arrayValue);
+
+    if (useDataLevels)
+      valueArray =
+          data_level_values(item.second, level_values, timeSteps, step, levelArray, levelIdx);
+    else
+    {
+      // Every n'th item value has data for the timestep
+      std::size_t itemCnt = (isGridProducer ? item.second.size() : lon_size);
+      for (std::size_t itemIdx = step.tStep, valIdx = 0; (itemIdx < itemCnt);
+           itemIdx += timeSteps, valIdx++)
+        valueArray[valIdx] = item.second[itemIdx];
+    }
+
+    auto shape = Json::Value(Json::ValueType::arrayValue);
+    shape[0] = valueArray.size();
+
+    param_range["shape"] = shape;
+    param_range["values"] = valueArray;
+    ranges[param_name] = param_range;
+  }
+  return ranges;
+}
+
 Json::Value format_output_data_vertical_profile(
     const TS::OutputData &outputData,
     const EDRMetaData &emd,
@@ -3371,72 +3627,15 @@ Json::Value format_output_data_vertical_profile(
     std::map<std::string, Json::Value> parameter_data_type;
     //	std::map<std::string, Json::Value> parameter_level_values;
     auto level_values = Json::Value(Json::ValueType::arrayValue);
-    auto values_array = Json::Value(Json::ValueType::arrayValue);
-    std::string prev_param;
-    unsigned int data_index = 0;
     auto isGridProducer = emd.isGridProducer();
-    // iterate columns (parameters)
-    for (unsigned int j = 0; j < outdata.size(); j++)
-    {
-      auto parameter_name = query_parameters[j].name();
-      const auto &parameter_precision = emd.getPrecision(parameter_name);
-      boost::algorithm::to_lower(parameter_name);
-      if (lon_lat_level_param(parameter_name))
-        continue;
-
-      auto firstParameter = prev_param.empty();
-      auto resetDataIndex = ((!firstParameter) && (!isGridProducer));
-      TS::TimeSeriesPtr ts_data = as_timeseries(outdata.at(j));
-      TS::TimeSeriesPtr ts_level = as_timeseries(outdata.at(level_index));
-
-      if (!ts_data)
-        continue;
-
-      parameter_name = parse_parameter_name(query_parameters[j].originalName());
-
-      if (isGridProducer)
-      {
-        // Parameter's levels are fetched as separate parameters, append their data
-        // into single parameter/values_array
-
-        if (parameter_name != prev_param)
-        {
-          if (!firstParameter)
-          {
-            parameter_data_values[prev_param] = values_array;
-            resetDataIndex = true;
-          }
-
-          prev_param = parameter_name;
-        }
-      }
-
-      if (resetDataIndex)
-      {
-        values_array = Json::Value(Json::ValueType::arrayValue);
-        data_index = 0;
-      }
-
-      add_parameter(parameter_name,
-                    parameter_precision,
-                    ts_data,
-                    ts_level,
-                    level_precision,
-                    firstParameter,
-                    data_index,
-                    values_array,
-                    level_values,
-                    parameter_data_type);
-
-      if (!isGridProducer)
-      {
-        parameter_data_values[parameter_name] = values_array;
-        prev_param = parameter_name;
-      }
-    }
-
-    if (isGridProducer && (!prev_param.empty()))
-      parameter_data_values[prev_param] = values_array;
+    collect_vertical_profile_values(outdata,
+                                    emd,
+                                    query_parameters,
+                                    level_index,
+                                    level_precision,
+                                    parameter_data_values,
+                                    parameter_data_type,
+                                    level_values);
 
     if (parameter_data_values.empty())
       return coverageCollection;
@@ -3462,139 +3661,41 @@ Json::Value format_output_data_vertical_profile(
     const auto &lon_timed_value = ts_lon->front();
     const auto &lat_timed_value = ts_lat->front();
 
-    // Referencing x,y coordinates
-    auto referencing = Json::Value(Json::ValueType::arrayValue);
-    auto referencing_xy = xy_referencing(emd.output_crs);
-
-    // Referencing z coordinate
-    auto referencing_z = Json::Value(Json::ValueType::objectValue);
-    referencing_z["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-    referencing_z["coordinates"][0] = Json::Value("z");
-    referencing_z["system"] = VerticalReference::covjson_system(emd.vertical_extent.level_type);
-
-    auto referencing_time = Json::Value(Json::ValueType::objectValue);
-    referencing_time["coordinates"] = Json::Value(Json::ValueType::arrayValue);
-    referencing_time["coordinates"][0] = Json::Value("t");
-    referencing_time["system"] = Json::Value(Json::ValueType::objectValue);
-    referencing_time["system"]["type"] = Json::Value("TemporalRS");
-    referencing_time["system"]["calendar"] = Json::Value("Gregorian");
-
-    referencing[0] = referencing_xy;
-    referencing[1] = referencing_z;
-    referencing[2] = referencing_time;
-
-    coverageCollection["referencing"] = referencing;
+    coverageCollection["referencing"] = vertical_profile_referencing(emd);
 
     // Iterate coverages/timesteps
-    auto timeIter = ts_lon->begin();
-    auto tI = timeIter;
+    ProfileTimeStep step;
+    step.timeIter = ts_lon->begin();
+    step.tI = step.timeIter;
     size_t timeSteps = 0;
-    size_t tS = 0;
 
     if (useDataLevels)
       timeSteps = ts_lon->size();
     else
       timeSteps = (isGridProducer ? ts_lon->size() : (ts_lon->size() / levels.size()));
 
-    for (std::size_t tStep = 0, coverageIdx = 0; (tStep < timeSteps);)
+    for (std::size_t coverageIdx = 0; (step.tStep < timeSteps);)
     {
-      auto ranges = Json::Value(Json::ValueType::objectValue);
-      auto domain = Json::Value(Json::ValueType::objectValue);
+      auto domain = vertical_profile_domain(lon_timed_value,
+                                            lat_timed_value,
+                                            longitude_precision,
+                                            latitude_precision,
+                                            *step.timeIter);
 
-      // The domain type is given by the coverage collection
-      domain["type"] = Json::Value("Domain");
-
-      domain["axes"] = Json::Value(Json::ValueType::objectValue);
-      domain["axes"]["x"] = Json::Value(Json::ValueType::objectValue);
-      domain["axes"]["x"]["values"] = Json::Value(Json::ValueType::arrayValue);
-      auto &x_array = domain["axes"]["x"]["values"];
-      domain["axes"]["y"] = Json::Value(Json::ValueType::objectValue);
-      domain["axes"]["y"]["values"] = Json::Value(Json::ValueType::arrayValue);
-      auto &y_array = domain["axes"]["y"]["values"];
-
-      // One position coordinates do not change
-      x_array[0] = UtilityFunctions::json_value(lon_timed_value.value, longitude_precision);
-      y_array[0] = UtilityFunctions::json_value(lat_timed_value.value, latitude_precision);
-
-      auto levelArray = Json::Value(Json::ValueType::arrayValue);
       std::size_t levelIdx = 0;
-      if (emd.vertical_extent.level_type == "PressureLevel")
-      {
-        if (!useDataLevels)
-        {
-          for (auto level = levels.crbegin(); (level != levels.crend()); level++)
-            levelArray[levelIdx++] = Json::Value(*level);
-        }
-      }
-      else
-      {
-        for (auto level : levels)
-          levelArray[levelIdx++] = Json::Value(level);
-      }
+      auto levelArray = vertical_profile_levels(emd, levels, useDataLevels, levelIdx);
 
-      std::string timestep =
-          (Fmi::date_time::to_iso_extended_string(timeIter->time.utc_time()) + "Z");
-      auto t_array = Json::Value(Json::ValueType::arrayValue);
-      t_array[0] = Json::Value(timestep);
-      domain["axes"]["t"] = Json::Value(Json::ValueType::objectValue);
-      domain["axes"]["t"]["values"] = t_array;
-
-      for (auto &item : parameter_data_values)
-      {
-        const auto &param_name = item.first;
-
-        // BRAINSTORM-3116 'level' kludge, FIXME !
-        //
-        if (param_name == EDR_OBSERVATION_LEVEL)
-          continue;
-
-        auto param_range = Json::Value(Json::ValueType::objectValue);
-        param_range["type"] = Json::Value("NdArray");
-        param_range["dataType"] = parameter_data_type.at(param_name);  // Json::Value("float");
-        param_range["axisNames"] = axis_names;
-
-        auto valueArray = Json::Value(Json::ValueType::arrayValue);
-
-        if (useDataLevels)
-        {
-          // Observation (sounding) data is in timestep order and itemIdx runs every row (level)
-          // until time changes
-
-          size_t valIdx = 0;
-          size_t itemIdx = tStep;
-          tS = tStep;
-
-          bool loadLevels = (levelArray.size() == 0);
-
-          for (tI = timeIter; (itemIdx < timeSteps); itemIdx++, valIdx++, tI++)
-          {
-            if ((itemIdx != tS) && (tI->time != timeIter->time))
-              break;
-
-            valueArray[valIdx] = item.second[itemIdx];
-
-            if (loadLevels)
-              levelArray[levelIdx++] = level_values[itemIdx];
-          }
-
-          tS = itemIdx;
-        }
-        else
-        {
-          // Every n'th item value has data for the timestep
-          std::size_t itemCnt = (isGridProducer ? item.second.size() : ts_lon->size());
-          for (std::size_t itemIdx = tStep, valIdx = 0; (itemIdx < itemCnt);
-               itemIdx += timeSteps, valIdx++)
-            valueArray[valIdx] = item.second[itemIdx];
-        }
-
-        auto shape = Json::Value(Json::ValueType::arrayValue);
-        shape[0] = valueArray.size();
-
-        param_range["shape"] = shape;
-        param_range["values"] = valueArray;
-        ranges[param_name] = param_range;
-      }
+      auto ranges = vertical_profile_ranges(parameter_data_values,
+                                            parameter_data_type,
+                                            level_values,
+                                            axis_names,
+                                            useDataLevels,
+                                            isGridProducer,
+                                            ts_lon->size(),
+                                            timeSteps,
+                                            step,
+                                            levelArray,
+                                            levelIdx);
 
       domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
       domain["axes"]["z"]["values"] = levelArray;
@@ -3607,13 +3708,13 @@ Json::Value format_output_data_vertical_profile(
 
       if (useDataLevels)
       {
-        tStep = tS;
-        timeIter = tI;
+        step.tStep = step.tS;
+        step.timeIter = step.tI;
       }
       else
       {
-        tStep++;
-        timeIter++;
+        step.tStep++;
+        step.timeIter++;
       }
     }
 
