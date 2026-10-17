@@ -1561,6 +1561,61 @@ void PluginImpl::checkNewDataAndNotify(const std::shared_ptr<EngineMetaData>& ne
   }
 }
 
+namespace
+{
+#ifndef WITHOUT_OBSERVATION
+// The stations of an observation producer, none if they cannot be read
+SupportedLocations station_locations(Engine::Observation::Engine& obsEngine,
+                                     const std::string& producer)
+{
+  Engine::Observation::Settings settings;
+  settings.stationtype = producer;
+  settings.allplaces = true;
+  Spine::Stations stations;
+  try
+  {
+    obsEngine.getStations(stations, settings);
+  }
+  catch (...)
+  {
+    // A station type without a working database driver must not prevent the
+    // locations of the other producers from being listed
+    Fmi::Exception::Trace(BCP, "Failed to read the stations of producer " + producer)
+        .disableStackTrace()
+        .printError();
+    return {};
+  }
+  SupportedLocations sls;
+  for (const auto& station : stations)
+  {
+    if (station.fmisid == 0 || station.geoid == 0)
+      continue;
+    location_info li(station);
+    sls[li.id] = li;
+  }
+  return sls;
+}
+#endif
+
+// The locations of the keywords
+SupportedLocations keyword_locations(const Engine::Geonames::Engine& geoEngine,
+                                     const Locus::QueryOptions& opts,
+                                     const std::set<std::string>& keywords)
+{
+  SupportedLocations sls;
+  for (const auto& keyword : keywords)
+  {
+    auto llist = geoEngine.keywordSearch(opts, keyword);
+    for (const auto& loc : llist)
+    {
+      location_info li(loc, keyword);
+      sls[li.id] = li;
+    }
+  }
+  return sls;
+}
+}  // namespace
+
 void PluginImpl::updateSupportedLocations()
 {
   try
@@ -1572,31 +1627,7 @@ void PluginImpl::updateSupportedLocations()
       obs_producers = itsEngines.obsEngine->getValidStationTypes();
       for (const auto& producer : obs_producers)
       {
-        Engine::Observation::Settings settings;
-        settings.stationtype = producer;
-        settings.allplaces = true;
-        Spine::Stations stations;
-        try
-        {
-          itsEngines.obsEngine->getStations(stations, settings);
-        }
-        catch (...)
-        {
-          // A station type without a working database driver must not prevent the
-          // locations of the other producers from being listed
-          Fmi::Exception::Trace(BCP, "Failed to read the stations of producer " + producer)
-              .disableStackTrace()
-              .printError();
-          continue;
-        }
-        SupportedLocations sls;
-        for (const auto& station : stations)
-        {
-          if (station.fmisid == 0 || station.geoid == 0)
-            continue;
-          location_info li(station);
-          sls[li.id] = li;
-        }
+        SupportedLocations sls = station_locations(*itsEngines.obsEngine, producer);
         if (!sls.empty())
           itsSupportedLocations[producer] =
               std::make_shared<const SupportedLocations>(std::move(sls));
@@ -1623,16 +1654,7 @@ void PluginImpl::updateSupportedLocations()
       if (qd_native_location_producers.find(producer) != qd_native_location_producers.end())
         continue;
       Spine::LocationList producer_llist;
-      SupportedLocations sls;
-      for (const auto& keyword : item.second)
-      {
-        auto llist = itsEngines.geoEngine->keywordSearch(opts, keyword);
-        for (const auto& loc : llist)
-        {
-          location_info li(loc, keyword);
-          sls[li.id] = li;
-        }
-      }
+      SupportedLocations sls = keyword_locations(*itsEngines.geoEngine, opts, item.second);
       if (!sls.empty())
         itsSupportedLocations[producer] =
             std::make_shared<const SupportedLocations>(std::move(sls));
