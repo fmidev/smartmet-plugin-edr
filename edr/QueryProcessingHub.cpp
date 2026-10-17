@@ -1618,7 +1618,7 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
           itsObsEngineQuery.isObsProducer(areaproducers.front()))
       {
         // Cannot cache observations! Safety check only, this has already been checked at the start
-        return 0;
+        return Fmi::bad_hash;
       }
       else
 #endif
@@ -1635,7 +1635,7 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
                            no_data_locations,
                            locations_with_data,
                            hash))
-          return 0;
+          return Fmi::bad_hash;
       }
 
       // get the latestTimestep from previous query
