@@ -1675,7 +1675,8 @@ edr_temporal_extent obs_temporal_extent(const Engine::Observation::MetaData& obs
 
   temporal_extent_period.end_time = end_time;
   temporal_extent_period.timestep = obs_md.timestep;
-  temporal_extent_period.timesteps = (periodLength / obs_md.timestep);
+  // Irregular data has no timestep and thus no timestep count
+  temporal_extent_period.timesteps = (obs_md.timestep > 0 ? periodLength / obs_md.timestep : 0);
   temporal_extent.time_periods.push_back(temporal_extent_period);
   return temporal_extent;
 }
