@@ -83,7 +83,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-test-data >= 26.8.26
+#TestRequires: smartmet-test-data >= 26.10.17
 #TestRequires: smartmet-library-grid-files-test >= 26.10.16
 #TestRequires: smartmet-library-gis >= 26.10.16
 #TestRequires: smartmet-engine-avi >= 26.10.16
