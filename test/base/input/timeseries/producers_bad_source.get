@@ -1,0 +1,3 @@
+GET /timeseries/api/producers?source=xyz HTTP/1.0
+X-Test-Headers: Content-Type
+

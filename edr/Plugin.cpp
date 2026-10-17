@@ -91,9 +91,11 @@ void Plugin::init()
       // The OpenAPI definition of the TimeSeries API and its documentation pages
       if (new_impl->itsConfig.openAPISettings().enabled)
       {
-        for (const auto& api_url : {ts_url + "/api", ts_url + "/api/docs"})
+        for (const auto& api_url :
+             {ts_url + "/api", ts_url + "/api/docs", ts_url + "/api/producers"})
         {
-          const bool prefix = (api_url != ts_url + "/api");
+          const bool prefix =
+              (api_url == ts_url + "/api/docs" || api_url == ts_url + "/api/producers");
           if (!itsReactor->addContentHandler(
                   this,
                   api_url,

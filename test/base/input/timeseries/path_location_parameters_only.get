@@ -1,0 +1,2 @@
+GET /timeseries?producer=pal_skandinavia&source=querydata&path=24.7,60.1,25.5,60.3&step=20&starttime=2008-08-05T00:00:00Z&timesteps=1&format=json&param=lon,lat HTTP/1.0
+

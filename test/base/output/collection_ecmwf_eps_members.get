@@ -1,0 +1,606 @@
+{
+	"id" : "ecmwf_eps",
+	"title" : "ecmwf_eps",
+	"links" : 
+	[
+		{
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps",
+			"hreflang" : "en",
+			"rel" : "self",
+			"type" : "application/json"
+		},
+		{
+			"href" : "https://en.ilmatieteenlaitos.fi/open-data-licence",
+			"hreflang" : "en",
+			"rel" : "license",
+			"type" : "text/html"
+		},
+		{
+			"title" : "Area query",
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/area",
+			"rel" : "data",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"title" : "Corridor query",
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/corridor",
+			"rel" : "data",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"title" : "Cube query",
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/cube",
+			"rel" : "data",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"title" : "Locations query",
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/locations",
+			"rel" : "data",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"title" : "Position query",
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/position",
+			"rel" : "data",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"title" : "Radius query",
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/radius",
+			"rel" : "data",
+			"type" : "application/vnd.cov+json"
+		},
+		{
+			"title" : "Trajectory query",
+			"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/trajectory",
+			"rel" : "data",
+			"type" : "application/vnd.cov+json"
+		}
+	],
+	"output_formats" : 
+	[
+		"CoverageJSON",
+		"GeoJSON"
+	],
+	"keywords" : 
+	[
+		"cape",
+		"precipitationamount",
+		"snowaccumulation",
+		"temperature",
+		"totalcloudcover",
+		"windgust",
+		"windums",
+		"windvms"
+	],
+	"crs" : 
+	[
+		"OGC:CRS84",
+		"EPSG:3067",
+		"EPSG:4326"
+	],
+	"data_queries" : 
+	{
+		"area" : 
+		{
+			"link" : 
+			{
+				"title" : "Area query",
+				"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/area",
+				"hreflang" : "en",
+				"rel" : "data",
+				"type" : "application/vnd.cov+json",
+				"variables" : 
+				{
+					"title" : "Area query",
+					"description" : "Data at the requested area",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
+					"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
+					"crs_details" : 
+					[
+						{
+							"crs" : "OGC:CRS84",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						},
+						{
+							"crs" : "EPSG:3067",
+							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+						},
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"query_type" : "area"
+				}
+			}
+		},
+		"corridor" : 
+		{
+			"link" : 
+			{
+				"title" : "Corridor query",
+				"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/corridor",
+				"hreflang" : "en",
+				"rel" : "data",
+				"type" : "application/vnd.cov+json",
+				"variables" : 
+				{
+					"title" : "Corridor query",
+					"description" : "Data within corridor",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
+					"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
+					"crs_details" : 
+					[
+						{
+							"crs" : "OGC:CRS84",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						},
+						{
+							"crs" : "EPSG:3067",
+							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+						},
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"height_units" : 
+					[
+						"m",
+						"km",
+						"mi",
+						"ft"
+					],
+					"query_type" : "corridor",
+					"width_units" : 
+					[
+						"m",
+						"km",
+						"mi"
+					]
+				}
+			}
+		},
+		"cube" : 
+		{
+			"link" : 
+			{
+				"title" : "Cube query",
+				"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/cube",
+				"hreflang" : "en",
+				"rel" : "data",
+				"type" : "application/vnd.cov+json",
+				"variables" : 
+				{
+					"title" : "Cube query",
+					"description" : "Data inside requested bounding box",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
+					"crs_details" : 
+					[
+						{
+							"crs" : "OGC:CRS84",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						},
+						{
+							"crs" : "EPSG:3067",
+							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+						},
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"height_units" : 
+					[
+						"m"
+					],
+					"query_type" : "cube"
+				}
+			}
+		},
+		"locations" : 
+		{
+			"link" : 
+			{
+				"title" : "Locations query",
+				"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/locations",
+				"hreflang" : "en",
+				"rel" : "data",
+				"type" : "application/vnd.cov+json",
+				"variables" : 
+				{
+					"title" : "Locations query",
+					"description" : "Data at point location defined by a unique identifier",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
+					"crs_details" : 
+					[
+						{
+							"crs" : "OGC:CRS84",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						},
+						{
+							"crs" : "EPSG:3067",
+							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+						},
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"multiple_locations" : false,
+					"query_type" : "locations"
+				}
+			}
+		},
+		"position" : 
+		{
+			"link" : 
+			{
+				"title" : "Position query",
+				"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/position",
+				"hreflang" : "en",
+				"rel" : "data",
+				"type" : "application/vnd.cov+json",
+				"variables" : 
+				{
+					"title" : "Position query",
+					"description" : "Data at point location",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
+					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+					"crs_details" : 
+					[
+						{
+							"crs" : "OGC:CRS84",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						},
+						{
+							"crs" : "EPSG:3067",
+							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+						},
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"query_type" : "position"
+				}
+			}
+		},
+		"radius" : 
+		{
+			"link" : 
+			{
+				"title" : "Radius query",
+				"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/radius",
+				"hreflang" : "en",
+				"rel" : "data",
+				"type" : "application/vnd.cov+json",
+				"variables" : 
+				{
+					"title" : "Radius query",
+					"description" : "Data at the area specified with a geographic position and radial distance",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
+					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
+					"crs_details" : 
+					[
+						{
+							"crs" : "OGC:CRS84",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						},
+						{
+							"crs" : "EPSG:3067",
+							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+						},
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"query_type" : "radius",
+					"within_units" : 
+					[
+						"m",
+						"km",
+						"mi"
+					]
+				}
+			}
+		},
+		"trajectory" : 
+		{
+			"link" : 
+			{
+				"title" : "Trajectory query",
+				"href" : "http://smartmet.fmi.fi/edr/collections/ecmwf_eps/trajectory",
+				"hreflang" : "en",
+				"rel" : "data",
+				"type" : "application/vnd.cov+json",
+				"variables" : 
+				{
+					"title" : "Trajectory query",
+					"description" : "Data along trajectory",
+					"output_formats" : 
+					[
+						"CoverageJSON",
+						"GeoJSON"
+					],
+					"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
+					"crs_details" : 
+					[
+						{
+							"crs" : "OGC:CRS84",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
+						},
+						{
+							"crs" : "EPSG:3067",
+							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
+						},
+						{
+							"crs" : "EPSG:4326",
+							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+						}
+					],
+					"default_output_format" : "CoverageJSON",
+					"query_type" : "trajectory"
+				}
+			}
+		}
+	},
+	"extent" : 
+	{
+		"custom" : 
+		[
+			{
+				"id" : "timestep",
+				"interval" : 
+				[
+					[
+						360,
+						1440
+					]
+				],
+				"reference" : "minutes",
+				"values" : 
+				[
+					360,
+					720,
+					1440
+				]
+			}
+		],
+		"spatial" : 
+		{
+			"crs" : "OGC:CRS84",
+			"bbox" : 
+			[
+				[
+					21.5492,
+					58.7085,
+					28.447,
+					62.7865
+				]
+			]
+		},
+		"temporal" : 
+		{
+			"interval" : 
+			[
+				[
+					"2014-02-20T06:00:00Z",
+					"2014-03-07T00:00:00Z"
+				]
+			],
+			"trs" : "Gregorian",
+			"values" : 
+			[
+				"R59/2014-02-20T06:00:00Z/PT360M"
+			]
+		},
+		"vertical" : 
+		{
+			"interval" : 
+			[
+				[
+					"1",
+					"51"
+				]
+			],
+			"values" : 
+			[
+				"1",
+				"2",
+				"3",
+				"4",
+				"5",
+				"6",
+				"7",
+				"8",
+				"9",
+				"10",
+				"11",
+				"12",
+				"13",
+				"14",
+				"15",
+				"16",
+				"17",
+				"18",
+				"19",
+				"20",
+				"21",
+				"22",
+				"23",
+				"24",
+				"25",
+				"26",
+				"27",
+				"28",
+				"29",
+				"30",
+				"31",
+				"32",
+				"33",
+				"34",
+				"35",
+				"36",
+				"37",
+				"38",
+				"39",
+				"40",
+				"41",
+				"42",
+				"43",
+				"44",
+				"45",
+				"46",
+				"47",
+				"48",
+				"49",
+				"50",
+				"51"
+			],
+			"vrs" : "PARAMETRICCRS[\"Ensemble member\",PDATUM[\"Members of an ensemble forecast\"],CS[parametric,1],AXIS[\"ensemble member (n)\",up],PARAMETRICUNIT[\"unity\",1.0]]"
+		}
+	},
+	"parameter_names" : 
+	{
+		"cape" : 
+		{
+			"id" : "CAPE",
+			"description" : "Convective available potential energy [J kg**-1]",
+			"label" : "CAPE",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "CAPE",
+				"label" : "CAPE"
+			}
+		},
+		"precipitationamount" : 
+		{
+			"id" : "PrecipitationAmount",
+			"description" : "Precipitation amount",
+			"label" : "PrecipitationAmount",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "PrecipitationAmount",
+				"label" : "PrecipitationAmount"
+			}
+		},
+		"snowaccumulation" : 
+		{
+			"id" : "SnowAccumulation",
+			"description" : "Snow accumulation",
+			"label" : "SnowAccumulation",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "SnowAccumulation",
+				"label" : "SnowAccumulation"
+			}
+		},
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"description" : "Ilman lämpötila",
+			"label" : "Temperature",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : "Temperature"
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : "Celsius",
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		},
+		"totalcloudcover" : 
+		{
+			"id" : "TotalCloudCover",
+			"description" : "TotalCloudCover",
+			"label" : "TotalCloudCover",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "TotalCloudCover",
+				"label" : "TotalCloudCover"
+			}
+		},
+		"windgust" : 
+		{
+			"id" : "WindGust",
+			"description" : "Wind gust",
+			"label" : "WindGust",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "WindGust",
+				"label" : "WindGust"
+			}
+		},
+		"windums" : 
+		{
+			"id" : "WindUMS",
+			"description" : "WindUMS",
+			"label" : "WindUMS",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "WindUMS",
+				"label" : "WindUMS"
+			}
+		},
+		"windvms" : 
+		{
+			"id" : "WindVMS",
+			"description" : "WindVMS",
+			"label" : "WindVMS",
+			"type" : "Parameter",
+			"observedProperty" : 
+			{
+				"id" : "WindVMS",
+				"label" : "WindVMS"
+			}
+		}
+	}
+}

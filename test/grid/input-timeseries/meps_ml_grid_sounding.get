@@ -1,0 +1,2 @@
+GET /timeseries?producer=meps_ml&source=grid&place=Helsinki&starttime=2026-10-15T06:00:00Z&timesteps=1&format=json&tz=UTC&param=name,time,level,P-PA,T-K,TD-K,RH-PRCNT,U-MS,V-MS HTTP/1.0
+

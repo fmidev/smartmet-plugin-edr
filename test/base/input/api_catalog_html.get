@@ -1,0 +1,4 @@
+GET /api HTTP/1.0
+Accept: text/html
+X-Test-Headers: Content-Type
+

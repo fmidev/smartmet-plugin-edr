@@ -123,6 +123,17 @@ The name(s) of the producer(s) can be defined using the 'producer' parameter in
 the request. If no producer is defined then the QEngine/ObsEngine module tries
 to find a valid data based on the requested location.
 
+The producers the interface reads are listed at `/timeseries/api/producers` with their
+parameters, areas, times and levels; `source=querydata`, `grid` or `observation` selects one
+source. The level types are named alike for all sources (`pressure`, `hybrid`, `height`,
+`depth`, ...) and the level values are those of the `levels` option, for example hPa for
+pressure levels. `/timeseries/api/producers/{producer}` gives one producer with the
+descriptions of its parameters and its locations (for observation producers the stations with
+their identifiers, coordinates and periods of operation), and for grid producers what their
+parameter keys may contain
+(see [Unique Parameter Keys](#unique-parameter-keys)). When several sources have a producer of
+the same name, `source` selects one, both here and in data requests.
+
 The timeseries interface can fetch data from several producers using a single request
 by giving the names of the producers separated by a comma (e.g.
 producer=fmi,hirlam') or a semicolon(e.g. producer=fmi;road). The semicolon is
@@ -623,7 +634,20 @@ Notice, that we can also leave some field empty when there are no multiple value
 
 It is also good to notice that if we are using "traditional" parameter names like "Temperature" instead of new names like "T-K", it usually means that the original data (= Temperature in Kelvins) is converted (Kelvin => Celcius) during the request. These conversions are defined in the SmartMet Server configuration / mapping files. The same files are used in order to define interpolation methods for different parameters. For example, temperature values are usully interpolated linearly, meanwhile direction parameters (like wind directions) are not necessary interpolated at all (i.e. the request picks the value from the nearest grid point).
 
-The easies way to find out unique parameter keys is to use the grid-gui-plugin.
+The easies way to find out unique parameter keys is to use the grid-gui-plugin, or
+`/timeseries/api/producers/{producer}?source=grid`, which lists the model runs of the producer
+and, for the latest run (or the one given with `origintime`), the geometries and per parameter
+the level types and levels, the forecast types and ensemble members, the aggregation and the
+number of times. Its level `values` are in the units of the `levels` option (hPa for pressure
+levels) and its level `keys` in the units of the parameter keys (Pa):
+
+```text
+smartmet.fmi.fi/timeseries/api/producers/ecmwf_skandinavia_painepinta?source=grid
+```
+
+A key that names one level gives one row per time; a parameter without a level gives a row per
+level of the producer, which the `level` parameter tells apart. The levels of a parameter
+without a key can also be chosen with the `levels` option, e.g. `levels=850,500`.
 
 
 ### Additional Parameters
@@ -736,6 +760,7 @@ over a given geographical area
 | Function                    | Description                                                                                                                                                                   |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | median(field)               | The median value of the field evaluated over the given area.                                                                                                                  |
+| percentile\[p](field)       | The p:th percentile (0...100) of the field values over the given area, interpolated linearly between the ranks: percentile\[90](temperature) is exceeded by a tenth of the values. |
 | mean(field)                 | The mean value of the field evaluated over the given area.                                                                                                                    |
 | circlemean(field)           | The circular mean value of a direction parameter over the given area or time.                                                                                                 |
 | min(field)                  | The minimum value of the field in the given area.                                                                                                                             |
@@ -785,6 +810,7 @@ necessary returned to the user.
 | interpolatedir_t(field/btime/atime)  | Same as above but for direction parameters in range 0...360.                                                                                                                            |
 | nearest_t(field/btime/atime)         | Replaces the missing value with nearest value inside given time interval.                                                                                                               |
 | median_t(field/btime/atime)          | The median value of the field evaluated over the given time interval.                                                                                                                   |
+| percentile_t\[p](field/btime/atime)  | The p:th percentile (0...100) of the field values in the given time interval, interpolated linearly between the ranks.                                                                  |
 | amean_t(field/btime/atime)           | The arithmetic mean value of the field evaluated over the given time interval.                                                                                                          |
 | mean_t(field/btime/atime)            | The mean value of the field evaluated over the given time interval by using the trapezoidal rule.                                                                                       |
 | meandir_t(field/btime/atime)         | Same as above but for direction parameters in range 0...360.                                                                                                                            |
@@ -797,7 +823,7 @@ necessary returned to the user.
 | trend_t(field/btime/atime)           | The trend of the field values calculated over the given time interval.                                                                                                                  |
 | change_t(field/btime/atime)          | The change of the field values calculated over the given time interval.                                                                                                                 |
 | count_t\[min:max](field/btime/atime) | The number of the field values in the given range (min..max) calculated  over the given time interval. The function returns the total number of the field values if no range is given . |
-| percentage_\[min:max](field)         | The percentage of the field values in the given range (min..max) calculated over the given time interval.                                                                               |
+| percentage_t\[min:max](field)        | The percentage of the field values in the given range (min..max) calculated over the given time interval.                                                                               |
 
 Example
 
@@ -1046,6 +1072,17 @@ weather station and not the area. Grouping the results is the default and it is
 not necessary to use `groupareas=1` in the querystring.
 
 ![Result of groupareas example](img/groupareas.png)
+
+### Statistics of Several Locations
+
+`grouplocations=1` treats the given locations as one area, so that the area
+functions summarize them: the locations of `lonlat(s)`, `latlon(s)`,
+`place(s)`, `keyword`, `fmisid`, `lpnn` or `wmo`. For example the median and
+the 10 % and 90 % percentiles of the temperatures at the stations of a keyword:
+
+```text
+/timeseries?producer=pal_skandinavia&keyword=finavia&grouplocations=1&param=time,nanpercentile_a[10](temperature),nanmedian_a(temperature),nanpercentile_a[90](temperature)
+```
 
 
 ## Observations

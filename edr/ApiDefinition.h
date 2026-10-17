@@ -36,6 +36,10 @@ Spine::OpenAPI::Document edr(const Config& config, const EngineMetaData& metadat
 
 // The OpenAPI definition of the TimeSeries API served at 'url' (e.g. "/timeseries").
 // Paths are absolute, the server URL is the host root.
+// The title and description of the TimeSeries API, also used in the API catalog
+extern const char* const TIMESERIES_TITLE;
+extern const char* const TIMESERIES_DESCRIPTION;
+
 Spine::OpenAPI::Document timeseries(const Config& config,
                                     const EngineMetaData& metadata,
                                     const std::string& url);

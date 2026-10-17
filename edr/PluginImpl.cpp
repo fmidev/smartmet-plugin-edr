@@ -7,14 +7,16 @@
 #include "PluginImpl.h"
 #include "ApiDefinition.h"
 #include "EDRException.h"
+#include "ProducerCatalog.h"
 #include "QueryProcessingHub.h"
 #include "State.h"
 #include "TimeSeriesQuery.h"
 #include "UtilityFunctions.h"
 #include <engines/gis/Engine.h>
 #include <fmt/format.h>
-#include <macgyver/StringConversion.h>
 #include <macgyver/Hash.h>
+#include <macgyver/StringConversion.h>
+#include <boost/algorithm/string.hpp>
 #include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
@@ -666,6 +668,9 @@ void PluginImpl::grouplocations(Spine::HTTP::Request& request) const
     if (!latlons)
       latlons = request.getParameter("latlon");
     auto places = request.getParameter("places");
+    if (!places)
+      places = request.getParameter("place");
+    auto keyword = request.getParameter("keyword");
     auto fmisid = request.getParameter("fmisid");
     auto lpnn = request.getParameter("lpnn");
     auto wmo = request.getParameter("wmo");
@@ -673,7 +678,25 @@ void PluginImpl::grouplocations(Spine::HTTP::Request& request) const
     std::string wkt_multipoint = "MULTIPOINT(";
     parse_lonlats(lonlats, request, wkt_multipoint);
     parse_latlons(latlons, request, wkt_multipoint);
+    if (places)
+      request.removeParameter("place");
     parse_places(places, request, wkt_multipoint, itsEngines.geoEngine.get());
+
+    // The locations of a keyword
+    if (keyword)
+    {
+      request.removeParameter("keyword");
+      Locus::QueryOptions opts;
+      opts.SetLanguage(
+          Spine::optional_string(request.getParameter("lang"), itsConfig.defaultLanguage()));
+      for (const auto& loc : itsEngines.geoEngine->keywordSearch(opts, *keyword))
+      {
+        if (wkt_multipoint != "MULTIPOINT(")
+          wkt_multipoint += ",";
+        wkt_multipoint +=
+            "(" + Fmi::to_string(loc->longitude) + " " + Fmi::to_string(loc->latitude) + ")";
+      }
+    }
 
     std::vector<int> fmisids;
     std::vector<int> lpnns;
@@ -695,6 +718,11 @@ void PluginImpl::grouplocations(Spine::HTTP::Request& request) const
                           Fmi::to_string(lopt.loc->latitude) + ")";
       }
     }
+
+    if (wkt_multipoint == "MULTIPOINT(")
+      throw Fmi::Exception(BCP,
+                           "grouplocations needs locations: lonlat(s), latlon(s), place(s), "
+                           "keyword, fmisid, lpnn or wmo");
 
     wkt_multipoint += ")";
     request.addParameter("wkt", wkt_multipoint);
@@ -901,6 +929,7 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
     std::string firstMessage = ex.what();
     if (isdebug)
     {
+      theResponse.setHeader("Content-Type", "text/html; charset=UTF-8");
       theResponse.setContent(ex.getHtmlStackTrace());
       theResponse.setStatus(Spine::HTTP::Status::ok);
     }
@@ -911,6 +940,9 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
       else
         theResponse.setStatus(Spine::HTTP::Status::bad_request);
 
+      // The message may repeat request parameters: it must never be taken for HTML
+      theResponse.setHeader("Content-Type", "text/plain; charset=UTF-8");
+      theResponse.setHeader("X-Content-Type-Options", "nosniff");
       theResponse.setContent(firstMessage);
     }
 
@@ -1018,6 +1050,7 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
     {
       // Delivering the exception information as HTTP content
       std::string fullMessage = ex.getHtmlStackTrace();
+      theResponse.setHeader("Content-Type", "text/html; charset=UTF-8");
       theResponse.setContent(fullMessage);
       theResponse.setStatus(Spine::HTTP::Status::ok);
     }
@@ -1156,9 +1189,18 @@ void PluginImpl::init()
     const auto& openapi = itsConfig.openAPISettings();
     if (openapi.enabled)
     {
+      const auto& page = itsConfig.landingPage();
       itsEdrApi = std::make_unique<Spine::OpenAPI::Publisher>(openapi);
+      itsEdrApi->addToCatalog(itsConfig.defaultUrl(), page.title, page.description, "edr");
       for (const auto& url : itsConfig.timeSeriesUrls())
-        itsTimeSeriesApis.emplace(url, std::make_unique<Spine::OpenAPI::Publisher>(openapi));
+      {
+        auto publisher = std::make_unique<Spine::OpenAPI::Publisher>(openapi);
+        publisher->addToCatalog(url,
+                                ApiDefinition::TIMESERIES_TITLE,
+                                ApiDefinition::TIMESERIES_DESCRIPTION,
+                                "timeseries");
+        itsTimeSeriesApis.emplace(url, std::move(publisher));
+      }
       publishApiDefinitions();
     }
 
@@ -1390,6 +1432,24 @@ void PluginImpl::publishApiDefinitions() const
 
     for (const auto& item : itsTimeSeriesApis)
       item.second->publish(ApiDefinition::timeseries(itsConfig, *metadata, item.first));
+
+    if (!itsTimeSeriesApis.empty())
+    {
+      ::Json::StreamWriterBuilder builder;
+      builder["indentation"] = "";
+      const auto store = [&builder](ProducerDocument& doc, const ::Json::Value& json)
+      {
+        doc.json = ::Json::writeString(builder, json);
+        doc.etag = fmt::format("\"{:x}-producers\"", Fmi::hash_value(doc.json));
+      };
+      auto docs = std::make_shared<ProducerDocuments>();
+      const auto catalog = ProducerCatalog::build(*metadata);
+      store((*docs)[""], catalog);
+      (*docs)[""].catalog = catalog;
+      for (const auto& source : ProducerCatalog::sources())
+        store((*docs)[source], ProducerCatalog::filter(catalog, source));
+      itsProducerDocuments.store(docs);
+    }
   }
   catch (...)
   {
@@ -1419,6 +1479,18 @@ bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
 
     for (const auto& item : itsTimeSeriesApis)
     {
+      const auto producers = item.first + "/api/producers";
+      if (resource == producers)
+      {
+        handleProducers(theRequest, theResponse);
+        return true;
+      }
+      if (resource.size() > producers.size() + 1 &&
+          resource.compare(0, producers.size() + 1, producers + "/") == 0)
+      {
+        handleProducer(theRequest, theResponse, resource.substr(producers.size() + 1));
+        return true;
+      }
       if (Spine::OpenAPI::Publisher::isApiResource(resource, item.first))
       {
         // The paths of the TimeSeries definition are absolute
@@ -1429,6 +1501,309 @@ bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
       }
     }
     return false;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Answer <timeseries_url>/api/producers
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::handleProducers(const Spine::HTTP::Request& theRequest,
+                                 Spine::HTTP::Response& theResponse) const
+{
+  try
+  {
+    auto docs = itsProducerDocuments.load();
+    theResponse.setHeader("Access-Control-Allow-Origin", "*");
+
+    const auto source = Spine::optional_string(theRequest.getParameter("source"), "");
+    const ProducerDocument* doc = nullptr;
+    if (docs)
+    {
+      auto pos = docs->find(source);
+      if (pos == docs->end())
+      {
+        theResponse.setStatus(Spine::HTTP::Status::bad_request);
+        theResponse.setHeader("Content-Type", "application/problem+json");
+        theResponse.setContent(
+            R"({"title":"Bad Request","status":400,"detail":"source must be querydata, grid or observation"})");
+        return;
+      }
+      doc = &pos->second;
+    }
+    if (doc == nullptr)
+    {
+      theResponse.setStatus(Spine::HTTP::Status::service_unavailable);
+      theResponse.setHeader("Content-Type", "application/problem+json");
+      theResponse.setContent(
+          R"({"title":"Service Unavailable","status":503,"detail":"The metadata is not available yet"})");
+      return;
+    }
+
+    theResponse.setHeader("Cache-Control", "public, max-age=60");
+    theResponse.setHeader("ETag", doc->etag);
+    if (theRequest.getHeader("X-Request-ETag"))
+    {
+      theResponse.setStatus(Spine::HTTP::Status::no_content);
+      return;
+    }
+    if (auto status = Spine::HTTP::conditionalResponseStatus(theRequest, doc->etag))
+    {
+      theResponse.setStatus(*status);
+      return;
+    }
+    theResponse.setStatus(Spine::HTTP::Status::ok);
+    theResponse.setHeader("Content-Type", "application/json");
+    theResponse.setContent(doc->json);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Answer <timeseries_url>/api/producers/{name}
+ *
+ * The producer as listed, and for grid producers the model runs and what
+ * the parameter keys of the chosen run may contain.
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::handleProducer(const Spine::HTTP::Request& theRequest,
+                                Spine::HTTP::Response& theResponse,
+                                const std::string& name) const
+{
+  const auto problem = [&theResponse](Spine::HTTP::Status status, const std::string& detail)
+  {
+    ::Json::Value json;
+    json["title"] = (status == Spine::HTTP::Status::not_found ? "Not Found" : "Bad Request");
+    json["status"] = static_cast<int>(status);
+    json["detail"] = detail;
+    ::Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    theResponse.setStatus(status);
+    theResponse.setHeader("Content-Type", "application/problem+json");
+    theResponse.setContent(::Json::writeString(builder, json));
+  };
+
+  try
+  {
+    theResponse.setHeader("Access-Control-Allow-Origin", "*");
+    auto docs = itsProducerDocuments.load();
+    if (!docs || docs->find("") == docs->end())
+    {
+      theResponse.setStatus(Spine::HTTP::Status::service_unavailable);
+      theResponse.setHeader("Content-Type", "application/problem+json");
+      theResponse.setContent(
+          R"({"title":"Service Unavailable","status":503,"detail":"The metadata is not available yet"})");
+      return;
+    }
+
+    // Without a source the first one listed, as in a request without one
+    const auto source = Spine::optional_string(theRequest.getParameter("source"), "");
+    const auto& catalog = docs->at("").catalog;
+    const ::Json::Value* entry = nullptr;
+    for (const auto& p : catalog["producers"])
+      if (p["name"].asString() == Fmi::ascii_tolower_copy(name) &&
+          (source.empty() || p["source"].asString() == source))
+      {
+        entry = &p;
+        break;
+      }
+    if (entry == nullptr)
+    {
+      problem(Spine::HTTP::Status::not_found,
+              "Unknown producer " + name + (source.empty() ? "" : " of source " + source));
+      return;
+    }
+
+    ::Json::Value result = *entry;
+    result["parameters"] = ::Json::Value(::Json::objectValue);
+    for (const auto& p : (*entry)["parameters"])
+    {
+      const auto& info = catalog["parameters"][p.asString()];
+      result["parameters"][p.asString()] =
+          (info.isObject() ? info : ::Json::Value(::Json::objectValue));
+    }
+
+    // The locations of the producer, such as observation stations, from the metadata
+    if ((*entry)["source"].asString() != "grid")
+    {
+      if (auto metadata = itsMetaData.load())
+      {
+        for (const auto& engine_item : metadata->getMetaData())
+        {
+          const auto& source = (*entry)["source"].asString();
+          const bool same_source =
+              (engine_item.first == SourceEngine::Querydata && source == "querydata") ||
+              (engine_item.first == SourceEngine::Observation && source == "observation");
+          if (!same_source)
+            continue;
+          auto pos = engine_item.second.find((*entry)["name"].asString());
+          if (pos == engine_item.second.end())
+            continue;
+          for (const auto& md : pos->second)
+          {
+            if (!md.locations || md.locations->empty())
+              continue;
+            auto& locations = result["locations"];
+            locations = ::Json::Value(::Json::arrayValue);
+            for (const auto& item : *md.locations)
+            {
+              const auto& loc = item.second;
+              ::Json::Value l;
+              l["id"] = loc.id;
+              l["type"] = loc.type;
+              l["name"] = loc.name;
+              l["lon"] = loc.longitude;
+              l["lat"] = loc.latitude;
+              if (!loc.start_time.is_not_a_date_time())
+                l["start"] = Fmi::date_time::to_iso_extended_string(loc.start_time) + "Z";
+              if (!loc.end_time.is_not_a_date_time())
+                l["end"] = Fmi::date_time::to_iso_extended_string(loc.end_time) + "Z";
+              if (!loc.wsi.empty())
+                l["wsi"] = loc.wsi;
+              locations.append(l);
+            }
+            break;
+          }
+        }
+      }
+    }
+
+#ifndef WITHOUT_OBSERVATION
+    // The sensors of observation stations: which sensors each parameter has at a station, which
+    // one is the default, and their periods
+    const auto fmisids = Spine::optional_string(theRequest.getParameter("fmisid"), "");
+    if ((*entry)["source"].asString() == "observation" && !fmisids.empty() && itsEngines.obsEngine)
+    {
+      Engine::Observation::SensorOptions options;
+      options.producer = (*entry)["name"].asString();
+      std::vector<std::string> parts;
+      boost::algorithm::split(parts, fmisids, boost::algorithm::is_any_of(","));
+      for (const auto& p : parts)
+        if (auto id = Fmi::stoi_opt(p))
+          options.fmisids.insert(*id);
+      const auto params = Spine::optional_string(theRequest.getParameter("param"), "");
+      if (!params.empty())
+      {
+        boost::algorithm::split(parts, params, boost::algorithm::is_any_of(","));
+        for (const auto& p : parts)
+          if (!p.empty())
+            options.parameters.insert(p);
+      }
+      const auto starttime = Spine::optional_string(theRequest.getParameter("starttime"), "");
+      const auto endtime = Spine::optional_string(theRequest.getParameter("endtime"), "");
+      try
+      {
+        if (!starttime.empty())
+          options.starttime = Fmi::TimeParser::parse(starttime);
+        if (!endtime.empty())
+          options.endtime = Fmi::TimeParser::parse(endtime);
+        const auto found = itsEngines.obsEngine->getSensors(options);
+        const auto iso = [](const Fmi::DateTime& t)
+        { return Fmi::date_time::to_iso_extended_string(t) + "Z"; };
+        ::Json::Value sensors(::Json::objectValue);
+        sensors["available"] = found.available;
+        sensors["note"] = found.note;
+        sensors["list"] = ::Json::Value(::Json::arrayValue);
+        for (const auto& s : found.sensors)
+        {
+          ::Json::Value item;
+          item["fmisid"] = s.fmisid;
+          item["measurand_id"] = s.measurand_id;
+          if (!s.measurand_code.empty())
+            item["code"] = s.measurand_code;
+          item["parameters"] = ::Json::Value(::Json::arrayValue);
+          for (const auto& name : s.parameters)
+            item["parameters"].append(name);
+          item["sensor"] = s.sensor_no;
+          item["default"] = s.is_default;
+          if (!s.configuration_start.is_not_a_date_time())
+            item["configuration_start"] = iso(s.configuration_start);
+          if (!s.configuration_end.is_not_a_date_time())
+            item["configuration_end"] = iso(s.configuration_end);
+          if (!s.first_data.is_not_a_date_time())
+            item["first"] = iso(s.first_data);
+          if (!s.last_data.is_not_a_date_time())
+            item["last"] = iso(s.last_data);
+          if (s.values > 0)
+            item["values"] = static_cast<::Json::UInt64>(s.values);
+          sensors["list"].append(item);
+        }
+        result["sensors"] = sensors;
+      }
+      catch (...)
+      {
+        // The first reason, e.g. an unknown parameter of the producer
+        Fmi::Exception e = Fmi::Exception::Trace(BCP, "Listing the sensors failed");
+        const auto* first = e.getFirstException();
+        problem(Spine::HTTP::Status::bad_request, first ? first->getWhat() : e.getWhat());
+        return;
+      }
+    }
+#endif
+
+    if ((*entry)["source"].asString() == "grid" && itsEngines.gridEngine)
+    {
+      const auto origintime = Spine::optional_string(theRequest.getParameter("origintime"), "");
+      ::Json::Value grid;
+      try
+      {
+        grid =
+            ProducerDetails::grid(*itsEngines.gridEngine, *itsGridDetailsCache, name, origintime);
+      }
+      catch (...)
+      {
+        problem(Spine::HTTP::Status::not_found,
+                "No model run " + origintime + " of grid producer " + name);
+        return;
+      }
+      result["producer"] = grid["producer"];
+      result["runs"] = grid["runs"];
+      if (grid.isMember("run"))
+      {
+        // The descriptions of the listing, what the keys may contain from the run
+        for (const auto& key : grid["run"]["parameters"].getMemberNames())
+        {
+          auto& p = grid["run"]["parameters"][key];
+          for (const auto& field : result["parameters"][key].getMemberNames())
+            if (!p.isMember(field))
+              p[field] = result["parameters"][key][field];
+        }
+        result["parameters"] = grid["run"]["parameters"];
+        grid["run"].removeMember("parameters");
+        result["run"] = grid["run"];
+      }
+    }
+
+    ::Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+    const auto json = ::Json::writeString(builder, result);
+    const auto etag = fmt::format("\"{:x}-producer\"", Fmi::hash_value(json));
+    theResponse.setHeader("Cache-Control", "public, max-age=60");
+    theResponse.setHeader("ETag", etag);
+    if (theRequest.getHeader("X-Request-ETag"))
+    {
+      theResponse.setStatus(Spine::HTTP::Status::no_content);
+      return;
+    }
+    if (auto status = Spine::HTTP::conditionalResponseStatus(theRequest, etag))
+    {
+      theResponse.setStatus(*status);
+      return;
+    }
+    theResponse.setStatus(Spine::HTTP::Status::ok);
+    theResponse.setHeader("Content-Type", "application/json");
+    theResponse.setContent(json);
   }
   catch (...)
   {

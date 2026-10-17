@@ -1,0 +1,4 @@
+Status: 400
+Content-Type: text/plain; charset=UTF-8
+
+The percentile must be in the range 0...100

@@ -1,0 +1,2 @@
+GET /timeseries?producer=meps_ml&place=Helsinki&starttime=2026-10-15T06:00:00Z&timesteps=1&format=json&tz=UTC&param=name,time,level,pressure,geomheight,temperature,dewpoint,humidity,windspeedms,winddirection HTTP/1.0
+

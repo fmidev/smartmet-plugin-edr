@@ -11,6 +11,7 @@
 #include "Engines.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
+#include "ProducerDetails.h"
 #include "Query.h"
 #include "State.h"
 #include <engines/gis/GeometryStorage.h>
@@ -131,6 +132,24 @@ class PluginImpl
   // Generated OpenAPI definitions: the EDR API and each TimeSeries URL
   std::unique_ptr<Spine::OpenAPI::Publisher> itsEdrApi;
   std::map<std::string, std::unique_ptr<Spine::OpenAPI::Publisher>> itsTimeSeriesApis;
+
+  // The producers of the TimeSeries API (<timeseries_url>/api/producers), regenerated with
+  // the definitions
+  struct ProducerDocument
+  {
+    std::string json;
+    std::string etag;
+    ::Json::Value catalog;  // the parsed document, kept for all the sources only
+  };
+  using ProducerDocuments = std::map<std::string, ProducerDocument>;  // by source, "" for all
+  mutable Fmi::AtomicSharedPtr<const ProducerDocuments> itsProducerDocuments;
+  void handleProducers(const Spine::HTTP::Request& theRequest,
+                       Spine::HTTP::Response& theResponse) const;
+  // <timeseries_url>/api/producers/{name}: what the requests of one producer may contain
+  void handleProducer(const Spine::HTTP::Request& theRequest,
+                      Spine::HTTP::Response& theResponse,
+                      const std::string& name) const;
+  std::shared_ptr<ProducerDetails::Cache> itsGridDetailsCache = ProducerDetails::makeCache();
 
   SupportedProducerLocations itsSupportedLocations;
   ParameterInfo itsConfigParameterInfo;

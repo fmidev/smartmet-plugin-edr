@@ -1,0 +1,4 @@
+Status: 404
+Content-Type: application/problem+json
+
+{"detail":"No model run 2000-01-01T00:00:00Z of grid producer hirlam","status":404,"title":"Not Found"}

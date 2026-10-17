@@ -1,0 +1,2 @@
+GET /timeseries?producer=ecmwf_eps&source=querydata&place=Helsinki&param=name,time,level,temperature&levels=1,2,51&starttime=2014-02-20T06:00:00Z&timesteps=2&timestep=360&format=json&tz=UTC HTTP/1.0
+

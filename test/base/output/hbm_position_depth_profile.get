@@ -1,0 +1,177 @@
+{
+	"coverages" : 
+	[
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2014-07-28T01:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							25.00000
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							59.80000
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							0,
+							5,
+							10,
+							15,
+							20,
+							25,
+							30,
+							35,
+							40,
+							45,
+							50,
+							55,
+							60,
+							65,
+							70,
+							75,
+							80,
+							85,
+							90,
+							95,
+							100,
+							150,
+							200,
+							300,
+							400
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperaturesea" : 
+				{
+					"axisNames" : 
+					[
+						"z"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						25
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						20,
+						20,
+						19,
+						15,
+						8,
+						5,
+						4,
+						4,
+						5,
+						5,
+						5,
+						5,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null
+					]
+				}
+			}
+		}
+	],
+	"domainType" : "VerticalProfile",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"x",
+				"y"
+			],
+			"system" : 
+			{
+				"id" : "OGC:CRS84",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"type" : "VerticalCRS",
+				"description" : 
+				{
+					"en" : "Depth below surface in metres"
+				}
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperaturesea" : 
+		{
+			"id" : "TemperatureSea",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "TemperatureSea"
+			},
+			"label" : 
+			{
+				"fi" : "TemperatureSea"
+			},
+			"observedProperty" : 
+			{
+				"id" : "TemperatureSea",
+				"label" : 
+				{
+					"fi" : "TemperatureSea"
+				}
+			}
+		}
+	}
+}

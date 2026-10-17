@@ -8,7 +8,7 @@ test test-grid:	start-redis-db
 	if $(MAKE) DB_TYPE=$(DB_TYPE) test-impl; then ok=true; else ok=false; fi; $(MAKE) stop-redis-db; $$ok
 
 clean:
-	rm -rf failures
+	rm -rf failures failures-timeseries
 	rm -rf cnf/grid
 
 test-impl:
@@ -19,9 +19,22 @@ test-impl:
 		--reactor-config cnf/reactor.conf \
 		$(foreach fn, input/.testignore_$(DB_TYPE), --ignore $(fn)) \
 		--timeout 300 || ok=false; \
+	$(TEST_RUNNER) \
+	smartmet-plugin-test \
+		--handler /timeseries \
+		--reactor-config cnf/reactor.conf \
+		--input-dir input-timeseries \
+		--expected-output-dir output-timeseries \
+		--failures-dir failures-timeseries \
+		--timeout 300 || ok=false; \
 	$$ok
 
 start-redis-db:
+	@port=$$(sed -n 's/^REDIS_CONTENT_SERVER_PORT *= *//p' cnf/environment.conf); \
+	if bash -c "exec 3<>/dev/tcp/127.0.0.1/$$port" 2>/dev/null; then \
+		echo "*** Port $$port is already in use: the tests would read another Redis database"; \
+		exit 1; \
+	fi
 	rm -rf cnf/grid
 	cp -pr $(datadir)/smartmet/test/grid cnf/
 	@echo "*** Creating the Redis configuration file."

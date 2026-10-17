@@ -1,0 +1,2 @@
+GET /timeseries?producer=hbm&lonlat=25.0,59.8&starttime=2014-07-28T01:00:00Z&timesteps=1&format=json&tz=UTC&param=name,time,level,temperaturesea,salinity HTTP/1.0
+

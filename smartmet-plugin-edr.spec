@@ -34,18 +34,18 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.10.16
+BuildRequires: smartmet-library-spine-devel >= 26.10.17-1
 BuildRequires: smartmet-library-locus-devel >= 26.10.16
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
 BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
 BuildRequires: smartmet-library-grid-files-devel >= 26.10.16
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
 BuildRequires: smartmet-library-gis-devel >= 26.10.16
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.16
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.17-1
 BuildRequires: smartmet-engine-avi-devel >= 26.10.16
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.10.16
+BuildRequires: smartmet-engine-observation-devel >= 26.10.17-1
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 26.10.16
 BuildRequires: smartmet-engine-gis-devel >= 26.10.16
@@ -54,15 +54,17 @@ BuildRequires: smartmet-engine-grid-devel >= 26.10.16
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 26.10.11
 #%endif
+# Engine::getSensors is a new virtual method: older engines lack it
+Conflicts: smartmet-engine-observation < 26.10.17-1
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-locus >= 26.10.16
 Requires: smartmet-library-macgyver >= 26.10.17
 Requires: smartmet-library-newbase >= 26.10.17
-Requires: smartmet-library-spine >= 26.10.17
+Requires: smartmet-library-spine >= 26.10.17-1
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-timeseries >= 26.10.16
+Requires: smartmet-library-timeseries >= 26.10.17-1
 Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-grid-files >= 26.10.17
 Requires: smartmet-engine-avi >= 26.10.17
@@ -78,20 +80,20 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.17
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.16
+#TestRequires: smartmet-library-spine >= 26.10.17-1
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.17-1
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-test-data >= 26.8.26
-#TestRequires: smartmet-library-grid-files-test >= 26.10.16
+#TestRequires: smartmet-test-data >= 26.10.17-1
+#TestRequires: smartmet-library-grid-files-test >= 26.10.17-1
 #TestRequires: smartmet-library-gis >= 26.10.17
 #TestRequires: smartmet-engine-avi >= 26.10.17
 #TestRequires: smartmet-engine-geonames >= 26.10.17
 #TestRequires: smartmet-engine-gis >= 26.10.17
 #TestRequires: smartmet-engine-querydata >= 26.10.17
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.17
+#TestRequires: smartmet-engine-observation >= 26.10.17-1
 %endif
 #TestRequires: smartmet-engine-grid >= 26.10.17
 #TestRequires: gdal312-libs
@@ -121,6 +123,53 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
+- The details of an observation producer list the sensors of the stations given with fmisid
+  (optionally param, starttime, endtime): per station and parameter the sensor numbers, the
+  default sensor and the periods of the configurations and values
+- Grid parameter keys on pressure levels without a level of their own take the levels option in
+  hPa, as named parameters of pressure level producers do (they returned no values)
+- The points of an area or a path are computed once per request, not again for every parameter
+  and level of a querydata request
+- The levels of querydata producers configured with leveltype = "ensemble" are listed as the
+  members of an ensemble (level type "member", an ensemble member vertical reference)
+- The parameter dictionary of the producer listing takes each field from the first producer
+  having it, so that a producer without a description no longer hides those of the others
+- TimeSeries requests of location parameters only (e.g. lon,lat) for a path, a bounding box, an
+  area or a radius list the points like data requests do, instead of 0,0 or null
+- Querydata paths and areas on several levels: the names, times and coordinates are listed
+  for each point and level like the values (they were listed per level only)
+- Observed soundings: sounding levels are listed as the level type 'sounding', and the
+  stations of point querydata that has an area are listed as its locations
+- EDR requests of a querydata collection were read from the grid engine when the grid engine
+  had a producer of the same name, returning nothing or wrong values; the collection now
+  tells the source
+- <timeseries_url>/api/producers/{producer} lists the locations of querydata and observation
+  producers: observation stations with their ids, coordinates, periods and WIGOS ids
+- Observation producers are listed without an origin time: theirs was the metadata update time
+- Grid parameter keys naming their level were still repeated once per level of the producer
+  when the request had lat, lon or the @AT-N etc. details of the data
+- <timeseries_url>/api/producers/{producer}: one producer with its parameter descriptions,
+  and for grid producers the model runs, geometries, and per parameter the levels, forecast
+  types, ensemble members, aggregation and number of times, from the grid content server
+- The producer listing names level types alike for all sources (pressure, hybrid, ...) and
+  gives grid pressure levels in hPa, the unit of the levels option
+- A grid parameter key naming its level no longer repeats its values once per level of the
+  producer
+- The grid tests refuse to start when the Redis port is already in use
+- The spatial extents of grid collections had their west edge at 0: it was never set. Global
+  grids get -180...180, grids scanned from north to south their real latitudes, and
+  geometries without corners no extent
+- Grid producers whose names contain dots are listed by their full names in the producer list
+- grouplocations=1 also groups the locations of a keyword and of place; an empty group is
+  reported instead of failing with an invalid WKT
+- Tests of the new percentile functions, requires smartmet-library-timeseries 26.10.17-1
+- TimeSeries errors are sent as text/plain with nosniff, since the messages may repeat request
+  parameters; debug stack traces as text/html
+- New <timeseries_url>/api/producers: the producers of the TimeSeries API with their
+  parameters, areas, times and levels, for the data explorer
+- TimeSeries OpenAPI parameters in the order producer, param, time, locations, data, output
+- The APIs are listed in the API catalog with their kinds (edr, timeseries)
+- The EDR API and each TimeSeries URL are listed in the API catalog of the server (/api)
 - Wrap lines longer than 100 columns in the refactored code
 - get_edr_metadata_grid: set the western edge of the bounding box too
 - QueryProcessingHub::hash_value: return Fmi::bad_hash instead of 0 for queries which cannot be

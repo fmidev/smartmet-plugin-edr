@@ -691,6 +691,15 @@ EDRQueryParams::EDRQueryParams(const State& state,
       if (!itsEDRQuery.instance_id.empty())
         req.addParameter("origintime", itsEDRQuery.instance_id);
       itsEDRQuery.query_id = EDRQueryId::DataQuery;
+      // The collection tells the source: without it a querydata collection whose producer
+      // name is also a grid producer would be read from the grid engine
+      if (!req.getParameter("source"))
+      {
+        if (emd.metadata_source == SourceEngine::Querydata)
+          req.addParameter("source", "querydata");
+        else if (emd.metadata_source == SourceEngine::Grid)
+          req.addParameter("source", "grid");
+      }
     }
 
     checkQueryType(invalid_query_type, config);

@@ -9,6 +9,7 @@
 #include <macgyver/StringConversion.h>
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <map>
 #include <set>
 #include <string>
@@ -22,6 +23,12 @@ namespace EDR
 {
 namespace ApiDefinition
 {
+const char* const TIMESERIES_TITLE = "SmartMet TimeSeries API";
+const char* const TIMESERIES_DESCRIPTION =
+    "Time series of forecasts and observations at locations, areas and paths. The values to "
+    "return are selected with the param option, see the documentation for the parameter names "
+    "and functions.";
+
 namespace
 {
 namespace OA = Spine::OpenAPI;
@@ -1059,6 +1066,26 @@ struct TSParameter
 
 // clang-format off
 const std::vector<TSParameter> ts_parameters{
+    // The model first: it determines the available parameters, times and areas. The
+    // param option is inserted after these.
+    {"producer", "Data", "string", "Producer(s) of the data. A comma separates producers by area, a semicolon by time."},
+    {"model", "Data", "string", "Alias of producer"},
+    {"source", "Data", "string", "Data source: querydata or grid"},
+    // Time
+    {"starttime", "Time", "string", "Start time: ISO 8601, YYYYMMDDHHMI, a relative time like +2h or -1d, or 'data' for the first time of the data. The default is the next full hour."},
+    {"endtime", "Time", "string", "End time in the formats of starttime, or 'data'. The default is starttime plus 24 hours."},
+    {"timestep", "Time", "string", "Time step in minutes, or 'data' to select the times of the data. The default is 60."},
+    {"timesteps", "Time", "integer", "Number of times to return, an alternative to endtime"},
+    {"startstep", "Time", "integer", "Number of time steps to skip from the start"},
+    {"hour", "Time", "array", "Comma separated list of hours to select, e.g. 12,18"},
+    {"time", "Time", "array", "Comma separated list of times HHMI to select, e.g. 1200,1230"},
+    {"day", "Time", "array", "Comma separated list of days of the month to select"},
+    {"weekday", "Time", "array", "Comma separated list of weekdays to select"},
+    {"now", "Time", "string", "Override the current time"},
+    {"tz", "Time", "string", "Time zone of the request and the response times, the default is 'localtime'"},
+    {"origintime", "Time", "string", "Origin time of the model run to use, the latest by default"},
+    {"usecurrenttime", "Time", "boolean", "Use the current time instead of the next full hour as the default start time"},
+    {"interval", "Time", "string", "Time interval for observation queries"},
     // Locations
     {"place", "Location", "string", "Location name, optionally with a radius in km: place=Helsinki or place=Helsinki:20"},
     {"places", "Location", "array", "Comma separated list of location names"},
@@ -1095,25 +1122,7 @@ const std::vector<TSParameter> ts_parameters{
     {"grouplocations", "Location", "boolean", "Group the given locations as one area"},
     {"areasource", "Location", "string", "Source of the area geometries"},
     {"step", "Location", "number", "Distance in kilometers between the points sampled along a path"},
-    // Time
-    {"starttime", "Time", "string", "Start time: ISO 8601, YYYYMMDDHHMI, a relative time like +2h or -1d, or 'data' for the first time of the data. The default is the next full hour."},
-    {"endtime", "Time", "string", "End time in the formats of starttime, or 'data'. The default is starttime plus 24 hours."},
-    {"timestep", "Time", "string", "Time step in minutes, or 'data' to select the times of the data. The default is 60."},
-    {"timesteps", "Time", "integer", "Number of times to return, an alternative to endtime"},
-    {"startstep", "Time", "integer", "Number of time steps to skip from the start"},
-    {"hour", "Time", "array", "Comma separated list of hours to select, e.g. 12,18"},
-    {"time", "Time", "array", "Comma separated list of times HHMI to select, e.g. 1200,1230"},
-    {"day", "Time", "array", "Comma separated list of days of the month to select"},
-    {"weekday", "Time", "array", "Comma separated list of weekdays to select"},
-    {"now", "Time", "string", "Override the current time"},
-    {"tz", "Time", "string", "Time zone of the request and the response times, the default is 'localtime'"},
-    {"origintime", "Time", "string", "Origin time of the model run to use, the latest by default"},
-    {"usecurrenttime", "Time", "boolean", "Use the current time instead of the next full hour as the default start time"},
-    {"interval", "Time", "string", "Time interval for observation queries"},
     // Data
-    {"producer", "Data", "string", "Producer(s) of the data. A comma separates producers by area, a semicolon by time."},
-    {"model", "Data", "string", "Alias of producer"},
-    {"source", "Data", "string", "Data source: querydata or grid"},
     {"level", "Data", "string", "Model level"},
     {"levels", "Data", "array", "Comma separated list of model levels"},
     {"levelrange", "Data", "string", "Range of model levels min,max"},
@@ -1351,12 +1360,8 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     const auto& settings = config.openAPISettings();
     const auto max_enum = settings.max_enum;
 
-    OA::Document doc("SmartMet TimeSeries API",
-                     "Time series of forecasts and observations at locations, areas and paths. "
-                     "The values to return are selected with the param option, see the "
-                     "documentation for the parameter names and functions.",
-                     config.landingPage().version,
-                     settings);
+    OA::Document doc(
+        TIMESERIES_TITLE, TIMESERIES_DESCRIPTION, config.landingPage().version, settings);
     doc.addTag("TimeSeries", "Time series queries");
     doc.addTag(TAG_CAPABILITIES, "The API definition");
     doc.json()["externalDocs"]["description"] = "Using the TimeSeries API";
@@ -1400,10 +1405,20 @@ Spine::OpenAPI::Document timeseries(const Config& config,
           "geoid",      "fmisid", "wmo",        "elevation", "localtz",     "utctime", "localtime",
           "timestring", "level",  "model",      "producer",  "stationname", "distance"})
       param["x-meta-parameters"].append(meta);
-    params.append(param);
 
     for (const auto& p : ts_parameters)
+    {
+      // The values to return follow the model, which determines what is available
+      if (std::strcmp(p.group, "Time") == 0 && param.isObject())
+      {
+        params.append(param);
+        param = JsonValue();
+      }
       params.append(ts_parameter(p, producers, max_enum, url));
+    }
+
+    if (param.isObject())
+      params.append(param);
 
     auto& ok = op["responses"]["200"];
     ok["description"] = "The time series in the requested format";
@@ -1425,6 +1440,93 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     }
     doc.addCommonComponents();
     OA::Document::addErrorResponses(op, false);
+
+    // The producers and their parameters, times and areas for clients building queries
+    auto& producers_op = doc.operation(url + "/api/producers", "get");
+    producers_op["tags"].append(TAG_CAPABILITIES);
+    producers_op["summary"] = "Producers and their parameters";
+    producers_op["description"] =
+        "The producers the API reads, with their parameters, areas, times and levels, and a "
+        "dictionary of the parameter descriptions and units. Parameter names are lower case.";
+    producers_op["operationId"] = "getProducers" + component_name(url);
+    producers_op["parameters"].append(
+        OA::parameter("source",
+                      "query",
+                      "Only the producers of this source",
+                      OA::enumSchema({"querydata", "grid", "observation"}, max_enum)));
+    auto& producers_ok = producers_op["responses"]["200"];
+    producers_ok["description"] = "The producers";
+    JsonValue producers_schema;
+    producers_schema["type"] = "object";
+    producers_schema["required"].append("producers");
+    producers_schema["required"].append("parameters");
+    producers_schema["properties"]["producers"]["type"] = "array";
+    producers_schema["properties"]["parameters"]["type"] = "object";
+    producers_ok["content"]["application/json"]["schema"] = producers_schema;
+    OA::Document::addErrorResponses(producers_op, false);
+
+    // What the requests of one producer may contain: for grid producers the model runs,
+    // geometries, levels and ensemble members of the parameter keys
+    auto& producer_op = doc.operation(url + "/api/producers/{producer}", "get");
+    producer_op["tags"].append(TAG_CAPABILITIES);
+    producer_op["summary"] = "One producer and the parameter keys of its grid data";
+    producer_op["description"] =
+        "The producer as listed by /api/producers, with a dictionary of its parameters and its "
+        "locations, such as the observation stations with their periods of operation. For grid "
+        "producers also the model runs, and for the chosen run the geometries and per parameter "
+        "the level types and levels, forecast types and ensemble members, aggregation and number "
+        "of times, from which parameter keys name:producer:geometry:levelId:level:forecastType:"
+        "forecastNumber are built. The level values are in the units of the levels option (hPa "
+        "for pressure), the keys in the units of the parameter keys (Pa). For observation "
+        "producers the sensors of the stations given with fmisid: per station and parameter the "
+        "sensor numbers, the default sensor and the periods of the configurations and values.";
+    producer_op["operationId"] = "getProducer" + component_name(url);
+    JsonValue string_schema;
+    string_schema["type"] = "string";
+    auto producer_param = OA::parameter("producer", "path", "Name of the producer", string_schema);
+    producer_param["required"] = true;
+    producer_op["parameters"].append(producer_param);
+    producer_op["parameters"].append(
+        OA::parameter("source",
+                      "query",
+                      "The source of the producer when several have the same name",
+                      OA::enumSchema({"querydata", "grid", "observation"}, max_enum)));
+    JsonValue time_schema = string_schema;
+    time_schema["format"] = "date-time";
+    producer_op["parameters"].append(
+        OA::parameter("origintime",
+                      "query",
+                      "The model run of a grid producer, the latest by default",
+                      time_schema));
+    // The sensors of observation stations
+    producer_op["parameters"].append(
+        OA::parameter("fmisid",
+                      "query",
+                      "Comma separated observation stations whose sensors are listed",
+                      string_schema));
+    producer_op["parameters"].append(
+        OA::parameter("param",
+                      "query",
+                      "Comma separated parameters whose sensors are listed, all by default",
+                      string_schema));
+    producer_op["parameters"].append(OA::parameter(
+        "starttime", "query", "Start of the period of the sensors, now by default", time_schema));
+    producer_op["parameters"].append(OA::parameter(
+        "endtime", "query", "End of the period of the sensors, now by default", time_schema));
+    auto& producer_ok = producer_op["responses"]["200"];
+    producer_ok["description"] = "The producer";
+    JsonValue producer_schema;
+    producer_schema["type"] = "object";
+    producer_schema["required"].append("name");
+    producer_schema["required"].append("source");
+    producer_schema["required"].append("parameters");
+    producer_schema["properties"]["parameters"]["type"] = "object";
+    producer_schema["properties"]["runs"]["type"] = "array";
+    producer_schema["properties"]["locations"]["type"] = "array";
+    producer_schema["properties"]["run"]["type"] = "object";
+    producer_schema["properties"]["sensors"]["type"] = "object";
+    producer_ok["content"]["application/json"]["schema"] = producer_schema;
+    OA::Document::addErrorResponses(producer_op, false);
 
     // The definition and its documentation
     doc.addApiOperations(TAG_CAPABILITIES, url);

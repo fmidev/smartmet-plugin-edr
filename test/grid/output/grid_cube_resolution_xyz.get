@@ -1,5 +1,5 @@
 {
   "title" : "An error occurred",
   "status" : 400,
-  "detail" : "Query parameter 'resolution-z' is not supported for grid data, its data is not interpolated vertically"
+  "detail" : "Query parameter 'resolution-z' is not supported for collection 'ecmwf_skandinavia_painepinta.5901.2', its data is not interpolated vertically"
 }

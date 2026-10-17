@@ -1133,6 +1133,20 @@ std::string latin1_to_utf8(const std::string& s)
   return out;
 }
 
+// Whether the levels of a querydata producer are the members of an ensemble
+bool is_ensemble_producer(const Engine::Querydata::Engine &qEngine, const std::string &producer)
+{
+  try
+  {
+    return qEngine.getProducerConfig(producer).leveltype == "ensemble";
+  }
+  catch (...)
+  {
+    // An alias or an unknown producer is not an ensemble
+    return false;
+  }
+}
+
 // The settings common to the collections of all sources: precision, language, parameter and
 // collection info, data queries and output formats
 void set_collection_settings(EDRMetaData& producer_emd,
@@ -1174,13 +1188,26 @@ void set_latest_update_times(EDRProducerMetaData& epmd,
   }
 }
 
-// The levels of querydata
-void set_qd_vertical_extent(const Engine::Querydata::MetaData& qmd, EDRMetaData& producer_emd)
+// The levels of querydata. Legacy ensembles store their members as levels; the producer is
+// then configured with leveltype = "ensemble" and its levels are listed as members.
+void set_qd_vertical_extent(const Engine::Querydata::Engine& qEngine,
+                            const Engine::Querydata::MetaData& qmd,
+                            EDRMetaData& producer_emd)
 {
   if (qmd.levels.size() > 1)
   {
-    producer_emd.vertical_extent.level_type = qmd.levels.front().type;
-    producer_emd.vertical_extent.vrs = VerticalReference::wkt(qmd.levels.front().type);
+    if (is_ensemble_producer(qEngine, qmd.producer))
+    {
+      producer_emd.vertical_extent.level_type = "EnsembleMember";
+      producer_emd.vertical_extent.vrs =
+          "PARAMETRICCRS[\"Ensemble member\",PDATUM[\"Members of an ensemble forecast\"],"
+          "CS[parametric,1],AXIS[\"ensemble member (n)\",up],PARAMETRICUNIT[\"unity\",1.0]]";
+    }
+    else
+    {
+      producer_emd.vertical_extent.level_type = qmd.levels.front().type;
+      producer_emd.vertical_extent.vrs = VerticalReference::wkt(qmd.levels.front().type);
+    }
     for (const auto& item : qmd.levels)
       producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
   }
@@ -1277,7 +1304,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       EDRMetaData producer_emd;
       producer_emd.metadata_source = SourceEngine::Querydata;
 
-      set_qd_vertical_extent(qmd, producer_emd);
+      set_qd_vertical_extent(qEngine, qmd, producer_emd);
 
       const auto &rangeLon = qmd.wgs84Envelope.getRangeLon();
       const auto &rangeLat = qmd.wgs84Envelope.getRangeLat();
@@ -1339,7 +1366,8 @@ std::set<std::string> load_locations_qd(const Engine::Querydata::Engine &qEngine
 
         auto info = q->info();
         info->FirstParam();
-        if (info->Area() != nullptr)
+        // Point data may have an area (observed soundings do), only a grid makes it gridded
+        if (info->Grid() != nullptr)
           continue;  // defensive; isGrid() already filtered gridded data
 
         SupportedLocations sls;
@@ -1499,17 +1527,36 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       set_grid_vertical_extent(gmd, producer_emd);
 
-      producer_emd.spatial_extent.bbox_xmin =
-          std::min(gmd.latlon_bottomLeft.x(), gmd.latlon_topLeft.x());
-      producer_emd.spatial_extent.bbox_ymin =
-          std::min(gmd.latlon_bottomLeft.y(), gmd.latlon_bottomRight.y());
-      producer_emd.spatial_extent.bbox_xmax =
-          std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
-      producer_emd.spatial_extent.bbox_ymax =
-          std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
-      // A global grid may start at 180 instead of -180
-      if (producer_emd.spatial_extent.bbox_xmin >= producer_emd.spatial_extent.bbox_xmax)
-        producer_emd.spatial_extent.bbox_xmin -= 360;
+      // The west edge from the left corners and the east edge from the right ones. A global
+      // grid has its corners at 0 and 359.9 (= -0.1) degrees, and a grid crossing the
+      // antimeridian gets minx > maxx, as in OGC API - Common.
+      double west = std::min(gmd.latlon_bottomLeft.x(), gmd.latlon_topLeft.x());
+      double east = std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
+      // Without the corners of the geometry there is no extent
+      const auto same = [](const T::Coordinate& a, const T::Coordinate& b)
+      { return a.x() == b.x() && a.y() == b.y(); };
+      const bool known = !(same(gmd.latlon_bottomLeft, gmd.latlon_topRight) &&
+                           same(gmd.latlon_topLeft, gmd.latlon_bottomRight) &&
+                           same(gmd.latlon_bottomLeft, gmd.latlon_topLeft));
+      if (!known)
+        west = east = 0;
+      else if (east <= west && east + 360 - west >= 359)
+      {
+        west = -180;
+        east = 180;
+      }
+      // The latitudes from all the corners: grids scanned from north to south have their
+      // "bottom" corners in the north
+      producer_emd.spatial_extent.bbox_xmin = west;
+      producer_emd.spatial_extent.bbox_ymin = std::min({gmd.latlon_bottomLeft.y(),
+                                                        gmd.latlon_bottomRight.y(),
+                                                        gmd.latlon_topLeft.y(),
+                                                        gmd.latlon_topRight.y()});
+      producer_emd.spatial_extent.bbox_xmax = east;
+      producer_emd.spatial_extent.bbox_ymax = std::max({gmd.latlon_bottomLeft.y(),
+                                                        gmd.latlon_bottomRight.y(),
+                                                        gmd.latlon_topLeft.y(),
+                                                        gmd.latlon_topRight.y()});
 
       edr_temporal_extent temporal_extent;
       try

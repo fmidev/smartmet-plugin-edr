@@ -40,6 +40,57 @@ Fmi::DateTime y2100(Fmi::Date(2100, 1, 1));
 Fmi::TimeZonePtr utc("Etc/UTC");
 
 const uint TimeseriesFunctionFlag = 1 << 31;
+
+// True if every data parameter names one level in the key name:producer:geometry:levelId:level.
+// The level column then comes from the data, and looping over the levels of the producer would
+// only repeat the same values.
+bool levelsInParameters(const SmartMet::Plugin::EDR::CommonQuery& masterquery)
+{
+  bool found = false;
+  for (const auto& param : masterquery.poptions.parameters())
+  {
+    // @AT-N etc. tell details of the data of another column
+    const auto& name = param.name();
+    if (param.type() == SmartMet::Spine::Parameter::Type::DataIndependent ||
+        SmartMet::TimeSeries::is_special_parameter(name) || (!name.empty() && name[0] == '@'))
+      continue;
+    if (name.find_first_of("({[") != std::string::npos)
+      return false;
+    std::vector<std::string> parts;
+    SmartMet::splitString(name, ':', parts);
+    if (parts.size() < 5 || parts[4].empty() ||
+        parts[4].find_first_not_of("0123456789.") != std::string::npos)
+      return false;
+    found = true;
+  }
+  return found;
+}
+
+// True if the data parameters without a level of their own are keys on pressure levels
+// (name:producer:geometry:2) and none is on another level type: the levels option is then in
+// hPa, as for the parameters of a producer of pressure levels
+bool keysOnPressureLevels(const SmartMet::Plugin::EDR::CommonQuery& masterquery)
+{
+  bool found = false;
+  for (const auto& param : masterquery.poptions.parameters())
+  {
+    const auto& name = param.name();
+    if (param.type() == SmartMet::Spine::Parameter::Type::DataIndependent ||
+        SmartMet::TimeSeries::is_special_parameter(name) || (!name.empty() && name[0] == '@'))
+      continue;
+    if (name.find_first_of("({[") != std::string::npos)
+      return false;
+    std::vector<std::string> parts;
+    SmartMet::splitString(name, ':', parts);
+    if (parts.size() < 4 || parts[3].empty())
+      return false;
+    if (parts[3] != "2")
+      return false;
+    if (parts.size() < 5 || parts[4].empty())
+      found = true;
+  }
+  return found;
+}
 }  // anonymous namespace
 
 namespace SmartMet
@@ -1686,7 +1737,7 @@ void GridInterface::findLevels(CommonQuery& masterquery,
           // we should deliver all levels from the current level type from the given producer.
 
           if (areaproducers.size() == 1 && masterquery.pressures.empty() &&
-              masterquery.heights.empty())
+              masterquery.heights.empty() && !levelsInParameters(masterquery))
           {
             std::string producerName = *areaproducers.begin();
 
@@ -1703,7 +1754,10 @@ void GridInterface::findLevels(CommonQuery& masterquery,
         }
         else
         {
-          // There are levels listed in the request.
+          // There are levels listed in the request. Keys on pressure levels make them pressures
+          // in hPa like the leveltype option does.
+          if (levelId <= 0 && masterquery.leveltype.empty() && keysOnPressureLevels(masterquery))
+            levelId = 2;
           requestLevels(masterquery, levelId, levels);
         }
         break;

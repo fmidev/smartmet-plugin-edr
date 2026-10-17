@@ -1,0 +1,6 @@
+Status: 200
+Content-Type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
+Link: </.well-known/api-catalog>; rel="api-catalog"
+Access-Control-Allow-Origin: *
+
+{"linkset":[{"anchor":"/.well-known/api-catalog","item":[{"description":"API for querying meteorological datasets. Conforms to OGC API Environmental Data Retrieval specification","href":"/edr","title":"FMI EDR Server","x-smartmet-kind":"edr"},{"description":"Time series of forecasts and observations at locations, areas and paths. The values to return are selected with the param option, see the documentation for the parameter names and functions.","href":"/timeseries","title":"SmartMet TimeSeries API","x-smartmet-kind":"timeseries"}]},{"anchor":"/edr","service-desc":[{"href":"/edr/api","title":"FMI EDR Server - OpenAPI definition","type":"application/vnd.oai.openapi+json;version=3.1"}],"service-doc":[{"href":"/edr/api/docs","title":"FMI EDR Server - API documentation","type":"text/html"}]},{"anchor":"/timeseries","service-desc":[{"href":"/timeseries/api","title":"SmartMet TimeSeries API - OpenAPI definition","type":"application/vnd.oai.openapi+json;version=3.1"}],"service-doc":[{"href":"/timeseries/api/docs","title":"SmartMet TimeSeries API - API documentation","type":"text/html"}]}]}

@@ -1,0 +1,2 @@
+GET /edr/collections/meps_ml/position?coords=POINT(24.94+60.17)&datetime=2026-10-15T06:00:00Z&parameter-name=Temperature,Pressure HTTP/1.0
+

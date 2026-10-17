@@ -1,0 +1,3 @@
+GET /timeseries?producer=pal_skandinavia&param=name,nanmedian_a(temperature)&starttime=2008-08-06T00:00:00Z&timesteps=1&keyword=nosuchkeyword&grouplocations=1&format=json HTTP/1.0
+X-Test-Headers: Content-Type
+

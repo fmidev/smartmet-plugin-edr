@@ -1,0 +1,4 @@
+Status: 404
+Content-Type: application/problem+json
+
+{"detail":"Unknown producer nosuch","status":404,"title":"Not Found"}
