@@ -128,7 +128,9 @@ parameters, areas, times and levels; `source=querydata`, `grid` or `observation`
 source. The level types are named alike for all sources (`pressure`, `hybrid`, `height`,
 `depth`, ...) and the level values are those of the `levels` option, for example hPa for
 pressure levels. `/timeseries/api/producers/{producer}` gives one producer with the
-descriptions of its parameters, and for grid producers what their parameter keys may contain
+descriptions of its parameters and its locations (for observation producers the stations with
+their identifiers, coordinates and periods of operation), and for grid producers what their
+parameter keys may contain
 (see [Unique Parameter Keys](#unique-parameter-keys)). When several sources have a producer of
 the same name, `source` selects one, both here and in data requests.
 

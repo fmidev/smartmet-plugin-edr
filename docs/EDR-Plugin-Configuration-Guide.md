@@ -63,7 +63,7 @@ changes:
 | `/edr/api/docs` | Documentation page rendered by Swagger UI |
 | `/timeseries/api`, `/timeseries/api/docs` | The same for the TimeSeries API (each `timeseries_url`) |
 | `/timeseries/api/producers` | The producers of the TimeSeries API with their parameters, areas, times and levels, and a dictionary of parameter descriptions and units; `source=querydata`, `grid` or `observation` selects one source. Used by the data explorer to build queries. |
-| `/timeseries/api/producers/{producer}` | One producer with the descriptions of its parameters; for grid producers also the model runs (`origintime` chooses one) and, per parameter, the level types and levels, forecast types and ensemble members, aggregation and number of times of the run, read from the grid content server. |
+| `/timeseries/api/producers/{producer}` | One producer with the descriptions of its parameters and its locations (observation stations with their periods); for grid producers also the model runs (`origintime` chooses one) and, per parameter, the level types and levels, forecast types and ensemble members, aggregation and number of times of the run, read from the grid content server. |
 
 The landing page links the definition (`rel=service-desc`) and the documentation
 (`rel=service-doc`).

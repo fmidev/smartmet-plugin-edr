@@ -232,7 +232,8 @@ JsonValue build(const EngineMetaData& metadata)
         p["time"]["end"] = isoTime(e.end);
       if (e.step > 0)
         p["time"]["step"] = e.step;
-      if (!e.origin.is_not_a_date_time())
+      // Observations have no model run: their origin time is that of the metadata
+      if (!e.origin.is_not_a_date_time() && e.source != SourceEngine::Observation)
         p["time"]["origintime"] = isoTime(e.origin);
       for (const auto& level : e.levels)
       {

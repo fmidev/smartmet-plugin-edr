@@ -1620,6 +1620,51 @@ void PluginImpl::handleProducer(const Spine::HTTP::Request& theRequest,
           (info.isObject() ? info : ::Json::Value(::Json::objectValue));
     }
 
+    // The locations of the producer, such as observation stations, from the metadata
+    if ((*entry)["source"].asString() != "grid")
+    {
+      if (auto metadata = itsMetaData.load())
+      {
+        for (const auto& engine_item : metadata->getMetaData())
+        {
+          const auto& source = (*entry)["source"].asString();
+          const bool same_source =
+              (engine_item.first == SourceEngine::Querydata && source == "querydata") ||
+              (engine_item.first == SourceEngine::Observation && source == "observation");
+          if (!same_source)
+            continue;
+          auto pos = engine_item.second.find((*entry)["name"].asString());
+          if (pos == engine_item.second.end())
+            continue;
+          for (const auto& md : pos->second)
+          {
+            if (!md.locations || md.locations->empty())
+              continue;
+            auto& locations = result["locations"];
+            locations = ::Json::Value(::Json::arrayValue);
+            for (const auto& item : *md.locations)
+            {
+              const auto& loc = item.second;
+              ::Json::Value l;
+              l["id"] = loc.id;
+              l["type"] = loc.type;
+              l["name"] = loc.name;
+              l["lon"] = loc.longitude;
+              l["lat"] = loc.latitude;
+              if (!loc.start_time.is_not_a_date_time())
+                l["start"] = Fmi::date_time::to_iso_extended_string(loc.start_time) + "Z";
+              if (!loc.end_time.is_not_a_date_time())
+                l["end"] = Fmi::date_time::to_iso_extended_string(loc.end_time) + "Z";
+              if (!loc.wsi.empty())
+                l["wsi"] = loc.wsi;
+              locations.append(l);
+            }
+            break;
+          }
+        }
+      }
+    }
+
     if ((*entry)["source"].asString() == "grid" && itsEngines.gridEngine)
     {
       const auto origintime = Spine::optional_string(theRequest.getParameter("origintime"), "");

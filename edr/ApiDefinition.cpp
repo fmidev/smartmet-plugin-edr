@@ -1456,7 +1456,8 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     producer_op["tags"].append(TAG_CAPABILITIES);
     producer_op["summary"] = "One producer and the parameter keys of its grid data";
     producer_op["description"] =
-        "The producer as listed by /api/producers, with a dictionary of its parameters. For grid "
+        "The producer as listed by /api/producers, with a dictionary of its parameters and its "
+        "locations, such as the observation stations with their periods of operation. For grid "
         "producers also the model runs, and for the chosen run the geometries and per parameter "
         "the level types and levels, forecast types and ensemble members, aggregation and number "
         "of times, from which parameter keys name:producer:geometry:levelId:level:forecastType:"
@@ -1489,6 +1490,7 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     producer_schema["required"].append("parameters");
     producer_schema["properties"]["parameters"]["type"] = "object";
     producer_schema["properties"]["runs"]["type"] = "array";
+    producer_schema["properties"]["locations"]["type"] = "array";
     producer_schema["properties"]["run"]["type"] = "object";
     producer_ok["content"]["application/json"]["schema"] = producer_schema;
     OA::Document::addErrorResponses(producer_op, false);
