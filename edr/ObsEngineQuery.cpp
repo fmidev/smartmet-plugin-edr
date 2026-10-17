@@ -376,6 +376,28 @@ void fill_missing_location_params(TS::TimeSeries& ts)
 ObsEngineQuery::ObsEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlugin) {}
 
 #ifndef WITHOUT_OBSERVATION
+namespace
+{
+// The data filter of the requested levels or level range
+void set_level_filter(const CommonQuery& query, Engine::Observation::Settings& settings)
+{
+  if (query.levels.empty())
+    return;
+
+  if (query.levelRange)
+  {
+    std::string filter = "ge " + std::to_string(*query.levels.begin()) + " AND le " +
+                         std::to_string(*query.levels.rbegin());
+    settings.dataFilter.setDataFilter("level", filter);
+  }
+  else
+  {
+    for (const auto& level : query.levels)
+      settings.dataFilter.setDataFilter("level", std::to_string(level));
+  }
+}
+}  // namespace
+
 void ObsEngineQuery::processObsEngineQuery(const State& state,
                                            CommonQuery& query,
                                            TS::OutputData& outputData,
@@ -423,20 +445,7 @@ void ObsEngineQuery::processObsEngineQuery(const State& state,
 
         if (!item.is_area || UtilityFunctions::is_flash_or_mobile_producer(producer))
         {
-          if (!query.levels.empty())
-          {
-            if (query.levelRange)
-            {
-              std::string filter = "ge " + std::to_string(*query.levels.begin()) + " AND le " +
-                                   std::to_string(*query.levels.rbegin());
-              settings.dataFilter.setDataFilter("level", filter);
-            }
-            else
-            {
-              for (const auto& level : query.levels)
-                settings.dataFilter.setDataFilter("level", std::to_string(level));
-            }
-          }
+          set_level_filter(query, settings);
 
           fetchObsEngineValuesForPlaces(
               state, producer, obsParameters, settings, query, outputData);
@@ -601,6 +610,70 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::doAggregationForPlaces(
   }
 }
 
+namespace
+{
+// The observations of the query. If aggregation is requested, all observations are fetched.
+TS::TimeSeriesVectorPtr fetch_observations(Engine::Observation::Engine& obsEngine,
+                                           Engine::Observation::Settings& settings,
+                                           const CommonQuery& query)
+{
+  // Quick query if there is no aggregation
+  if (!query.timeAggregationRequested)
+    return obsEngine.values(settings, query.toptions);
+
+  // Request all observations in order to do aggregation
+  TS::TimeSeriesGeneratorOptions tmpoptions;
+  tmpoptions.startTime = settings.starttime;
+  tmpoptions.endTime = settings.endtime;
+  tmpoptions.startTimeUTC = query.toptions.startTimeUTC;
+  tmpoptions.endTimeUTC = query.toptions.endTimeUTC;
+  settings.timestep = 1;
+
+  // fetches results for all location and all parameters
+  return obsEngine.values(settings, tmpoptions);
+}
+
+// The sorted unique times of a time series
+std::vector<Fmi::LocalDateTime> sorted_timesteps(const TS::TimeSeries& ts)
+{
+  std::vector<Fmi::LocalDateTime> ts_vector;
+  std::set<Fmi::LocalDateTime> ts_set;
+  for (const TS::TimedValue& tval : ts)
+    ts_set.insert(tval.time);
+  ts_vector.insert(ts_vector.end(), ts_set.begin(), ts_set.end());
+  std::sort(ts_vector.begin(), ts_vector.end());
+  return ts_vector;
+}
+
+// Time series vector groups for parameters: each group is dedicated for one parameter and it
+// contains the timeseries of the parameter at the different locations
+std::vector<TS::TimeSeriesGroupPtr> parameter_groups(
+    const std::vector<TS::FmisidTSVectorPair>& tsv_area_with_added_fields, std::size_t nparams)
+{
+  std::vector<TS::TimeSeriesGroupPtr> tsg_vector;
+  tsg_vector.reserve(nparams);
+  for (unsigned int i = 0; i < nparams; i++)
+    tsg_vector.emplace_back(std::make_shared<TS::TimeSeriesGroup>());
+
+  // iterate locations
+
+  for (const auto& tsv_area : tsv_area_with_added_fields)
+  {
+    const TS::TimeSeriesVector* tsv = tsv_area.second.get();
+
+    // iterate fields
+    for (unsigned int k = 0; k < tsv->size(); k++)
+    {
+      // add k:th time series to the group
+      TS::LonLat lonlat(0, 0);  // location is not relevant here
+      TS::LonLatTimeSeries lonlat_ts(lonlat, tsv->at(k));
+      tsg_vector[k]->push_back(lonlat_ts);
+    }
+  }
+  return tsg_vector;
+}
+}  // namespace
+
 void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
                                                    const std::string& producer,
                                                    const ObsParameters& obsParameters,
@@ -610,26 +683,8 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
 {
   try
   {
-    TS::TimeSeriesVectorPtr observation_result;
-
-    // Quick query if there is no aggregation
-    if (!query.timeAggregationRequested)
-    {
-      observation_result = itsPlugin.itsEngines.obsEngine->values(settings, query.toptions);
-    }
-    else
-    {
-      // Request all observations in order to do aggregation
-      TS::TimeSeriesGeneratorOptions tmpoptions;
-      tmpoptions.startTime = settings.starttime;
-      tmpoptions.endTime = settings.endtime;
-      tmpoptions.startTimeUTC = query.toptions.startTimeUTC;
-      tmpoptions.endTimeUTC = query.toptions.endTimeUTC;
-      settings.timestep = 1;
-
-      // fetches results for all location and all parameters
-      observation_result = itsPlugin.itsEngines.obsEngine->values(settings, tmpoptions);
-    }
+    TS::TimeSeriesVectorPtr observation_result =
+        fetch_observations(*itsPlugin.itsEngines.obsEngine, settings, query);
 #ifdef MYDEBUG
     std::cout << "observation_result for places: " << *observation_result << std::endl;
 #endif
@@ -920,13 +975,7 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
       return;
 
     // lets find out actual timesteps: different locations may have different timesteps
-    std::vector<Fmi::LocalDateTime> ts_vector;
-    std::set<Fmi::LocalDateTime> ts_set;
-    const TS::TimeSeries& ts = observation_result->at(0);
-    for (const TS::TimedValue& tval : ts)
-      ts_set.insert(tval.time);
-    ts_vector.insert(ts_vector.end(), ts_set.begin(), ts_set.end());
-    std::sort(ts_vector.begin(), ts_vector.end());
+    std::vector<Fmi::LocalDateTime> ts_vector = sorted_timesteps(observation_result->at(0));
 
     int fmisid_index = get_fmisid_index(settings);
 
@@ -999,26 +1048,8 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
     // ..  ..              ..
     //
 
-    std::vector<TS::TimeSeriesGroupPtr> tsg_vector;
-    tsg_vector.reserve(obsParameters.size());
-    for (unsigned int i = 0; i < obsParameters.size(); i++)
-      tsg_vector.emplace_back(std::make_shared<TS::TimeSeriesGroup>());
-
-    // iterate locations
-
-    for (const auto& tsv_area : tsv_area_with_added_fields)
-    {
-      const TS::TimeSeriesVector* tsv = tsv_area.second.get();
-
-      // iterate fields
-      for (unsigned int k = 0; k < tsv->size(); k++)
-      {
-        // add k:th time series to the group
-        TS::LonLat lonlat(0, 0);  // location is not relevant here
-        TS::LonLatTimeSeries lonlat_ts(lonlat, tsv->at(k));
-        tsg_vector[k]->push_back(lonlat_ts);
-      }
-    }
+    std::vector<TS::TimeSeriesGroupPtr> tsg_vector =
+        parameter_groups(tsv_area_with_added_fields, obsParameters.size());
 
 #ifdef MYDEBUG
     std::cout << "timeseries groups: " << std::endl;
