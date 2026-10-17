@@ -714,6 +714,26 @@ std::string QueryProcessingHub::getMsgZipFileName(
   return msgZipFileName + "_" + datetime + ".xml";
 }
 
+namespace
+{
+// The icao codes of the messages
+std::vector<std::string> group_icao_codes(const TS::TimeSeriesGroup& tsgicao_data)
+{
+  std::vector<std::string> icaoCodes;
+  for (const auto& llts_data : tsgicao_data)
+  {
+    for (const auto& timed_value : llts_data.timeseries)
+    {
+      if (const auto* ptr = std::get_if<std::string>(&timed_value.value))
+        icaoCodes.emplace_back(*ptr);
+      else
+        throw Fmi::Exception(BCP, std::string("Internal error, icao code data missing"));
+    }
+  }
+  return icaoCodes;
+}
+}  // namespace
+
 std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGroupPtr& tsgicao_data,
                                                          const TS::TimeSeriesGroupPtr& tsg_data,
                                                          const Query& masterquery,
@@ -727,18 +747,7 @@ std::string QueryProcessingHub::parseIWXXMAndTACMessages(const TS::TimeSeriesGro
     // BRAINSTORM-3305: icao code is fetched too for naming zipped IWXXM files
     //
     if (&tsgicao_data != &tsg_data)
-    {
-      for (const auto& llts_data : *tsgicao_data)
-      {
-        for (const auto& timed_value : llts_data.timeseries)
-        {
-          if (const auto* ptr = std::get_if<std::string>(&timed_value.value))
-            icaoCodes.emplace_back(*ptr);
-          else
-            throw Fmi::Exception(BCP, std::string("Internal error, icao code data missing"));
-        }
-      }
-    }
+      icaoCodes = group_icao_codes(*tsgicao_data);
 
     auto icaoIterator = icaoCodes.cbegin();
 
