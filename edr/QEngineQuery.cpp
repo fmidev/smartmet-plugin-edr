@@ -3,6 +3,7 @@
 #include "PostProcessing.h"
 #include "State.h"
 #include "UtilityFunctions.h"
+#include <fmt/format.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiIndexMaskTools.h>
 #include <newbase/NFmiLocation.h>
@@ -1158,8 +1159,9 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
     {
       if (loc->type == Spine::Location::Path)
       {
-        Spine::LocationList llist =
-            getLocationListForPath(theQuery, theTLoc, place, svgPath, theState, isWkt);
+        const Spine::LocationList& llist = cachedLocations(
+            fmt::format("path|{}|{}|{}|{}", theTLoc.tag, loc->name, theQuery.step, isWkt),
+            [&] { return getLocationListForPath(theQuery, theTLoc, place, svgPath, theState, isWkt); });
 
         check_request_limit(
             itsPlugin.itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
@@ -1185,7 +1187,10 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
                 loc->type == Spine::Location::Place ||
                 loc->type == Spine::Location::CoordinatePoint))
       {
-        Spine::LocationList llist = getLocationListForArea(theTLoc, loc, theQ, svgPath, isWkt);
+        const Spine::LocationList& llist = cachedLocations(
+            fmt::format("area|{}|{}|{}|{}|{}", theTLoc.tag, loc->name, loc->radius,
+                        theQ->gridHashValue(), isWkt),
+            [&] { return getLocationListForArea(theTLoc, loc, theQ, svgPath, isWkt); });
         check_request_limit(
             itsPlugin.itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
 

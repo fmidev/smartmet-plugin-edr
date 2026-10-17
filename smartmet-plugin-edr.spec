@@ -121,6 +121,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
+- The points of an area or a path are computed once per request, not again for every parameter
+  and level of a querydata request
 - The levels of querydata producers configured with leveltype = "ensemble" are listed as the
   members of an ensemble (level type "member", an ensemble member vertical reference)
 - The parameter dictionary of the producer listing takes each field from the first producer

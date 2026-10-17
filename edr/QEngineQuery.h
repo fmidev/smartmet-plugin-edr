@@ -10,6 +10,8 @@
 #include "PluginImpl.h"
 #include "ProducerDataPeriod.h"
 #include "QueryLevelDataCache.h"
+#include <map>
+#include <string>
 
 namespace SmartMet
 {
@@ -173,7 +175,20 @@ class QEngineQuery
                                              NFmiSvgPath& svgPath,
                                              bool isWkt) const;
 
+  // The locations of an area or a path, computed once per request: they are the same for every
+  // parameter and level. The key names the location, its radius and the grid of the data.
+  template <typename Compute>
+  const Spine::LocationList& cachedLocations(const std::string& key, Compute&& compute) const
+  {
+    auto pos = itsLocationsCache.find(key);
+    if (pos == itsLocationsCache.end())
+      pos = itsLocationsCache.emplace(key, compute()).first;
+    return pos->second;
+  }
+
   const PluginImpl& itsPlugin;
+  // A request is processed in one thread, and the object lives for one request
+  mutable std::map<std::string, Spine::LocationList> itsLocationsCache;
 };
 
 }  // namespace EDR
