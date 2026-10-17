@@ -51,6 +51,22 @@ class QueryProcessingHub
   const std::string& getZipFileName() const { return zipFileName; }
 
  private:
+  static bool combineTimeSeriesHash(const State& state,
+                                    Query& subquery,
+                                    const std::string& producer,
+                                    const Spine::Location& loc,
+                                    std::set<std::size_t>& handled_timeseries,
+                                    std::size_t& hash);
+  bool locationsHash(const State& state,
+                     const Query& masterquery,
+                     Query& q,
+                     const AreaProducers& areaproducers,
+                     const ProducerDataPeriod& producerDataPeriod,
+                     bool& firstProducer,
+                     std::set<std::size_t>& handled_timeseries,
+                     std::vector<std::string>& no_data_locations,
+                     std::size_t& locations_with_data,
+                     std::size_t& hash) const;
   static Json::Value processMetaDataQuery(const State& state,
                                           const EDRQuery& edr_query,
                                           Links* response_links = nullptr);

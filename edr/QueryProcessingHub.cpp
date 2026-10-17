@@ -1346,6 +1346,163 @@ std::shared_ptr<std::string> QueryProcessingHub::processQuery(
  *       combination.
  */
 // ----------------------------------------------------------------------
+namespace
+{
+// Limit the end time of the query to the end of the data. The end time is in UTC or in local
+// time depending on the request, compare it in the same time
+void limit_end_time(Query& subquery, const Fmi::LocalDateTime& data_period_endtime)
+{
+  if (data_period_endtime.is_not_a_date_time())
+    return;
+
+  const auto data_endtime = (subquery.toptions.endTimeUTC ? data_period_endtime.utc_time()
+                                                          : data_period_endtime.local_time());
+  if (subquery.toptions.endTime > data_endtime)
+    subquery.toptions.endTime = data_endtime;
+}
+
+// True if the location is an area or a radius, which is not allowed for non-grid data
+bool is_area_location(const Spine::Location& loc)
+{
+  return ((loc.type != Spine::Location::Place && loc.type != Spine::Location::CoordinatePoint) ||
+          ((loc.type == Spine::Location::Place || loc.type == Spine::Location::CoordinatePoint) &&
+           loc.radius > 0));
+}
+
+}  // namespace
+
+// Combine the hash of the querydata and the generated timeseries of the producer into the hash,
+// unless the combination has already been handled. False if the query cannot be cached.
+bool QueryProcessingHub::combineTimeSeriesHash(const State& state,
+                                               Query& subquery,
+                                               const std::string& producer,
+                                               const Spine::Location& loc,
+                                               std::set<std::size_t>& handled_timeseries,
+                                               std::size_t& hash)
+{
+  const auto& thePlugin = state.getPlugin();
+
+  auto qi = (subquery.origintime ? state.get(producer, *subquery.origintime) : state.get(producer));
+
+  // Generated timeseries may depend on the available querydata
+  auto querydata_hash = Engine::Querydata::hash_value(qi);
+
+  // No need to generate the timeseries again if the combination has already been handled
+  // Note that timeseries_hash is used only for caching the generated timeseries,
+  // the value should not be used for calculating the actual product hash. Instead,
+  // we use the hash of the generated timeseries itself.
+
+  auto timeseries_hash = querydata_hash;
+  Fmi::hash_combine(timeseries_hash, Fmi::hash_value(subquery.timezone));
+  Fmi::hash_combine(timeseries_hash, subquery.toptions.hash_value());
+
+  auto pos_flag = handled_timeseries.insert(timeseries_hash);
+
+  if (!pos_flag.second)  // if insert was not successful
+    return true;
+
+  const auto validtimes = qi->validTimes();
+  if (validtimes->empty())
+    throw Fmi::Exception(BCP, "Producer '" + producer + "' has no valid timesteps!");
+  subquery.toptions.setDataTimes(validtimes, qi->isClimatology());
+
+  // no area operations allowed for non-grid data
+  if (!qi->isGrid() && is_area_location(loc))
+    return false;
+
+  auto tz = thePlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(subquery.timezone);
+  auto tlist = thePlugin.itsTimeSeriesCache->generate(subquery.toptions, tz);
+
+  // This is enough to generate an unique hash for the request, even
+  // though the timesteps may not be exactly the same as those used
+  // in generating the result.
+
+  Fmi::hash_combine(hash, querydata_hash);
+  Fmi::hash_combine(hash, Fmi::hash_value(*tlist));
+  return true;
+}
+// ----------------------------------------------------------------------
+/*!
+ * \brief Combine the hashes of the locations of a producer group into the hash
+ *
+ * Emulates processQEngineQuery. Returns false if the query cannot be cached.
+ */
+// ----------------------------------------------------------------------
+
+bool QueryProcessingHub::locationsHash(const State& state,
+                                       const Query& masterquery,
+                                       Query& q,
+                                       const AreaProducers& areaproducers,
+                                       const ProducerDataPeriod& producerDataPeriod,
+                                       bool& firstProducer,
+                                       std::set<std::size_t>& handled_timeseries,
+                                       std::vector<std::string>& no_data_locations,
+                                       std::size_t& locations_with_data,
+                                       std::size_t& hash) const
+{
+  const auto& thePlugin = state.getPlugin();
+
+  // first timestep is here in utc
+  Fmi::DateTime first_timestep = q.latestTimestep;
+
+  for (const auto& tloc : q.loptions->locations())
+  {
+    Query subquery = q;
+
+    if (subquery.timezone == LOCALTIME_PARAM)
+      subquery.timezone = tloc.loc->timezone;
+
+    subquery.toptions.startTime = first_timestep;
+
+    if (!firstProducer)
+      subquery.toptions.startTime += Fmi::Minutes(1);  // WHY???????
+    firstProducer = false;
+
+    // producer can be alias, get actual producer
+    std::string producer(itsQEngineQuery.selectProducer(*(tloc.loc), subquery, areaproducers));
+
+    bool isClimatologyProducer =
+        (producer.empty()
+             ? false
+             : thePlugin.itsEngines.qEngine->getProducerConfig(producer).isclimatology);
+
+    Fmi::LocalDateTime data_period_endtime(producerDataPeriod.getLocalEndTime(
+        producer, subquery.timezone, thePlugin.itsEngines.geoEngine->getTimeZones()));
+
+    // We do not need to iterate over the parameters here like processQEngineQuery does
+
+    // every parameter starts from the same row
+    if (!isClimatologyProducer)
+      limit_end_time(subquery, data_period_endtime);
+
+    {
+      // Emulate fetchQEngineValues here
+      Spine::LocationPtr loc = get_loc(
+          masterquery, q, tloc, *thePlugin.itsEngines.geoEngine, thePlugin.itsGeometryStorage);
+
+      if (subquery.timezone == LOCALTIME_PARAM)
+        subquery.timezone = loc->timezone;
+
+      // Select the producer for the coordinate
+      producer = itsQEngineQuery.selectProducer(*loc, subquery, areaproducers);
+
+      if (producer.empty())
+      {
+        no_data_locations.push_back(get_name_base(tloc.loc->name));
+        continue;
+      }
+      ++locations_with_data;
+
+      if (!combineTimeSeriesHash(state, subquery, producer, *loc, handled_timeseries, hash))
+        return false;
+    }
+    // get the latest_timestep from previous query
+    q.latestTimestep = subquery.latestTimestep;
+    q.lastpoint = subquery.lastpoint;
+  }
+  return true;
+}
+
 std::size_t QueryProcessingHub::hash_value(const State& state,
                                            const Spine::HTTP::Request& request,
                                            Query masterquery) const
@@ -1468,119 +1625,17 @@ std::size_t QueryProcessingHub::hash_value(const State& state,
       {
         // Here we emulate processQEngineQuery
         // Note name changes: masterquery --> query, and query-->subquery
-
-        // first timestep is here in utc
-        Fmi::DateTime first_timestep = q.latestTimestep;
-
-        for (const auto& tloc : q.loptions->locations())
-        {
-          Query subquery = q;
-
-          if (subquery.timezone == LOCALTIME_PARAM)
-            subquery.timezone = tloc.loc->timezone;
-
-          subquery.toptions.startTime = first_timestep;
-
-          if (!firstProducer)
-            subquery.toptions.startTime += Fmi::Minutes(1);  // WHY???????
-          firstProducer = false;
-
-          // producer can be alias, get actual producer
-          std::string producer(
-              itsQEngineQuery.selectProducer(*(tloc.loc), subquery, areaproducers));
-
-          bool isClimatologyProducer =
-              (producer.empty()
-                   ? false
-                   : thePlugin.itsEngines.qEngine->getProducerConfig(producer).isclimatology);
-
-          Fmi::LocalDateTime data_period_endtime(producerDataPeriod.getLocalEndTime(
-              producer, subquery.timezone, thePlugin.itsEngines.geoEngine->getTimeZones()));
-
-          // We do not need to iterate over the parameters here like processQEngineQuery does
-
-          // every parameter starts from the same row. The end time is in UTC or in local
-          // time depending on the request, compare it in the same time
-          if (!data_period_endtime.is_not_a_date_time() && !isClimatologyProducer)
-          {
-            const auto data_endtime = (subquery.toptions.endTimeUTC
-                                           ? data_period_endtime.utc_time()
-                                           : data_period_endtime.local_time());
-            if (subquery.toptions.endTime > data_endtime)
-              subquery.toptions.endTime = data_endtime;
-          }
-
-          {
-            // Emulate fetchQEngineValues here
-            Spine::LocationPtr loc = get_loc(masterquery,
-                                             q,
-                                             tloc,
-                                             *thePlugin.itsEngines.geoEngine,
-                                             thePlugin.itsGeometryStorage);
-
-            if (subquery.timezone == LOCALTIME_PARAM)
-              subquery.timezone = loc->timezone;
-
-            // Select the producer for the coordinate
-            producer = itsQEngineQuery.selectProducer(*loc, subquery, areaproducers);
-
-            if (producer.empty())
-            {
-              no_data_locations.push_back(get_name_base(tloc.loc->name));
-              continue;
-            }
-            ++locations_with_data;
-
-            auto qi = (subquery.origintime ? state.get(producer, *subquery.origintime)
-                                           : state.get(producer));
-
-            // Generated timeseries may depend on the available querydata
-            auto querydata_hash = Engine::Querydata::hash_value(qi);
-
-            // No need to generate the timeseries again if the combination has already been handled
-            // Note that timeseries_hash is used only for caching the generated timeseries,
-            // the value should not be used for calculating the actual product hash. Instead,
-            // we use the hash of the generated timeseries itself.
-
-            auto timeseries_hash = querydata_hash;
-            Fmi::hash_combine(timeseries_hash, Fmi::hash_value(subquery.timezone));
-            Fmi::hash_combine(timeseries_hash, subquery.toptions.hash_value());
-
-            auto pos_flag = handled_timeseries.insert(timeseries_hash);
-
-            if (pos_flag.second)  // if insert was successful
-            {
-              const auto validtimes = qi->validTimes();
-              if (validtimes->empty())
-                throw Fmi::Exception(BCP, "Producer '" + producer + "' has no valid timesteps!");
-              subquery.toptions.setDataTimes(validtimes, qi->isClimatology());
-
-              // no area operations allowed for non-grid data
-              if (!qi->isGrid() && ((loc->type != Spine::Location::Place &&
-                                     loc->type != Spine::Location::CoordinatePoint) ||
-                                    ((loc->type == Spine::Location::Place ||
-                                      loc->type == Spine::Location::CoordinatePoint) &&
-                                     loc->radius > 0)))
-              {
-                return 0;
-              }
-
-              auto tz = thePlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(
-                  subquery.timezone);
-              auto tlist = thePlugin.itsTimeSeriesCache->generate(subquery.toptions, tz);
-
-              // This is enough to generate an unique hash for the request, even
-              // though the timesteps may not be exactly the same as those used
-              // in generating the result.
-
-              Fmi::hash_combine(hash, querydata_hash);
-              Fmi::hash_combine(hash, Fmi::hash_value(*tlist));
-            }
-          }
-          // get the latest_timestep from previous query
-          q.latestTimestep = subquery.latestTimestep;
-          q.lastpoint = subquery.lastpoint;
-        }
+        if (!locationsHash(state,
+                           masterquery,
+                           q,
+                           areaproducers,
+                           producerDataPeriod,
+                           firstProducer,
+                           handled_timeseries,
+                           no_data_locations,
+                           locations_with_data,
+                           hash))
+          return 0;
       }
 
       // get the latestTimestep from previous query
