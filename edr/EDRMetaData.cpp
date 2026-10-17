@@ -459,6 +459,7 @@ void add_derived_parameters(const Engine::Observation::Engine &obsEngine,
   }
 }
 
+#endif
 #ifndef WITHOUT_AVI
 std::vector<TimePeriod> get_time_periods(
     const std::set<Fmi::LocalDateTime> &timesteps,
@@ -1042,6 +1043,7 @@ std::list<AviMetaData> getAviEngineMetadata(const Engine::Avi::Engine &aviEngine
   }
 }
 
+#endif
 // ----------------------------------------------------------------------
 /*!
  * \brief Select the locations inside the data area
@@ -1065,6 +1067,7 @@ SupportedLocationsPtr locations_inside(const SupportedLocationsPtr &locations,
   return ret;
 }
 
+#ifndef WITHOUT_AVI
 SupportedLocations get_supported_locations(const AviMetaData &amd,
                                            const AviCollections & /* aviCollections */)
 
@@ -1096,6 +1099,7 @@ SupportedLocations get_supported_locations(const AviMetaData &amd,
   }
 }
 
+#endif
 }  // namespace
 
 const Fmi::DateTime &get_latest_data_update_time(const EDRProducerMetaData &pmd,
@@ -1564,6 +1568,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
   }
 }
 
+#ifndef WITHOUT_OBSERVATION
 namespace
 {
 // The metadata of the visible observation producers
@@ -1771,6 +1776,7 @@ EDRProducerMetaData get_edr_metadata_obs(
 }
 #endif
 
+#ifndef WITHOUT_AVI
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine &aviEngine,
                                          const Config &config,
                                          const ProducerLicenses & /* licenses */,
