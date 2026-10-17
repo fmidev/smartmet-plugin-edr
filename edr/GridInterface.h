@@ -71,6 +71,7 @@ class GridInterface
 
       static void     insertFileQueries(QueryServer::Query& query,const QueryServer::QueryStreamer_sptr& queryStreamer);
       static bool     isBuildInParameter(const char *parameter);
+      void            setParameterName(QueryServer::QueryParameter& qParam, const Spine::Parameter& param);
 
       void            prepareProducer(QueryServer::Query& gridQuery,const CommonQuery& masterquery,int origLevelId,
                         const AreaProducers& areaproducers,int& levelId,int& geometryId);
