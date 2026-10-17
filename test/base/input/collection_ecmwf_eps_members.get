@@ -1,0 +1,2 @@
+GET /edr/collections/ecmwf_eps?f=application/json HTTP/1.0
+

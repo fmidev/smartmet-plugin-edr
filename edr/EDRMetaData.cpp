@@ -1122,6 +1122,21 @@ std::string latin1_to_utf8(const std::string& s)
 
   return out;
 }
+
+// Whether the levels of a querydata producer are the members of an ensemble
+bool is_ensemble_producer(const Engine::Querydata::Engine &qEngine, const std::string &producer)
+{
+  try
+  {
+    return qEngine.getProducerConfig(producer).leveltype == "ensemble";
+  }
+  catch (...)
+  {
+    // An alias or an unknown producer is not an ensemble
+    return false;
+  }
+}
+
 }  // namespace
 
 EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine,
@@ -1168,8 +1183,20 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 
       if (qmd.levels.size() > 1)
       {
-        producer_emd.vertical_extent.level_type = qmd.levels.front().type;
-        producer_emd.vertical_extent.vrs = VerticalReference::wkt(qmd.levels.front().type);
+        // Legacy ensembles store their members as levels; the producer is then configured
+        // with leveltype = "ensemble" and its levels are listed as members
+        if (is_ensemble_producer(qEngine, qmd.producer))
+        {
+          producer_emd.vertical_extent.level_type = "EnsembleMember";
+          producer_emd.vertical_extent.vrs =
+              "PARAMETRICCRS[\"Ensemble member\",PDATUM[\"Members of an ensemble forecast\"],"
+              "CS[parametric,1],AXIS[\"ensemble member (n)\",up],PARAMETRICUNIT[\"unity\",1.0]]";
+        }
+        else
+        {
+          producer_emd.vertical_extent.level_type = qmd.levels.front().type;
+          producer_emd.vertical_extent.vrs = VerticalReference::wkt(qmd.levels.front().type);
+        }
         for (const auto &item : qmd.levels)
           producer_emd.vertical_extent.levels.push_back(Fmi::to_string(item.value));
       }

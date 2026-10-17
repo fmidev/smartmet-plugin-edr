@@ -121,6 +121,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
+- The levels of querydata producers configured with leveltype = "ensemble" are listed as the
+  members of an ensemble (level type "member", an ensemble member vertical reference)
+- The parameter dictionary of the producer listing takes each field from the first producer
+  having it, so that a producer without a description no longer hides those of the others
 - TimeSeries requests of location parameters only (e.g. lon,lat) for a path, a bounding box, an
   area or a radius list the points like data requests do, instead of 0,0 or null
 - Querydata paths and areas on several levels: the names, times and coordinates are listed

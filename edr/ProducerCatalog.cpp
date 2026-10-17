@@ -64,7 +64,8 @@ LevelKind levelKind(SourceEngine source, const std::string& type)
       {"depth", {"depth", "m", 1}},
       {"depthlevel", {"depth", "m", 1}},
       {"ground_depth", {"ground depth", "m", 1}},
-      {"soundinglevel", {"sounding", "", 1}}};
+      {"soundinglevel", {"sounding", "", 1}},
+      {"ensemblemember", {"member", "", 1}}};
   auto it = kinds.find(Fmi::ascii_tolower_copy(type));
   if (it == kinds.end())
     return {nullptr, "", 1};
@@ -193,11 +194,11 @@ JsonValue build(const EngineMetaData& metadata)
         for (const auto& md : producer_item.second)
         {
           entry.add(md);
-          // Only what adds to the name: most observation parameters have no description
+          // Only what adds to the name: most observation parameters have no description. The
+          // first producer having a field gives it, the others fill in what is still missing, so
+          // that a producer without a description does not hide those of the others.
           for (const auto& p : md.parameters)
           {
-            if (dictionary.isMember(p.first))
-              continue;
             JsonValue info(::Json::objectValue);
             if (p.second.name != p.first)
               info["name"] = p.second.name;
@@ -206,8 +207,12 @@ JsonValue build(const EngineMetaData& metadata)
               info["description"] = desc;
             if (!p.second.unit.empty())
               info["unit"] = p.second.unit;
-            if (info.size() > 0)
-              dictionary[p.first] = info;
+            if (info.size() == 0)
+              continue;
+            auto& known = dictionary[p.first];
+            for (const auto& field : info.getMemberNames())
+              if (!known.isMember(field))
+                known[field] = info[field];
           }
         }
       }
