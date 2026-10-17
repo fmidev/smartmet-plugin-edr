@@ -1,0 +1,2 @@
+GET /timeseries?source=grid&place=Helsinki&starttime=2008-09-09T00:00:00Z&timesteps=1&format=json&tz=UTC&param=name,level,T-K:ECMWF_SKANDINAVIA_PAINEPINTA::2&levels=850,500 HTTP/1.0
+

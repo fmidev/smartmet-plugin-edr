@@ -65,6 +65,32 @@ bool levelsInParameters(const SmartMet::Plugin::EDR::CommonQuery& masterquery)
   }
   return found;
 }
+
+// True if the data parameters without a level of their own are keys on pressure levels
+// (name:producer:geometry:2) and none is on another level type: the levels option is then in
+// hPa, as for the parameters of a producer of pressure levels
+bool keysOnPressureLevels(const SmartMet::Plugin::EDR::CommonQuery& masterquery)
+{
+  bool found = false;
+  for (const auto& param : masterquery.poptions.parameters())
+  {
+    const auto& name = param.name();
+    if (param.type() == SmartMet::Spine::Parameter::Type::DataIndependent ||
+        SmartMet::TimeSeries::is_special_parameter(name) || (!name.empty() && name[0] == '@'))
+      continue;
+    if (name.find_first_of("({[") != std::string::npos)
+      return false;
+    std::vector<std::string> parts;
+    SmartMet::splitString(name, ':', parts);
+    if (parts.size() < 4 || parts[3].empty())
+      return false;
+    if (parts[3] != "2")
+      return false;
+    if (parts.size() < 5 || parts[4].empty())
+      found = true;
+  }
+  return found;
+}
 }  // anonymous namespace
 
 namespace SmartMet
@@ -1544,7 +1570,11 @@ void GridInterface::findLevels(CommonQuery& masterquery,
         }
         else
         {
-          // There are levels listed in the request.
+          // There are levels listed in the request. Keys on pressure levels make them pressures
+          // in hPa like the leveltype option does.
+
+          if (levelId <= 0 && masterquery.leveltype.empty() && keysOnPressureLevels(masterquery))
+            levelId = 2;
 
           if (levelId == 2)
           {
