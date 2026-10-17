@@ -189,15 +189,31 @@ double distance_in_km(double value, const std::string& units, const char* name)
                      "' used, 'm', 'km' and 'mi' are supported");
 }
 
-// Output format selected by the Accept header (RFC 9110 content negotiation). The default
-// format is used if there is no Accept header or it accepts anything.
-std::string negotiate_output_format(const std::optional<std::string>& accept,
-                                    const std::set<std::string>& supported_formats,
-                                    const std::string& default_format)
+// The quality value (q parameter) of an Accept header media range split at ';'
+double accept_quality(const std::vector<std::string>& parts)
 {
-  if (!accept || Fmi::trim_copy(*accept).empty())
-    return default_format;
+  double q = 1;
+  for (std::size_t i = 1; i < parts.size(); i++)
+  {
+    auto param = Fmi::trim_copy(parts[i]);
+    if (boost::algorithm::istarts_with(param, "q="))
+    {
+      try
+      {
+        q = std::stod(param.substr(2));
+      }
+      catch (...)
+      {
+        q = 0;
+      }
+    }
+  }
+  return q;
+}
 
+// The output format of an Accept header media type, empty if there is none
+std::string media_type_format(const std::string& type, const std::string& default_format)
+{
   // Media type -> output format
   static const std::vector<std::pair<std::string, std::string>> media_types{
       {COVERAGE_JSON_MIME_TYPE, COVERAGE_JSON_FORMAT},
@@ -209,6 +225,31 @@ std::string negotiate_output_format(const std::optional<std::string>& accept,
       {"application/zip", IWXXMZIP_FORMAT},
       {"text/plain", TAC_FORMAT}};
 
+  if (type == "*/*" || type == "application/*")
+    return default_format;
+
+  std::string format;
+  for (const auto& item : media_types)
+    if (item.first == type)
+    {
+      format = item.second;
+      if (format.empty() &&
+          (default_format == COVERAGE_JSON_FORMAT || default_format == GEO_JSON_FORMAT))
+        format = default_format;
+      break;
+    }
+  return format;
+}
+
+// Output format selected by the Accept header (RFC 9110 content negotiation). The default
+// format is used if there is no Accept header or it accepts anything.
+std::string negotiate_output_format(const std::optional<std::string>& accept,
+                                    const std::set<std::string>& supported_formats,
+                                    const std::string& default_format)
+{
+  if (!accept || Fmi::trim_copy(*accept).empty())
+    return default_format;
+
   std::string best_format;
   double best_q = 0;
 
@@ -219,41 +260,11 @@ std::string negotiate_output_format(const std::optional<std::string>& accept,
     std::vector<std::string> parts;
     boost::algorithm::split(parts, range, boost::algorithm::is_any_of(";"));
     const auto type = boost::algorithm::to_lower_copy(Fmi::trim_copy(parts[0]));
-    double q = 1;
-    for (std::size_t i = 1; i < parts.size(); i++)
-    {
-      auto param = Fmi::trim_copy(parts[i]);
-      if (boost::algorithm::istarts_with(param, "q="))
-      {
-        try
-        {
-          q = std::stod(param.substr(2));
-        }
-        catch (...)
-        {
-          q = 0;
-        }
-      }
-    }
+    double q = accept_quality(parts);
     if (q <= best_q)
       continue;
 
-    std::string format;
-    if (type == "*/*" || type == "application/*")
-      format = default_format;
-    else
-    {
-      for (const auto& item : media_types)
-        if (item.first == type)
-        {
-          format = item.second;
-          if (format.empty() && (default_format == COVERAGE_JSON_FORMAT ||
-                                 default_format == GEO_JSON_FORMAT))
-            format = default_format;
-          break;
-        }
-    }
-
+    std::string format = media_type_format(type, default_format);
     if (!format.empty() && supported_formats.find(format) != supported_formats.end())
     {
       best_format = format;
