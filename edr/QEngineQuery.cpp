@@ -344,6 +344,22 @@ void QEngineQuery::resolveAreaLocations(CommonQuery& query,
   query.loptions->setLocations(tloclist);
 }
 
+namespace
+{
+// Limit the end time of the query to the end of the data. The end time is in UTC or in local
+// time depending on the request, compare it in the same time
+void limit_end_time(CommonQuery& q, const Fmi::LocalDateTime& data_period_endtime)
+{
+  if (data_period_endtime.is_not_a_date_time())
+    return;
+
+  const auto data_endtime = (q.toptions.endTimeUTC ? data_period_endtime.utc_time()
+                                                   : data_period_endtime.local_time());
+  if (q.toptions.endTime > data_endtime)
+    q.toptions.endTime = data_endtime;
+}
+}  // namespace
+
 std::vector<std::string> QEngineQuery::processQEngineQuery(const State& state,
                                                            CommonQuery& masterquery,
                                        TS::OutputData& outputData,
@@ -421,16 +437,9 @@ std::vector<std::string> QEngineQuery::processQEngineQuery(const State& state,
         // reset to original start time for each new location
         q.toptions.startTime = old_start_time;
 
-        // every parameter starts from the same row. The end time is in UTC or in local
-        // time depending on the request, compare it in the same time
-        if (!data_period_endtime.is_not_a_date_time() && !isClimatologyProducer)
-        {
-          const auto data_endtime =
-              (q.toptions.endTimeUTC ? data_period_endtime.utc_time()
-                                     : data_period_endtime.local_time());
-          if (q.toptions.endTime > data_endtime)
-            q.toptions.endTime = data_endtime;
-        }
+        // every parameter starts from the same row
+        if (!isClimatologyProducer)
+          limit_end_time(q, data_period_endtime);
         fetchQEngineValues(state,
                            paramfunc,
                            q.precisions[column],
