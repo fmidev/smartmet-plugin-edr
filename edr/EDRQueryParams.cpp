@@ -1859,6 +1859,52 @@ void EDRQueryParams::parseDateTime(const State& /* state */,
   }
 }
 
+namespace
+{
+// The number of levels of resolution-z: 0 for the levels of the data, otherwise 2-max_levels
+long parse_resolution_z(const std::string& opt, long max_levels)
+{
+  long nz = -1;
+  try
+  {
+    std::size_t pos = 0;
+    nz = std::stol(opt, &pos);
+    if (pos != opt.size())
+      nz = -1;
+  }
+  catch (...)
+  {
+  }
+  if (nz != 0 && (nz < 2 || nz > max_levels))
+    throw EDRException("Invalid 'resolution-z' value '" + opt +
+                       "', valid values are 0 for the levels of the data and 2-" +
+                       Fmi::to_string(max_levels) +
+                       " for the number of levels including the minimum and maximum");
+  return nz;
+}
+
+// The range of the z parameter limited to the vertical extent zmin...zmax of the collection
+void requested_z_range(std::string z, const std::string& collection_id, double& zmin, double& zmax)
+{
+  const double extent_min = zmin;
+  const double extent_max = zmax;
+  bool is_range = false;
+  std::string lo;
+  std::string hi;
+  if (!UtilityFunctions::parseRangeListValue(z, is_range, lo, hi))
+    throw EDRException("Invalid 'z' query parameter '" + z + "'");
+  zmin = Fmi::stod(lo);
+  zmax = (hi.empty() ? zmin : Fmi::stod(hi));
+  if (zmin > zmax)
+    std::swap(zmin, zmax);
+  zmin = std::max(zmin, extent_min);
+  zmax = std::min(zmax, extent_max);
+  if (zmin > zmax)
+    throw EDRException("Query parameter 'z' does not overlap the vertical extent of collection '" +
+                       collection_id + "'");
+}
+}  // namespace
+
 void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd, const Config& config)
 {
   try
@@ -1877,22 +1923,7 @@ void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd, const Config& conf
     // At most 1000 levels unless the request limits of the configuration say otherwise
     const auto& limits = config.requestLimits();
     const long max_levels = (limits.maxlevels > 0 ? long(limits.maxlevels) : 1000);
-    long nz = -1;
-    try
-    {
-      std::size_t pos = 0;
-      nz = std::stol(*opt, &pos);
-      if (pos != opt->size())
-        nz = -1;
-    }
-    catch (...)
-    {
-    }
-    if (nz != 0 && (nz < 2 || nz > max_levels))
-      throw EDRException("Invalid 'resolution-z' value '" + *opt +
-                         "', valid values are 0 for the levels of the data and 2-" +
-                         Fmi::to_string(max_levels) +
-                         " for the number of levels including the minimum and maximum");
+    const long nz = parse_resolution_z(*opt, max_levels);
     if (nz == 0)
       return;
 
@@ -1931,23 +1962,7 @@ void EDRQueryParams::parseResolutionZ(const EDRMetaData& emd, const Config& conf
     double zmax = extent_max;
     auto z = Spine::optional_string(req.getParameter("z"), "");
     if (!z.empty())
-    {
-      bool is_range = false;
-      std::string lo;
-      std::string hi;
-      if (!UtilityFunctions::parseRangeListValue(z, is_range, lo, hi))
-        throw EDRException("Invalid 'z' query parameter '" + z + "'");
-      zmin = Fmi::stod(lo);
-      zmax = (hi.empty() ? zmin : Fmi::stod(hi));
-      if (zmin > zmax)
-        std::swap(zmin, zmax);
-      zmin = std::max(zmin, extent_min);
-      zmax = std::min(zmax, extent_max);
-      if (zmin > zmax)
-        throw EDRException(
-            "Query parameter 'z' does not overlap the vertical extent of collection '" +
-            itsEDRQuery.collection_id + "'");
-    }
+      requested_z_range(z, itsEDRQuery.collection_id, zmin, zmax);
 
     std::string values;
     for (long k = 0; k < nz; k++)
