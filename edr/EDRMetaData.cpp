@@ -1376,12 +1376,17 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
           producer_emd.vertical_extent.levels.push_back(Fmi::to_string(level));
       }
 
+      producer_emd.spatial_extent.bbox_xmin =
+          std::min(gmd.latlon_bottomLeft.x(), gmd.latlon_topLeft.x());
       producer_emd.spatial_extent.bbox_ymin =
           std::min(gmd.latlon_bottomLeft.y(), gmd.latlon_bottomRight.y());
       producer_emd.spatial_extent.bbox_xmax =
           std::max(gmd.latlon_bottomRight.x(), gmd.latlon_topRight.x());
       producer_emd.spatial_extent.bbox_ymax =
           std::max(gmd.latlon_topLeft.y(), gmd.latlon_topRight.y());
+      // A global grid may start at 180 instead of -180
+      if (producer_emd.spatial_extent.bbox_xmin >= producer_emd.spatial_extent.bbox_xmax)
+        producer_emd.spatial_extent.bbox_xmin -= 360;
 
       edr_temporal_extent temporal_extent;
       try
