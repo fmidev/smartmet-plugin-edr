@@ -3783,6 +3783,167 @@ void page_locations(const EDRQuery &edr_query,
     *response_links = links;
 }
 
+// The metadata of the first instance of the collection: all instances of a collection share
+// the same locations
+const EDRMetaData* collection_metadata(const EngineMetaData& emd, const std::string& producer)
+{
+  const auto& metadata = emd.getMetaData();
+  for (const auto& item : metadata)
+  {
+    const auto& engine_metadata = item.second;
+    auto it = engine_metadata.find(producer);
+    if (it != engine_metadata.end() && !it->second.empty())
+      return &it->second.front();
+  }
+  return nullptr;
+}
+
+// The period of the data of a location, not a date time if unknown
+void location_data_period(const EDRMetaData& edr_md,
+                          const location_info& loc,
+                          bool soundingObservations,
+                          Fmi::DateTime& start_time,
+                          Fmi::DateTime& end_time)
+{
+  if (soundingObservations)
+  {
+    try
+    {
+      auto stationId = Fmi::stoi(loc.id);
+      auto it = edr_md.stationMetaData.find(stationId);
+
+      if (it != edr_md.stationMetaData.end())
+      {
+        start_time = it->second.period.begin();
+        end_time = it->second.period.end();
+      }
+    }
+    catch (...)
+    {
+    }
+  }
+  else if (edr_md.isAviProducer())
+  {
+    // BRAINSTORM-3320
+    //
+    // Station's temporal extent, varies e.g. for taf collection
+    //
+    auto it = edr_md.stationTemporalExtentMetaData.find(loc.id);
+
+    // Same UB-on-empty-vector shape as the avi 'all' feature block
+    // below: an entry today is only inserted when the station has at
+    // least one matching message, but defending against an empty
+    // time_periods makes the function robust to future refactors that
+    // might pre-populate the map.
+    if (it != edr_md.stationTemporalExtentMetaData.end() && !it->second.time_periods.empty())
+    {
+      start_time = it->second.time_periods.front().start_time;
+      end_time = it->second.time_periods.back().end_time;
+    }
+  }
+  else
+  {
+    start_time = loc.start_time;
+    end_time = loc.end_time;
+  }
+}
+
+// The datetime property of a location: the period of its data limited to the time now
+// for observations, the temporal extent of the collection by default
+Json::Value location_datetime(const EDRMetaData& edr_md,
+                              const location_info& loc,
+                              bool soundingObservations,
+                              const Fmi::DateTime& now)
+{
+  Fmi::DateTime start_time;
+  Fmi::DateTime end_time;
+  location_data_period(edr_md, loc, soundingObservations, start_time, end_time);
+
+  if (start_time.is_not_a_date_time())
+    start_time = edr_md.temporal_extent.time_periods.front().start_time;
+  if (end_time.is_not_a_date_time())
+    end_time = edr_md.temporal_extent.time_periods.back().end_time;
+  if (end_time.is_not_a_date_time())
+    end_time = edr_md.temporal_extent.time_periods.back().start_time;
+  // Station periods of observations may extend to the future; forecast data does,
+  // and its extent must not be cut at the time of the request
+  if ((edr_md.isObsProducer() || edr_md.isAviProducer()) && end_time > now)
+    end_time = now;
+
+  return Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
+                     Fmi::to_iso_extended_string(end_time) + "Z");
+}
+
+// The feature of a location
+Json::Value location_feature(const EDRMetaData& edr_md,
+                             const location_info& loc,
+                             bool soundingObservations,
+                             const Fmi::DateTime& now)
+{
+  auto longitude_precision = edr_md.getPrecision("longitude");
+  auto latitude_precision = edr_md.getPrecision("latitude");
+
+  auto feature = Json::Value(Json::ValueType::objectValue);
+  feature["type"] = Json::Value("Feature");
+  feature["id"] = Json::Value(loc.id);
+  auto geometry = Json::Value(Json::ValueType::objectValue);
+
+  if ((!(edr_md.isAviProducer())) || (!edr_md.getGeometry(loc.id, geometry)))
+  {
+    geometry["type"] = Json::Value("Point");
+    auto coordinates = Json::Value(Json::ValueType::arrayValue);
+    coordinates[0] = Json::Value(loc.longitude, longitude_precision);
+    coordinates[1] = Json::Value(loc.latitude, latitude_precision);
+    geometry["coordinates"] = coordinates;
+  }
+  auto properties = Json::Value(Json::ValueType::objectValue);
+  properties["name"] = Json::Value(loc.name);
+  auto detail_string = ("Id is " + loc.type);
+  if (!loc.keyword.empty())
+    detail_string.append(" from " + loc.keyword);
+  properties["detail"] = Json::Value(detail_string);
+  // As in the locations example of the OGC API EDR specification
+  if (!loc.wsi.empty())
+    properties["WIGOS Station Identifier"] = Json::Value(loc.wsi);
+  if (!edr_md.temporal_extent.time_periods.empty())
+    properties["datetime"] = location_datetime(edr_md, loc, soundingObservations, now);
+  feature["geometry"] = geometry;
+  feature["properties"] = properties;
+  return feature;
+}
+
+// The feature of the special location 'all' of aviation collections
+Json::Value all_locations_feature(const EDRMetaData& edr_md)
+{
+  auto all = Json::Value(Json::ValueType::objectValue);
+  all["id"] = "all";
+  all["type"] = "Feature";
+
+  auto bbox = Json::Value(Json::ValueType::arrayValue);
+  bbox[0] = Json::Value(edr_md.spatial_extent.bbox_xmin);
+  bbox[1] = Json::Value(edr_md.spatial_extent.bbox_ymin);
+  bbox[2] = Json::Value(edr_md.spatial_extent.bbox_xmax);
+  bbox[3] = Json::Value(edr_md.spatial_extent.bbox_ymax);
+  all["bbox"] = bbox;
+
+  auto properties = Json::Value(Json::ValueType::objectValue);
+  // single_time_periods is empty when no rows in avidb_messages match the
+  // collection's filters. Without this guard front()/back() on an empty
+  // vector is undefined behavior and crashes the server (SIGSEGV) on the
+  // /collections/<avi-collection>/locations endpoint.
+  if (!edr_md.temporal_extent.single_time_periods.empty())
+  {
+    auto start_time = edr_md.temporal_extent.single_time_periods.front().start_time;
+    auto end_time = edr_md.temporal_extent.single_time_periods.back().start_time;
+    properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
+                                         Fmi::to_iso_extended_string(end_time) + "Z");
+  }
+  properties["detail"] = "Id is special location";
+  properties["name"] = "Special logical selector representing all collection locations";
+  all["properties"] = properties;
+  return all;
+}
+
 Json::Value parse_locations(const EDRQuery &edr_query,
                             const EngineMetaData &emd,
                             Links *response_links)
@@ -3793,29 +3954,15 @@ Json::Value parse_locations(const EDRQuery &edr_query,
   {
     Json::Value result;
 
-    const EDRMetaData *edr_md = nullptr;
-    const auto &metadata = emd.getMetaData();
-    for (const auto &item : metadata)
-    {
-      const auto &engine_metadata = item.second;
-      auto it = engine_metadata.find(producer);
-      if (it != engine_metadata.end() && !it->second.empty())
-      {
-        edr_md = &it->second.front();
-        break;
-      }
-    }
-
     // 1. querydata, 2. grid, 3. observation
     // All instances of a collection share the same locations, so just get the
     // metadata of first instance
 
+    const EDRMetaData* edr_md = collection_metadata(emd, producer);
     if (!edr_md || !edr_md->locations)
       return result;
 
     bool soundingObservations = (edr_md->isObsProducer() && (producer == SOUNDING_PRODUCER));
-    auto longitude_precision = edr_md->getPrecision("longitude");
-    auto latitude_precision = edr_md->getPrecision("latitude");
 
     result["type"] = Json::Value("FeatureCollection");
     auto features = Json::Value(Json::ValueType::arrayValue);
@@ -3823,128 +3970,10 @@ Json::Value parse_locations(const EDRQuery &edr_query,
     auto now = Fmi::SecondClock::universal_time();
 
     for (const auto &item : *edr_md->locations)
-    {
-      const auto &loc = item.second;
-      auto feature = Json::Value(Json::ValueType::objectValue);
-      feature["type"] = Json::Value("Feature");
-      feature["id"] = Json::Value(loc.id);
-      auto geometry = Json::Value(Json::ValueType::objectValue);
-
-      if ((!(edr_md->isAviProducer())) || (!edr_md->getGeometry(loc.id, geometry)))
-      {
-        geometry["type"] = Json::Value("Point");
-        auto coordinates = Json::Value(Json::ValueType::arrayValue);
-        coordinates[0] = Json::Value(loc.longitude, longitude_precision);
-        coordinates[1] = Json::Value(loc.latitude, latitude_precision);
-        geometry["coordinates"] = coordinates;
-      }
-      auto properties = Json::Value(Json::ValueType::objectValue);
-      properties["name"] = Json::Value(loc.name);
-      auto detail_string = ("Id is " + loc.type);
-      if (!loc.keyword.empty())
-        detail_string.append(" from " + loc.keyword);
-      properties["detail"] = Json::Value(detail_string);
-      // As in the locations example of the OGC API EDR specification
-      if (!loc.wsi.empty())
-        properties["WIGOS Station Identifier"] = Json::Value(loc.wsi);
-      if (!edr_md->temporal_extent.time_periods.empty())
-      {
-        Fmi::DateTime start_time;
-        Fmi::DateTime end_time;
-
-        if (soundingObservations)
-        {
-          try
-          {
-            auto stationId = Fmi::stoi(loc.id);
-            auto it = edr_md->stationMetaData.find(stationId);
-
-            if (it != edr_md->stationMetaData.end())
-            {
-              start_time = it->second.period.begin();
-              end_time = it->second.period.end();
-            }
-          }
-          catch (...)
-          {
-          }
-        }
-        else if (edr_md->isAviProducer())
-        {
-          // BRAINSTORM-3320
-          //
-          // Station's temporal extent, varies e.g. for taf collection
-          //
-          auto it = edr_md->stationTemporalExtentMetaData.find(loc.id);
-
-          // Same UB-on-empty-vector shape as the avi 'all' feature block
-          // below: an entry today is only inserted when the station has at
-          // least one matching message, but defending against an empty
-          // time_periods makes the function robust to future refactors that
-          // might pre-populate the map.
-          if (it != edr_md->stationTemporalExtentMetaData.end() &&
-              !it->second.time_periods.empty())
-          {
-            start_time = it->second.time_periods.front().start_time;
-            end_time = it->second.time_periods.back().end_time;
-          }
-        }
-        else
-        {
-          start_time = loc.start_time;
-          end_time = loc.end_time;
-        }
-
-        if (start_time.is_not_a_date_time())
-          start_time = edr_md->temporal_extent.time_periods.front().start_time;
-        if (end_time.is_not_a_date_time())
-          end_time = edr_md->temporal_extent.time_periods.back().end_time;
-        if (end_time.is_not_a_date_time())
-          end_time = edr_md->temporal_extent.time_periods.back().start_time;
-        // Station periods of observations may extend to the future; forecast data does,
-        // and its extent must not be cut at the time of the request
-        if ((edr_md->isObsProducer() || edr_md->isAviProducer()) && end_time > now)
-          end_time = now;
-
-        properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
-                                             Fmi::to_iso_extended_string(end_time) + "Z");
-      }
-      feature["geometry"] = geometry;
-      feature["properties"] = properties;
-      features[features.size()] = feature;
-    }
+      features[features.size()] = location_feature(*edr_md, item.second, soundingObservations, now);
 
     if (edr_md->isAviProducer() && !edr_md->locations->empty())
-    {
-      auto all = Json::Value(Json::ValueType::objectValue);
-      all["id"] = "all";
-      all["type"] = "Feature";
-
-      auto bbox = Json::Value(Json::ValueType::arrayValue);
-      bbox[0] = Json::Value(edr_md->spatial_extent.bbox_xmin);
-      bbox[1] = Json::Value(edr_md->spatial_extent.bbox_ymin);
-      bbox[2] = Json::Value(edr_md->spatial_extent.bbox_xmax);
-      bbox[3] = Json::Value(edr_md->spatial_extent.bbox_ymax);
-      all["bbox"] = bbox;
-
-      auto properties = Json::Value(Json::ValueType::objectValue);
-      // single_time_periods is empty when no rows in avidb_messages match the
-      // collection's filters. Without this guard front()/back() on an empty
-      // vector is undefined behavior and crashes the server (SIGSEGV) on the
-      // /collections/<avi-collection>/locations endpoint.
-      if (!edr_md->temporal_extent.single_time_periods.empty())
-      {
-        auto start_time = edr_md->temporal_extent.single_time_periods.front().start_time;
-        auto end_time = edr_md->temporal_extent.single_time_periods.back().start_time;
-        properties["datetime"] = Json::Value(Fmi::to_iso_extended_string(start_time) + "Z/" +
-                                             Fmi::to_iso_extended_string(end_time) + "Z");
-      }
-      properties["detail"] = "Id is special location";
-      properties["name"] = "Special logical selector representing all collection locations";
-      all["properties"] = properties;
-
-      features[features.size()] = all;
-    }
+      features[features.size()] = all_locations_feature(*edr_md);
 
     page_locations(edr_query, features, result, response_links);
     result["features"] = features;
