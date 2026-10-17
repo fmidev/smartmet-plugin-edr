@@ -63,10 +63,13 @@ changes:
 | `/edr/api/docs` | Documentation page rendered by Swagger UI |
 | `/timeseries/api`, `/timeseries/api/docs` | The same for the TimeSeries API (each `timeseries_url`) |
 | `/timeseries/api/producers` | The producers of the TimeSeries API with their parameters, areas, times and levels, and a dictionary of parameter descriptions and units; `source=querydata`, `grid` or `observation` selects one source. Used by the data explorer to build queries. |
-| `/timeseries/api/producers/{producer}` | One producer with the descriptions of its parameters and its locations (observation stations with their periods); for grid producers also the model runs (`origintime` chooses one) and, per parameter, the level types and levels, forecast types and ensemble members, aggregation and number of times of the run, read from the grid content server. |
+| `/timeseries/api/producers/{producer}` | One producer with the descriptions of its parameters and its locations (observation stations with their periods); for grid producers also the model runs (`origintime` chooses one) and, per parameter, the level types and levels, forecast types and ensemble members, aggregation and number of times of the run, read from the grid content server; for observation producers with `fmisid` (and optionally `param`, `starttime`, `endtime`) the sensors of the stations, from the observation engine. |
 
 The landing page links the definition (`rel=service-desc`) and the documentation
-(`rel=service-doc`).
+(`rel=service-doc`). The EDR API and each TimeSeries URL are also listed, with their kinds
+(`edr`, `timeseries`), in the API catalog of the server (`/api`), which the documentation
+page selector (`/api/docs`) and the data explorer (`/api/explorer`) of the server use; see
+the `api_catalog` settings of the server configuration.
 
 The documentation page shows the executed request with its full URL, and as bash (curl),
 Python, R and JavaScript snippets. When the request has a time window (`datetime=start/end`,

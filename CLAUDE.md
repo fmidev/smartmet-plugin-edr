@@ -78,7 +78,7 @@ The plugin uses a custom `Json.h` wrapper (aliasing `Json::Value` etc.) rather t
 
 ### API documents
 
-The landing page, conformance declaration and OpenAPI definitions (`/edr/api`, `<timeseries_url>/api`, documentation pages at `.../api/docs`) are generated in `ApiDefinition.cpp` from the configuration and the metadata; there are no templates. `PluginImpl::publishApiDefinitions()` regenerates the definitions after each metadata update and hands them to `Spine::OpenAPI::Publisher`, which serves them. `test/validate-openapi.py` validates the definitions and checks that every successful test request is described by them, so new request parameters must be added to `ApiDefinition.cpp`.
+The landing page, conformance declaration and OpenAPI definitions (`/edr/api`, `<timeseries_url>/api`, documentation pages at `.../api/docs`) are generated in `ApiDefinition.cpp` from the configuration and the metadata; there are no templates. `PluginImpl::publishApiDefinitions()` regenerates the definitions after each metadata update and hands them to `Spine::OpenAPI::Publisher`, which serves them. `test/validate-openapi.py` validates the definitions and checks that every successful test request is described by them, so new request parameters must be added to `ApiDefinition.cpp`. `<timeseries_url>/api/producers` and `/api/producers/{name}` (`PluginImpl.cpp`) give the producers, their parameters, locations, grid details and observation sensors for the data explorer of spine; the EDR API and the TimeSeries URLs are listed in the API catalog of the server with the kinds `edr` and `timeseries`.
 
 ### Key classes
 

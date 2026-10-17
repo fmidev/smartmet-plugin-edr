@@ -102,8 +102,9 @@ then you have to provide your `fmi_apikey` to get the data requested. There is a
 the `opendata.fmi.fi` service that can be used without an apikey. Most data is also
 available from this open service.
 
-The timeseries interface returns a  HTTP error message such as "Bad Request",
-"Wrong parameters" etc. to the client if the request process fails.
+If a request fails, the timeseries interface answers with an HTTP error status, such as
+400 Bad Request for an unknown producer or an invalid option, and the reason as plain text
+(`text/plain`), which is also given in the `X-TimeSeriesPlugin-Error` header.
 
 ## Producers
 
@@ -131,7 +132,13 @@ pressure levels. `/timeseries/api/producers/{producer}` gives one producer with 
 descriptions of its parameters and its locations (for observation producers the stations with
 their identifiers, coordinates and periods of operation), and for grid producers what their
 parameter keys may contain
-(see [Unique Parameter Keys](#unique-parameter-keys)). When several sources have a producer of
+(see [Unique Parameter Keys](#unique-parameter-keys)). For observation producers
+`fmisid=` lists the sensors of those stations: per station and parameter the sensor numbers,
+the default sensor (the one whose values a parameter without a sensor number gives), the
+periods of their configurations and values and the number of values, for the parameters of
+`param=` (all by default) in the period of `starttime` and `endtime` (now by default). The
+sensors are listed for the stations of the observation database and of its cache; for the
+other sources the answer says that they are not available. When several sources have a producer of
 the same name, `source` selects one, both here and in data requests.
 
 The timeseries interface can fetch data from several producers using a single request
@@ -647,7 +654,8 @@ smartmet.fmi.fi/timeseries/api/producers/ecmwf_skandinavia_painepinta?source=gri
 
 A key that names one level gives one row per time; a parameter without a level gives a row per
 level of the producer, which the `level` parameter tells apart. The levels of a parameter
-without a key can also be chosen with the `levels` option, e.g. `levels=850,500`.
+without a key, and of a key on pressure levels without a level of its own, can also be chosen
+with the `levels` option in hPa, e.g. `levels=850,500`.
 
 
 ### Additional Parameters

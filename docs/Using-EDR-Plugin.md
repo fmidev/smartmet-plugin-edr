@@ -79,6 +79,13 @@ Currently one of the collections SmartMet provides is named ecmwf_eurooppa_malli
 ```
 Response, see Annex 2.
 
+The spatial extent is the bounding box of the data in longitude and latitude. A global grid
+covers -180...180; a grid crossing the antimeridian has its west edge greater than its east
+edge, as in OGC API - Common. The vertical extent lists the levels of the data. Ensembles
+whose members are stored as levels (querydata producers configured with
+`leveltype = "ensemble"`) list them as ensemble members (`EnsembleMember`), so that `z`
+chooses members.
+
 ## Metadata of all instances of specified collection
 
 ```
