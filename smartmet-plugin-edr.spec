@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.10.17
-Release: 5%{?dist}.fmi
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -34,7 +34,7 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.10.16-3
+BuildRequires: smartmet-library-spine-devel >= 26.10.17-1
 BuildRequires: smartmet-library-locus-devel >= 26.10.16
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
 BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
@@ -60,7 +60,7 @@ Requires: smartmet-library-gis >= 26.10.16
 Requires: smartmet-library-locus >= 26.10.16
 Requires: smartmet-library-macgyver >= 26.10.16
 Requires: smartmet-library-newbase >= 26.10.16
-Requires: smartmet-library-spine >= 26.10.16-3
+Requires: smartmet-library-spine >= 26.10.17-1
 Requires: smartmet-swagger-ui
 Requires: smartmet-library-timeseries >= 26.10.16-2
 Requires: smartmet-library-gis >= 26.10.16
@@ -78,13 +78,13 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.16-3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.16-3
+#TestRequires: smartmet-library-spine >= 26.10.17-1
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.17-1
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-test-data >= 26.10.17-2
-#TestRequires: smartmet-library-grid-files-test >= 26.10.17-2
+#TestRequires: smartmet-test-data >= 26.10.17-1
+#TestRequires: smartmet-library-grid-files-test >= 26.10.17-1
 #TestRequires: smartmet-library-gis >= 26.10.16
 #TestRequires: smartmet-engine-avi >= 26.10.16
 #TestRequires: smartmet-engine-geonames >= 26.10.16
@@ -120,27 +120,21 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
-* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-5.fmi
+* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
 - TimeSeries requests of location parameters only (e.g. lon,lat) for a path, a bounding box, an
   area or a radius list the points like data requests do, instead of 0,0 or null
-* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-4.fmi
 - Querydata paths and areas on several levels: the names, times and coordinates are listed
   for each point and level like the values (they were listed per level only)
-* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-3.fmi
 - Observed soundings: sounding levels are listed as the level type 'sounding', and the
   stations of point querydata that has an area are listed as its locations
-* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-2.fmi
 - EDR requests of a querydata collection were read from the grid engine when the grid engine
   had a producer of the same name, returning nothing or wrong values; the collection now
   tells the source
-* Sat Oct 17 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
 - <timeseries_url>/api/producers/{producer} lists the locations of querydata and observation
   producers: observation stations with their ids, coordinates, periods and WIGOS ids
 - Observation producers are listed without an origin time: theirs was the metadata update time
-* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-5.fmi
 - Grid parameter keys naming their level were still repeated once per level of the producer
   when the request had lat, lon or the @AT-N etc. details of the data
-* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-4.fmi
 - <timeseries_url>/api/producers/{producer}: one producer with its parameter descriptions,
   and for grid producers the model runs, geometries, and per parameter the levels, forecast
   types, ensemble members, aggregation and number of times, from the grid content server
@@ -149,7 +143,6 @@ rm -rf $RPM_BUILD_ROOT
 - A grid parameter key naming its level no longer repeats its values once per level of the
   producer
 - The grid tests refuse to start when the Redis port is already in use
-* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-3.fmi
 - The spatial extents of grid collections had their west edge at 0: it was never set. Global
   grids get -180...180, grids scanned from north to south their real latitudes, and
   geometries without corners no extent
@@ -163,8 +156,6 @@ rm -rf $RPM_BUILD_ROOT
   parameters, areas, times and levels, for the data explorer
 - TimeSeries OpenAPI parameters in the order producer, param, time, locations, data, output
 - The APIs are listed in the API catalog with their kinds (edr, timeseries)
-
-* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-2.fmi
 - The EDR API and each TimeSeries URL are listed in the API catalog of the server (/api)
 
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
