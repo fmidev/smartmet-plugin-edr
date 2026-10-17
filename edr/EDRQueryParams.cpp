@@ -1205,6 +1205,290 @@ std::string EDRQueryParams::parseTrajectoryAndCorridor(const std::string& coords
   }
 }
 
+namespace
+{
+// Report height-units not valid for the vertical extent of the collection
+[[noreturn]] void throw_invalid_height_units(const std::string& height_units,
+                                             const std::string& collection_id,
+                                             const std::string& reason)
+{
+  throw EDRException("Query parameter 'height-units' value '" + height_units +
+                     "' is not valid for collection '" + collection_id + "': " + reason);
+}
+
+// Normalize corridor-height into the unit the collection's own vertical levels use.
+// Pressure and hybrid/model levels are known, documented special cases:
+// - Pressure: querydata/observation producers report levels in hPa (newbase
+//   "PressureLevel" convention) while grid-engine producers (collection ids containing
+//   '.') report them in Pa (GRIB "PRESSURE" convention) - see EDRMetaData.cpp's
+//   get_edr_metadata_qd/get_edr_metadata_grid. Convert automatically so hPa/Pa/mbar can
+//   be used interchangeably regardless of which engine backs the collection.
+// - Hybrid/model levels ("HybridLevel"/"HYBRID") are dimensionless model level indices,
+//   not a physical unit - EDR represents this with unit "1", and no conversion applies.
+// Other level types (height, depth, ...) have no known unit convention difference across
+// engines, so metric units are only range-checked, not converted, matching prior
+// behaviour.
+double corridor_height_in_level_units(double height,
+                                      const std::string& height_units,
+                                      const std::string& level_type,
+                                      const std::string& collection_id)
+{
+  bool grid_producer = (collection_id.find('.') != std::string::npos);
+  bool is_pressure_level = boost::algorithm::icontains(level_type, "pressure");
+  bool is_hybrid_level = boost::algorithm::icontains(level_type, "hybrid");
+
+  if (height_units == "hPa" || height_units == "mbar")
+  {
+    if (!is_pressure_level)
+      throw_invalid_height_units(
+          height_units, collection_id, "its vertical extent is not a pressure level");
+    if (grid_producer)
+      height *= 100.0;  // hPa/mbar -> Pa
+  }
+  else if (height_units == "Pa")
+  {
+    if (!is_pressure_level)
+      throw_invalid_height_units(
+          height_units, collection_id, "its vertical extent is not a pressure level");
+    if (!grid_producer)
+      height /= 100.0;  // Pa -> hPa
+  }
+  else if (height_units == "1")
+  {
+    if (!is_hybrid_level)
+      throw_invalid_height_units(
+          height_units, collection_id, "its vertical extent is not a hybrid/model level");
+    // Dimensionless model level index - used as-is, no conversion.
+  }
+  else if (height_units == "m" || height_units == "km" || height_units == "mi" ||
+           height_units == "ft")
+  {
+    if (is_pressure_level)
+      throw_invalid_height_units(height_units,
+                                 collection_id,
+                                 "its vertical extent is a pressure level, use 'hPa', 'mbar' "
+                                 "or 'Pa' instead");
+    if (is_hybrid_level)
+      throw_invalid_height_units(height_units,
+                                 collection_id,
+                                 "its vertical extent is a hybrid/model level, use '1' instead");
+    if (height_units == "km")
+      height *= 1000.0;
+    else if (height_units == "mi")
+      height *= 1609.34;
+    else if (height_units == "ft")
+      height *= 0.3048;
+  }
+  else
+    throw EDRException(
+        "Invalid height-units option '" + height_units +
+        "' used, supported units: 'hPa', 'mbar', 'Pa' for pressure levels, '1' for "
+        "hybrid/model levels, 'm', 'km', 'mi', 'ft' for height/altitude/depth levels");
+  return height;
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief The within/within-units or corridor-width/width-units options
+ *
+ * The radius of Radius and Corridor queries is appended to the coords, for Position
+ * queries within limits the distance of the station used.
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::parseWithin(std::string& coords)
+{
+  // EDR within + within-units
+  auto within = Spine::optional_string(req.getParameter("within"), "");
+  auto within_units = Spine::optional_string(req.getParameter("within-units"), "");
+
+  if (itsEDRQuery.query_type == EDRQueryType::Radius && (within.empty() || within_units.empty()))
+    throw EDRException(
+        "Query parameter 'within' and 'within-units' must be defined for Radius query");
+
+  if (itsEDRQuery.query_type == EDRQueryType::Corridor)
+  {
+    auto corridor_width = Spine::optional_string(req.getParameter("corridor-width"), "");
+    auto width_units = Spine::optional_string(req.getParameter("width-units"), "");
+    if (corridor_width.empty() || width_units.empty())
+      throw EDRException(
+          "Query parameter 'corridor-width' and 'width-units' must be defined for Corridor "
+          "query");
+
+    within = corridor_width;
+    within_units = width_units;
+  }
+
+  if ((itsEDRQuery.query_type == EDRQueryType::Radius ||
+       itsEDRQuery.query_type == EDRQueryType::Corridor) &&
+      !within.empty() && !within_units.empty())
+  {
+    const auto* units_name =
+        (itsEDRQuery.query_type == EDRQueryType::Corridor ? "width-units" : "within-units");
+    auto radius = distance_in_km(Fmi::stod(within), within_units, units_name);
+    coords += (":" + Fmi::to_string(radius));
+  }
+
+  if (itsEDRQuery.query_type == EDRQueryType::Position && !within.empty())
+  {
+    // Extension to OGC API EDR: within and within-units limit the distance of the
+    // station (or point data location) used for the position (BRAINSTORM-2883)
+    if (within_units.empty())
+      throw EDRException("Query parameter 'within-units' must be defined with 'within'");
+
+    auto distance = Fmi::stod(within);
+    if (!(distance > 0))
+      throw EDRException("Query parameter 'within' must be positive");
+    distance = distance_in_km(distance, within_units, "within-units");
+    req.setParameter("maxdistance", Fmi::to_string(distance) + "km");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief The WKT of the coords of the query type
+ */
+// ----------------------------------------------------------------------
+
+std::string EDRQueryParams::coordsToWkt(const std::string& coords)
+{
+  auto wkt = coords;
+  if (itsEDRQuery.query_type == EDRQueryType::Area)
+  {
+    // OGC API EDR: the area is a POLYGON; a MULTIPOLYGON is accepted too (e.g. islands)
+    auto geometry_type = boost::algorithm::to_upper_copy(boost::algorithm::trim_copy(coords));
+    if (!boost::algorithm::starts_with(geometry_type, "POLYGON") &&
+        !boost::algorithm::starts_with(geometry_type, "MULTIPOLYGON"))
+      throw EDRException("Area query coords must be a POLYGON or MULTIPOLYGON");
+  }
+  else if (itsEDRQuery.query_type == EDRQueryType::Position)
+    wkt = parsePosition(coords);
+  else if (itsEDRQuery.query_type == EDRQueryType::Trajectory ||
+           itsEDRQuery.query_type == EDRQueryType::Corridor)
+    wkt = parseTrajectoryAndCorridor(coords);
+  else if (itsEDRQuery.query_type == EDRQueryType::Cube)
+  {
+    auto z = Spine::optional_string(req.getParameter("z"), "");
+    bool zIsRange = false;
+    std::string zLo;
+    std::string zHi;
+
+    UtilityFunctions::parseRangeListValue(z, zIsRange, zLo, zHi);
+  }
+
+  return wkt;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief The centre levels of a corridor
+ *
+ * The corridor's centre level comes from the path's own Z coordinates
+ * ([MULTI]LINESTRINGZ/ZM); if the path is 2D an explicit 'z' level must be given
+ * instead to act as the centre of the height band
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::corridorCentreLevels(std::string& centre_lo, std::string& centre_hi) const
+{
+  auto levels = itsCoordinateFilter.getLevels();
+  if (!levels.empty())
+  {
+    std::vector<std::string> level_list;
+    boost::algorithm::split(level_list, levels, boost::algorithm::is_any_of(","));
+    centre_lo = level_list.front();
+    centre_hi = level_list.back();
+    return;
+  }
+
+  auto z = Spine::optional_string(req.getParameter("z"), "");
+  if (z.empty())
+    throw EDRException(
+        "Query parameter 'corridor-height' requires 3D coords "
+        "([MULTI]LINESTRINGZ/ZM) or an explicit 'z' query parameter to define the "
+        "centre level of the corridor");
+
+  // 'z' may be a single value, a list, a range (lo/hi) or a repeating interval
+  // (Rn/start/step); take the min/max of whatever it expands to as the centre band's
+  // extremes, same as the 3D-path branch above does with the path's own levels.
+  bool zIsRange = false;
+  if (!UtilityFunctions::parseRangeListValue(z, zIsRange, centre_lo, centre_hi))
+    throw EDRException("Invalid 'z' query parameter '" + z + "'");
+  if (centre_hi.empty())
+    centre_hi = centre_lo;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief EDR corridor-height + height-units of a Corridor query: the z range of the corridor
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::parseCorridorHeight(const EDRMetaData& emd)
+{
+  auto corridor_height = Spine::optional_string(req.getParameter("corridor-height"), "");
+  auto height_units = Spine::optional_string(req.getParameter("height-units"), "");
+
+  if (corridor_height.empty() && height_units.empty())
+    return;
+
+  if (corridor_height.empty() || height_units.empty())
+    throw EDRException(
+        "Query parameter 'corridor-height' and 'height-units' must both be defined for "
+        "Corridor query");
+
+  // AVI collections (METAR/TAC/IWXXM reports) have no vertical extent at all - the
+  // engine never filters by level/z - so silently accepting corridor-height here would
+  // just discard it without effect. Reject explicitly instead of pretending it did
+  // something.
+  if (emd.isAviProducer())
+    throw EDRException("Query parameter 'corridor-height' is not supported for collection '" +
+                       itsEDRQuery.collection_id + "': it has no vertical extent");
+
+  auto height = corridor_height_in_level_units(Fmi::stod(corridor_height),
+                                               height_units,
+                                               emd.vertical_extent.level_type,
+                                               itsEDRQuery.collection_id);
+
+  std::string centre_lo;
+  std::string centre_hi;
+  corridorCentreLevels(centre_lo, centre_hi);
+
+  auto zLo = Fmi::stod(centre_lo) - height / 2;
+  auto zHi = Fmi::stod(centre_hi) + height / 2;
+  req.removeParameter("z");
+  req.addParameter("z", Fmi::to_string(zLo) + "/" + Fmi::to_string(zHi));
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add the wkt parameter(s) of the query
+ *
+ * The segments of a MULTILINESTRING trajectory are queried as separate locations so that
+ * each segment becomes a trajectory of its own in the output. AVI queries read the
+ * geometry as a single parameter, and their results are per station anyway.
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::addWktParameters(const EDRMetaData& emd, const std::string& wkt)
+{
+  if (itsEDRQuery.query_type == EDRQueryType::Trajectory && !emd.isAviProducer() &&
+      boost::algorithm::starts_with(wkt, "MULTILINESTRING("))
+  {
+    // parseTrajectoryAndCorridor has normalized the value to MULTILINESTRING((...),(...))
+    std::size_t pos = wkt.find('(');  // the outer parenthesis
+    while ((pos = wkt.find('(', pos + 1)) != std::string::npos)
+    {
+      const auto close = wkt.find(')', pos);
+      req.addParameter("wkt", "LINESTRING" + wkt.substr(pos, close - pos + 1));
+      pos = close;
+    }
+  }
+  else
+    req.addParameter("wkt", wkt);
+}
+
 void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coordinates)
 {
   try
@@ -1212,206 +1496,12 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
     // Coordinates in a CRS whose axis order is latitude/longitude or northing/easting are
     // handled in the x/y order
     auto coords = (itsEDRQuery.crs ? itsEDRQuery.crs->toXY(coordinates) : coordinates);
-    // EDR within + within-units
-    auto within = Spine::optional_string(req.getParameter("within"), "");
-    auto within_units = Spine::optional_string(req.getParameter("within-units"), "");
+    parseWithin(coords);
 
-    if (itsEDRQuery.query_type == EDRQueryType::Radius && (within.empty() || within_units.empty()))
-      throw EDRException(
-          "Query parameter 'within' and 'within-units' must be defined for Radius query");
+    auto wkt = coordsToWkt(coords);
 
     if (itsEDRQuery.query_type == EDRQueryType::Corridor)
-    {
-      auto corridor_width = Spine::optional_string(req.getParameter("corridor-width"), "");
-      auto width_units = Spine::optional_string(req.getParameter("width-units"), "");
-      if (corridor_width.empty() || width_units.empty())
-        throw EDRException(
-            "Query parameter 'corridor-width' and 'width-units' must be defined for Corridor "
-            "query");
-
-      within = corridor_width;
-      within_units = width_units;
-    }
-
-    if ((itsEDRQuery.query_type == EDRQueryType::Radius ||
-         itsEDRQuery.query_type == EDRQueryType::Corridor) &&
-        !within.empty() && !within_units.empty())
-    {
-      const auto* units_name =
-          (itsEDRQuery.query_type == EDRQueryType::Corridor ? "width-units" : "within-units");
-      auto radius = distance_in_km(Fmi::stod(within), within_units, units_name);
-      coords += (":" + Fmi::to_string(radius));
-    }
-
-    if (itsEDRQuery.query_type == EDRQueryType::Position && !within.empty())
-    {
-      // Extension to OGC API EDR: within and within-units limit the distance of the
-      // station (or point data location) used for the position (BRAINSTORM-2883)
-      if (within_units.empty())
-        throw EDRException("Query parameter 'within-units' must be defined with 'within'");
-
-      auto distance = Fmi::stod(within);
-      if (!(distance > 0))
-        throw EDRException("Query parameter 'within' must be positive");
-      distance = distance_in_km(distance, within_units, "within-units");
-      req.setParameter("maxdistance", Fmi::to_string(distance) + "km");
-    }
-
-    auto wkt = coords;
-    if (itsEDRQuery.query_type == EDRQueryType::Area)
-    {
-      // OGC API EDR: the area is a POLYGON; a MULTIPOLYGON is accepted too (e.g. islands)
-      auto geometry_type = boost::algorithm::to_upper_copy(boost::algorithm::trim_copy(coords));
-      if (!boost::algorithm::starts_with(geometry_type, "POLYGON") &&
-          !boost::algorithm::starts_with(geometry_type, "MULTIPOLYGON"))
-        throw EDRException("Area query coords must be a POLYGON or MULTIPOLYGON");
-    }
-    else if (itsEDRQuery.query_type == EDRQueryType::Position)
-      wkt = parsePosition(coords);
-    else if (itsEDRQuery.query_type == EDRQueryType::Trajectory ||
-             itsEDRQuery.query_type == EDRQueryType::Corridor)
-      wkt = parseTrajectoryAndCorridor(coords);
-    else if (itsEDRQuery.query_type == EDRQueryType::Cube)
-    {
-      auto z = Spine::optional_string(req.getParameter("z"), "");
-      bool zIsRange = false;
-      std::string zLo;
-      std::string zHi;
-
-      UtilityFunctions::parseRangeListValue(z, zIsRange, zLo, zHi);
-    }
-
-    if (itsEDRQuery.query_type == EDRQueryType::Corridor)
-    {
-      // EDR corridor-height + height-units
-      auto corridor_height = Spine::optional_string(req.getParameter("corridor-height"), "");
-      auto height_units = Spine::optional_string(req.getParameter("height-units"), "");
-
-      if (!corridor_height.empty() || !height_units.empty())
-      {
-        if (corridor_height.empty() || height_units.empty())
-          throw EDRException(
-              "Query parameter 'corridor-height' and 'height-units' must both be defined for "
-              "Corridor query");
-
-        // AVI collections (METAR/TAC/IWXXM reports) have no vertical extent at all - the
-        // engine never filters by level/z - so silently accepting corridor-height here would
-        // just discard it without effect. Reject explicitly instead of pretending it did
-        // something.
-        if (emd.isAviProducer())
-          throw EDRException(
-              "Query parameter 'corridor-height' is not supported for collection '" +
-              itsEDRQuery.collection_id + "': it has no vertical extent");
-
-        auto height = Fmi::stod(corridor_height);
-
-        // Normalize corridor-height into the unit the collection's own vertical levels use.
-        // Pressure and hybrid/model levels are known, documented special cases:
-        // - Pressure: querydata/observation producers report levels in hPa (newbase
-        //   "PressureLevel" convention) while grid-engine producers (collection ids containing
-        //   '.') report them in Pa (GRIB "PRESSURE" convention) - see EDRMetaData.cpp's
-        //   get_edr_metadata_qd/get_edr_metadata_grid. Convert automatically so hPa/Pa/mbar can
-        //   be used interchangeably regardless of which engine backs the collection.
-        // - Hybrid/model levels ("HybridLevel"/"HYBRID") are dimensionless model level indices,
-        //   not a physical unit - EDR represents this with unit "1", and no conversion applies.
-        // Other level types (height, depth, ...) have no known unit convention difference across
-        // engines, so metric units are only range-checked, not converted, matching prior
-        // behaviour.
-        bool grid_producer = (itsEDRQuery.collection_id.find('.') != std::string::npos);
-        const auto& level_type = emd.vertical_extent.level_type;
-        bool is_pressure_level = boost::algorithm::icontains(level_type, "pressure");
-        bool is_hybrid_level = boost::algorithm::icontains(level_type, "hybrid");
-
-        if (height_units == "hPa" || height_units == "mbar")
-        {
-          if (!is_pressure_level)
-            throw EDRException("Query parameter 'height-units' value '" + height_units +
-                               "' is not valid for collection '" + itsEDRQuery.collection_id +
-                               "': its vertical extent is not a pressure level");
-          if (grid_producer)
-            height *= 100.0;  // hPa/mbar -> Pa
-        }
-        else if (height_units == "Pa")
-        {
-          if (!is_pressure_level)
-            throw EDRException("Query parameter 'height-units' value '" + height_units +
-                               "' is not valid for collection '" + itsEDRQuery.collection_id +
-                               "': its vertical extent is not a pressure level");
-          if (!grid_producer)
-            height /= 100.0;  // Pa -> hPa
-        }
-        else if (height_units == "1")
-        {
-          if (!is_hybrid_level)
-            throw EDRException("Query parameter 'height-units' value '1' is not valid for "
-                               "collection '" + itsEDRQuery.collection_id +
-                               "': its vertical extent is not a hybrid/model level");
-          // Dimensionless model level index - used as-is, no conversion.
-        }
-        else if (height_units == "m" || height_units == "km" || height_units == "mi" ||
-                 height_units == "ft")
-        {
-          if (is_pressure_level)
-            throw EDRException("Query parameter 'height-units' value '" + height_units +
-                               "' is not valid for collection '" + itsEDRQuery.collection_id +
-                               "': its vertical extent is a pressure level, use 'hPa', 'mbar' "
-                               "or 'Pa' instead");
-          if (is_hybrid_level)
-            throw EDRException("Query parameter 'height-units' value '" + height_units +
-                               "' is not valid for collection '" + itsEDRQuery.collection_id +
-                               "': its vertical extent is a hybrid/model level, use '1' instead");
-          if (height_units == "km")
-            height *= 1000.0;
-          else if (height_units == "mi")
-            height *= 1609.34;
-          else if (height_units == "ft")
-            height *= 0.3048;
-        }
-        else
-          throw EDRException(
-              "Invalid height-units option '" + height_units +
-              "' used, supported units: 'hPa', 'mbar', 'Pa' for pressure levels, '1' for "
-              "hybrid/model levels, 'm', 'km', 'mi', 'ft' for height/altitude/depth levels");
-
-        // The corridor's centre level comes from the path's own Z coordinates
-        // ([MULTI]LINESTRINGZ/ZM); if the path is 2D an explicit 'z' level must be given
-        // instead to act as the centre of the height band
-        auto levels = itsCoordinateFilter.getLevels();
-        std::string centre_lo;
-        std::string centre_hi;
-        if (!levels.empty())
-        {
-          std::vector<std::string> level_list;
-          boost::algorithm::split(level_list, levels, boost::algorithm::is_any_of(","));
-          centre_lo = level_list.front();
-          centre_hi = level_list.back();
-        }
-        else
-        {
-          auto z = Spine::optional_string(req.getParameter("z"), "");
-          if (z.empty())
-            throw EDRException(
-                "Query parameter 'corridor-height' requires 3D coords "
-                "([MULTI]LINESTRINGZ/ZM) or an explicit 'z' query parameter to define the "
-                "centre level of the corridor");
-
-          // 'z' may be a single value, a list, a range (lo/hi) or a repeating interval
-          // (Rn/start/step); take the min/max of whatever it expands to as the centre band's
-          // extremes, same as the 3D-path branch above does with the path's own levels.
-          bool zIsRange = false;
-          if (!UtilityFunctions::parseRangeListValue(z, zIsRange, centre_lo, centre_hi))
-            throw EDRException("Invalid 'z' query parameter '" + z + "'");
-          if (centre_hi.empty())
-            centre_hi = centre_lo;
-        }
-
-        auto zLo = Fmi::stod(centre_lo) - height / 2;
-        auto zHi = Fmi::stod(centre_hi) + height / 2;
-        req.removeParameter("z");
-        req.addParameter("z", Fmi::to_string(zLo) + "/" + Fmi::to_string(zHi));
-      }
-    }
-
+      parseCorridorHeight(emd);
 
     /*
           // Maybe later: support other CRSs than WGS84
@@ -1430,23 +1520,7 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
       wkt = itsEDRQuery.crs->toWGS84(wkt);
     }
 
-    // The segments of a MULTILINESTRING trajectory are queried as separate locations so that
-    // each segment becomes a trajectory of its own in the output. AVI queries read the
-    // geometry as a single parameter, and their results are per station anyway.
-    if (itsEDRQuery.query_type == EDRQueryType::Trajectory && !emd.isAviProducer() &&
-        boost::algorithm::starts_with(wkt, "MULTILINESTRING("))
-    {
-      // parseTrajectoryAndCorridor has normalized the value to MULTILINESTRING((...),(...))
-      std::size_t pos = wkt.find('(');  // the outer parenthesis
-      while ((pos = wkt.find('(', pos + 1)) != std::string::npos)
-      {
-        const auto close = wkt.find(')', pos);
-        req.addParameter("wkt", "LINESTRING" + wkt.substr(pos, close - pos + 1));
-        pos = close;
-      }
-    }
-    else
-      req.addParameter("wkt", wkt);
+    addWktParameters(emd, wkt);
   }
   catch (...)
   {
