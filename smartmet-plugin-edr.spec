@@ -55,7 +55,7 @@ BuildRequires: smartmet-engine-grid-devel >= 26.10.16
 #Requires: smartmet-engine-observation >= 26.10.11
 #%endif
 # Engine::getSensors is a new virtual method: older engines lack it
-Conflicts: smartmet-engine-observation < 26.10.17-1
+Conflicts: smartmet-engine-observation < 26.10.17
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 26.10.17
