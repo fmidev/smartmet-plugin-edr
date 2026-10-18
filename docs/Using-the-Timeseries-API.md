@@ -1219,7 +1219,7 @@ etc.) are described in the
 <tr><td colspan="2"> pretty</td> <td> Allow pretty printed output ("true" or "false")</td></tr>
 <tr><td rowspan="5">request_limits </td> <td> maxlocations </td> <td> The maximum number of locations allowed in a request</td></tr>
 <tr><td> maxparameters </td><td>The maximum number of parameters allowed in a request</td></tr>
-<tr><td> maxtimes </td><td>The maximum number of time steps allowed in a request</td></tr>
+<tr><td> maxtimes </td><td>The maximum number of time steps allowed in a request (default 50000, 0 means unlimited)</td></tr>
 <tr><td> maxlevels </td><td>The maximum number of levels allowed in a request</td></tr>
 <tr><td> maxelements </td><td>The maximum number of result elements allowed in a request</td></tr>
 <tr><td> cache </td> <td> timeseries_size </td> <td>The number of timeseries requests that are cached internally</td></tr>

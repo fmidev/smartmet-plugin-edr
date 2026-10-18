@@ -34,6 +34,10 @@ namespace EDR
 {
 namespace
 {
+// The default maximum number of time steps in a request, the same as in the timeseries
+// plugin: a month of one-minute data is ~43200 steps. 0 in the configuration disables the limit.
+const int default_maxtimes = 50000;
+
 void check_setting_isstring(const libconfig::Setting &setting, const std::string &name)
 {
   if (setting.getType() != libconfig::Setting::Type::TypeString)
@@ -1356,7 +1360,7 @@ Config::Config(const string &configfile)
     // Request limits
     int maxlocations = 0;
     int maxparameters = 0;
-    int maxtimes = 0;
+    int maxtimes = default_maxtimes;
     int maxlevels = 0;
     int maxelements = 0;
     itsConfig.lookupValue("request_limits.maxlocations", maxlocations);

@@ -19,6 +19,7 @@ This page describes more indepth EDR API
 - [URL, language](#url-language)
 - [Metadata updates](#metadata-updates)
 - [Observation period](#observation-period)
+- [Request limits](#request-limits)
 - [Timeseries interface settings](#timeseries-interface-settings)
 
 
@@ -365,6 +366,27 @@ Observation database contains observations from very long period. If you want to
 ```
 observation_period = 24; // hours
 ```
+
+# Request limits
+
+The size of a request can be limited, both in EDR and in TimeSeries API requests.
+A request exceeding a limit is rejected.
+
+```
+request_limits:
+{
+  maxlocations  = 0;     // locations
+  maxparameters = 0;     // parameters
+  maxtimes      = 50000; // time steps
+  maxlevels     = 0;     // levels
+  maxelements   = 0;     // result values
+};
+maxradius = 0;           // km, the radius of a circle or a buffered location
+```
+
+0 disables a limit. All limits are disabled by default except `maxtimes`, whose default
+50000 is the same as in the timeseries plugin (a month of one-minute data is about 43200
+time steps).
 
 # Timeseries interface settings
 

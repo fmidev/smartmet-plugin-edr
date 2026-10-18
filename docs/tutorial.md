@@ -469,7 +469,7 @@ reported. The keys that shape EDR behaviour most:
 | `metadata_update_interval`, `metadata_updates_disabled` | 30 s, false | refresh thread |
 | `expires` | 60 s | HTTP cache headers; 0 means `no-cache` |
 | `pretty` | false | pretty-printed JSON |
-| `request_limits.*`, `maxradius` | off | guards on locations, parameters, times, levels, elements, radius |
+| `request_limits.*`, `maxradius` | off, except `maxtimes` 50000 | guards on locations, parameters, times, levels, elements, radius |
 | `precision` | | see section 11 |
 | `primaryForecastSource`, `defaultGridGeometries`, `defaultProducerMappingName`, `parameterAliasFiles` | | shared with the TimeSeries plugin; must match a legacy TimeSeries deployment when comparing responses |
 | `aviengine_disabled`, `observation_disabled`, `gridengine_disabled` | false | skip an engine for EDR routing |

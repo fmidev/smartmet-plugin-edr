@@ -178,6 +178,7 @@ rm -rf $RPM_BUILD_ROOT
 - obs_temporal_extent: no timestep count for observations without a timestep (division by zero)
 - Vertical profile coverages: stop when no data parameter advances the time steps
 - Split functions with a cognitive complexity above 25 into smaller helpers, no functional changes
+- request_limits.maxtimes defaults to 50000 as in the timeseries plugin (it was unlimited); 0 still disables the limit
 
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
 - CommonQuery has a virtual destructor
