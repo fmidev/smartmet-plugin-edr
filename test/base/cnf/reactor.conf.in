@@ -1,3 +1,10 @@
+# The catalog is tested without the data explorer: whether its files are installed must not
+# change the outputs
+api_catalog:
+{
+	explorer = false;
+};
+
 plugins:
 {
 	edr:
