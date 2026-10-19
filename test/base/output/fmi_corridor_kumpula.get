@@ -37,9 +37,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -92,9 +92,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -147,9 +147,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -202,9 +202,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -257,9 +257,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -312,9 +312,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -367,9 +367,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -422,9 +422,9 @@
 				{
 					"axisNames" : 
 					[
-						"x",
+						"t",
 						"y",
-						"t"
+						"x"
 					],
 					"dataType" : "float",
 					"shape" : 
@@ -453,7 +453,7 @@
 			],
 			"system" : 
 			{
-				"id" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+				"id" : "OGC:CRS84",
 				"type" : "GeographicCRS"
 			}
 		},
@@ -494,14 +494,15 @@
 			},
 			"unit" : 
 			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
 				"label" : 
 				{
 					"fi" : "Celsius"
 				},
 				"symbol" : 
 				{
-					"type" : "http://codes.wmo.int/common/unit/_degC",
-					"value" : "˚C"
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
 				}
 			}
 		}
