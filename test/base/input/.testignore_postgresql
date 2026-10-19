@@ -12,3 +12,8 @@ timeseries/road-latlon.get
 timeseries/sounding_observations_area_kymenlaakso.get
 timeseries/sounding_observations_default_sounding_type.get
 timeseries/sounding_observations_selected_sounding_type.get
+#
+#  The expected output predates the links of data query responses (A.83B), regenerate it
+#  against the observation database
+#
+opendata_locations_101004_derived_geojson.get
