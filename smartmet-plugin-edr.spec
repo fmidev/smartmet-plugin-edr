@@ -98,6 +98,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-grid >= 26.10.17
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
+#TestRequires: python3-jsonschema
 
 %description
 SmartMet edr plugin
