@@ -1465,6 +1465,70 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     producers_ok["content"]["application/json"]["schema"] = producers_schema;
     OA::Document::addErrorResponses(producers_op, false);
 
+    // The names of the area option, for completing them
+    auto& areas_op = doc.operation(url + "/api/areas", "get");
+    areas_op["tags"].append(TAG_CAPABILITIES);
+    areas_op["summary"] = "Names of the areas";
+    areas_op["description"] =
+        "The names of the areas of the server, which the area and areas options accept: the "
+        "polygons of the configured geometry tables, in lower case.";
+    areas_op["operationId"] = "getAreas" + component_name(url);
+    auto& areas_ok = areas_op["responses"]["200"];
+    areas_ok["description"] = "The area names";
+    JsonValue areas_schema;
+    areas_schema["type"] = "object";
+    areas_schema["required"].append("areas");
+    areas_schema["properties"]["areas"]["type"] = "array";
+    areas_schema["properties"]["areas"]["items"]["type"] = "string";
+    areas_ok["content"]["application/json"]["schema"] = areas_schema;
+    OA::Document::addErrorResponses(areas_op, false);
+
+    // The places whose names begin with a pattern, for completing the place option
+    auto& places_op = doc.operation(url + "/api/places", "get");
+    places_op["tags"].append(TAG_CAPABILITIES);
+    places_op["summary"] = "Places whose names begin with a pattern";
+    places_op["description"] =
+        "The places whose names begin with the pattern, the most important first, for "
+        "completing the place option. A name shared by several places is told apart by the "
+        "area: place=name,area.";
+    places_op["operationId"] = "getPlaces" + component_name(url);
+    JsonValue pattern_schema;
+    pattern_schema["type"] = "string";
+    pattern_schema["minLength"] = 1;
+    pattern_schema["maxLength"] = 64;
+    auto pattern_param =
+        OA::parameter("pattern", "query", "The beginning of the place name", pattern_schema);
+    pattern_param["required"] = true;
+    places_op["parameters"].append(pattern_param);
+    JsonValue lang_schema;
+    lang_schema["type"] = "string";
+    places_op["parameters"].append(OA::parameter(
+        "lang", "query", "The language of the names, the default language by default", lang_schema));
+    JsonValue max_schema;
+    max_schema["type"] = "integer";
+    max_schema["minimum"] = 1;
+    max_schema["maximum"] = 50;
+    max_schema["default"] = 15;
+    places_op["parameters"].append(
+        OA::parameter("max", "query", "The largest number of places", max_schema));
+    auto& places_ok = places_op["responses"]["200"];
+    places_ok["description"] = "The places";
+    JsonValue place_schema;
+    place_schema["type"] = "object";
+    for (const char* name : {"name", "area", "country", "feature"})
+      place_schema["properties"][name]["type"] = "string";
+    for (const char* name : {"geoid", "population"})
+      place_schema["properties"][name]["type"] = "integer";
+    for (const char* name : {"lon", "lat"})
+      place_schema["properties"][name]["type"] = "number";
+    JsonValue places_schema;
+    places_schema["type"] = "object";
+    places_schema["required"].append("places");
+    places_schema["properties"]["places"]["type"] = "array";
+    places_schema["properties"]["places"]["items"] = place_schema;
+    places_ok["content"]["application/json"]["schema"] = places_schema;
+    OA::Document::addErrorResponses(places_op, false);
+
     // What the requests of one producer may contain: for grid producers the model runs,
     // geometries, levels and ensemble members of the parameter keys
     auto& producer_op = doc.operation(url + "/api/producers/{producer}", "get");

@@ -91,8 +91,11 @@ void Plugin::init()
       // The OpenAPI definition of the TimeSeries API and its documentation pages
       if (new_impl->itsConfig.openAPISettings().enabled)
       {
-        for (const auto& api_url :
-             {ts_url + "/api", ts_url + "/api/docs", ts_url + "/api/producers"})
+        for (const auto& api_url : {ts_url + "/api",
+                                    ts_url + "/api/docs",
+                                    ts_url + "/api/producers",
+                                    ts_url + "/api/areas",
+                                    ts_url + "/api/places"})
         {
           const bool prefix =
               (api_url == ts_url + "/api/docs" || api_url == ts_url + "/api/producers");

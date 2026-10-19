@@ -150,6 +150,12 @@ class PluginImpl
                       Spine::HTTP::Response& theResponse,
                       const std::string& name) const;
   std::shared_ptr<ProducerDetails::Cache> itsGridDetailsCache = ProducerDetails::makeCache();
+  // <timeseries_url>/api/areas: the names of the area option (the polygons of the geometry
+  // storage)
+  void handleAreas(const Spine::HTTP::Request& theRequest, Spine::HTTP::Response& theResponse) const;
+  // <timeseries_url>/api/places?pattern=...: the places whose names begin with the pattern
+  void handlePlaces(const Spine::HTTP::Request& theRequest,
+                    Spine::HTTP::Response& theResponse) const;
 
   SupportedProducerLocations itsSupportedLocations;
   ParameterInfo itsConfigParameterInfo;

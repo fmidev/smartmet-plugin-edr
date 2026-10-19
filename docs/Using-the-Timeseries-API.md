@@ -141,6 +141,12 @@ sensors are listed for the stations of the observation database and of its cache
 other sources the answer says that they are not available. When several sources have a producer of
 the same name, `source` selects one, both here and in data requests.
 
+`/timeseries/api/areas` lists the names the `area` option accepts, and
+`/timeseries/api/places?pattern=hels` the places whose names begin with the pattern (the most
+important first, `lang` and `max` optional), for completing the `area` and `place` options. A
+place name shared by several places is told apart by its area, for example
+`place=Portland,USA`.
+
 The timeseries interface can fetch data from several producers using a single request
 by giving the names of the producers separated by a comma (e.g.
 producer=fmi,hirlam') or a semicolon(e.g. producer=fmi;road). The semicolon is

@@ -1,0 +1,2 @@
+GET /timeseries/api/areas HTTP/1.0
+

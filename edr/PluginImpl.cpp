@@ -25,6 +25,7 @@
 #include <spine/Reactor.h>
 #include <spine/TableFormatterFactory.h>
 #include <timeseries/ParameterKeywords.h>
+#include <algorithm>
 #include <array>
 #include <iostream>
 
@@ -1485,6 +1486,16 @@ bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
         handleProducers(theRequest, theResponse);
         return true;
       }
+      if (resource == item.first + "/api/areas")
+      {
+        handleAreas(theRequest, theResponse);
+        return true;
+      }
+      if (resource == item.first + "/api/places")
+      {
+        handlePlaces(theRequest, theResponse);
+        return true;
+      }
       if (resource.size() > producers.size() + 1 &&
           resource.compare(0, producers.size() + 1, producers + "/") == 0)
       {
@@ -1804,6 +1815,106 @@ void PluginImpl::handleProducer(const Spine::HTTP::Request& theRequest,
     theResponse.setStatus(Spine::HTTP::Status::ok);
     theResponse.setHeader("Content-Type", "application/json");
     theResponse.setContent(json);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Answer <timeseries_url>/api/areas
+ *
+ * The names the area option accepts: the polygons of the geometry storage.
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::handleAreas(const Spine::HTTP::Request& /* theRequest */,
+                             Spine::HTTP::Response& theResponse) const
+{
+  try
+  {
+    ::Json::Value areas(::Json::arrayValue);
+    for (const auto& name : itsGeometryStorage.areaNames())
+      if (itsGeometryStorage.isPolygon(name))
+        areas.append(name);
+
+    ::Json::Value json;
+    json["areas"] = areas;
+    ::Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+
+    theResponse.setHeader("Access-Control-Allow-Origin", "*");
+    theResponse.setHeader("Cache-Control", "public, max-age=3600");
+    theResponse.setHeader("Content-Type", "application/json");
+    theResponse.setStatus(Spine::HTTP::Status::ok);
+    theResponse.setContent(::Json::writeString(builder, json));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Answer <timeseries_url>/api/places?pattern=...&lang=...&max=...
+ *
+ * The places whose names begin with the pattern, the most important first, for completing the
+ * place option. A name shared by several places is told apart by the area: place=name,area.
+ */
+// ----------------------------------------------------------------------
+
+void PluginImpl::handlePlaces(const Spine::HTTP::Request& theRequest,
+                              Spine::HTTP::Response& theResponse) const
+{
+  try
+  {
+    theResponse.setHeader("Access-Control-Allow-Origin", "*");
+
+    const auto pattern = Spine::optional_string(theRequest.getParameter("pattern"), "");
+    if (pattern.empty() || pattern.size() > 64)
+    {
+      theResponse.setStatus(Spine::HTTP::Status::bad_request);
+      theResponse.setHeader("Content-Type", "application/problem+json");
+      theResponse.setContent(
+          R"({"title":"Bad Request","status":400,"detail":"pattern must have 1-64 characters"})");
+      return;
+    }
+    const auto lang =
+        Spine::optional_string(theRequest.getParameter("lang"), itsConfig.defaultLanguage());
+    const auto maxresults = std::clamp<unsigned long>(
+        Spine::optional_unsigned_long(theRequest.getParameter("max"), 15), 1, 50);
+
+    const auto accept_all = [](const Spine::LocationPtr& /* loc */) { return false; };
+
+    ::Json::Value places(::Json::arrayValue);
+    for (const auto& loc :
+         itsEngines.geoEngine->suggest(pattern, accept_all, lang, FMINAMES_DEFAULT_KEYWORD, 0,
+                                       maxresults))
+    {
+      ::Json::Value place;
+      place["name"] = loc->name;
+      place["area"] = loc->area;
+      place["country"] = loc->country;
+      place["feature"] = loc->feature;
+      place["geoid"] = static_cast<::Json::Int64>(loc->geoid);
+      place["lon"] = loc->longitude;
+      place["lat"] = loc->latitude;
+      place["population"] = static_cast<::Json::Int64>(loc->population);
+      places.append(place);
+    }
+
+    ::Json::Value json;
+    json["places"] = places;
+    ::Json::StreamWriterBuilder builder;
+    builder["indentation"] = "";
+
+    theResponse.setHeader("Cache-Control", "public, max-age=3600");
+    theResponse.setHeader("Content-Type", "application/json");
+    theResponse.setStatus(Spine::HTTP::Status::ok);
+    theResponse.setContent(::Json::writeString(builder, json));
   }
   catch (...)
   {

@@ -1,0 +1,2 @@
+GET /timeseries/api/places?pattern=helsin&lang=fi&max=3 HTTP/1.0
+
