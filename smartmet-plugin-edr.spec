@@ -37,8 +37,8 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: smartmet-library-spine-devel >= 26.10.17-1
 BuildRequires: smartmet-library-locus-devel >= 26.10.16
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
-BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
-BuildRequires: smartmet-library-grid-files-devel >= 26.10.16
+BuildRequires: smartmet-library-grid-content-devel >= 26.10.20
+BuildRequires: smartmet-library-grid-files-devel >= 26.10.20
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
 BuildRequires: smartmet-library-gis-devel >= 26.10.16
 BuildRequires: smartmet-library-timeseries-devel >= 26.10.17-1
@@ -66,7 +66,8 @@ Requires: smartmet-library-spine >= 26.10.17-1
 Requires: smartmet-swagger-ui
 Requires: smartmet-library-timeseries >= 26.10.17-1
 Requires: smartmet-library-gis >= 26.10.17
-Requires: smartmet-library-grid-files >= 26.10.17
+Requires: smartmet-library-grid-content >= 26.10.20
+Requires: smartmet-library-grid-files >= 26.10.20
 Requires: smartmet-engine-avi >= 26.10.17
 Requires: smartmet-engine-geonames >= 26.10.17
 Requires: smartmet-engine-querydata >= 26.10.17
@@ -86,8 +87,10 @@ Provides: %{SPECNAME}
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-test-data >= 26.10.17-1
-#TestRequires: smartmet-library-grid-files-test >= 26.10.17-1
+#TestRequires: smartmet-library-grid-files-test >= 26.10.20-1
 #TestRequires: smartmet-library-gis >= 26.10.17
+#TestRequires: smartmet-library-grid-content >= 26.10.20
+#TestRequires: smartmet-library-grid-files >= 26.10.20
 #TestRequires: smartmet-engine-avi >= 26.10.17
 #TestRequires: smartmet-engine-geonames >= 26.10.17
 #TestRequires: smartmet-engine-gis >= 26.10.17
