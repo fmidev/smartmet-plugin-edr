@@ -2,6 +2,9 @@ include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
 DB_TYPE := sqlite
 
+# Starts the Redis test database listening only on a Unix socket below /tmp
+GRID_TEST_REDIS ?= smartmet-grid-test-redis
+
 all:
 
 test test-grid:	start-redis-db
@@ -9,6 +12,7 @@ test test-grid:	start-redis-db
 
 clean:
 	rm -rf failures failures-timeseries
+	-$(GRID_TEST_REDIS) stop
 	rm -rf cnf/grid
 
 test-impl:
@@ -30,20 +34,7 @@ test-impl:
 	$$ok
 
 start-redis-db:
-	@port=$$(sed -n 's/^REDIS_CONTENT_SERVER_PORT *= *//p' cnf/environment.conf); \
-	if bash -c "exec 3<>/dev/tcp/127.0.0.1/$$port" 2>/dev/null; then \
-		echo "*** Port $$port is already in use: the tests would read another Redis database"; \
-		exit 1; \
-	fi
-	rm -rf cnf/grid
-	cp -pr $(datadir)/smartmet/test/grid cnf/
-	@echo "*** Creating the Redis configuration file."
-	smartmet-grid-test-config-creator cnf/environment.conf cnf/grid/redis/redis-template.conf cnf/grid/redis/redis.conf
-	@echo "*** Starting the Redis database."
-	@valkey-server cnf/grid/redis/redis.conf
+	$(GRID_TEST_REDIS) start
 
 stop-redis-db:
-	@if [ -f cnf/grid/redis/redis-server.pid ] ; then \
-		cat cnf/grid/redis/redis-server.pid | xargs kill -9; \
-		rm -f cnf/grid/redis/redis-server.pid; \
-	fi
+	$(GRID_TEST_REDIS) stop
