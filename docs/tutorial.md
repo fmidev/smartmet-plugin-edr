@@ -518,7 +518,7 @@ the locally built plugin:
 | `test/base/input/*.get` | one HTTP request line per file | `make test-sqlite`, `test-oracle`, `test-postgresql` pick the observation backend via `@DB_TYPE@` in `reactor.conf.in` |
 | `test/base/input/timeseries/*.get` | the merged TimeSeries regression suite | mostly skipped on sqlite through `.testignore_<db>` |
 | `test/base/output/*.get` | expected bodies | pretty-printed JSON compared textually; `.wgs84` variants selected automatically when newbase is built in WGS84 mode |
-| `test/grid/` | grid engine suite | starts a local Redis with `smartmet-grid-test-config-creator` |
+| `test/grid/` | grid engine suite | starts a local Redis on a Unix socket with `smartmet-grid-test-redis` |
 | `test/base/failures/` | actual bodies of failed tests | |
 
 There is no format-aware comparison; a change in key order, precision or whitespace is a
