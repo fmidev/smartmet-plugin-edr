@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.20
+Version: 26.10.21
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Wed Oct 21 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.10.21-1.fmi
+- Repackage due to smartmet-engine-observation ABI change
+
 * Tue Oct 20 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.10.20-1.fmi
 - Use UNIX socket with Valkey/Redis db for tests
 
