@@ -132,6 +132,11 @@ rm -rf $RPM_BUILD_ROOT
   (SmartSymbol, WindCompass8, FeelsLike, ...) and the aliases of observations
 - starttime=now is taken as the default start, as endtime=now (needs smartmet-library-timeseries
   26.10.23)
+- Observations: the stations of a keyword are no longer replaced by nearby stations unless
+  maxdistance or numberofstations is given explicitly; other keyword locations still use the
+  nearest station
+- The default maxdistance of observation requests comes from the configuration instead of a
+  fixed 60 km
 
 * Wed Oct 21 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.10.21-1.fmi
 - Repackage due to smartmet-engine-observation ABI change

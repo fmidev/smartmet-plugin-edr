@@ -19,6 +19,7 @@ struct ObsQueryParams
   std::map<std::string, double> boundingBox;
   TS::DataFilter dataFilter;
   int numberofstations;
+  bool numberofstationsOptionGiven;
   std::set<std::string> stationgroups;
   bool allplaces;
   bool latestObservation;
