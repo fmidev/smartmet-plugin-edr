@@ -1072,7 +1072,7 @@ const std::vector<TSParameter> ts_parameters{
     {"model", "Data", "string", "Alias of producer"},
     {"source", "Data", "string", "Data source: querydata or grid"},
     // Time
-    {"starttime", "Time", "string", "Start time: ISO 8601, YYYYMMDDHHMI, a relative time like +2h or -1d, or 'data' for the first time of the data. The default is the next full hour."},
+    {"starttime", "Time", "string", "Start time: ISO 8601, YYYYMMDDHHMI, a relative time like +2h or -1d, 'data' for the first time of the data, or 'now'. The default is the next full hour."},
     {"endtime", "Time", "string", "End time in the formats of starttime, or 'data'. The default is starttime plus 24 hours."},
     {"timestep", "Time", "string", "Time step in minutes, or 'data' to select the times of the data. The default is 60."},
     {"timesteps", "Time", "integer", "Number of times to return, an alternative to endtime"},

@@ -41,7 +41,7 @@ BuildRequires: smartmet-library-grid-content-devel >= 26.10.20
 BuildRequires: smartmet-library-grid-files-devel >= 26.10.20
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
 BuildRequires: smartmet-library-gis-devel >= 26.10.16
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.17-1
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.23
 BuildRequires: smartmet-engine-avi-devel >= 26.10.16
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
 %if %{with observation}
@@ -64,7 +64,7 @@ Requires: smartmet-library-macgyver >= 26.10.17
 Requires: smartmet-library-newbase >= 26.10.17
 Requires: smartmet-library-spine >= 26.10.17-1
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-timeseries >= 26.10.17-1
+Requires: smartmet-library-timeseries >= 26.10.23
 Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-grid-content >= 26.10.20
 Requires: smartmet-library-grid-files >= 26.10.20
@@ -130,6 +130,8 @@ rm -rf $RPM_BUILD_ROOT
 - <timeseries_url>/api/producers lists the other names of the parameters the TimeSeries API
   accepts: the newbase names of grid parameters, the parameters derived from querydata
   (SmartSymbol, WindCompass8, FeelsLike, ...) and the aliases of observations
+- starttime=now is taken as the default start, as endtime=now (needs smartmet-library-timeseries
+  26.10.23)
 
 * Wed Oct 21 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.10.21-1.fmi
 - Repackage due to smartmet-engine-observation ABI change

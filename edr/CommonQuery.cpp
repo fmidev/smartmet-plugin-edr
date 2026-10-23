@@ -269,7 +269,9 @@ void CommonQuery::commonInit(const State& state,
 
     latestTimestep = toptions.startTime;
 
-    starttimeOptionGiven = (!!req.getParameter("starttime") || !!req.getParameter("now"));
+    // starttime=now is the default start, as endtime=now is the default end
+    const std::string starttime = Spine::optional_string(req.getParameter("starttime"), "");
+    starttimeOptionGiven = ((!starttime.empty() && starttime != "now") || !!req.getParameter("now"));
     std::string endtime = Spine::optional_string(req.getParameter("endtime"), "");
     endtimeOptionGiven = (endtime != "now");
     useCurrentTime = (!!req.getParameter("usecurrenttime"));
