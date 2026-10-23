@@ -128,7 +128,12 @@ The producers the interface reads are listed at `/timeseries/api/producers` with
 parameters, areas, times and levels; `source=querydata`, `grid` or `observation` selects one
 source. The level types are named alike for all sources (`pressure`, `hybrid`, `height`,
 `depth`, ...) and the level values are those of the `levels` option, for example hPa for
-pressure levels. `/timeseries/api/producers/{producer}` gives one producer with the
+pressure levels. The parameters include the other names the interface accepts for them: the
+newbase names the parameter mappings of the grid engine give to grid parameters (`Temperature`
+for `T-K`), the parameters the querydata engine derives from those of the data (`SmartSymbol`,
+`WindCompass8`, `FeelsLike`, ... when the data has what they need), and the aliases of
+observation parameters (`temperature` for `ta_pt1h_avg`).
+`/timeseries/api/producers/{producer}` gives one producer with the
 descriptions of its parameters and its locations (for observation producers the stations with
 their identifiers, coordinates and periods of operation), and for grid producers what their
 parameter keys may contain

@@ -106,6 +106,10 @@ struct EDRMetaData
 
   std::set<std::string> parameter_names;
   std::map<std::string, edr_parameter> parameters;
+  // Other names of the parameters the TimeSeries API accepts: the newbase names of grid
+  // parameters, the parameters derived from querydata and the aliases of observations. Listed
+  // by <timeseries_url>/api/producers only, they are not EDR parameters.
+  std::map<std::string, edr_parameter> timeseries_parameters;
   std::map<std::string, int> parameter_precisions;
   std::set<std::string> data_queries;    // Supported data_queries, defined in config file
   std::set<std::string> output_formats;  // Supported output_formats, defined in config file

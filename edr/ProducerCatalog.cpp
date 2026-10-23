@@ -155,6 +155,8 @@ struct Entry
       levels[v.level_type].insert(v.levels.begin(), v.levels.end());
 
     parameters.insert(md.parameter_names.begin(), md.parameter_names.end());
+    for (const auto& p : md.timeseries_parameters)
+      parameters.insert(p.first);
     stations = std::max(stations, md.stationMetaData.size());
   }
 };
@@ -197,23 +199,24 @@ JsonValue build(const EngineMetaData& metadata)
           // Only what adds to the name: most observation parameters have no description. The
           // first producer having a field gives it, the others fill in what is still missing, so
           // that a producer without a description does not hide those of the others.
-          for (const auto& p : md.parameters)
-          {
-            JsonValue info(::Json::objectValue);
-            if (p.second.name != p.first)
-              info["name"] = p.second.name;
-            const auto& desc = p.second.description;
-            if (!desc.empty() && desc != p.first && desc != p.second.name)
-              info["description"] = desc;
-            if (!p.second.unit.empty())
-              info["unit"] = p.second.unit;
-            if (info.size() == 0)
-              continue;
-            auto& known = dictionary[p.first];
-            for (const auto& field : info.getMemberNames())
-              if (!known.isMember(field))
-                known[field] = info[field];
-          }
+          for (const auto* list : {&md.parameters, &md.timeseries_parameters})
+            for (const auto& p : *list)
+            {
+              JsonValue info(::Json::objectValue);
+              if (p.second.name != p.first)
+                info["name"] = p.second.name;
+              const auto& desc = p.second.description;
+              if (!desc.empty() && desc != p.first && desc != p.second.name)
+                info["description"] = desc;
+              if (!p.second.unit.empty())
+                info["unit"] = p.second.unit;
+              if (info.size() == 0)
+                continue;
+              auto& known = dictionary[p.first];
+              for (const auto& field : info.getMemberNames())
+                if (!known.isMember(field))
+                  known[field] = info[field];
+            }
         }
       }
     }

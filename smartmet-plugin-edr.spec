@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.21
+Version: 26.10.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -49,7 +49,7 @@ BuildRequires: smartmet-engine-observation-devel >= 26.10.17-1
 %endif
 BuildRequires: smartmet-engine-querydata-devel >= 26.10.16
 BuildRequires: smartmet-engine-gis-devel >= 26.10.16
-BuildRequires: smartmet-engine-grid-devel >= 26.10.16
+BuildRequires: smartmet-engine-grid-devel >= 26.10.23
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 26.10.11
@@ -72,7 +72,7 @@ Requires: smartmet-engine-avi >= 26.10.17
 Requires: smartmet-engine-geonames >= 26.10.17
 Requires: smartmet-engine-querydata >= 26.10.17
 Requires: smartmet-engine-gis >= 26.10.17
-Requires: smartmet-engine-grid >= 26.10.17
+Requires: smartmet-engine-grid >= 26.10.23
 Requires: smartmet-server >= 26.10.17
 Requires: %{smartmet_boost}-filesystem
 Requires: %{smartmet_boost}-iostreams
@@ -98,7 +98,7 @@ Provides: %{SPECNAME}
 %if %{with observation}
 #TestRequires: smartmet-engine-observation >= 26.10.17-1
 %endif
-#TestRequires: smartmet-engine-grid >= 26.10.17
+#TestRequires: smartmet-engine-grid >= 26.10.23
 #TestRequires: gdal312-libs
 #TestRequires: libwebp13
 #TestRequires: python3-jsonschema
@@ -126,6 +126,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Fri Oct 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.23-1.fmi
+- <timeseries_url>/api/producers lists the other names of the parameters the TimeSeries API
+  accepts: the newbase names of grid parameters, the parameters derived from querydata
+  (SmartSymbol, WindCompass8, FeelsLike, ...) and the aliases of observations
+
 * Wed Oct 21 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.10.21-1.fmi
 - Repackage due to smartmet-engine-observation ABI change
 

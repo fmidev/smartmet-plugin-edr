@@ -21,6 +21,7 @@
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
+#include <fmt/format.h>
 #include <algorithm>
 #include <functional>
 
@@ -451,6 +452,55 @@ void add_derived_parameters(const Engine::Observation::Engine &obsEngine,
       producer_emd.parameter_names.insert(name);
       producer_emd.parameters.insert(
           std::make_pair(name, edr_parameter(name, description, unit, name)));
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!").addParameter("Producer", producer);
+  }
+}
+
+// The aliases of the parameters of an observation producer (temperature for ta_pt1h_avg and
+// so on), which the TimeSeries API accepts too. An alias is listed when the producer has the
+// measurand it stands for.
+void add_parameter_aliases(const Engine::Observation::Engine &obsEngine,
+                           const std::string &producer,
+                           const ProducerParameters &prodParams,
+                           const Engine::Observation::ProducerMeasurandInfo &pmi,
+                           EDRMetaData &producer_emd)
+{
+  try
+  {
+    // The measurands of the producer by their ids
+    std::map<std::string, std::string> codes;
+    const auto pos = pmi.find(producer);
+    if (pos != pmi.end())
+      for (const auto &item : pos->second)
+        codes[item.second.measurand_id] = Fmi::ascii_tolower_copy(item.first);
+
+    const bool restricted = prodParams.parametersDefined(producer);
+    // Columns: #, Parameter, Producer, ParameterId
+    const auto table = obsEngine.getParameterInfo(producer);
+    if (!table)
+      return;
+    for (auto row : table->rows())
+    {
+      const auto name = Fmi::ascii_tolower_copy(table->get(1, row));
+      if (name.empty() || producer_emd.parameter_names.count(name) > 0)
+        continue;
+      if (restricted && !prodParams.isValidParameter(producer, name))
+        continue;
+      const auto &id = table->get(3, row);
+      const auto code = codes.find(id);
+      const auto target = (code != codes.end() ? code->second : Fmi::ascii_tolower_copy(id));
+      const auto parameter = producer_emd.parameters.find(target);
+      if (parameter == producer_emd.parameters.end())
+        continue;
+      const auto &desc = parameter->second.description;
+      auto description =
+          (desc.empty() || desc == target ? target : fmt::format("{} ({})", desc, target));
+      producer_emd.timeseries_parameters.insert(std::make_pair(
+          name, edr_parameter(name, description, parameter->second.unit)));
     }
   }
   catch (...)
@@ -1213,7 +1263,45 @@ void set_qd_vertical_extent(const Engine::Querydata::Engine& qEngine,
   }
 }
 
-// The parameters of querydata
+// The parameters the querydata engine derives from those of the data (Q.cpp), the parameters
+// each needs, its description and unit
+struct DerivedParameter
+{
+  const char* name;
+  std::vector<const char*> needs;
+  const char* description;
+  const char* unit;
+};
+
+const std::vector<DerivedParameter>& qd_derived_parameters()
+{
+  static const std::vector<DerivedParameter> derived = {
+      {"WindCompass8", {"winddirection"}, "Wind direction as an 8-point compass direction", ""},
+      {"WindCompass16", {"winddirection"}, "Wind direction as a 16-point compass direction", ""},
+      {"WindCompass32", {"winddirection"}, "Wind direction as a 32-point compass direction", ""},
+      {"Cloudiness8th", {"totalcloudcover"}, "Total cloud cover in eighths", ""},
+      {"WindChill", {"temperature", "windspeedms"}, "Wind chill temperature", "degC"},
+      {"SummerSimmerIndex", {"temperature", "humidity"}, "Summer simmer index", "degC"},
+      {"FeelsLike", {"temperature", "windspeedms", "humidity"}, "Feels like temperature", "degC"},
+      {"ApparentTemperature",
+       {"temperature", "windspeedms", "humidity"},
+       "Apparent temperature",
+       "degC"},
+      {"Snow1h", {"temperature", "windspeedms", "precipitation1h"}, "Snowfall in one hour", ""},
+      {"Snow1hLower", {"precipitation1h"}, "Snowfall in one hour, the lower limit", ""},
+      {"Snow1hUpper", {"precipitation1h"}, "Snowfall in one hour, the upper limit", ""},
+      {"WeatherSymbol", {"weathersymbol3"}, "Weather symbol", ""},
+      {"Weather", {"weathersymbol3"}, "Weather as text", ""},
+      {"SmartSymbol", {"totalcloudcover", "precipitation1h"}, "Weather symbol (SmartSymbol)", ""},
+      {"SmartSymbolText",
+       {"totalcloudcover", "precipitation1h"},
+       "Weather symbol (SmartSymbol) as text",
+       ""},
+      {"WeatherNumber", {"totalcloudcover", "precipitation1h"}, "Weather number", ""}};
+  return derived;
+}
+
+// The parameters of querydata, and the parameters the engine can derive from them
 void set_qd_parameters(const Engine::Querydata::MetaData& qmd, EDRMetaData& producer_emd)
 {
   for (const auto& p : qmd.parameters)
@@ -1224,6 +1312,17 @@ void set_qd_parameters(const Engine::Querydata::MetaData& qmd, EDRMetaData& prod
     auto utf8_description = latin1_to_utf8(p.description);
     producer_emd.parameters.insert(
         std::make_pair(parameter_name, edr_parameter(p.name, utf8_description)));
+  }
+
+  const auto& names = producer_emd.parameter_names;
+  for (const auto& d : qd_derived_parameters())
+  {
+    auto key = boost::algorithm::to_lower_copy(std::string(d.name));
+    if (names.count(key) > 0)
+      continue;
+    if (std::all_of(d.needs.begin(), d.needs.end(), [&names](const char* n) { return names.count(n) > 0; }))
+      producer_emd.timeseries_parameters.insert(
+          std::make_pair(key, edr_parameter(d.name, d.description, d.unit)));
   }
 }
 
@@ -1439,9 +1538,14 @@ void set_grid_vertical_extent(const Engine::Grid::MetaData& gmd, EDRMetaData& pr
   }
 }
 
-// The parameters of a grid collection
-void set_grid_parameters(const Engine::Grid::MetaData& gmd, EDRMetaData& producer_emd)
+// The parameters of a grid collection, and the names its parameter mappings give them, which
+// the TimeSeries API accepts too (for example temperature for T-K)
+void set_grid_parameters(const Engine::Grid::Engine& gEngine,
+                         const Engine::Grid::MetaData& gmd,
+                         EDRMetaData& producer_emd)
 {
+  std::set<std::string> fmi_names;
+  std::map<std::string, const Engine::Grid::Parameter*> infos;
   for (const auto& p : gmd.parameters)
   {
     auto parameter_name = p.parameterName;
@@ -1450,6 +1554,28 @@ void set_grid_parameters(const Engine::Grid::MetaData& gmd, EDRMetaData& produce
     producer_emd.parameters.insert(std::make_pair(
         parameter_name,
         edr_parameter(parameter_name, p.parameterDescription, p.parameterUnits, p.parameterUnits)));
+    fmi_names.insert(p.parameterName);
+    infos[p.parameterName] = &p;
+  }
+
+  std::map<std::string, std::set<std::string>> mapping_names;
+  gEngine.getParameterMappingNames(gmd.producerName, fmi_names, mapping_names);
+  for (const auto& item : mapping_names)
+  {
+    const auto* info = infos.at(item.first);
+    for (const auto& name : item.second)
+    {
+      auto key = boost::algorithm::to_lower_copy(name);
+      if (producer_emd.parameter_names.count(key) > 0)
+        continue;
+      // The unit of the name may differ from that of the grid parameter: the mapping may
+      // convert the values (Temperature is in C, T-K in K)
+      auto description = info->parameterDescription.empty()
+                             ? item.first
+                             : fmt::format("{} ({})", info->parameterDescription, item.first);
+      producer_emd.timeseries_parameters.insert(
+          std::make_pair(key, edr_parameter(name, description)));
+    }
   }
 }
 
@@ -1579,7 +1705,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
 
       producer_emd.temporal_extent = temporal_extent;
 
-      set_grid_parameters(gmd, producer_emd);
+      set_grid_parameters(gEngine, gmd, producer_emd);
 
       producer_emd.collection_info_engine.title =
           ("Producer: " + gmd.producerName + "; Geometry id: " + Fmi::to_string(gmd.geometryId) +
@@ -1799,6 +1925,7 @@ EDRProducerMetaData get_edr_metadata_obs(
                          default_language,
                          producer_emd);
       add_derived_parameters(obsEngine, producer, prodParam, producer_emd);
+      add_parameter_aliases(obsEngine, producer, prodParam, producer_measurand_info, producer_emd);
 
       set_collection_settings(producer_emd,
                               default_language,
