@@ -233,6 +233,43 @@ JsonValue runJson(ContentServer::ServiceInterface& content, const T::GenerationI
   return run;
 }
 
+// Disabled and deleted model runs are not listed
+bool isListed(const T::GenerationInfo* g)
+{
+  return g != nullptr && g->mStatus != T::GenerationInfo::Status::Disabled &&
+         (g->mFlags & T::GenerationInfo::Flags::DeletedGeneration) == 0;
+}
+
+// List the model runs, latest first, and return the one asked for: by default the latest
+// finished run, or the latest one if none has finished
+const T::GenerationInfo* listRuns(T::GenerationInfoList& generations,
+                                  const std::string& origintime,
+                                  JsonValue& runs)
+{
+  const T::GenerationInfo* latest = nullptr;
+  const T::GenerationInfo* latestReady = nullptr;
+  const T::GenerationInfo* wanted = nullptr;
+  for (uint i = generations.getLength(); i > 0; i--)
+  {
+    const auto* g = generations.getGenerationInfoByIndex(i - 1);
+    if (!isListed(g))
+      continue;
+    JsonValue run;
+    run["origintime"] = isoTime(g->mAnalysisTime);
+    run["status"] = statusName(g->mStatus);
+    runs.append(run);
+
+    if (latest == nullptr)
+      latest = g;
+    if (latestReady == nullptr && g->mStatus == T::GenerationInfo::Status::Ready)
+      latestReady = g;
+    if (wanted == nullptr && run["origintime"].asString() == origintime)
+      wanted = g;
+  }
+  if (!origintime.empty())
+    return wanted;
+  return (latestReady != nullptr ? latestReady : latest);
+}
 }  // namespace
 
 class Cache
@@ -287,30 +324,7 @@ JsonValue grid(const Engine::Grid::Engine& engine,
     result["producer"] = producerInfo.mName;
     result["runs"] = JsonValue(::Json::arrayValue);
 
-    // By default the latest finished run, or the latest one if none has finished
-    const T::GenerationInfo* latest = nullptr;
-    const T::GenerationInfo* latestReady = nullptr;
-    const T::GenerationInfo* wanted = nullptr;
-    for (uint i = generations.getLength(); i > 0; i--)
-    {
-      const auto* g = generations.getGenerationInfoByIndex(i - 1);
-      if (g == nullptr || g->mStatus == T::GenerationInfo::Status::Disabled ||
-          (g->mFlags & T::GenerationInfo::Flags::DeletedGeneration) != 0)
-        continue;
-      JsonValue run;
-      run["origintime"] = isoTime(g->mAnalysisTime);
-      run["status"] = statusName(g->mStatus);
-      result["runs"].append(run);
-
-      if (latest == nullptr)
-        latest = g;
-      if (latestReady == nullptr && g->mStatus == T::GenerationInfo::Status::Ready)
-        latestReady = g;
-      if (wanted == nullptr && run["origintime"].asString() == origintime)
-        wanted = g;
-    }
-    const auto* chosen =
-        (!origintime.empty() ? wanted : (latestReady != nullptr ? latestReady : latest));
+    const auto* chosen = listRuns(generations, origintime, result["runs"]);
 
     if (chosen == nullptr)
     {

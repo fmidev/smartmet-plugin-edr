@@ -647,6 +647,71 @@ void EDRQueryParams::setFormatUrls(const std::string& resource,
   }
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Mark the query a data query of the model run of the instance
+ */
+// ----------------------------------------------------------------------
+
+void EDRQueryParams::setDataQuery(const EDRMetaData& emd)
+{
+  if (!itsEDRQuery.instance_id.empty())
+    req.addParameter("origintime", itsEDRQuery.instance_id);
+  itsEDRQuery.query_id = EDRQueryId::DataQuery;
+
+  // The collection tells the source: without it a querydata collection whose producer
+  // name is also a grid producer would be read from the grid engine
+  if (req.getParameter("source"))
+    return;
+  if (emd.metadata_source == SourceEngine::Querydata)
+    req.addParameter("source", "querydata");
+  else if (emd.metadata_source == SourceEngine::Grid)
+    req.addParameter("source", "grid");
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief The TimeSeries parameters of a data query
+ *
+ * The EDR parameters, the coordinates and the levels if the producer has any.
+ */
+// ----------------------------------------------------------------------
+
+std::string EDRQueryParams::dataParameterNames(const State& state,
+                                               const EDRMetaData& emd,
+                                               bool grid_producer)
+{
+  // (MetOcean profile) custom dimensions to filter parameters
+  CustomDimensions customDimensions(req);
+
+  bool noReqParams = false;
+  auto parameter_names =
+      parseParameterNamesAndZ(state, emd, grid_producer, noReqParams, customDimensions);
+
+  if (parameter_names.empty())
+  {
+    if (emd.parameters.empty())
+      throw EDRException("No metadata for " + itsEDRQuery.collection_id + "!");
+
+    throw EDRException("No matching parameter names given!");
+  }
+
+  // Longitude, latitude are always needed
+  parameter_names += ",longitude,latitude";
+
+  // If producer has levels we need to query them
+  if (!emd.vertical_extent.levels.empty())
+  {
+    // BRAINSTORM-3116 'level' kludge, FIXME !
+    //
+    if (itsEDRQuery.collection_id != SOUNDING_PRODUCER)
+      parameter_names += ",level";
+    else
+      parameter_names += ",edr_observation_level";
+  }
+  return parameter_names;
+}
+
 EDRQueryParams::EDRQueryParams(const State& state,
                                const Spine::HTTP::Request& request,
                                const Config& config)
@@ -687,20 +752,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
                          "', because there is no vertical extent!");
 
     if (is_data_query(req, itsEDRQuery, emd))
-    {
-      if (!itsEDRQuery.instance_id.empty())
-        req.addParameter("origintime", itsEDRQuery.instance_id);
-      itsEDRQuery.query_id = EDRQueryId::DataQuery;
-      // The collection tells the source: without it a querydata collection whose producer
-      // name is also a grid producer would be read from the grid engine
-      if (!req.getParameter("source"))
-      {
-        if (emd.metadata_source == SourceEngine::Querydata)
-          req.addParameter("source", "querydata");
-        else if (emd.metadata_source == SourceEngine::Grid)
-          req.addParameter("source", "grid");
-      }
-    }
+      setDataQuery(emd);
 
     checkQueryType(invalid_query_type, config);
 
@@ -733,21 +785,8 @@ EDRQueryParams::EDRQueryParams(const State& state,
     // EDR datetime
     parseDateTime(state, itsEDRQuery.collection_id, emd);
 
-    // (MetOcean profile) custom dimensions to filter parameters
-    CustomDimensions customDimensions(req);
-
     // EDR parameter names and z
-    bool noReqParams = false;
-    auto parameter_names = parseParameterNamesAndZ(
-        state, emd, grid_producer, noReqParams, customDimensions);
-
-    if (parameter_names.empty())
-    {
-      if (emd.parameters.empty())
-        throw EDRException("No metadata for " + itsEDRQuery.collection_id + "!");
-
-      throw EDRException("No matching parameter names given!");
-    }
+    const auto parameter_names = dataParameterNames(state, emd, grid_producer);
 
     parseOutputFormat(config, emd);
 
@@ -758,19 +797,6 @@ EDRQueryParams::EDRQueryParams(const State& state,
       mime_type = COVERAGE_JSON_MIME_TYPE;
     else if (output_format == GEO_JSON_FORMAT)
       mime_type = "application/geo+json";
-
-    // Longitude, latitude are always needed
-    parameter_names += ",longitude,latitude";
-    // If producer has levels we need to query them
-    if (!emd.vertical_extent.levels.empty())
-    {
-      // BRAINSTORM-3116 'level' kludge, FIXME !
-      //
-      if (itsEDRQuery.collection_id != SOUNDING_PRODUCER)
-        parameter_names += ",level";
-      else
-        parameter_names += ",edr_observation_level";
-    }
 
     req.addParameter("param", parameter_names);
 

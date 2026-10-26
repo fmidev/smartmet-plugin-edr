@@ -1519,6 +1519,224 @@ bool PluginImpl::handleApiRequest(const Spine::HTTP::Request& theRequest,
   }
 }
 
+namespace
+{
+void send_problem(Spine::HTTP::Response& theResponse,
+                  Spine::HTTP::Status status,
+                  const std::string& detail)
+{
+  ::Json::Value json;
+  json["title"] = (status == Spine::HTTP::Status::not_found ? "Not Found" : "Bad Request");
+  json["status"] = static_cast<int>(status);
+  json["detail"] = detail;
+  ::Json::StreamWriterBuilder builder;
+  builder["indentation"] = "";
+  theResponse.setStatus(status);
+  theResponse.setHeader("Content-Type", "application/problem+json");
+  theResponse.setContent(::Json::writeString(builder, json));
+}
+
+void send_metadata_unavailable(Spine::HTTP::Response& theResponse)
+{
+  theResponse.setStatus(Spine::HTTP::Status::service_unavailable);
+  theResponse.setHeader("Content-Type", "application/problem+json");
+  theResponse.setContent(
+      R"({"title":"Service Unavailable","status":503,"detail":"The metadata is not available yet"})");
+}
+
+// Send a JSON document cached for a minute, answering conditional requests
+void send_json(const Spine::HTTP::Request& theRequest,
+               Spine::HTTP::Response& theResponse,
+               const std::string& json,
+               const std::string& etag)
+{
+  theResponse.setHeader("Cache-Control", "public, max-age=60");
+  theResponse.setHeader("ETag", etag);
+  if (theRequest.getHeader("X-Request-ETag"))
+  {
+    theResponse.setStatus(Spine::HTTP::Status::no_content);
+    return;
+  }
+  if (auto status = Spine::HTTP::conditionalResponseStatus(theRequest, etag))
+  {
+    theResponse.setStatus(*status);
+    return;
+  }
+  theResponse.setStatus(Spine::HTTP::Status::ok);
+  theResponse.setHeader("Content-Type", "application/json");
+  theResponse.setContent(json);
+}
+
+// The producer in the listing of all producers, the first one of any source if
+// no source is given. Null if there is no such producer.
+const ::Json::Value* find_producer(const ::Json::Value& catalog,
+                                   const std::string& name,
+                                   const std::string& source)
+{
+  const auto producer = Fmi::ascii_tolower_copy(name);
+  for (const auto& p : catalog["producers"])
+    if (p["name"].asString() == producer && (source.empty() || p["source"].asString() == source))
+      return &p;
+  return nullptr;
+}
+
+// The descriptions of the parameters of a producer
+::Json::Value producer_parameters(const ::Json::Value& entry, const ::Json::Value& catalog)
+{
+  ::Json::Value parameters(::Json::objectValue);
+  for (const auto& p : entry["parameters"])
+  {
+    const auto& info = catalog["parameters"][p.asString()];
+    parameters[p.asString()] = (info.isObject() ? info : ::Json::Value(::Json::objectValue));
+  }
+  return parameters;
+}
+
+bool is_source(SourceEngine engine, const std::string& source)
+{
+  return (engine == SourceEngine::Querydata && source == "querydata") ||
+         (engine == SourceEngine::Observation && source == "observation");
+}
+
+std::string iso_time(const Fmi::DateTime& t)
+{
+  return Fmi::date_time::to_iso_extended_string(t) + "Z";
+}
+
+::Json::Value location_json(const location_info& loc)
+{
+  ::Json::Value l;
+  l["id"] = loc.id;
+  l["type"] = loc.type;
+  l["name"] = loc.name;
+  l["lon"] = loc.longitude;
+  l["lat"] = loc.latitude;
+  if (!loc.start_time.is_not_a_date_time())
+    l["start"] = iso_time(loc.start_time);
+  if (!loc.end_time.is_not_a_date_time())
+    l["end"] = iso_time(loc.end_time);
+  if (!loc.wsi.empty())
+    l["wsi"] = loc.wsi;
+  return l;
+}
+
+// The locations of a querydata or observation producer, such as observation stations, from
+// the metadata. Null if there are none.
+::Json::Value producer_locations(const EngineMetaData& metadata,
+                                 const std::string& source,
+                                 const std::string& producer)
+{
+  for (const auto& engine_item : metadata.getMetaData())
+  {
+    if (!is_source(engine_item.first, source))
+      continue;
+    auto pos = engine_item.second.find(producer);
+    if (pos == engine_item.second.end())
+      continue;
+    for (const auto& md : pos->second)
+    {
+      if (!md.locations || md.locations->empty())
+        continue;
+      ::Json::Value locations(::Json::arrayValue);
+      for (const auto& item : *md.locations)
+        locations.append(location_json(item.second));
+      return locations;
+    }
+  }
+  return {};
+}
+
+#ifndef WITHOUT_OBSERVATION
+// The stations, parameters and period of the sensors asked for
+Engine::Observation::SensorOptions sensor_options(const Spine::HTTP::Request& theRequest,
+                                                  const std::string& producer,
+                                                  const std::string& fmisids)
+{
+  Engine::Observation::SensorOptions options;
+  options.producer = producer;
+  std::vector<std::string> parts;
+  boost::algorithm::split(parts, fmisids, boost::algorithm::is_any_of(","));
+  for (const auto& p : parts)
+    if (auto id = Fmi::stoi_opt(p))
+      options.fmisids.insert(*id);
+  const auto params = Spine::optional_string(theRequest.getParameter("param"), "");
+  if (!params.empty())
+  {
+    boost::algorithm::split(parts, params, boost::algorithm::is_any_of(","));
+    for (const auto& p : parts)
+      if (!p.empty())
+        options.parameters.insert(p);
+  }
+  const auto starttime = Spine::optional_string(theRequest.getParameter("starttime"), "");
+  const auto endtime = Spine::optional_string(theRequest.getParameter("endtime"), "");
+  if (!starttime.empty())
+    options.starttime = Fmi::TimeParser::parse(starttime);
+  if (!endtime.empty())
+    options.endtime = Fmi::TimeParser::parse(endtime);
+  return options;
+}
+
+::Json::Value sensor_json(const Engine::Observation::SensorInfo& s)
+{
+  ::Json::Value item;
+  item["fmisid"] = s.fmisid;
+  item["measurand_id"] = s.measurand_id;
+  if (!s.measurand_code.empty())
+    item["code"] = s.measurand_code;
+  item["parameters"] = ::Json::Value(::Json::arrayValue);
+  for (const auto& name : s.parameters)
+    item["parameters"].append(name);
+  item["sensor"] = s.sensor_no;
+  item["default"] = s.is_default;
+  if (!s.configuration_start.is_not_a_date_time())
+    item["configuration_start"] = iso_time(s.configuration_start);
+  if (!s.configuration_end.is_not_a_date_time())
+    item["configuration_end"] = iso_time(s.configuration_end);
+  if (!s.first_data.is_not_a_date_time())
+    item["first"] = iso_time(s.first_data);
+  if (!s.last_data.is_not_a_date_time())
+    item["last"] = iso_time(s.last_data);
+  if (s.values > 0)
+    item["values"] = static_cast<::Json::UInt64>(s.values);
+  return item;
+}
+
+::Json::Value sensors_json(const Engine::Observation::SensorResult& found)
+{
+  ::Json::Value sensors(::Json::objectValue);
+  sensors["available"] = found.available;
+  sensors["note"] = found.note;
+  sensors["list"] = ::Json::Value(::Json::arrayValue);
+  for (const auto& s : found.sensors)
+    sensors["list"].append(sensor_json(s));
+  return sensors;
+}
+#endif
+
+// Add the model runs of a grid producer, and what the parameter keys of the chosen run may
+// contain, completed with the descriptions of the listing
+void add_grid_details(::Json::Value& grid, ::Json::Value& result)
+{
+  result["producer"] = grid["producer"];
+  result["runs"] = grid["runs"];
+  if (!grid.isMember("run"))
+    return;
+
+  auto& parameters = grid["run"]["parameters"];
+  for (const auto& key : parameters.getMemberNames())
+  {
+    auto& p = parameters[key];
+    const auto& listed = result["parameters"][key];
+    for (const auto& field : listed.getMemberNames())
+      if (!p.isMember(field))
+        p[field] = listed[field];
+  }
+  result["parameters"] = parameters;
+  grid["run"].removeMember("parameters");
+  result["run"] = grid["run"];
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Answer <timeseries_url>/api/producers
@@ -1550,28 +1768,10 @@ void PluginImpl::handleProducers(const Spine::HTTP::Request& theRequest,
     }
     if (doc == nullptr)
     {
-      theResponse.setStatus(Spine::HTTP::Status::service_unavailable);
-      theResponse.setHeader("Content-Type", "application/problem+json");
-      theResponse.setContent(
-          R"({"title":"Service Unavailable","status":503,"detail":"The metadata is not available yet"})");
+      send_metadata_unavailable(theResponse);
       return;
     }
-
-    theResponse.setHeader("Cache-Control", "public, max-age=60");
-    theResponse.setHeader("ETag", doc->etag);
-    if (theRequest.getHeader("X-Request-ETag"))
-    {
-      theResponse.setStatus(Spine::HTTP::Status::no_content);
-      return;
-    }
-    if (auto status = Spine::HTTP::conditionalResponseStatus(theRequest, doc->etag))
-    {
-      theResponse.setStatus(*status);
-      return;
-    }
-    theResponse.setStatus(Spine::HTTP::Status::ok);
-    theResponse.setHeader("Content-Type", "application/json");
-    theResponse.setContent(doc->json);
+    send_json(theRequest, theResponse, doc->json, doc->etag);
   }
   catch (...)
   {
@@ -1592,178 +1792,67 @@ void PluginImpl::handleProducer(const Spine::HTTP::Request& theRequest,
                                 Spine::HTTP::Response& theResponse,
                                 const std::string& name) const
 {
-  const auto problem = [&theResponse](Spine::HTTP::Status status, const std::string& detail)
-  {
-    ::Json::Value json;
-    json["title"] = (status == Spine::HTTP::Status::not_found ? "Not Found" : "Bad Request");
-    json["status"] = static_cast<int>(status);
-    json["detail"] = detail;
-    ::Json::StreamWriterBuilder builder;
-    builder["indentation"] = "";
-    theResponse.setStatus(status);
-    theResponse.setHeader("Content-Type", "application/problem+json");
-    theResponse.setContent(::Json::writeString(builder, json));
-  };
-
   try
   {
     theResponse.setHeader("Access-Control-Allow-Origin", "*");
     auto docs = itsProducerDocuments.load();
     if (!docs || docs->find("") == docs->end())
     {
-      theResponse.setStatus(Spine::HTTP::Status::service_unavailable);
-      theResponse.setHeader("Content-Type", "application/problem+json");
-      theResponse.setContent(
-          R"({"title":"Service Unavailable","status":503,"detail":"The metadata is not available yet"})");
+      send_metadata_unavailable(theResponse);
       return;
     }
 
     // Without a source the first one listed, as in a request without one
     const auto source = Spine::optional_string(theRequest.getParameter("source"), "");
     const auto& catalog = docs->at("").catalog;
-    const ::Json::Value* entry = nullptr;
-    for (const auto& p : catalog["producers"])
-      if (p["name"].asString() == Fmi::ascii_tolower_copy(name) &&
-          (source.empty() || p["source"].asString() == source))
-      {
-        entry = &p;
-        break;
-      }
+    const auto* entry = find_producer(catalog, name, source);
     if (entry == nullptr)
     {
-      problem(Spine::HTTP::Status::not_found,
-              "Unknown producer " + name + (source.empty() ? "" : " of source " + source));
+      send_problem(theResponse,
+                   Spine::HTTP::Status::not_found,
+                   "Unknown producer " + name + (source.empty() ? "" : " of source " + source));
       return;
     }
 
     ::Json::Value result = *entry;
-    result["parameters"] = ::Json::Value(::Json::objectValue);
-    for (const auto& p : (*entry)["parameters"])
-    {
-      const auto& info = catalog["parameters"][p.asString()];
-      result["parameters"][p.asString()] =
-          (info.isObject() ? info : ::Json::Value(::Json::objectValue));
-    }
+    result["parameters"] = producer_parameters(*entry, catalog);
+
+    const auto producer = (*entry)["name"].asString();
+    const auto producer_source = (*entry)["source"].asString();
 
     // The locations of the producer, such as observation stations, from the metadata
-    if ((*entry)["source"].asString() != "grid")
+    auto metadata = itsMetaData.load();
+    if (metadata && producer_source != "grid")
     {
-      if (auto metadata = itsMetaData.load())
-      {
-        for (const auto& engine_item : metadata->getMetaData())
-        {
-          const auto& source = (*entry)["source"].asString();
-          const bool same_source =
-              (engine_item.first == SourceEngine::Querydata && source == "querydata") ||
-              (engine_item.first == SourceEngine::Observation && source == "observation");
-          if (!same_source)
-            continue;
-          auto pos = engine_item.second.find((*entry)["name"].asString());
-          if (pos == engine_item.second.end())
-            continue;
-          for (const auto& md : pos->second)
-          {
-            if (!md.locations || md.locations->empty())
-              continue;
-            auto& locations = result["locations"];
-            locations = ::Json::Value(::Json::arrayValue);
-            for (const auto& item : *md.locations)
-            {
-              const auto& loc = item.second;
-              ::Json::Value l;
-              l["id"] = loc.id;
-              l["type"] = loc.type;
-              l["name"] = loc.name;
-              l["lon"] = loc.longitude;
-              l["lat"] = loc.latitude;
-              if (!loc.start_time.is_not_a_date_time())
-                l["start"] = Fmi::date_time::to_iso_extended_string(loc.start_time) + "Z";
-              if (!loc.end_time.is_not_a_date_time())
-                l["end"] = Fmi::date_time::to_iso_extended_string(loc.end_time) + "Z";
-              if (!loc.wsi.empty())
-                l["wsi"] = loc.wsi;
-              locations.append(l);
-            }
-            break;
-          }
-        }
-      }
+      auto locations = producer_locations(*metadata, producer_source, producer);
+      if (!locations.isNull())
+        result["locations"] = locations;
     }
 
 #ifndef WITHOUT_OBSERVATION
     // The sensors of observation stations: which sensors each parameter has at a station, which
     // one is the default, and their periods
     const auto fmisids = Spine::optional_string(theRequest.getParameter("fmisid"), "");
-    if ((*entry)["source"].asString() == "observation" && !fmisids.empty() && itsEngines.obsEngine)
+    if (producer_source == "observation" && !fmisids.empty() && itsEngines.obsEngine)
     {
-      Engine::Observation::SensorOptions options;
-      options.producer = (*entry)["name"].asString();
-      std::vector<std::string> parts;
-      boost::algorithm::split(parts, fmisids, boost::algorithm::is_any_of(","));
-      for (const auto& p : parts)
-        if (auto id = Fmi::stoi_opt(p))
-          options.fmisids.insert(*id);
-      const auto params = Spine::optional_string(theRequest.getParameter("param"), "");
-      if (!params.empty())
-      {
-        boost::algorithm::split(parts, params, boost::algorithm::is_any_of(","));
-        for (const auto& p : parts)
-          if (!p.empty())
-            options.parameters.insert(p);
-      }
-      const auto starttime = Spine::optional_string(theRequest.getParameter("starttime"), "");
-      const auto endtime = Spine::optional_string(theRequest.getParameter("endtime"), "");
       try
       {
-        if (!starttime.empty())
-          options.starttime = Fmi::TimeParser::parse(starttime);
-        if (!endtime.empty())
-          options.endtime = Fmi::TimeParser::parse(endtime);
-        const auto found = itsEngines.obsEngine->getSensors(options);
-        const auto iso = [](const Fmi::DateTime& t)
-        { return Fmi::date_time::to_iso_extended_string(t) + "Z"; };
-        ::Json::Value sensors(::Json::objectValue);
-        sensors["available"] = found.available;
-        sensors["note"] = found.note;
-        sensors["list"] = ::Json::Value(::Json::arrayValue);
-        for (const auto& s : found.sensors)
-        {
-          ::Json::Value item;
-          item["fmisid"] = s.fmisid;
-          item["measurand_id"] = s.measurand_id;
-          if (!s.measurand_code.empty())
-            item["code"] = s.measurand_code;
-          item["parameters"] = ::Json::Value(::Json::arrayValue);
-          for (const auto& name : s.parameters)
-            item["parameters"].append(name);
-          item["sensor"] = s.sensor_no;
-          item["default"] = s.is_default;
-          if (!s.configuration_start.is_not_a_date_time())
-            item["configuration_start"] = iso(s.configuration_start);
-          if (!s.configuration_end.is_not_a_date_time())
-            item["configuration_end"] = iso(s.configuration_end);
-          if (!s.first_data.is_not_a_date_time())
-            item["first"] = iso(s.first_data);
-          if (!s.last_data.is_not_a_date_time())
-            item["last"] = iso(s.last_data);
-          if (s.values > 0)
-            item["values"] = static_cast<::Json::UInt64>(s.values);
-          sensors["list"].append(item);
-        }
-        result["sensors"] = sensors;
+        const auto options = sensor_options(theRequest, producer, fmisids);
+        result["sensors"] = sensors_json(itsEngines.obsEngine->getSensors(options));
       }
       catch (...)
       {
         // The first reason, e.g. an unknown parameter of the producer
         Fmi::Exception e = Fmi::Exception::Trace(BCP, "Listing the sensors failed");
         const auto* first = e.getFirstException();
-        problem(Spine::HTTP::Status::bad_request, first ? first->getWhat() : e.getWhat());
+        send_problem(
+            theResponse, Spine::HTTP::Status::bad_request, first ? first->getWhat() : e.getWhat());
         return;
       }
     }
 #endif
 
-    if ((*entry)["source"].asString() == "grid" && itsEngines.gridEngine)
+    if (producer_source == "grid" && itsEngines.gridEngine)
     {
       const auto origintime = Spine::optional_string(theRequest.getParameter("origintime"), "");
       ::Json::Value grid;
@@ -1774,47 +1863,19 @@ void PluginImpl::handleProducer(const Spine::HTTP::Request& theRequest,
       }
       catch (...)
       {
-        problem(Spine::HTTP::Status::not_found,
-                "No model run " + origintime + " of grid producer " + name);
+        send_problem(theResponse,
+                     Spine::HTTP::Status::not_found,
+                     "No model run " + origintime + " of grid producer " + name);
         return;
       }
-      result["producer"] = grid["producer"];
-      result["runs"] = grid["runs"];
-      if (grid.isMember("run"))
-      {
-        // The descriptions of the listing, what the keys may contain from the run
-        for (const auto& key : grid["run"]["parameters"].getMemberNames())
-        {
-          auto& p = grid["run"]["parameters"][key];
-          for (const auto& field : result["parameters"][key].getMemberNames())
-            if (!p.isMember(field))
-              p[field] = result["parameters"][key][field];
-        }
-        result["parameters"] = grid["run"]["parameters"];
-        grid["run"].removeMember("parameters");
-        result["run"] = grid["run"];
-      }
+      add_grid_details(grid, result);
     }
 
     ::Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
     const auto json = ::Json::writeString(builder, result);
-    const auto etag = fmt::format("\"{:x}-producer\"", Fmi::hash_value(json));
-    theResponse.setHeader("Cache-Control", "public, max-age=60");
-    theResponse.setHeader("ETag", etag);
-    if (theRequest.getHeader("X-Request-ETag"))
-    {
-      theResponse.setStatus(Spine::HTTP::Status::no_content);
-      return;
-    }
-    if (auto status = Spine::HTTP::conditionalResponseStatus(theRequest, etag))
-    {
-      theResponse.setStatus(*status);
-      return;
-    }
-    theResponse.setStatus(Spine::HTTP::Status::ok);
-    theResponse.setHeader("Content-Type", "application/json");
-    theResponse.setContent(json);
+    send_json(
+        theRequest, theResponse, json, fmt::format("\"{:x}-producer\"", Fmi::hash_value(json)));
   }
   catch (...)
   {
