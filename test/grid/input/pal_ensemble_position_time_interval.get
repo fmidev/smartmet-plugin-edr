@@ -1,0 +1,1 @@
+GET /edr/collections/pal_ensemble.5900.1/position?coords=POINT(24.9384+60.1699)&datetime=200808050500/200808050700&parameter-name=Temperature HTTP/1.0
