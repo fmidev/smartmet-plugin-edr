@@ -89,7 +89,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-test-data >= 26.10.26
 #TestRequires: smartmet-library-grid-files-test >= 26.10.26
 #TestRequires: smartmet-library-gis >= 26.10.17
-#TestRequires: smartmet-library-grid-content >= 26.10.26
+#TestRequires: smartmet-library-grid-content >= 26.10.26-2
 #TestRequires: smartmet-library-grid-files >= 26.10.20
 #TestRequires: smartmet-engine-avi >= 26.10.17
 #TestRequires: smartmet-engine-geonames >= 26.10.17
