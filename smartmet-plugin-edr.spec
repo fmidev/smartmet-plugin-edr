@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.26
+Version: 26.10.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -43,7 +43,7 @@ BuildRequires: smartmet-library-newbase-devel >= 26.10.16
 BuildRequires: smartmet-library-gis-devel >= 26.10.16
 BuildRequires: smartmet-library-timeseries-devel >= 26.10.23
 BuildRequires: smartmet-engine-avi-devel >= 26.10.16
-BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
+BuildRequires: smartmet-engine-geonames-devel >= 26.10.27
 %if %{with observation}
 BuildRequires: smartmet-engine-observation-devel >= 26.10.17-1
 %endif
@@ -69,7 +69,7 @@ Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-grid-content >= 26.10.20
 Requires: smartmet-library-grid-files >= 26.10.20
 Requires: smartmet-engine-avi >= 26.10.17
-Requires: smartmet-engine-geonames >= 26.10.17
+Requires: smartmet-engine-geonames >= 26.10.27
 Requires: smartmet-engine-querydata >= 26.10.17
 Requires: smartmet-engine-gis >= 26.10.17
 Requires: smartmet-engine-grid >= 26.10.23
@@ -92,7 +92,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-grid-content >= 26.10.26-2
 #TestRequires: smartmet-library-grid-files >= 26.10.20
 #TestRequires: smartmet-engine-avi >= 26.10.17
-#TestRequires: smartmet-engine-geonames >= 26.10.17
+#TestRequires: smartmet-engine-geonames >= 26.10.27
 #TestRequires: smartmet-engine-gis >= 26.10.17
 #TestRequires: smartmet-engine-querydata >= 26.10.17
 %if %{with observation}
@@ -126,6 +126,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Tue Oct 27 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.27-1.fmi
+- GeoEngine database searches are done only if the requested parameters need them (name, geoid,
+  country etc). EDR queries never need them: coordinates, areas, paths and WKT geometries resolve
+  without a search, and observation station locations come from the observation engine
+- EDR queries report the coordinates of observation stations from the station metadata, as do the
+  EDR locations listings, instead of the slightly different coordinates of the geonames entries
+- DEM height and land cover type of area grid points are looked up only when requested
+- Static location values of areas are resolved once instead of once per parameter
+- x/y/crs locations are parsed once, and crs=EPSG:4326 coordinates are no longer transformed
+- A coordinate without data is reported as given in the request, not by the nearest place name
+
 * Mon Oct 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.26-1.fmi
 - The producer listing of the TimeSeries API, the query parameter parsing and the grid model run details split into smaller functions
 

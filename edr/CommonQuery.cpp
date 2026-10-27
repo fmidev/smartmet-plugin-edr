@@ -13,6 +13,7 @@
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/DistanceParser.h>
 #include <spine/Convenience.h>
+#include <timeseries/ParameterKeywords.h>
 #include <algorithm>
 
 using namespace std;
@@ -233,18 +234,19 @@ void CommonQuery::commonInit(const State& state,
 
     parse_attr(req);
 
+    // The parameters decide whether locations need to be searched from GeoEngine
+    parse_parameters(req);
+    parse_location_needs();
+
     if (!parse_grib_loptions(state))
     {
-      loptions = std::make_shared<Engine::Geonames::LocationOptions>(
-          state.getGeoEngine().parseLocations(req));
-
       auto lon_coord = Spine::optional_double(req.getParameter("x"), kFloatMissing);
       auto lat_coord = Spine::optional_double(req.getParameter("y"), kFloatMissing);
       auto source_crs = Spine::optional_string(req.getParameter("crs"), "");
 
       if (lon_coord != kFloatMissing && lat_coord != kFloatMissing && !source_crs.empty())
       {
-        if (source_crs != "ESPG:4326")
+        if (source_crs != "EPSG:4326")
         {
           Fmi::CoordinateTransformation transformation(source_crs, "WGS84");
           transformation.transform(lon_coord, lat_coord);
@@ -253,11 +255,16 @@ void CommonQuery::commonInit(const State& state,
         tmpReq.addParameter("lonlat",
                             (Fmi::to_string(lon_coord) + "," + Fmi::to_string(lat_coord)));
         loptions = std::make_shared<Engine::Geonames::LocationOptions>(
-            state.getGeoEngine().parseLocations(tmpReq));
+            state.getGeoEngine().parseLocations(tmpReq, !geonamesNeeded));
+      }
+      else
+      {
+        loptions = std::make_shared<Engine::Geonames::LocationOptions>(
+            state.getGeoEngine().parseLocations(req, !geonamesNeeded));
       }
     }
 
-    wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
+    wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language, !geonamesNeeded);
 
     toptions = TS::parseTimes(req);
 
@@ -307,7 +314,6 @@ void CommonQuery::commonInit(const State& state,
 
     parse_origintime(req);
     parse_producers(req, state, extraProducerCheck);
-    parse_parameters(req);
 
     parse_levels(req);
 
@@ -640,6 +646,68 @@ void CommonQuery::parse_parameters(const Spine::HTTP::Request& theReq)
   }
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Find out which location information the requested parameters need
+ *
+ * GeoEngine searches the database for the nearest named location of coordinates
+ * and for the geonames entries of observation stations. The search is needed
+ * only for the parameters below, coordinates and timezones are known without it.
+ */
+// ----------------------------------------------------------------------
+
+void CommonQuery::parse_location_needs()
+{
+  try
+  {
+    // Parameters needing a GeoEngine search for coordinates
+    static const std::set<std::string> geonames_parameters{"name",
+                                                           "place",
+                                                           "iso2",
+                                                           "country",
+                                                           "countryname",
+                                                           "region",
+                                                           "feature",
+                                                           "population",
+                                                           "elevation",
+                                                           "geoid"};
+
+    // Observation stations: the fmisid is known without a search, but the coordinates of
+    // the geonames entry of the station may differ slightly from the station metadata.
+    // EDR queries use the station metadata, as do the EDR locations listings.
+    static const std::set<std::string> station_parameters{
+        "lat", "latitude", "lon", "longitude", "latlon", "lonlat", "x", "y"};
+
+    // WXML output always contains the name and the geoid
+    if (format == "wxml")
+      return;
+
+    geonamesNeeded = false;
+    stationGeonamesNeeded = false;
+    terrainNeeded = false;
+
+    for (const auto& param : poptions.parameters())
+    {
+      const auto name = Fmi::ascii_tolower_copy(param.name());
+      if (geonames_parameters.count(name) > 0)
+      {
+        geonamesNeeded = true;
+        stationGeonamesNeeded = true;
+      }
+      else if (station_parameters.count(name) > 0)
+        stationGeonamesNeeded |= is_timeseries_query;
+      else if (name == FMISID_PARAM)
+        geonamesNeeded = true;
+      else if (name == DEM_PARAM || name == "covertype")
+        terrainNeeded = true;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void CommonQuery::parse_attr(const Spine::HTTP::Request& theReq)
 {
   try
@@ -698,7 +766,7 @@ bool CommonQuery::parse_grib_loptions(const State& state)
       Spine::HTTP::Request tmpReq;
       tmpReq.addParameter("latlon", val);
       loptions = std::make_shared<Engine::Geonames::LocationOptions>(
-          state.getGeoEngine().parseLocations(tmpReq));
+          state.getGeoEngine().parseLocations(tmpReq, !geonamesNeeded));
       return true;
     }
 
@@ -710,7 +778,7 @@ bool CommonQuery::parse_grib_loptions(const State& state)
       Spine::HTTP::Request tmpReq;
       tmpReq.addParameter("latlon", val);
       loptions = std::make_shared<Engine::Geonames::LocationOptions>(
-          state.getGeoEngine().parseLocations(tmpReq));
+          state.getGeoEngine().parseLocations(tmpReq, !geonamesNeeded));
       return true;
     }
 

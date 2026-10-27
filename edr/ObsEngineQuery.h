@@ -10,6 +10,8 @@
 #include "ObsParameter.h"
 #include "PluginImpl.h"
 #include "ProducerDataPeriod.h"
+#include <map>
+#include <set>
 
 namespace SmartMet
 {
@@ -151,6 +153,13 @@ class ObsEngineQuery
       const TS::TimeSeriesVector* tsv_observation_result,
       const std::vector<Fmi::LocalDateTime>& ts_vector,
       const CommonQuery& query) const;
+
+  // Station locations by fmisid without GeoEngine searches. Empty if the requested
+  // parameters need the geonames information of the stations.
+  using StationLocations = std::map<int, Spine::LocationPtr>;
+  StationLocations getStationLocations(const CommonQuery& query,
+                                       const Engine::Observation::Settings& settings,
+                                       const std::set<int>& fmisids) const;
 
   void handleLocationSettings(const CommonQuery& query,
                               const std::string& producer,

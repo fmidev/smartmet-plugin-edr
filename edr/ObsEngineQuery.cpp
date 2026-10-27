@@ -144,10 +144,25 @@ TS::TimeSeriesGenerator::LocalTimeList get_all_timesteps(const CommonQuery& quer
   }
 }
 
+Spine::LocationPtr get_station_location(const CommonQuery& query,
+                                        const State& state,
+                                        int fmisid,
+                                        const std::map<int, Spine::LocationPtr>& stationLocations)
+{
+  if (query.stationGeonamesNeeded)
+    return get_location(state.getGeoEngine(), fmisid, FMISID_PARAM, query.language);
+
+  auto pos = stationLocations.find(fmisid);
+  if (pos != stationLocations.end())
+    return pos->second;
+  return {};
+}
+
 Spine::LocationPtr get_loc(const CommonQuery& query,
                            const State& state,
                            const std::string& producer,
-                           int fmisid)
+                           int fmisid,
+                           const std::map<int, Spine::LocationPtr>& stationLocations)
 {
   try
   {
@@ -155,7 +170,7 @@ Spine::LocationPtr get_loc(const CommonQuery& query,
 
     if (!UtilityFunctions::is_flash_or_mobile_producer(producer))
     {
-      loc = get_location(state.getGeoEngine(), fmisid, FMISID_PARAM, query.language);
+      loc = get_station_location(query, state, fmisid, stationLocations);
       if (!loc)
       {
         // Most likely an old station not known to geoengine. The result will not
@@ -674,6 +689,66 @@ std::vector<TS::TimeSeriesGroupPtr> parameter_groups(
 }
 }  // namespace
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Station locations from the station information of the observation engine
+ *
+ * The locations carry the coordinates, the timezone and the fmisid of the stations,
+ * which is all the requested parameters need unless stationGeonamesNeeded is set.
+ * The station metadata identifies the geonames entry of the station.
+ */
+// ----------------------------------------------------------------------
+
+ObsEngineQuery::StationLocations ObsEngineQuery::getStationLocations(
+    const CommonQuery& query,
+    const Engine::Observation::Settings& settings,
+    const std::set<int>& fmisids) const
+{
+  try
+  {
+    StationLocations ret;
+    if (query.stationGeonamesNeeded || fmisids.empty())
+      return ret;
+
+    Engine::Observation::Settings stationSettings = settings;
+    stationSettings.allplaces = false;
+    stationSettings.taggedFMISIDs.clear();
+    for (int fmisid : fmisids)
+      stationSettings.taggedFMISIDs.emplace_back(Fmi::to_string(fmisid), fmisid);
+
+    Spine::Stations stations;
+    itsPlugin.itsEngines.obsEngine->getStations(stations, stationSettings);
+
+    const auto& geoengine = *itsPlugin.itsEngines.geoEngine;
+    for (const auto& station : stations)
+    {
+      // Stations unknown to GeoEngine get no location, as with a GeoEngine search
+      if (station.geoid == 0)
+        continue;
+
+      // The observation engine uses the same station timezone for local times
+      const std::string timezone =
+          (!station.timezone.empty()
+               ? station.timezone
+               : geoengine.getTimeZoneName(station.longitude, station.latitude));
+
+      auto loc =
+          std::make_shared<Spine::Location>(station.longitude, station.latitude, "", timezone);
+      loc->fmisid = station.fmisid;
+      loc->geoid = station.geoid;
+      if (query.terrainNeeded)
+        loc->dem = geoengine.demHeight(station.longitude, station.latitude);
+      ret.emplace(station.fmisid, loc);
+    }
+
+    return ret;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
                                                    const std::string& producer,
                                                    const ObsParameters& obsParameters,
@@ -724,6 +799,12 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
     Fmi::TimeZonePtr prev_tz;
     TS::TimeSeriesGeneratorCache::TimeList prev_tlist;
 
+    std::set<int> fmisids;
+    if (!UtilityFunctions::is_flash_or_mobile_producer(producer))
+      for (const auto& observation_result_location : observation_result_by_location)
+        fmisids.insert(observation_result_location.first);
+    const auto stationLocations = getStationLocations(query, settings, fmisids);
+
     // iterate locations
     for (const auto& observation_result_location : observation_result_by_location)
     {
@@ -731,7 +812,7 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
       int fmisid = observation_result_location.first;
 
       // Get location
-      Spine::LocationPtr loc = get_loc(query, state, producer, fmisid);
+      Spine::LocationPtr loc = get_loc(query, state, producer, fmisid, stationLocations);
 
       // When tz=local, resolve the station's actual timezone for timestep generation.
       auto station_tz = tz;
@@ -991,20 +1072,25 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
     TS::TimeSeriesByLocation tsv_area =
         timeseries_by_fmisid(producer, observation_result, tlist_all, fmisid_index);
 
+    // fmisid may be missing for rows for which there is no data. Hence we extract
+    // it from the full time timeseries once.
+    std::vector<int> area_fmisids;
+    for (const TS::FmisidTSVectorPair& val : tsv_area)
+      area_fmisids.push_back(get_fmisid_value(val.second->at(fmisid_index)));
+
+    const auto stationLocations = getStationLocations(
+        query, settings, std::set<int>(area_fmisids.begin(), area_fmisids.end()));
+
     std::vector<TS::FmisidTSVectorPair> tsv_area_with_added_fields;
     // add data for location- and time-related fields; these fields are added by timeseries
     // plugin
-    for (TS::FmisidTSVectorPair& val : tsv_area)
+    for (std::size_t i = 0; i < tsv_area.size(); i++)
     {
+      TS::FmisidTSVectorPair& val = tsv_area[i];
       TS::TimeSeriesVector* tsv_observation_result = val.second.get();
 
-      const TS::TimeSeries& fmisid_ts = tsv_observation_result->at(fmisid_index);
-
-      // fmisid may be missing for rows for which there is no data. Hence we extract
-      // it from the full time timeseries once.
-      int fmisid = get_fmisid_value(fmisid_ts);
-      Spine::LocationPtr loc =
-          get_location(state.getGeoEngine(), fmisid, FMISID_PARAM, query.language);
+      int fmisid = area_fmisids[i];
+      Spine::LocationPtr loc = get_station_location(query, state, fmisid, stationLocations);
 
       if (!loc)
         std::cout << "EDR::ObsEngineQuery::fetchObsEngineValuesForArea:"

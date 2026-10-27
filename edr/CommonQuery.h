@@ -116,6 +116,14 @@ class CommonQuery : public ObsQueryParams
   std::set<Spine::GeoId> keywordStationGeoids;
   bool groupareas{true};
 
+  // Requested parameters need location information which only a GeoEngine search provides
+  // (name, geoid, country etc). Coordinates, timezones and terrain do not need a search.
+  bool geonamesNeeded{true};
+  // Same for observation stations, whose fmisid is known without a search
+  bool stationGeonamesNeeded{true};
+  // Requested parameters need the DEM height or the land cover type of the locations
+  bool terrainNeeded{true};
+
   double maxdistance_kilometers() const;
   double maxdistance_meters() const;
   // DO NOT FORGET TO CHANGE hash_value IF YOU ADD ANY NEW PARAMETERS
@@ -134,6 +142,7 @@ class CommonQuery : public ObsQueryParams
                        const State& theState,
                        const std::function<bool(const std::string&)>& extraCheck = nullptr);
   void parse_parameters(const Spine::HTTP::Request& theReq);
+  void parse_location_needs();
   void parse_aggregation_intervals(const Spine::HTTP::Request& theReq);
   void parse_attr(const Spine::HTTP::Request& theReq);
   bool parse_grib_loptions(const State& state);

@@ -173,7 +173,8 @@ class QEngineQuery
                                              const Spine::LocationPtr& loc,
                                              const Engine::Querydata::Q& theQ,
                                              NFmiSvgPath& svgPath,
-                                             bool isWkt) const;
+                                             bool isWkt,
+                                             bool terrainNeeded) const;
 
   // The locations of an area or a path, computed once per request: they are the same for every
   // parameter and level. The key names the location, its radius and the grid of the data.

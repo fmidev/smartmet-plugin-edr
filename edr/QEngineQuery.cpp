@@ -137,7 +137,8 @@ bool is_point_query(const Spine::LocationPtr& loc)
 Spine::LocationList get_indexmask_locations(const NFmiIndexMask& indexmask,
                                             const Spine::LocationPtr& loc,
                                             const Engine::Querydata::Q& qi,
-                                            const Engine::Geonames::Engine& geoengine)
+                                            const Engine::Geonames::Engine& geoengine,
+                                            bool terrainNeeded)
 {
   try
   {
@@ -149,8 +150,11 @@ Spine::LocationList get_indexmask_locations(const NFmiIndexMask& indexmask,
       Spine::Location location(*loc);
       location.longitude = coord.X();
       location.latitude = coord.Y();
-      location.dem = geoengine.demHeight(location.longitude, location.latitude);
-      location.covertype = geoengine.coverType(location.longitude, location.latitude);
+      if (terrainNeeded)
+      {
+        location.dem = geoengine.demHeight(location.longitude, location.latitude);
+        location.covertype = geoengine.coverType(location.longitude, location.latitude);
+      }
       location.type = Spine::Location::CoordinatePoint;
       Spine::LocationPtr locPtr = std::make_shared<Spine::Location>(location);
       loclist.emplace_back(locPtr);
@@ -168,7 +172,8 @@ Spine::TaggedLocationList get_locations_for_area(const NFmiIndexMask& indexmask,
                                                  const Spine::TaggedLocation& tloc,
                                                  const Spine::LocationPtr& area_loc,
                                                  const Engine::Querydata::Q& qi,
-                                                 const Engine::Geonames::Engine& geoengine)
+                                                 const Engine::Geonames::Engine& geoengine,
+                                                 bool terrainNeeded)
 {
   try
   {
@@ -180,8 +185,11 @@ Spine::TaggedLocationList get_locations_for_area(const NFmiIndexMask& indexmask,
       Spine::Location location(*area_loc);
       location.longitude = coord.X();
       location.latitude = coord.Y();
-      location.dem = geoengine.demHeight(location.longitude, location.latitude);
-      location.covertype = geoengine.coverType(location.longitude, location.latitude);
+      if (terrainNeeded)
+      {
+        location.dem = geoengine.demHeight(location.longitude, location.latitude);
+        location.covertype = geoengine.coverType(location.longitude, location.latitude);
+      }
       location.type = Spine::Location::CoordinatePoint;
       location.radius = 0;
       Spine::LocationPtr locPtr = std::make_shared<Spine::Location>(location);
@@ -280,7 +288,7 @@ Spine::TaggedLocationList get_tloclist(const CommonQuery& query,
     else
       indexmask = get_area_indexmask(tloc, loc, qi, geometryStorage, svgPath);
 
-    return get_locations_for_area(indexmask, tloc, area_loc, qi, geoengine);
+    return get_locations_for_area(indexmask, tloc, area_loc, qi, geoengine, query.terrainNeeded);
   }
   catch (...)
   {
@@ -308,12 +316,15 @@ void QEngineQuery::resolveAreaLocations(CommonQuery& query,
     NFmiSvgPath svgPath;
 
     if (tloc.loc->type == Spine::Location::BoundingBox)
-      area_loc = get_bbox_location(
-          get_name_base(tloc.loc->name), query.language, *itsPlugin.itsEngines.geoEngine);
+      area_loc = get_bbox_location(get_name_base(tloc.loc->name),
+                                   query.language,
+                                   query.geonamesNeeded,
+                                   *itsPlugin.itsEngines.geoEngine);
     else
       area_loc = get_location_for_area(tloc,
                                        itsPlugin.itsGeometryStorage,
                                        query.language,
+                                       query.geonamesNeeded,
                                        *itsPlugin.itsEngines.geoEngine,
                                        &svgPath);
 
@@ -941,8 +952,8 @@ Spine::LocationList QEngineQuery::getLocationListForPath(const CommonQuery& theQ
         std::list<NFmiSvgPath> svgList = theQuery.wktGeometries.getSvgPaths(place);
         for (const auto& svg : svgList)
         {
-          Spine::LocationList ll =
-              get_location_list(svg, theTLoc.tag, theQuery.step, theState.getGeoEngine());
+          Spine::LocationList ll = get_location_list(
+              svg, theTLoc.tag, theQuery.step, theQuery.geonamesNeeded, theState.getGeoEngine());
           if (!ll.empty())
             llist.insert(llist.end(), ll.begin(), ll.end());
         }
@@ -954,12 +965,14 @@ Spine::LocationList QEngineQuery::getLocationListForPath(const CommonQuery& theQ
       else if (geomType == wkbLineString)
       {
         // For LineString svgPath has been extracted earlier
-        llist = get_location_list(svgPath, theTLoc.tag, theQuery.step, theState.getGeoEngine());
+        llist = get_location_list(
+            svgPath, theTLoc.tag, theQuery.step, theQuery.geonamesNeeded, theState.getGeoEngine());
       }
     }
     else
     {
-      llist = get_location_list(svgPath, theTLoc.tag, theQuery.step, theState.getGeoEngine());
+      llist = get_location_list(
+          svgPath, theTLoc.tag, theQuery.step, theQuery.geonamesNeeded, theState.getGeoEngine());
     }
 
     return llist;
@@ -1077,7 +1090,8 @@ Spine::LocationList QEngineQuery::getLocationListForArea(const Spine::TaggedLoca
                                                          const Spine::LocationPtr& loc,
                                                          const Engine::Querydata::Q& theQ,
                                                          NFmiSvgPath& svgPath,
-                                                         bool isWkt) const
+                                                         bool isWkt,
+                                                         bool terrainNeeded) const
 {
   try
   {
@@ -1119,7 +1133,7 @@ Spine::LocationList QEngineQuery::getLocationListForArea(const Spine::TaggedLoca
       mask = NFmiIndexMaskTools::MaskExpand(theQ->grid(), svgPath, isWkt ? 0 : loc->radius);
     }
     // Indexmask (indexed locations on the area)
-    return get_indexmask_locations(mask, loc, theQ, *itsPlugin.itsEngines.geoEngine);
+    return get_indexmask_locations(mask, loc, theQ, *itsPlugin.itsEngines.geoEngine, terrainNeeded);
   }
   catch (...)
   {
@@ -1196,10 +1210,18 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
                 loc->type == Spine::Location::Place ||
                 loc->type == Spine::Location::CoordinatePoint))
       {
-        const Spine::LocationList& llist = cachedLocations(
-            fmt::format("area|{}|{}|{}|{}|{}", theTLoc.tag, loc->name, loc->radius,
-                        theQ->gridHashValue(), isWkt),
-            [&] { return getLocationListForArea(theTLoc, loc, theQ, svgPath, isWkt); });
+        const Spine::LocationList& llist =
+            cachedLocations(fmt::format("area|{}|{}|{}|{}|{}",
+                                        theTLoc.tag,
+                                        loc->name,
+                                        loc->radius,
+                                        theQ->gridHashValue(),
+                                        isWkt),
+                            [&]
+                            {
+                              return getLocationListForArea(
+                                  theTLoc, loc, theQ, svgPath, isWkt, theQuery.terrainNeeded);
+                            });
         check_request_limit(
             itsPlugin.itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
 
@@ -1461,14 +1483,15 @@ Spine::LocationPtr QEngineQuery::resolveLocation(const Spine::TaggedLocation& tl
       loc = get_location_for_area(tloc,
                                   itsPlugin.itsGeometryStorage,
                                   query.language,
+                                  query.geonamesNeeded,
                                   *itsPlugin.itsEngines.geoEngine,
                                   &svgPath);
     }
     else if (loc->type == Spine::Location::BoundingBox)
     {
       // get location info for center coordinate
-      std::unique_ptr<Spine::Location> tmp =
-          get_bbox_location(place, query.language, *itsPlugin.itsEngines.geoEngine);
+      std::unique_ptr<Spine::Location> tmp = get_bbox_location(
+          place, query.language, query.geonamesNeeded, *itsPlugin.itsEngines.geoEngine);
 
       tmp->name = tloc.tag;
       tmp->type = tloc.loc->type;
