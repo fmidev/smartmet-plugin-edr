@@ -661,7 +661,10 @@ The easies way to find out unique parameter keys is to use the grid-gui-plugin, 
 and, for the latest run (or the one given with `origintime`), the geometries and per parameter
 the level types and levels, the forecast types and ensemble members, the aggregation and the
 number of times. Its level `values` are in the units of the `levels` option (hPa for pressure
-levels) and its level `keys` in the units of the parameter keys (Pa):
+levels) and its level `keys` in the units of the parameter keys (Pa). Its `aliases` give the
+parameters the mapping names stand for (`"air_pressure": "p-pa"`): a key may name the parameter
+by its mapping name too, as in `air_pressure:MEPS::7:0:3:5`, and its values are then converted
+like those of the mapping name:
 
 ```text
 smartmet.fmi.fi/timeseries/api/producers/ecmwf_skandinavia_painepinta?source=grid

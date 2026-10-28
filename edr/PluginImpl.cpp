@@ -1732,7 +1732,9 @@ void add_grid_details(::Json::Value& grid, ::Json::Value& result)
         p[field] = listed[field];
   }
   result["parameters"] = parameters;
+  result["aliases"] = grid["run"]["aliases"];
   grid["run"].removeMember("parameters");
+  grid["run"].removeMember("aliases");
   result["run"] = grid["run"];
 }
 }  // namespace

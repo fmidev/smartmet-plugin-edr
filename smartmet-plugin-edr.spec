@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.26
+Version: 26.10.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Wed Oct 28 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.28-1.fmi
+- The grid producer details of the TimeSeries API list the grid parameters the mapping names stand for (aliases), so that the data explorer finds the levels and ensemble members of air_pressure and other mapping names
+
 * Mon Oct 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.26-1.fmi
 - The producer listing of the TimeSeries API, the query parameter parsing and the grid model run details split into smaller functions
 

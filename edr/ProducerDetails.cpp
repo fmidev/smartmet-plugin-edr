@@ -173,7 +173,41 @@ JsonValue parameterJson(const ParameterInfo& info)
   return p;
 }
 
-JsonValue runJson(ContentServer::ServiceInterface& content, const T::GenerationInfo& generation)
+// The names the parameter mappings of the producer give to its parameters, which requests accept
+// too (for example air_pressure for P-PA), and the parameters they stand for. A name standing for
+// several parameters (at different levels, say) stands for none of them in particular, and is
+// left out.
+JsonValue aliasesJson(const Engine::Grid::Engine& engine,
+                      const std::string& producer,
+                      const std::map<std::string, ParameterInfo>& parameters)
+{
+  std::set<std::string> names;
+  for (const auto& item : parameters)
+    names.insert(item.second.name);
+
+  std::map<std::string, std::set<std::string>> mappingNames;
+  engine.getParameterMappingNames(producer, names, mappingNames);
+
+  std::map<std::string, std::set<std::string>> targets;  // alias -> parameters
+  for (const auto& item : mappingNames)
+    for (const auto& alias : item.second)
+    {
+      auto key = Fmi::ascii_tolower_copy(alias);
+      if (parameters.count(key) == 0)
+        targets[key].insert(Fmi::ascii_tolower_copy(item.first));
+    }
+
+  JsonValue aliases(::Json::objectValue);
+  for (const auto& item : targets)
+    if (item.second.size() == 1)
+      aliases[item.first] = *item.second.begin();
+  return aliases;
+}
+
+JsonValue runJson(const Engine::Grid::Engine& engine,
+                  ContentServer::ServiceInterface& content,
+                  const std::string& producer,
+                  const T::GenerationInfo& generation)
 {
   JsonValue run;
   run["origintime"] = isoTime(generation.mAnalysisTime);
@@ -230,6 +264,7 @@ JsonValue runJson(ContentServer::ServiceInterface& content, const T::GenerationI
   run["parameters"] = JsonValue(::Json::objectValue);
   for (const auto& item : parameters)
     run["parameters"][item.first] = parameterJson(item.second);
+  run["aliases"] = aliasesJson(engine, producer, parameters);
   return run;
 }
 
@@ -340,7 +375,7 @@ JsonValue grid(const Engine::Grid::Engine& engine,
                                                              : nullptr);
     if (!run)
     {
-      run = std::make_shared<const JsonValue>(runJson(*content, *chosen));
+      run = std::make_shared<const JsonValue>(runJson(engine, *content, producerInfo.mName, *chosen));
       if (chosen->mStatus == T::GenerationInfo::Status::Ready)
         cache.insert(chosen->mGenerationId, run);
     }

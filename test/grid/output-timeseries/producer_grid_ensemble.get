@@ -1,0 +1,4 @@
+Status: 200
+Content-Type: application/json
+
+{"aliases":{},"bbox":[-9.1163845586004602,51.299999999999997,49.046318417340181,70.205383570663528],"name":"pal_ensemble","parameters":{"temperature":{"description":"L\u00e4mp\u00f6tila","forecasts":[{"description":"Ensemble forecast, perturbation","members":[1,2],"name":"Ensemble forecast (perturbation)","type":3},{"description":"Ensemble forecast, control forecast","members":[0],"name":"Ensemble forecast (control)","type":4}],"levels":[{"keys":[0],"levelId":1,"type":"ground","values":[0]}],"name":"TEMPERATURE","times":3}},"producer":"pal_ensemble","run":{"end":"2008-08-05T07:00:00Z","geometries":[{"id":5900,"name":"TEST_PST_1"}],"origintime":"2008-08-05T05:00:00Z","start":"2008-08-05T05:00:00Z","status":"ready"},"runs":[{"origintime":"2008-08-05T05:00:00Z","status":"ready"}],"source":"grid","time":{"end":"2008-08-05T07:00:00Z","origintime":"2008-08-05T05:00:00Z","start":"2008-08-05T05:00:00Z","step":60}}

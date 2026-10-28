@@ -18,10 +18,13 @@
  *                                         "members" } ],
  *                        "aggregation": { "name", "description", "period" },
  *                        "processing": { "name", "description" },
- *                        "times" } } }
+ *                        "times" } },
+ *              "aliases": { alias: name } }      // mapping names of parameters
  *   }
  *
- * Parameter names are lower case like in the producer listing. The level
+ * Parameter names and aliases are lower case like in the producer listing.
+ * The aliases are the names the parameter mappings give to the parameters
+ * (air_pressure for p-pa), which requests accept too. The level
  * "values" are in the units of the levels option of a request (hPa for
  * pressure), the "keys" in the units of the parameter keys (Pa).
  */
