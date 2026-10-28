@@ -1443,12 +1443,26 @@ void PluginImpl::publishApiDefinitions() const
         doc.json = ::Json::writeString(builder, json);
         doc.etag = fmt::format("\"{:x}-producers\"", Fmi::hash_value(doc.json));
       };
+      // The precisions the requests accept, for clients choosing one
+      ::Json::Value precisions;
+      precisions["default"] = itsConfig.defaultTimeSeriesPrecision().empty()
+                                  ? itsConfig.defaultPrecision()
+                                  : itsConfig.defaultTimeSeriesPrecision();
+      precisions["names"] = ::Json::Value(::Json::arrayValue);
+      for (const auto& item : itsConfig.allPrecisions())
+        precisions["names"].append(item.first);
+
       auto docs = std::make_shared<ProducerDocuments>();
-      const auto catalog = ProducerCatalog::build(*metadata);
+      auto catalog = ProducerCatalog::build(*metadata);
+      catalog["precisions"] = precisions;
       store((*docs)[""], catalog);
       (*docs)[""].catalog = catalog;
       for (const auto& source : ProducerCatalog::sources())
-        store((*docs)[source], ProducerCatalog::filter(catalog, source));
+      {
+        auto doc = ProducerCatalog::filter(catalog, source);
+        doc["precisions"] = precisions;
+        store((*docs)[source], doc);
+      }
       itsProducerDocuments.store(docs);
     }
   }

@@ -1447,7 +1447,8 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     producers_op["summary"] = "Producers and their parameters";
     producers_op["description"] =
         "The producers the API reads, with their parameters, areas, times and levels, and a "
-        "dictionary of the parameter descriptions and units. Parameter names are lower case.";
+        "dictionary of the parameter descriptions and units, and the names of the precisions. "
+        "Parameter names are lower case.";
     producers_op["operationId"] = "getProducers" + component_name(url);
     producers_op["parameters"].append(
         OA::parameter("source",
@@ -1462,6 +1463,13 @@ Spine::OpenAPI::Document timeseries(const Config& config,
     producers_schema["required"].append("parameters");
     producers_schema["properties"]["producers"]["type"] = "array";
     producers_schema["properties"]["parameters"]["type"] = "object";
+    auto& precisions_schema = producers_schema["properties"]["precisions"];
+    precisions_schema["type"] = "object";
+    precisions_schema["description"] =
+        "The names the precision option accepts, and the one used when it is not given";
+    precisions_schema["properties"]["default"]["type"] = "string";
+    precisions_schema["properties"]["names"]["type"] = "array";
+    precisions_schema["properties"]["names"]["items"]["type"] = "string";
     producers_ok["content"]["application/json"]["schema"] = producers_schema;
     OA::Document::addErrorResponses(producers_op, false);
 

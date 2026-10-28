@@ -66,6 +66,7 @@ class Config : private boost::noncopyable
   const std::set<std::string> &getSupportedDataQueries(const std::string &producer) const;
   const ProducerKeywords &getProducerKeywords() { return itsProducerKeywords; }
   const Precision &getPrecision(const std::string &name) const;
+  const Precisions &allPrecisions() const { return itsPrecisions; }
 
   const std::string &defaultPrecision() const { return itsDefaultPrecision; }
   // Empty when no timeseries-specific override is configured; callers should fall back

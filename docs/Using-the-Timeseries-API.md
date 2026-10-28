@@ -132,7 +132,9 @@ pressure levels. The parameters include the other names the interface accepts fo
 newbase names the parameter mappings of the grid engine give to grid parameters (`Temperature`
 for `T-K`), the parameters the querydata engine derives from those of the data (`SmartSymbol`,
 `WindCompass8`, `FeelsLike`, ... when the data has what they need), and the aliases of
-observation parameters (`temperature` for `ta_pt1h_avg`).
+observation parameters (`temperature` for `ta_pt1h_avg`). The listing also gives the names the
+`precision` option accepts and the one used without it, for example
+`"precisions": {"default": "normal", "names": ["auto", "double", "full", "normal"]}`.
 `/timeseries/api/producers/{producer}` gives one producer with the
 descriptions of its parameters and its locations (for observation producers the stations with
 their identifiers, coordinates and periods of operation), and for grid producers what their
