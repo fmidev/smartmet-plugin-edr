@@ -17,6 +17,7 @@
 #include <grid-files/common/ShowFunction.h>
 #include <grid-files/identification/GridDef.h>
 #include <macgyver/Astronomy.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/CharsetTools.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>
@@ -2971,8 +2972,12 @@ void GridInterface::processGridQuery(const State& state,
         // Query-object. This object can point to the original query-object as well as a cached
         // query-object.
 
+        Fmi::check_cancelled();
+
         std::shared_ptr<QueryServer::Query> gridQuery =
             itsGridEngine->executeQuery(originalGridQuery);
+
+        Fmi::check_cancelled();
 
         check_result_limits(*gridQuery, outputData, itsRequestLimits);
 

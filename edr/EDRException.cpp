@@ -1,4 +1,5 @@
 #include "EDRException.h"
+#include <macgyver/Cancellation.h>
 #include <macgyver/StringConversion.h>
 #include <cstring>
 
@@ -10,6 +11,11 @@ namespace EDR
 {
 int http_status(const Fmi::Exception& exception)
 {
+  // The server replaces the response of a cancelled request, the status matters only
+  // without the server, for example in the tests
+  if (Fmi::is_cancellation(exception))
+    return 503;
+
   int status = 0;
   bool timeout = false;
 

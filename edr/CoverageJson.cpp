@@ -3,6 +3,7 @@
 #include "EDRException.h"
 #include "UtilityFunctions.h"
 #include <engines/observation/Keywords.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <optional>
@@ -2614,6 +2615,8 @@ Json::Value format_coverage_collection_point(const DataPerParameter &dpp,
 
       for (std::size_t point_idx = 0; point_idx < max_points; point_idx++)
       {
+        Fmi::check_cancelled();
+
         const ParamLevelData *domain_source = find_domain_source(params_at_level, point_idx);
         if (!domain_source)
           continue;
@@ -3143,6 +3146,8 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
 
     for (unsigned int j = 0; j < outdata.size(); j++)
     {
+      Fmi::check_cancelled();
+
       auto parameter_name = parse_parameter_name(query_parameters[j].name());
       boost::algorithm::to_lower(parameter_name);
 
@@ -4281,6 +4286,8 @@ Json::Value formatGridOutputData(const TS::OutputData &outputData,
     auto ranges = Json::Value(Json::ValueType::objectValue);
     for (const auto &dpp_item : dpp)
     {
+      Fmi::check_cancelled();
+
       const auto &parameter_name = dpp_item.first;
       const auto precision = emd.getPrecision(parameter_name);
 

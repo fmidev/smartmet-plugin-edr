@@ -14,6 +14,7 @@
 #include "UtilityFunctions.h"
 #include <engines/gis/Engine.h>
 #include <fmt/format.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
 #include <boost/algorithm/string.hpp>
@@ -925,7 +926,9 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
     auto apikey = Spine::FmiApiKey::getFmiApiKey(theRequest, check_token);
     ex.addParameter("Apikey", (apikey ? *apikey : std::string("-")));
 
-    ex.printError();
+    // The server reports cancelled requests itself
+    if (!Fmi::is_cancellation(ex))
+      ex.printError();
 
     std::string firstMessage = ex.what();
     if (isdebug)
@@ -1044,7 +1047,9 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
     auto apikey = Spine::FmiApiKey::getFmiApiKey(theRequest, check_token);
     ex.addParameter("Apikey", (apikey ? *apikey : std::string("-")));
 
-    ex.printError();
+    // The server reports cancelled requests itself
+    if (!Fmi::is_cancellation(ex))
+      ex.printError();
 
     std::string firstMessage = ex.what();
     if (isdebug)
