@@ -1,4 +1,4 @@
-include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
+include $(or $(PREFIX),$(shell smartbuildcfg --prefix))/share/smartmet/devel/makefile.inc
 
 TEST_PREPARE_TARGETS := cnf/avi.conf cnf/geonames.conf cnf/gis.conf
 TEST_FINISH_TARGETS := dummy
