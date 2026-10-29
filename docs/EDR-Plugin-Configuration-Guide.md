@@ -377,18 +377,26 @@ A request exceeding a limit is rejected.
 ```
 request_limits:
 {
-  maxlocations  = 0;     // locations
-  maxparameters = 0;     // parameters
-  maxtimes      = 50000; // time steps
-  maxlevels     = 0;     // levels
-  maxelements   = 0;     // result values
+  maxlocations  = 0;       // locations
+  maxparameters = 0;       // parameters
+  maxtimes      = 50000;   // time steps
+  maxlevels     = 0;       // levels
+  maxelements   = 1000000; // result values
 };
-maxradius = 0;           // km, the radius of a circle or a buffered location
+maxradius = 0;             // km, the radius of a circle or a buffered location
 ```
 
-0 disables a limit. All limits are disabled by default except `maxtimes`, whose default
-50000 is the same as in the timeseries plugin (a month of one-minute data is about 43200
-time steps).
+0 disables a limit. All limits are disabled by default except `maxtimes` and `maxelements`.
+The default 50000 of `maxtimes` is the same as in the timeseries plugin (a month of one-minute
+data is about 43200 time steps).
+
+The default 1000000 of `maxelements` protects the server from areas of gridded data, such as
+cube, area and corridor queries or TimeSeries API bounding boxes: every grid point inside the
+area produces values for each parameter, level and time, and each value takes a few kilobytes
+of memory before the response is ready. For querydata the values of the data parameters of an
+area are counted before they are fetched. The limit applies to observations as well, so a
+server providing long observation time series, such as a month of one-minute data of many
+stations and parameters, needs a larger value or 0.
 
 # Timeseries interface settings
 

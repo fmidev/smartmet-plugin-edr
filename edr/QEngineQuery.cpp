@@ -1,4 +1,5 @@
 #include "QEngineQuery.h"
+#include "EDRException.h"
 #include "LocationTools.h"
 #include "PostProcessing.h"
 #include "State.h"
@@ -33,6 +34,34 @@ std::size_t requestedLevelCount(const SmartMet::Plugin::EDR::CommonQuery& query,
   else if (query.pressures.empty() && query.heights.empty())
     count += q->info()->SizeLevels();
   return count;
+}
+
+// The values of an area are counted before they are fetched: a huge area would exhaust the
+// memory before the size of the result could be checked. The values of the data parameters
+// are counted, the coordinates and other values of the points are part of their cost.
+void check_area_elements(const SmartMet::Plugin::EDR::CommonQuery& query,
+                         const SmartMet::Engine::Querydata::Q& q,
+                         std::size_t points,
+                         std::size_t times,
+                         const TS::RequestLimits& limits)
+{
+  if (limits.maxelements == 0)
+    return;
+
+  const std::size_t levels = std::max<std::size_t>(1, requestedLevelCount(query, q));
+  std::size_t parameters = 0;
+  for (const auto& paramfunc : query.poptions.parameterFunctions())
+    if (TS::parameter_is_arithmetic(paramfunc.parameter) &&
+        !TS::is_special_parameter(paramfunc.parameter.name()))
+      parameters++;
+  parameters = std::max<std::size_t>(1, parameters);
+
+  const std::size_t elements = points * levels * times * parameters;
+  if (elements > limits.maxelements)
+    throw EDRTooLarge("Too many values " + Fmi::to_string(elements) +
+                      " requested for the area, the maximum is " +
+                      Fmi::to_string(limits.maxelements) +
+                      ". Reduce the area, the levels, the times or the parameters.");
 }
 
 
@@ -1174,6 +1203,11 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
 
         check_request_limit(
             itsPlugin.itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
+        check_area_elements(theQuery,
+                            theQ,
+                            llist.size(),
+                            std::max(theQueryDataTlist.size(), theRequestedTList.size()),
+                            itsPlugin.itsConfig.requestLimits());
 
         querydata_result = getQEngineValuesForArea(theQuery,
                                                    theProducer,
@@ -1202,6 +1236,11 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
             [&] { return getLocationListForArea(theTLoc, loc, theQ, svgPath, isWkt); });
         check_request_limit(
             itsPlugin.itsConfig.requestLimits(), llist.size(), TS::RequestLimitMember::LOCATIONS);
+        check_area_elements(theQuery,
+                            theQ,
+                            llist.size(),
+                            std::max(theQueryDataTlist.size(), theRequestedTList.size()),
+                            itsPlugin.itsConfig.requestLimits());
 
         querydata_result = getQEngineValuesForArea(theQuery,
                                                    theProducer,

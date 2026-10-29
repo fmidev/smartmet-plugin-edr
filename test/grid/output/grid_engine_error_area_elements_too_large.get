@@ -1,0 +1,8 @@
+Status: 413
+Content-Type: application/problem+json
+
+{
+  "title" : "An error occurred",
+  "status" : 413,
+  "detail" : "RequestLimitError"
+}

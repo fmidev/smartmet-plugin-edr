@@ -38,6 +38,11 @@ namespace
 // plugin: a month of one-minute data is ~43200 steps. 0 in the configuration disables the limit.
 const int default_maxtimes = 50000;
 
+// The default maximum number of values in a request. Each value of an area of gridded data takes
+// a few kilobytes of memory before the response is ready, the limit keeps a request within a few
+// gigabytes. 0 in the configuration disables the limit.
+const int default_maxelements = 1000000;
+
 void check_setting_isstring(const libconfig::Setting &setting, const std::string &name)
 {
   if (setting.getType() != libconfig::Setting::Type::TypeString)
@@ -1362,7 +1367,7 @@ Config::Config(const string &configfile)
     int maxparameters = 0;
     int maxtimes = default_maxtimes;
     int maxlevels = 0;
-    int maxelements = 0;
+    int maxelements = default_maxelements;
     itsConfig.lookupValue("request_limits.maxlocations", maxlocations);
     itsConfig.lookupValue("request_limits.maxparameters", maxparameters);
     itsConfig.lookupValue("request_limits.maxtimes", maxtimes);
