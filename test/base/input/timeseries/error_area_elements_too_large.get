@@ -1,0 +1,3 @@
+GET /timeseries?producer=ecmwf_skandinavia_painepinta&bbox=-40,30,80,85&format=json&param=time,Temperature&starttime=200809090000&endtime=200809200000 HTTP/1.0
+X-Test-Headers: Content-Type
+

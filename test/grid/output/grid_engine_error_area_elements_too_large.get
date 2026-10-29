@@ -4,5 +4,5 @@ Content-Type: application/problem+json
 {
   "title" : "An error occurred",
   "status" : 413,
-  "detail" : "RequestLimitError"
+  "detail" : "Too many elements: Max 1000000 allowed!"
 }

@@ -43,6 +43,20 @@ int http_status(const Fmi::Exception& exception)
   return 400;
 }
 
+std::string error_message(const Fmi::Exception& exception)
+{
+  for (const auto* e = &exception; e != nullptr; e = e->getPrevException())
+  {
+    const char* what = e->getWhat();
+    if (what != nullptr && std::strcmp(what, "RequestLimitError") == 0)
+    {
+      if (const char* description = e->getParameterValue("description"))
+        return description;
+    }
+  }
+  return exception.what();
+}
+
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

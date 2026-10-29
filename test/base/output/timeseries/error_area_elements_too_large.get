@@ -1,0 +1,4 @@
+Status: 400
+Content-Type: text/plain; charset=UTF-8
+
+Too many values 4368366 requested for the area, the maximum is 1000000. Reduce the area, the levels, the times or the parameters.

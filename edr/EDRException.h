@@ -23,6 +23,10 @@ inline constexpr const char* HTTP_STATUS_PARAMETER = "HTTP status";
 // since most of them are caused by invalid request parameters.
 int http_status(const Fmi::Exception& exception);
 
+// The message of a caught exception for the response. A request limit error is described by
+// its description parameter, otherwise the first message of the exception is used.
+std::string error_message(const Fmi::Exception& exception);
+
 }  // namespace EDR
 }  // namespace Plugin
 }  // namespace SmartMet

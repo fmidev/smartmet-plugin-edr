@@ -927,7 +927,7 @@ void PluginImpl::timeSeriesRequestHandler(Spine::Reactor& /* theReactor */,
 
     ex.printError();
 
-    std::string firstMessage = ex.what();
+    std::string firstMessage = error_message(ex);
     if (isdebug)
     {
       theResponse.setHeader("Content-Type", "text/html; charset=UTF-8");
@@ -1046,7 +1046,7 @@ void PluginImpl::requestHandler(Spine::Reactor& /* theReactor */,
 
     ex.printError();
 
-    std::string firstMessage = ex.what();
+    std::string firstMessage = error_message(ex);
     if (isdebug)
     {
       // Delivering the exception information as HTTP content
