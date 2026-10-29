@@ -377,13 +377,14 @@ A request exceeding a limit is rejected.
 ```
 request_limits:
 {
-  maxlocations  = 0;       // locations
-  maxparameters = 0;       // parameters
-  maxtimes      = 50000;   // time steps
-  maxlevels     = 0;       // levels
-  maxelements   = 1000000; // result values
+  maxlocations    = 0;       // locations
+  maxparameters   = 0;       // parameters
+  maxtimes        = 50000;   // time steps
+  maxlevels       = 0;       // levels
+  maxelements     = 1000000; // result values
+  maxareaelements = 1000000; // values of an area of gridded data, maxelements by default
 };
-maxradius = 0;             // km, the radius of a circle or a buffered location
+maxradius = 0;               // km, the radius of a circle or a buffered location
 ```
 
 0 disables a limit. All limits are disabled by default except `maxtimes` and `maxelements`.
@@ -393,10 +394,17 @@ data is about 43200 time steps).
 The default 1000000 of `maxelements` protects the server from areas of gridded data, such as
 cube, area and corridor queries or TimeSeries API bounding boxes: every grid point inside the
 area produces values for each parameter, level and time, and each value takes a few kilobytes
-of memory before the response is ready. For querydata the values of the data parameters of an
-area are counted before they are fetched. The limit applies to observations as well, so a
+of memory before the response is ready. The limit applies to observations as well, so a
 server providing long observation time series, such as a month of one-minute data of many
 stations and parameters, needs a larger value or 0.
+
+`maxareaelements` limits only the values of an area of gridded data, its default is the value
+of `maxelements`. Setting it allows a different limit for the areas, for example `maxelements
+= 0` for long observation time series and `maxareaelements = 1000000`. For querydata the
+values of the data parameters of an area are counted before they are fetched, for the grid
+engine after the data of each level has been fetched. The positions and levels requested with
+`resolution-x`, `resolution-y` and `resolution-z` are limited to `maxareaelements`, or to
+1000000 if it is 0.
 
 # Timeseries interface settings
 

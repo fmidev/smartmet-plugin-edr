@@ -30,7 +30,8 @@ class GridInterface
   public:
                       GridInterface(Engine::Grid::Engine* engine,
                                     const Fmi::TimeZones& timezones,
-                                    const TS::RequestLimits& requestLimits);
+                                    const TS::RequestLimits& requestLimits,
+                                    std::size_t maxAreaElements);
                       GridInterface() = delete;
                       GridInterface(const GridInterface& other) = delete;
                       GridInterface(GridInterface&& other) = delete;
@@ -105,6 +106,7 @@ class GridInterface
       Engine::Grid::Engine* itsGridEngine;
       const Fmi::TimeZones& itsTimezones;
       const TS::RequestLimits& itsRequestLimits;
+      std::size_t itsMaxAreaElements;
 
 };  // class GridInterface
 

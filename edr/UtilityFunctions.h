@@ -53,6 +53,10 @@ std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d = false
 // Media type of an EDR output format (CoverageJSON, GeoJSON, IWXXM, IWXXMZIP, TAC)
 std::string output_format_mime_type(const std::string& output_format);
 
+// Check the number of values of an area of gridded data against request_limits.maxareaelements,
+// 0 disables the check
+void check_area_elements(std::size_t elements, std::size_t max_elements);
+
 }  // namespace UtilityFunctions
 }  // namespace EDR
 }  // namespace Plugin

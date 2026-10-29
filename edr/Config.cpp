@@ -1379,6 +1379,11 @@ Config::Config(const string &configfile)
     itsRequestLimits.maxlevels = maxlevels;
     itsRequestLimits.maxelements = maxelements;
 
+    // The values of an area of gridded data, maxelements unless set separately
+    int maxareaelements = maxelements;
+    itsConfig.lookupValue("request_limits.maxareaelements", maxareaelements);
+    itsMaxAreaElements = maxareaelements;
+
     // Top level setting, like maxdistance. Unlike the limits above this one has no
     // TS::RequestLimitMember, so it can only be enforced by the plugin itself.
     itsConfig.lookupValue("maxradius", itsRequestLimits.maxradius);

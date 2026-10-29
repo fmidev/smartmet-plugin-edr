@@ -1,5 +1,4 @@
 #include "QEngineQuery.h"
-#include "EDRException.h"
 #include "LocationTools.h"
 #include "PostProcessing.h"
 #include "State.h"
@@ -43,9 +42,9 @@ void check_area_elements(const SmartMet::Plugin::EDR::CommonQuery& query,
                          const SmartMet::Engine::Querydata::Q& q,
                          std::size_t points,
                          std::size_t times,
-                         const TS::RequestLimits& limits)
+                         std::size_t max_elements)
 {
-  if (limits.maxelements == 0)
+  if (max_elements == 0)
     return;
 
   const std::size_t levels = std::max<std::size_t>(1, requestedLevelCount(query, q));
@@ -56,12 +55,7 @@ void check_area_elements(const SmartMet::Plugin::EDR::CommonQuery& query,
       parameters++;
   parameters = std::max<std::size_t>(1, parameters);
 
-  const std::size_t elements = points * levels * times * parameters;
-  if (elements > limits.maxelements)
-    throw EDRTooLarge("Too many values " + Fmi::to_string(elements) +
-                      " requested for the area, the maximum is " +
-                      Fmi::to_string(limits.maxelements) +
-                      ". Reduce the area, the levels, the times or the parameters.");
+  UtilityFunctions::check_area_elements(points * levels * times * parameters, max_elements);
 }
 
 
@@ -1207,7 +1201,7 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
                             theQ,
                             llist.size(),
                             std::max(theQueryDataTlist.size(), theRequestedTList.size()),
-                            itsPlugin.itsConfig.requestLimits());
+                            itsPlugin.itsConfig.maxAreaElements());
 
         querydata_result = getQEngineValuesForArea(theQuery,
                                                    theProducer,
@@ -1240,7 +1234,7 @@ void QEngineQuery::areaQuery(const CommonQuery& theQuery,
                             theQ,
                             llist.size(),
                             std::max(theQueryDataTlist.size(), theRequestedTList.size()),
-                            itsPlugin.itsConfig.requestLimits());
+                            itsPlugin.itsConfig.maxAreaElements());
 
         querydata_result = getQEngineValuesForArea(theQuery,
                                                    theProducer,

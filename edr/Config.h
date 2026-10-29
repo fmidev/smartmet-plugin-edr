@@ -54,6 +54,7 @@ class Config : private boost::noncopyable
   Config &operator=(Config &&other) = delete;
 
   const SmartMet::TimeSeries::RequestLimits &requestLimits() const { return itsRequestLimits; }
+  std::size_t maxAreaElements() const { return itsMaxAreaElements; }
   const SupportedOutputFormats &allSupportedOutputFormats() const
   {
     return itsSupportedOutputFormats;
@@ -171,6 +172,7 @@ class Config : private boost::noncopyable
 
   unsigned long long itsMaxTimeSeriesCacheSize = 10000;
   SmartMet::TimeSeries::RequestLimits itsRequestLimits;
+  std::size_t itsMaxAreaElements = 0;
 
   SupportedOutputFormats itsSupportedOutputFormats;  // producer->output formats
   DefaultOutputFormats itsDefaultOutputFormats;      // producer->default output format

@@ -2320,7 +2320,8 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
       throw EDRTooLarge("Too many grid positions " + Fmi::to_string(nx * ny) +
                         " requested with resolution-x and resolution-y, the maximum is " +
                         Fmi::to_string(max_points));
-    const std::size_t max_elements = (limits.maxelements > 0 ? limits.maxelements : 1000000);
+    const std::size_t max_elements =
+        (config.maxAreaElements() > 0 ? config.maxAreaElements() : 1000000);
     const std::size_t nz = std::max<std::size_t>(1, itsInterpolatedLevels.size());
     if (nx * ny * nz > max_elements)
       throw EDRTooLarge("Too many grid positions and levels " + Fmi::to_string(nx * ny * nz) +

@@ -19,7 +19,8 @@ GridEngineQuery::GridEngineQuery(const PluginImpl& thePlugin) : itsPlugin(thePlu
   {
     itsGridInterface.reset(new GridInterface(itsPlugin.itsEngines.gridEngine.get(),
                                              itsPlugin.itsEngines.geoEngine->getTimeZones(),
-                                             itsPlugin.itsConfig.requestLimits()));
+                                             itsPlugin.itsConfig.requestLimits(),
+                                             itsPlugin.itsConfig.maxAreaElements()));
   }
 }
 

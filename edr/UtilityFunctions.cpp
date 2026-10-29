@@ -1,4 +1,5 @@
 #include "UtilityFunctions.h"
+#include "EDRException.h"
 #include "State.h"
 #include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/observation/Keywords.h>
@@ -558,6 +559,14 @@ std::string output_format_mime_type(const std::string& output_format)
   if (output_format == TAC_FORMAT)
     return "text/plain";
   return "application/json";
+}
+
+void check_area_elements(std::size_t elements, std::size_t max_elements)
+{
+  if (max_elements > 0 && elements > max_elements)
+    throw EDRTooLarge("Too many values " + Fmi::to_string(elements) +
+                      " requested for the area, the maximum is " + Fmi::to_string(max_elements) +
+                      ". Reduce the area, the levels, the times or the parameters.");
 }
 
 }  // namespace UtilityFunctions
