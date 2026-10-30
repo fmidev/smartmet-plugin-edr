@@ -1,0 +1,191 @@
+{
+	"coverages" : 
+	[
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							24.93840
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.16990
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500,
+							1000
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"geopheight" : 
+				{
+					"axisNames" : 
+					[
+						"z"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						2
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						5675,
+						131
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T15:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							24.93840
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							60.16990
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500,
+							1000
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"geopheight" : 
+				{
+					"axisNames" : 
+					[
+						"z"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						2
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						5672,
+						138
+					]
+				}
+			}
+		}
+	],
+	"domainType" : "VerticalProfile",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"x",
+				"y"
+			],
+			"system" : 
+			{
+				"id" : "OGC:CRS84",
+				"type" : "GeographicCRS"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"type" : "VerticalCRS",
+				"description" : 
+				{
+					"en" : "Pressure level in hPa"
+				}
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"geopheight" : 
+		{
+			"id" : "GeopHeight",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Z-korkeus"
+			},
+			"label" : 
+			{
+				"fi" : "GeopHeight"
+			},
+			"observedProperty" : 
+			{
+				"id" : "GeopHeight",
+				"label" : 
+				{
+					"fi" : "GeopHeight"
+				}
+			}
+		}
+	}
+}
