@@ -3507,6 +3507,20 @@ Json::Value vertical_profile_levels(const EDRMetaData& emd,
   return levelArray;
 }
 
+// The levels of a querydata vertical profile timestep from the level column. Querydata levels
+// are fetched in the order the data stores them, which may be either ascending or descending,
+// so the z axis must follow the data rows instead of the requested level set.
+Json::Value data_row_levels(Json::Value& level_values,
+                            std::size_t tStep,
+                            std::size_t timeSteps,
+                            std::size_t& levelIdx)
+{
+  auto levelArray = Json::Value(Json::ValueType::arrayValue);
+  for (std::size_t itemIdx = tStep; (itemIdx < level_values.size()); itemIdx += timeSteps)
+    levelArray[levelIdx++] = level_values[itemIdx];
+  return levelArray;
+}
+
 // The values of the timestep of observation (sounding) data. Loads the levels too if none
 // are set yet.
 Json::Value data_level_values(Json::Value& values,
@@ -3674,6 +3688,11 @@ Json::Value format_output_data_vertical_profile(
     else
       timeSteps = (isGridProducer ? ts_lon->size() : (ts_lon->size() / levels.size()));
 
+    // Querydata rows are in data level order, grid producers return the levels in the order
+    // vertical_profile_levels() lists them
+    bool useLevelColumn = (!useDataLevels && !isGridProducer && timeSteps > 0 &&
+                           level_values.size() == ts_lon->size());
+
     for (std::size_t coverageIdx = 0; (step.tStep < timeSteps);)
     {
       auto domain = vertical_profile_domain(lon_timed_value,
@@ -3683,7 +3702,10 @@ Json::Value format_output_data_vertical_profile(
                                             *step.timeIter);
 
       std::size_t levelIdx = 0;
-      auto levelArray = vertical_profile_levels(emd, levels, useDataLevels, levelIdx);
+      auto levelArray =
+          (useLevelColumn
+               ? data_row_levels(level_values, step.tStep, timeSteps, levelIdx)
+               : vertical_profile_levels(emd, levels, useDataLevels, levelIdx));
 
       auto ranges = vertical_profile_ranges(parameter_data_values,
                                             parameter_data_type,
