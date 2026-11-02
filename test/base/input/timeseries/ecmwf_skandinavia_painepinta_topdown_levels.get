@@ -1,0 +1,1 @@
+GET /timeseries?producer=ecmwf_skandinavia_painepinta_topdown&lonlat=24.9384,60.1699&levels=1000,850,500&param=level,time,GeopHeight,Temperature&tz=UTC&starttime=200809091200&timestep=180&timesteps=2&format=json HTTP/1.0

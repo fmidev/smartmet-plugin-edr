@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.28
-Release: 2%{?dist}.fmi
+Version: 26.10.30
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -86,7 +86,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-test-data >= 26.10.27
+#TestRequires: smartmet-test-data >= 26.10.30
 #TestRequires: smartmet-library-grid-files-test >= 26.10.27
 #TestRequires: smartmet-library-gis >= 26.10.17
 #TestRequires: smartmet-library-grid-content >= 26.10.27-2
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Fri Oct 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.30-1.fmi
+- Fixed the z axis of multi-level querydata position queries to follow the level order of the data, values were listed against the wrong levels when the data stores pressure levels top-down
+
 * Wed Oct 28 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.28-2.fmi
 - The producer listing of the TimeSeries API gives the configured precisions and the default one, for the precision choice of the data explorer
 

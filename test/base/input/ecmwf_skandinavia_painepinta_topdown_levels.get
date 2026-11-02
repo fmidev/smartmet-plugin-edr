@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta_topdown/position?coords=POINT(24.9384+60.1699)&datetime=200809091200&parameter-name=GeopHeight,Temperature&z=1000,850,500 HTTP/1.0
