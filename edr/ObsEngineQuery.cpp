@@ -896,6 +896,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
           !UtilityFunctions::is_flash_or_mobile_producer(producer))
       {
         TS::TimeSeries location_ts;
+        location_ts.reserve(ts_vector.size());
 
         for (const auto& ts : ts_vector)
         {
@@ -919,6 +920,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
 
         TS::TimeSeriesGroupPtr grp(new TS::TimeSeriesGroup);
         TS::TimeSeries time_ts;
+        time_ts.reserve(ts_vector.size());
 
         for (const auto& ts : ts_vector)
         {
@@ -1068,12 +1070,20 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
 #endif
 
     TS::Value missing_value = TS::None();
+
+    // The number of parameters using each group. Duplicate parameters share a group, and
+    // only the last of them may modify it.
+    std::vector<unsigned int> group_users(tsg_vector.size(), 0);
+    for (const auto& obsparam : obsParameters)
+      group_users.at(obsparam.data_column)++;
+
     // iterate parameters, aggregate, and store aggregated result
 
     for (const auto& obsparam : obsParameters)
     {
       unsigned int data_column = obsparam.data_column;
       TS::TimeSeriesGroupPtr tsg = tsg_vector.at(data_column);
+      const bool last_user = (--group_users[data_column] == 0);
 
       if (tsg->empty())
         continue;
@@ -1102,15 +1112,13 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
 
       TS::DataFunctions pfunc = obsparam.functions;
       // Do the aggregation if requasted
-      TS::TimeSeriesGroupPtr aggregated_tsg(new TS::TimeSeriesGroup);
+      TS::TimeSeriesGroupPtr aggregated_tsg;
       if (pfunc.innerFunction.exists())
-      {
-        *aggregated_tsg = *(TS::aggregate(tsg, pfunc, tlist));
-      }
+        aggregated_tsg = TS::aggregate(tsg, pfunc, tlist);
+      else if (last_user)
+        aggregated_tsg = tsg;
       else
-      {
-        *aggregated_tsg = *tsg;
-      }
+        aggregated_tsg = std::make_shared<TS::TimeSeriesGroup>(*tsg);
 
       aggregated_tsg = TS::erase_redundant_timesteps(aggregated_tsg, tlist);
 
