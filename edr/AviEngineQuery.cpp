@@ -272,6 +272,13 @@ void AviEngineQuery::processAviEngineQuery(const Config &config,
 
     if (hasStartTime && hasEndTime && (startTime != endTime))
     {
+      // Bound the queried time range (the avi plugin applies a 31-day default for
+      // the same engine). Without this an anonymous EDR request with a very wide
+      // datetime interval would pull the entire message history. (DoS hardening.)
+      if ((query.toptions.endTime - query.toptions.startTime).total_seconds() >
+          31L * 24L * 3600L)
+        throw Fmi::Exception(BCP, "AVI datetime range too long, maximum is 31 days");
+
       queryOptions.itsTimeOptions.itsStartTime = "timestamptz '" + startTime + "Z'";
       queryOptions.itsTimeOptions.itsEndTime = "timestamptz '" + endTime + "Z'";
     }
