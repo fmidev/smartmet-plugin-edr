@@ -6,6 +6,7 @@
 
 #include "CommonQuery.h"
 #include "Config.h"
+#include "EDRException.h"
 #include <boost/algorithm/string.hpp>
 #include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/querydata/Engine.h>
@@ -27,6 +28,43 @@ namespace
 {
 
 const char* default_timezone = "localtime";
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Reject requests with too many output timesteps before they are generated
+ *
+ * A distant end time combined with a small timestep would otherwise be materialized
+ * as a time list before any limit check. The ceiling is request_limits.maxtimes,
+ * whose default is non-zero (0 disables the check). The raw values read for
+ * aggregation are limited separately by the observation engine.
+ */
+// ----------------------------------------------------------------------
+
+void validate_time_options(const TS::TimeSeriesGeneratorOptions& toptions, const Config& config)
+{
+  const std::size_t maxtimes = config.requestLimits().maxtimes;
+  if (maxtimes == 0)
+    return;
+
+  if (toptions.timeSteps && *toptions.timeSteps > maxtimes)
+    throw EDRTooLarge("Too many timesteps requested")
+        .addParameter("timesteps", Fmi::to_string(*toptions.timeSteps))
+        .addParameter("maxtimes", Fmi::to_string(maxtimes))
+        .disableLogging();
+
+  if (!toptions.timeSteps && toptions.timeStep && *toptions.timeStep > 0 &&
+      !toptions.startTimeData && !toptions.endTimeData && !toptions.startTime.is_special() &&
+      !toptions.endTime.is_special() && toptions.endTime > toptions.startTime)
+  {
+    const auto span_minutes = (toptions.endTime - toptions.startTime).total_minutes();
+    const auto estimate = static_cast<std::size_t>(span_minutes / *toptions.timeStep) + 1;
+    if (estimate > maxtimes)
+      throw EDRTooLarge("Too many timesteps requested")
+          .addParameter("timesteps", Fmi::to_string(estimate))
+          .addParameter("maxtimes", Fmi::to_string(maxtimes))
+          .disableLogging();
+  }
+}
 
 void parse_ids(const std::optional<std::string>& string_param, std::vector<std::string>& id_vector)
 {
@@ -260,6 +298,7 @@ void CommonQuery::commonInit(const State& state,
     wktGeometries = state.getGeoEngine().getWktGeometries(*loptions, language);
 
     toptions = TS::parseTimes(req);
+    validate_time_options(toptions, config);
 
     if (setDataTimesMode && ((!toptions.timeStep) || (*toptions.timeStep == 0)))
       toptions.mode = TS::TimeSeriesGeneratorOptions::DataTimes;

@@ -390,6 +390,17 @@ maxradius = 0;           // km, the radius of a circle or a buffered location
 50000 is the same as in the timeseries plugin (a month of one-minute data is about 43200
 time steps).
 
+The requested time steps are checked against `maxtimes` before the time series are generated.
+For observations both limits also apply to the data read from the database, which for
+aggregated or subsampled requests is far more than the result. `maxtimes` limits the
+distinct observation times read, and `maxelements` the rows read: the Observation-engine
+rejects a request before querying the database if the estimated number of rows exceeds
+`maxelements`. The estimate is the time period including the aggregation intervals, divided
+by the nominal interval of each parameter (for example PT1M for TA_PT1M_AVG), summed over
+the parameters and multiplied by the number of stations. Data stored more sparsely than the
+name of the parameter suggests is estimated too high. Large results are streamed from the
+database, so that an exceeded limit cancels the query.
+
 # Timeseries interface settings
 
 Since EDR plugin is built on timeseries plugin code base there are some common settings in configuration file, for example precision settings. These are documented in [Using the Timeseries API](Using-the-Timeseries-API.md#plugin-configuration-file).

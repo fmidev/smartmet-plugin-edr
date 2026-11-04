@@ -1241,7 +1241,7 @@ etc.) are described in the
 <tr><td> maxparameters </td><td>The maximum number of parameters allowed in a request</td></tr>
 <tr><td> maxtimes </td><td>The maximum number of time steps allowed in a request (default 50000, 0 means unlimited)</td></tr>
 <tr><td> maxlevels </td><td>The maximum number of levels allowed in a request</td></tr>
-<tr><td> maxelements </td><td>The maximum number of result elements allowed in a request</td></tr>
+<tr><td> maxelements </td><td>The maximum number of result elements allowed in a request. For observations it limits the rows read from the database, which for aggregated or subsampled requests is far more than the result: the Observation-engine rejects a request before querying the database if the number of rows estimated from the time period (including the aggregation intervals), the stations and the nominal interval of each parameter (for example PT1M for TA_PT1M_AVG) exceeds the limit. The estimate uses the interval in the parameter name, so data stored more sparsely than its name suggests is estimated too high.</td></tr>
 <tr><td> cache </td> <td> timeseries_size </td> <td>The number of timeseries requests that are cached internally</td></tr>
 <tr><td rowspan="3">wxml </td> <td>  timestring</td> <td> The default time format used with the WXML format (e.g. "%Y-%b-%dT%H:%M:%S")</td></tr>
 <tr><td> version</td><td>The default WXML version (e.g. "2.00")</td></tr>
