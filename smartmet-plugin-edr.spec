@@ -34,25 +34,25 @@ BuildRequires: bzip2-devel
 BuildRequires: zlib-devel
 BuildRequires: libzip-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: smartmet-library-spine-devel >= 26.10.17-1
+BuildRequires: smartmet-library-spine-devel >= 26.11.4
 BuildRequires: smartmet-library-locus-devel >= 26.10.16
-BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
+BuildRequires: smartmet-library-macgyver-devel >= 26.11.3
 BuildRequires: smartmet-library-grid-content-devel >= 26.10.20
 BuildRequires: smartmet-library-grid-files-devel >= 26.10.20
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
 BuildRequires: smartmet-library-gis-devel >= 26.10.16
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.23
+BuildRequires: smartmet-library-timeseries-devel >= 26.11.4
 BuildRequires: smartmet-engine-avi-devel >= 26.10.16
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
 %if %{with observation}
-BuildRequires: smartmet-engine-observation-devel >= 26.10.17-1
+BuildRequires: smartmet-engine-observation-devel >= 26.11.5
 %endif
-BuildRequires: smartmet-engine-querydata-devel >= 26.10.16
+BuildRequires: smartmet-engine-querydata-devel >= 26.11.5
 BuildRequires: smartmet-engine-gis-devel >= 26.10.16
 BuildRequires: smartmet-engine-grid-devel >= 26.10.23
 # obsengine can be disabled in configuration: not included intentionally
 #%if %{with observation}
-#Requires: smartmet-engine-observation >= 26.10.11
+#Requires: smartmet-engine-observation >= 26.11.5
 #%endif
 # Engine::getSensors is a new virtual method: older engines lack it
 Conflicts: smartmet-engine-observation < 26.10.17
@@ -60,17 +60,17 @@ Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-locus >= 26.10.16
-Requires: smartmet-library-macgyver >= 26.10.17
+Requires: smartmet-library-macgyver >= 26.11.3
 Requires: smartmet-library-newbase >= 26.10.17
-Requires: smartmet-library-spine >= 26.10.17-1
+Requires: smartmet-library-spine >= 26.11.4
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-timeseries >= 26.10.23
+Requires: smartmet-library-timeseries >= 26.11.4
 Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-grid-content >= 26.10.20
 Requires: smartmet-library-grid-files >= 26.10.20
 Requires: smartmet-engine-avi >= 26.10.17
 Requires: smartmet-engine-geonames >= 26.10.17
-Requires: smartmet-engine-querydata >= 26.10.17
+Requires: smartmet-engine-querydata >= 26.11.5
 Requires: smartmet-engine-gis >= 26.10.17
 Requires: smartmet-engine-grid >= 26.10.23
 Requires: smartmet-server >= 26.10.17
@@ -81,8 +81,8 @@ Requires: %{smartmet_boost}-thread
 Requires: libzip
 Provides: %{SPECNAME}
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine >= 26.10.17-1
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.17-1
+#TestRequires: smartmet-library-spine >= 26.11.4
+#TestRequires: smartmet-library-spine-plugin-test >= 26.11.4
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: valkey
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -94,9 +94,9 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-avi >= 26.10.17
 #TestRequires: smartmet-engine-geonames >= 26.10.17
 #TestRequires: smartmet-engine-gis >= 26.10.17
-#TestRequires: smartmet-engine-querydata >= 26.10.17
+#TestRequires: smartmet-engine-querydata >= 26.11.5
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.10.17-1
+#TestRequires: smartmet-engine-observation >= 26.11.5
 %endif
 #TestRequires: smartmet-engine-grid >= 26.10.23
 #TestRequires: gdal312-libs
