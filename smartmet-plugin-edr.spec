@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.10.30
+Version: 26.11.5
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Thu Nov  5 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.11.5-1.fmi
+- Memory use optimization (avoid unnecessary copy of TimeSeries objects)
+
 * Fri Oct 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.30-1.fmi
 - Fixed the z axis of multi-level querydata position queries to follow the level order of the data, values were listed against the wrong levels when the data stores pressure levels top-down
 
