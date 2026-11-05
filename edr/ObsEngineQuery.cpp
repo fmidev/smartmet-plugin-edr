@@ -647,27 +647,30 @@ std::vector<Fmi::LocalDateTime> sorted_timesteps(const TS::TimeSeries& ts)
 
 // Time series vector groups for parameters: each group is dedicated for one parameter and it
 // contains the timeseries of the parameter at the different locations
+// The time series are moved from tsv_area_with_added_fields to the groups
 std::vector<TS::TimeSeriesGroupPtr> parameter_groups(
-    const std::vector<TS::FmisidTSVectorPair>& tsv_area_with_added_fields, std::size_t nparams)
+    std::vector<TS::FmisidTSVectorPair>& tsv_area_with_added_fields, std::size_t nparams)
 {
   std::vector<TS::TimeSeriesGroupPtr> tsg_vector;
   tsg_vector.reserve(nparams);
   for (unsigned int i = 0; i < nparams; i++)
+  {
     tsg_vector.emplace_back(std::make_shared<TS::TimeSeriesGroup>());
+    tsg_vector.back()->reserve(tsv_area_with_added_fields.size());
+  }
 
   // iterate locations
 
-  for (const auto& tsv_area : tsv_area_with_added_fields)
+  for (auto& tsv_area : tsv_area_with_added_fields)
   {
-    const TS::TimeSeriesVector* tsv = tsv_area.second.get();
+    TS::TimeSeriesVector* tsv = tsv_area.second.get();
 
     // iterate fields
     for (unsigned int k = 0; k < tsv->size(); k++)
     {
       // add k:th time series to the group
       TS::LonLat lonlat(0, 0);  // location is not relevant here
-      TS::LonLatTimeSeries lonlat_ts(lonlat, tsv->at(k));
-      tsg_vector[k]->push_back(lonlat_ts);
+      tsg_vector[k]->emplace_back(lonlat, std::move(tsv->at(k)));
     }
   }
   return tsg_vector;
@@ -874,13 +877,14 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
     const std::string& producer,
     const Spine::LocationPtr& loc,
     const ObsParameters& obsParameters,
-    const TS::TimeSeriesVector* tsv_observation_result,
+    TS::TimeSeriesVector* tsv_observation_result,
     const std::vector<Fmi::LocalDateTime>& ts_vector,
     const CommonQuery& query) const
 {
   try
   {
     TS::TimeSeriesVectorPtr observation_result_with_added_fields(new TS::TimeSeriesVector());
+    observation_result_with_added_fields->reserve(obsParameters.size());
 
     unsigned int obs_result_field_index = 0;
     for (unsigned int i = 0; i < obsParameters.size(); i++)
@@ -892,6 +896,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
           !UtilityFunctions::is_flash_or_mobile_producer(producer))
       {
         TS::TimeSeries location_ts;
+        location_ts.reserve(ts_vector.size());
 
         for (const auto& ts : ts_vector)
         {
@@ -906,7 +911,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
 
           location_ts.emplace_back(TS::TimedValue(ts, value));
         }
-        observation_result_with_added_fields->push_back(location_ts);
+        observation_result_with_added_fields->push_back(std::move(location_ts));
       }
       else if (TS::is_time_parameter(paramname))
       {
@@ -915,6 +920,7 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
 
         TS::TimeSeriesGroupPtr grp(new TS::TimeSeriesGroup);
         TS::TimeSeries time_ts;
+        time_ts.reserve(ts_vector.size());
 
         for (const auto& ts : ts_vector)
         {
@@ -930,12 +936,12 @@ TS::TimeSeriesVectorPtr ObsEngineQuery::handleObsParametersForArea(
 
           time_ts.emplace_back(TS::TimedValue(ts, value));
         }
-        observation_result_with_added_fields->push_back(time_ts);
+        observation_result_with_added_fields->push_back(std::move(time_ts));
       }
       else if (!obsParameters[i].duplicate)
       {
         observation_result_with_added_fields->push_back(
-            tsv_observation_result->at(obs_result_field_index));
+            std::move(tsv_observation_result->at(obs_result_field_index)));
         obs_result_field_index++;
       }
     }
@@ -990,6 +996,9 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
     // timesteps
     TS::TimeSeriesByLocation tsv_area =
         timeseries_by_fmisid(producer, observation_result, tlist_all, fmisid_index);
+
+    // The observations have been copied to the stations' time series
+    observation_result.reset();
 
     std::vector<TS::FmisidTSVectorPair> tsv_area_with_added_fields;
     // add data for location- and time-related fields; these fields are added by timeseries
@@ -1061,12 +1070,20 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
 #endif
 
     TS::Value missing_value = TS::None();
+
+    // The number of parameters using each group. Duplicate parameters share a group, and
+    // only the last of them may modify it.
+    std::vector<unsigned int> group_users(tsg_vector.size(), 0);
+    for (const auto& obsparam : obsParameters)
+      group_users.at(obsparam.data_column)++;
+
     // iterate parameters, aggregate, and store aggregated result
 
     for (const auto& obsparam : obsParameters)
     {
       unsigned int data_column = obsparam.data_column;
       TS::TimeSeriesGroupPtr tsg = tsg_vector.at(data_column);
+      const bool last_user = (--group_users[data_column] == 0);
 
       if (tsg->empty())
         continue;
@@ -1095,15 +1112,13 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
 
       TS::DataFunctions pfunc = obsparam.functions;
       // Do the aggregation if requasted
-      TS::TimeSeriesGroupPtr aggregated_tsg(new TS::TimeSeriesGroup);
+      TS::TimeSeriesGroupPtr aggregated_tsg;
       if (pfunc.innerFunction.exists())
-      {
-        *aggregated_tsg = *(TS::aggregate(tsg, pfunc, tlist));
-      }
+        aggregated_tsg = TS::aggregate(tsg, pfunc, tlist);
+      else if (last_user)
+        aggregated_tsg = tsg;
       else
-      {
-        *aggregated_tsg = *tsg;
-      }
+        aggregated_tsg = std::make_shared<TS::TimeSeriesGroup>(*tsg);
 
       aggregated_tsg = TS::erase_redundant_timesteps(aggregated_tsg, tlist);
 

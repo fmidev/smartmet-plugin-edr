@@ -4,6 +4,7 @@
 #include "State.h"
 #include "UtilityFunctions.h"
 #include <fmt/format.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiIndexMaskTools.h>
 #include <newbase/NFmiLocation.h>
@@ -500,6 +501,9 @@ void QEngineQuery::fetchQEngineValues(const State& state,
 {
   try
   {
+    // Called for each parameter, level and location
+    Fmi::check_cancelled();
+
     auto paramname = paramfunc.parameter.name();
     auto tz = itsPlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(query.timezone);
     auto tlist = generateTList(query, producer, producerDataPeriod);

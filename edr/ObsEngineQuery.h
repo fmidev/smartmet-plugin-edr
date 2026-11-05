@@ -143,12 +143,13 @@ class ObsEngineQuery
   static void handleSpecialParameter(const ObsParameter& obsparam,
                                      const std::string& areaName,
                                      TS::TimeSeriesGroupPtr& tsg);
+  // The observations are moved from tsv_observation_result to the result
   TS::TimeSeriesVectorPtr handleObsParametersForArea(
       const State& state,
       const std::string& producer,
       const Spine::LocationPtr& loc,
       const ObsParameters& obsParameters,
-      const TS::TimeSeriesVector* tsv_observation_result,
+      TS::TimeSeriesVector* tsv_observation_result,
       const std::vector<Fmi::LocalDateTime>& ts_vector,
       const CommonQuery& query) const;
 
