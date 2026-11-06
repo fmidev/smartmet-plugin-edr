@@ -2,6 +2,7 @@
 #include "VerticalReference.h"
 #include "EDRException.h"
 #include "UtilityFunctions.h"
+#include <boost/algorithm/string.hpp>
 #include <engines/observation/Keywords.h>
 #include <macgyver/Cancellation.h>
 #include <macgyver/Exception.h>

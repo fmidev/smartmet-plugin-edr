@@ -1,5 +1,6 @@
 #include "GeoJson.h"
 #include "UtilityFunctions.h"
+#include <boost/algorithm/string.hpp>
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>

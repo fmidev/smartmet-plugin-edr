@@ -1,5 +1,6 @@
 #include "UtilityFunctions.h"
 #include "State.h"
+#include <boost/algorithm/string.hpp>
 #include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/observation/Keywords.h>
 #include <timeseries/ParameterKeywords.h>
