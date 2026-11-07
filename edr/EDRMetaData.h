@@ -91,7 +91,7 @@ struct edr_vertical_extent
   std::string vrs;
   std::string level_type;
   std::vector<std::string> levels;
-  Engine::Observation::ObsLevelType obs_level_type;
+  Engine::Observation::ObsLevelType obs_level_type = Engine::Observation::None;
   bool is_level_range = false;
 };
 
