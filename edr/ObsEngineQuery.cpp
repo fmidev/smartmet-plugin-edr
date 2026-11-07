@@ -711,7 +711,8 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
     // will generate an overriding station_tlist in each station's own timezone for
     // aggregation.
     if (!query.toptions.all())
-      tlist = itsPlugin.itsTimeSeriesCache->generate(query.toptions, tz);
+      tlist = itsPlugin.itsTimeSeriesCache->generate(
+          query.toptions, tz, itsPlugin.itsConfig.requestLimits().maxtimes);
 
     TS::TimeSeriesByLocation observation_result_by_location =
         timeseries_by_fmisid(producer, observation_result, tlist, fmisid_index);
@@ -747,7 +748,8 @@ void ObsEngineQuery::fetchObsEngineValuesForPlaces(const State& state,
           prev_tz = itsPlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(
               loc->timezone);
           if (!query.toptions.all())
-            prev_tlist = itsPlugin.itsTimeSeriesCache->generate(query.toptions, prev_tz);
+            prev_tlist = itsPlugin.itsTimeSeriesCache->generate(
+                query.toptions, prev_tz, itsPlugin.itsConfig.requestLimits().maxtimes);
         }
         station_tz = prev_tz;
         station_tlist = prev_tlist;
@@ -1107,7 +1109,8 @@ void ObsEngineQuery::fetchObsEngineValuesForArea(const State& state,
         // Generate requested timesteps
         auto tz =
             itsPlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(query.timezone);
-        tlist = *(itsPlugin.itsTimeSeriesCache->generate(query.toptions, tz));
+        tlist = *(itsPlugin.itsTimeSeriesCache->generate(
+            query.toptions, tz, itsPlugin.itsConfig.requestLimits().maxtimes));
       }
 
       TS::DataFunctions pfunc = obsparam.functions;

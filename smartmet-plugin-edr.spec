@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.11.7
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -41,7 +41,7 @@ BuildRequires: smartmet-library-grid-content-devel >= 26.10.20
 BuildRequires: smartmet-library-grid-files-devel >= 26.10.20
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
 BuildRequires: smartmet-library-gis-devel >= 26.10.16
-BuildRequires: smartmet-library-timeseries-devel >= 26.11.4
+BuildRequires: smartmet-library-timeseries-devel >= 26.11.7-2
 BuildRequires: smartmet-engine-avi-devel >= 26.10.16
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
 %if %{with observation}
@@ -64,7 +64,7 @@ Requires: smartmet-library-macgyver >= 26.11.3
 Requires: smartmet-library-newbase >= 26.10.17
 Requires: smartmet-library-spine >= 26.11.4
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-timeseries >= 26.11.4
+Requires: smartmet-library-timeseries >= 26.11.7-2
 Requires: smartmet-library-gis >= 26.10.17
 Requires: smartmet-library-grid-content >= 26.10.20
 Requires: smartmet-library-grid-files >= 26.10.20
@@ -126,6 +126,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Sat Nov 7 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.11.7-2.fmi
+- Limit generated time steps with maxtimes in all query paths
+- Check maxtimes also for requests without timestep and for fixed times
+- Check maxlocations before creating grid point locations
+
 * Sat Nov 7 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.11.7-1.fmi
 - Initialize member variables that some constructors left uninitialized
 - Avoid shifting into the sign bit of int in TimeseriesFunctionFlag

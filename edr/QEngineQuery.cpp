@@ -267,7 +267,9 @@ Spine::TaggedLocationList get_tloclist(const CommonQuery& query,
                                        const Engine::Geonames::Engine& geoengine,
                                        const Engine::Gis::GeometryStorage& geometryStorage,
                                        bool bbox_area,
-                                       NFmiSvgPath& svgPath)
+                                       NFmiSvgPath& svgPath,
+                                       const TS::RequestLimits& limits,
+                                       std::size_t nlocations)
 {
   try
   {
@@ -280,6 +282,9 @@ Spine::TaggedLocationList get_tloclist(const CommonQuery& query,
       indexmask = get_bbox_indexmask(loc, qi);
     else
       indexmask = get_area_indexmask(tloc, loc, qi, geometryStorage, svgPath);
+
+    // Check the limit before the grid points are converted into locations
+    check_request_limit(limits, nlocations + indexmask.size(), TS::RequestLimitMember::LOCATIONS);
 
     return get_locations_for_area(indexmask, tloc, area_loc, qi, geoengine);
   }
@@ -342,7 +347,9 @@ void QEngineQuery::resolveAreaLocations(CommonQuery& query,
                                 *itsPlugin.itsEngines.geoEngine,
                                 itsPlugin.itsGeometryStorage,
                                 bbox_area,
-                                svgPath);
+                                svgPath,
+                                itsPlugin.itsConfig.requestLimits(),
+                                tloclist.size());
 
       tloclist.insert(tloclist.end(), tlocs.begin(), tlocs.end());
     }
@@ -745,7 +752,9 @@ TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateQEngineQueryTimes(
   try
   {
     auto tz = itsPlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(query.timezone);
-    auto tlist = itsPlugin.itsTimeSeriesCache->generate(query.toptions, tz);
+    // Limit the full list, it is interpolated as is even if the output is trimmed to the data
+    const auto maxtimes = itsPlugin.itsConfig.requestLimits().maxtimes;
+    auto tlist = itsPlugin.itsTimeSeriesCache->generate(query.toptions, tz, maxtimes);
 
     // time list may be empty for example due to bad query string options
     if (tlist->empty())
@@ -778,8 +787,9 @@ TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateQEngineQueryTimes(
     topt.endTime =
         (query.toptions.endTimeUTC ? timeseriesEndTime.utc_time() : timeseriesEndTime.local_time());
 
-    // generate timelist for aggregation
-    tlist = itsPlugin.itsTimeSeriesCache->generate(topt, tz);
+    // generate timelist for aggregation. The period is extended by the aggregation interval,
+    // hence a more generous limit than for the requested times.
+    tlist = itsPlugin.itsTimeSeriesCache->generate(topt, tz, 2 * maxtimes);
     qdtimesteps.insert(tlist->begin(), tlist->end());
 
     // for aggregation generate timesteps also between fixed times
@@ -1496,7 +1506,9 @@ TS::TimeSeriesGenerator::LocalTimeList QEngineQuery::generateTList(
   try
   {
     auto tz = itsPlugin.itsEngines.geoEngine->getTimeZones().time_zone_from_string(query.timezone);
-    auto tlist = *itsPlugin.itsTimeSeriesCache->generate(query.toptions, tz);
+    // The limit applies before the list is trimmed to the end of the data
+    auto tlist = *itsPlugin.itsTimeSeriesCache->generate(
+        query.toptions, tz, itsPlugin.itsConfig.requestLimits().maxtimes);
     bool isClimatologyProducer =
         (producer.empty()
              ? false
