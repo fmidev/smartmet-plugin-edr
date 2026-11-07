@@ -40,7 +40,7 @@ Fmi::DateTime y2100(Fmi::Date(2100, 1, 1));
 
 Fmi::TimeZonePtr utc("Etc/UTC");
 
-const uint TimeseriesFunctionFlag = 1 << 31;
+const uint TimeseriesFunctionFlag = 1U << 31;
 
 // True if every data parameter names one level in the key name:producer:geometry:levelId:level.
 // The level column then comes from the data, and looping over the levels of the producer would
