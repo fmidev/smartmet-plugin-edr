@@ -123,7 +123,8 @@ Collection make_collection(const std::string& id,
   {
     std::set<std::string> ids;
     for (const auto& instance : emds)
-      ids.insert(Fmi::to_iso_string(instance.temporal_extent.origin_time));
+      ids.insert(Fmi::date_time::to_iso_extended_string(instance.temporal_extent.origin_time) +
+                 "Z");
     c.instances.assign(ids.begin(), ids.end());
   }
 
