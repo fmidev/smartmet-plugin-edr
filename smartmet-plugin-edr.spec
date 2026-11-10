@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.11.10
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -54,8 +54,8 @@ BuildRequires: smartmet-engine-grid-devel >= 26.10.23
 #%if %{with observation}
 #Requires: smartmet-engine-observation >= 26.11.5
 #%endif
-# Engine::getSensors is a new virtual method: older engines lack it
-Conflicts: smartmet-engine-observation < 26.10.17
+# Older engines throw for parameters known only to other data sources
+Conflicts: smartmet-engine-observation < 26.11.10
 Requires: %{smartmet_fmt}
 Requires: jsoncpp
 Requires: smartmet-library-gis >= 26.10.17
@@ -96,7 +96,7 @@ Provides: %{SPECNAME}
 #TestRequires: smartmet-engine-gis >= 26.10.17
 #TestRequires: smartmet-engine-querydata >= 26.11.5
 %if %{with observation}
-#TestRequires: smartmet-engine-observation >= 26.11.5
+#TestRequires: smartmet-engine-observation >= 26.11.10
 %endif
 #TestRequires: smartmet-engine-grid >= 26.10.23
 #TestRequires: gdal312-libs
@@ -126,6 +126,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Tue Nov 10 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.11.10-2.fmi
+- Observation parameter names known to any data source (observations of any station type,
+  newbase or Radon) give missing values, unknown names are an error
+
 * Tue Nov 10 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.10-1.fmi
 - Changed /api response to list RFC 3339 instance id's (BRAINSTORM-3569)
 
