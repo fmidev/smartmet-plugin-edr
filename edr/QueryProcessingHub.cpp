@@ -1019,7 +1019,7 @@ bool QueryProcessingHub::processGridQuery(const State& state,
 
   if (processed)
   {
-    // We need different hash calculcations for the grid requests.
+    // We need different hash calculations for the grid requests.
     product_hash = Fmi::bad_hash;
   }
   return processed;

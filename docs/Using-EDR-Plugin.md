@@ -11,7 +11,7 @@ This page describes more indepth EDR API
   - [Metadata of specified instance of specified collection](#metadata-of-specified-instance-of-specified-collection)
 - [EDR data queries](#edr-data-queries)
   - [Query types](#query-types)
-  - [Query paramaters](#query-parameters)
+  - [Query parameters](#query-parameters)
     - [Parameter coords](#parameter-coords---general)
     - [Parameter datetime](#parameter-datetime)
     - [Parameter parameter-name](#parameter-parameter-name)
@@ -35,7 +35,7 @@ This page describes more indepth EDR API
 
 # Introduction
 
-EDR plugin implements EDR API as specified in OGC API - 'Environmental Data Retrieval Standard' document (https://ogcapi.ogc.org/edr/). The specification documens describes the API as follows *The Environmental Data Retrieval (EDR) Application Programming Interface (API) provides a family of lightweight query interfaces to access spatio-temporal data resources by requesting data at a Position, within an Area, along a Trajectory or through a Corridor.*
+EDR plugin implements EDR API as specified in OGC API - 'Environmental Data Retrieval Standard' document (https://ogcapi.ogc.org/edr/). The specification documents describes the API as follows *The Environmental Data Retrieval (EDR) Application Programming Interface (API) provides a family of lightweight query interfaces to access spatio-temporal data resources by requesting data at a Position, within an Area, along a Trajectory or through a Corridor.*
 
 EDR plugin is used to retrieve small subsets from large collections of environmental data, such as meteorological forecasts or observations. The important aspect is that the data can be unambiguously specified by spatio-temporal coordinates.
 
@@ -52,7 +52,7 @@ The following notations are used in the following chapters:
 
 # EDR metadata queries
 
-Metadata requests are used to retrieve metadata information about data provided by SmartMet server. Meatadata describes sptio-temporal attribues of each collection as well as supported query types.
+Metadata requests are used to retrieve metadata information about data provided by SmartMet server. Metadata describes sptio-temporal attributes of each collection as well as supported query types.
 
 
 ## Metadata of all collections
@@ -111,7 +111,7 @@ In data provided by FMI the {instanceId} is a timestamp, so the actual request c
 
 # EDR data queries
 
-EDR data requests are used to retrieve spatio-temporal data from SmartMet server. The following path templates can be used in data requets
+EDR data requests are used to retrieve spatio-temporal data from SmartMet server. The following path templates can be used in data requests
 
 ```
 - /collections/{collectionId}/{queryType}

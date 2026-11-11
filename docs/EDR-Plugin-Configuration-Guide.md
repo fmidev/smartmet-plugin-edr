@@ -120,7 +120,7 @@ origin of a URL is allowed in the Content-Security-Policy of the page.
 
 # AVI engine configuration
 
-Because AVI engine does not provide enough information of its collections they must be introduced in configuration file. AVI engine collection are confgured as follows:
+Because AVI engine does not provide enough information of its collections they must be introduced in configuration file. AVI engine collection are configured as follows:
 
 ```
 avi:

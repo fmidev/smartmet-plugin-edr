@@ -269,7 +269,7 @@ std::vector<TS::LonLat> get_coordinates(const TS::OutputData &outputData,
       }
       else if (std::get_if<TS::TimeSeriesVectorPtr>(&tsdata))
       {
-        std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldnt be "
+        std::cout << "get_coordinates -> TS::TimeSeriesVectorPtr - Shouldn't be "
                      "here -> report error!!:\n"
                   << tsdata << '\n';
       }

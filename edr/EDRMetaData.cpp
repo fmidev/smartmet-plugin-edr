@@ -719,7 +719,7 @@ edr_temporal_extent get_temporal_extent(const std::set<Fmi::LocalDateTime> &time
     {
       // BRAINSTORM-3296
       //
-      // Store single timestep too, eralier it was lost. Since response output code checks
+      // Store single timestep too, earlier it was lost. Since response output code checks
       // for 1 period case and expects both period start and end time to exist, set both to
       // time_periods but single_time_periods can have just the start (it's used only for
       // getting nearest time instant to 'now' as the default request 'datetime' value)

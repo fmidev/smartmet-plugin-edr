@@ -617,7 +617,7 @@ void PluginImpl::query(const State& state,
     if (strcasecmp(q.format.c_str(), "FILE") == 0)
     {
       std::string filename =
-          "attachement; filename=timeseries_" + std::to_string(getTime()) + ".grib";
+          "attachment; filename=timeseries_" + std::to_string(getTime()) + ".grib";
       response.setHeader("Content-type", "application/octet-stream");
       response.setHeader("Content-Disposition", filename);
       response.setContent(queryStreamer);
@@ -647,7 +647,7 @@ void PluginImpl::query(const State& state,
 
         if (q.output_format == IWXXMZIP_FORMAT)
           response.setHeader("Content-Disposition",
-                             std::string("attachement; filename=") + qph.getZipFileName());
+                             std::string("attachment; filename=") + qph.getZipFileName());
       }
 
       response.setContent(*result);
@@ -840,7 +840,7 @@ void PluginImpl::timeSeriesQuery(const State& state,
     if (strcasecmp(tsq.format.c_str(), "FILE") == 0)
     {
       std::string filename =
-          "attachement; filename=timeseries_" + std::to_string(getTime()) + ".grib";
+          "attachment; filename=timeseries_" + std::to_string(getTime()) + ".grib";
       response.setHeader("Content-type", "application/octet-stream");
       response.setHeader("Content-Disposition", filename);
       response.setContent(queryStreamer);

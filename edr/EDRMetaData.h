@@ -118,7 +118,7 @@ struct EDRMetaData
                                                     // can be overwritten in configuration file
   const ParameterInfo* parameter_info = nullptr;    // Info about parameters from config file
   const CollectionInfo* collection_info = nullptr;  // Info about collections from config file
-  CollectionInfo collection_info_engine;            // Info about colections from engine
+  CollectionInfo collection_info_engine;            // Info about collections from engine
   std::string language = "en";                      // Language from configuration file
   SourceEngine metadata_source = SourceEngine::Undefined;
   Fmi::DateTime latest_data_update_time;

@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.11.10
-Release: 2%{?dist}.fmi
+Version: 26.11.11
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -126,6 +126,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Wed Nov 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.11.11-1.fmi
+- Fixed the Content-Disposition type of GRIB and zip downloads: attachement -> attachment
+- Fixed typos in messages and comments
+
 * Tue Nov 10 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.11.10-2.fmi
 - Observation parameter names known to any data source (observations of any station type,
   newbase or Radon) give missing values, unknown names are an error

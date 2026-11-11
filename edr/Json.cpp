@@ -421,7 +421,7 @@ Value &Value::operator[](ArrayIndex index)
 {
   if (valueType != ValueType::arrayValue)
   {
-    // This is actully not error, but value type should be set before using it,
+    // This is actually not error, but value type should be set before using it,
     // for example
     //  **
     //  ** auto referencing_xy = Json::Value(Json::ValueType::objectValue);

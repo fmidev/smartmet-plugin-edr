@@ -15,7 +15,7 @@ namespace EDR
 {
 struct location_info
 {
-  // Note: constuctor is not used for avi locations
+  // Note: constructor is not used for avi locations
   //
   location_info(const Spine::LocationPtr& loc, std::string k)
       : id(loc->fmisid ? Fmi::to_string(*loc->fmisid) : Fmi::to_string(loc->geoid)),

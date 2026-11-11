@@ -764,7 +764,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
     }
 
     // From here on EDR data query
-    // Querydata and obervation producers do not have dots (.) in id, but grid
+    // Querydata and observation producers do not have dots (.) in id, but grid
     // producers always do have
     bool grid_producer = (itsEDRQuery.collection_id.find('.') != std::string::npos);
     if (!grid_producer)
