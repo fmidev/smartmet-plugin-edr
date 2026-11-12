@@ -65,26 +65,22 @@ void Plugin::init()
 
     if (!itsReactor->addContentHandler(
             this,
-            new_impl->itsConfig.defaultUrl(),
+            Spine::Reactor::HandlerOptions(new_impl->itsConfig.defaultUrl()).IsPrefix(),
             [this](Spine::Reactor& theReactor,
                    const Spine::HTTP::Request& theRequest,
                    Spine::HTTP::Response& theResponse)
-            { callRequestHandler(theReactor, theRequest, theResponse); },
-            {},
-            true))
+            { callRequestHandler(theReactor, theRequest, theResponse); }))
       throw Fmi::Exception(BCP, "Failed to register edr content handler");
 
     for (const auto& ts_url : new_impl->itsConfig.timeSeriesUrls())
     {
       if (!itsReactor->addContentHandler(
               this,
-              ts_url,
+              Spine::Reactor::HandlerOptions(ts_url),
               [this](Spine::Reactor& theReactor,
                      const Spine::HTTP::Request& theRequest,
                      Spine::HTTP::Response& theResponse)
-              { plugin_impl.load()->timeSeriesRequestHandler(theReactor, theRequest, theResponse); },
-              {},
-              false))
+              { plugin_impl.load()->timeSeriesRequestHandler(theReactor, theRequest, theResponse); }))
         throw Fmi::Exception(BCP,
                              "Failed to register timeseries content handler for '" + ts_url + "'");
 
@@ -101,16 +97,14 @@ void Plugin::init()
               (api_url == ts_url + "/api/docs" || api_url == ts_url + "/api/producers");
           if (!itsReactor->addContentHandler(
                   this,
-                  api_url,
+                  Spine::Reactor::HandlerOptions(api_url).IsPrefix(prefix),
                   [this](Spine::Reactor& theReactor,
                          const Spine::HTTP::Request& theRequest,
                          Spine::HTTP::Response& theResponse)
                   {
                     plugin_impl.load()->timeSeriesRequestHandler(
                         theReactor, theRequest, theResponse);
-                  },
-                  {},
-                  prefix))
+                  }))
             throw Fmi::Exception(
                 BCP, "Failed to register timeseries API content handler for '" + api_url + "'");
         }
