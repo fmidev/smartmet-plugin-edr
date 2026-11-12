@@ -17,7 +17,6 @@
 #include "TimeSeriesQuery.h"
 #include "UtilityFunctions.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 #include <engines/avi/Engine.h>
 #include <engines/geonames/Engine.h>

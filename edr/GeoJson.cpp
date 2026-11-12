@@ -4,7 +4,6 @@
 #include "ParameterInfo.h"
 #include "UtilityFunctions.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>

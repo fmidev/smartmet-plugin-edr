@@ -10,7 +10,6 @@
 #include "UtilityFunctions.h"
 #include "VerticalReference.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/observation/Keywords.h>
 #include <engines/observation/MetaData.h>
 #include <macgyver/Cancellation.h>
