@@ -1,15 +1,31 @@
 #include "ProducerDetails.h"
 #include <engines/grid/Engine.h>
 #include <fmt/format.h>
+#include <grid-content/contentServer/definition/ContentInfo.h>
+#include <grid-content/contentServer/definition/ContentInfoList.h>
+#include <grid-content/contentServer/definition/GenerationInfo.h>
+#include <grid-content/contentServer/definition/GenerationInfoList.h>
+#include <grid-content/contentServer/definition/ProducerInfo.h>
 #include <grid-content/contentServer/definition/ServiceInterface.h>
+#include <grid-files/common/Typedefs.h>
+#include <grid-files/grid/Typedefs.h>
+#include <grid-files/identification/AggregationDef.h>
+#include <grid-files/identification/ForecastTypeDef.h>
 #include <grid-files/identification/GridDef.h>
+#include <grid-files/identification/LevelDef.h>
+#include <grid-files/identification/ProcessingTypeDef.h>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <algorithm>
 #include <cmath>
+#include <ctime>
 #include <map>
 #include <mutex>
 #include <set>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace SmartMet
 {

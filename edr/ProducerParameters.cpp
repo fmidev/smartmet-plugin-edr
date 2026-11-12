@@ -2,6 +2,8 @@
 #include <boost/algorithm/string.hpp>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <libconfig.h++>
+#include <vector>
 
 namespace SmartMet
 {

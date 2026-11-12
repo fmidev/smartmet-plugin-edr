@@ -1,11 +1,33 @@
 #include "GeoJson.h"
+#include "CoordinateFilter.h"
+#include "EDRMetaData.h"
+#include "ParameterInfo.h"
 #include "UtilityFunctions.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
+#include <spine/LonLat.h>
+#include <spine/None.h>
+#include <spine/Parameter.h>
+#include <timeseries/TimeSeries.h>
+#include <timeseries/TimeSeriesTypes.h>
 #include <algorithm>
+#include <cstddef>
+#include <iostream>
+#include <iterator>
+#include <limits>
+#include <map>
 #include <optional>
+#include <utility>
+#include <variant>
+
+namespace SmartMet::Plugin::EDR
+{
+enum class EDRQueryType;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

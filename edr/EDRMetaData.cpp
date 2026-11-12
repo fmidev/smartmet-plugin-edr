@@ -1,4 +1,7 @@
 #include "EDRMetaData.h"
+#include "AviMetaData.h"
+#include "Json.h"
+#include "ProducerParameters.h"
 #include "VerticalReference.h"
 #ifndef WITHOUT_AVI
 #include "AviCollection.h"
@@ -6,24 +9,52 @@
 #endif
 #include "Config.h"
 #include "EDRQuery.h"
-
+#include <boost/algorithm/string/case_conv.hpp>
 #include <engines/grid/Engine.h>
+#include <engines/grid/MetaData.h>
+#include <engines/observation/MeasurandInfo.h>
+#include <engines/observation/Settings.h>
 #include <engines/querydata/Engine.h>
+#include <engines/querydata/Envelope.h>
+#include <engines/querydata/MetaData.h>
 #include <engines/querydata/MetaQueryOptions.h>
+#include <engines/querydata/Producer.h>
+#include <engines/querydata/Q.h>
+#include <grid-files/common/Coordinate.h>
+#include <grid-files/common/Typedefs.h>
 #include <grid-files/identification/GridDef.h>
-#include <newbase/NFmiFastQueryInfo.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
+#include <macgyver/LocalDateTime.h>
 #include <macgyver/StringConversion.h>
+#include <newbase/NFmiFastQueryInfo.h>
+#include <newbase/NFmiGlobals.h>
+#include <newbase/NFmiLocation.h>
+#include <newbase/NFmiPoint.h>
+#include <newbase/NFmiString.h>
 #include <spine/Convenience.h>
-#include <timeseries/TimeSeriesOutput.h>
+#include <spine/Table.h>
+#include <spine/Value.h>
+#include <timeseries/TimeSeries.h>
+
+namespace SmartMet::Plugin::EDR
+{
+class ParameterInfo;
+}  // namespace SmartMet::Plugin::EDR
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/Engine.h>
 #include <engines/observation/ObservableProperty.h>
 #endif
 #include <fmt/format.h>
 #include <algorithm>
+#include <chrono>
+#include <cstdint>
 #include <functional>
+#include <iostream>
+#include <iterator>
+#include <list>
+#include <memory>
+#include <variant>
 
 namespace SmartMet
 {

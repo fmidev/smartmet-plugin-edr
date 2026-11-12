@@ -6,20 +6,35 @@
 
 #pragma once
 
-#include "CommonQuery.h"
 #include "ObsParameter.h"
-#include "PluginImpl.h"
-#include "ProducerDataPeriod.h"
+#include "Producers.h"
+#include <engines/observation/Settings.h>
+#include <macgyver/DateTime.h>
+#include <macgyver/LocalDateTime.h>
+#include <spine/Location.h>
+#include <timeseries/TimeSeries.h>
+#include <timeseries/TimeSeriesGenerator.h>
+#include <timeseries/TimeSeriesInclude.h>
+#include <timeseries/TimeSeriesUtility.h>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace SmartMet::Engine::Observation
+{
+struct StationSettings;
+}  // namespace SmartMet::Engine::Observation
+namespace SmartMet::Plugin::EDR
+{
+class CommonQuery;
+class PluginImpl;
+class ProducerDataPeriod;
+class State;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {
-namespace Engine
-{
-namespace Observation
-{
-class Engine;
-}
-}  // namespace Engine
 
 namespace Plugin
 {

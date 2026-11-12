@@ -8,13 +8,9 @@
 
 #include "AviCollection.h"
 #include "Precision.h"
-#include <boost/utility.hpp>
-#include <engines/gis/GeometryStorage.h>
-#include <engines/grid/Engine.h>
-#include <spine/Parameter.h>
-#include <spine/TableFormatterOptions.h>
-#include <timeseries/RequestLimits.h>
-#include <libconfig.h++>
+#include <list>
+#include <map>
+#include <set>
 #include <string>
 
 namespace SmartMet
@@ -23,7 +19,6 @@ namespace Plugin
 {
 namespace EDR
 {
-class AviCollection;
 
 using Precisions = std::map<std::string, Precision>;
 using SupportedOutputFormats =

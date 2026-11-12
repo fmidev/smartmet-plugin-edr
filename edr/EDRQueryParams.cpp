@@ -1,25 +1,42 @@
 #include "EDRQueryParams.h"
-#include "EDRException.h"
-#include "VerticalReference.h"
+#include "CRSSupport.h"
+#include "Config.h"
 #include "EDRDefs.h"
+#include "EDRException.h"
 #include "EDRMetaData.h"
+#include "LocationInfo.h"
 #include "LonLatDistance.h"
-#include "Plugin.h"
+#include "ParameterInfo.h"
+#include "PluginImpl.h"
+#include "State.h"
 #include "UtilityFunctions.h"
+#include "VerticalReference.h"
+#include <boost/algorithm/string.hpp>
 #include <engines/observation/Keywords.h>
-#include <macgyver/AnsiEscapeCodes.h>
+#include <fmt/format.h>
+#include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
-#include <fmt/format.h>
+#include <timeseries/RequestLimits.h>
+#include <algorithm>
+#include <cctype>
+#include <cmath>
+#include <iterator>
+#include <limits>
+#include <list>
+#include <memory>
 #include <ogr_api.h>
 #include <ogr_geometry.h>
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <memory>
+#include <optional>
 #include <string>
+#include <utility>
+
+namespace SmartMet::Engine::Observation
+{
+enum ObsLevelType;
+}  // namespace SmartMet::Engine::Observation
 
 namespace SmartMet
 {

@@ -5,22 +5,25 @@
 // ======================================================================
 
 #include "Config.h"
+#include "AviCollection.h"
+#include "AviMetaData.h"
 #include "EDRQuery.h"
 #include "Precision.h"
-#include <grid-files/common/GeneralFunctions.h>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <grid-files/common/ShowFunction.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <spine/ConfigTools.h>
 #include <spine/Convenience.h>
-#include <spine/Exceptions.h>
-#include <timeseries/TimeSeriesInclude.h>
 #include <algorithm>
-#include <mutex>
-#include <ogr_geometry.h>
+#include <exception>
+#include <filesystem>
+#include <initializer_list>
 #include <iostream>
-#include <stdexcept>
+#include <list>
+#include <optional>
+#include <utility>
 
 #define FUNCTION_TRACE FUNCTION_TRACE_OFF
 

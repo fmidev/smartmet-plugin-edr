@@ -7,7 +7,6 @@
 #pragma once
 
 #include <macgyver/Exception.h>
-#include <string>
 
 namespace SmartMet
 {

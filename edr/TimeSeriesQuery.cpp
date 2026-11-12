@@ -5,8 +5,15 @@
 // ======================================================================
 
 #include "TimeSeriesQuery.h"
-#include "Config.h"
 #include <spine/Convenience.h>
+#include <spine/HTTP.h>
+#include <list>
+#include <set>
+
+namespace SmartMet::Plugin::EDR
+{
+class State;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

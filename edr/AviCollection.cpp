@@ -4,11 +4,11 @@
  */
 // ======================================================================
 
-#include <boost/algorithm/string.hpp>
-#include <macgyver/StringConversion.h>
-#include <stdexcept>
-
 #include "AviCollection.h"
+#include <boost/algorithm/string.hpp>
+#include <cstring>
+#include <stdexcept>
+#include <utility>
 
 using namespace boost::algorithm;
 

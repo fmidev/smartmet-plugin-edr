@@ -6,29 +6,74 @@
 
 #include "PluginImpl.h"
 #include "ApiDefinition.h"
+#include "CommonQuery.h"
+#include "EDRDefs.h"
 #include "EDRException.h"
+#include "Links.h"
 #include "ProducerCatalog.h"
+#include "Query.h"
 #include "QueryProcessingHub.h"
 #include "State.h"
 #include "TimeSeriesQuery.h"
 #include "UtilityFunctions.h"
+#include <boost/algorithm/string.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread.hpp>
+#include <engines/avi/Engine.h>
+#include <engines/geonames/Engine.h>
 #include <engines/gis/Engine.h>
+#include <engines/grid/Engine.h>
+#include <engines/observation/Engine.h>
+#include <engines/observation/ObservableProperty.h>
+#include <engines/observation/Sensors.h>
+#include <engines/observation/Settings.h>
+#include <engines/querydata/Engine.h>
 #include <fmt/format.h>
+#include <grid-content/queryServer/definition/QueryStreamer.h>
+#include <grid-files/common/GeneralFunctions.h>
+#include <json/writer.h>
+#include <locus/QueryOptions.h>
+#include <macgyver/AsyncTask.h>
 #include <macgyver/Cancellation.h>
+#include <macgyver/Exception.h>
 #include <macgyver/Hash.h>
 #include <macgyver/StringConversion.h>
-#include <boost/algorithm/string.hpp>
+#include <macgyver/TimeFormatter.h>
 #include <macgyver/TimeParser.h>
+#include <macgyver/ValueFormatter.h>
+#include <spine/ConfigTools.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
+#include <spine/HTTP.h>
 #include <spine/HostInfo.h>
 #include <spine/ImageFormatter.h>
+#include <spine/Location.h>
+#include <spine/OpenApi.h>
+#include <spine/Parameter.h>
 #include <spine/Reactor.h>
+#include <spine/Station.h>
+#include <spine/TableFormatter.h>
 #include <spine/TableFormatterFactory.h>
+#include <spine/TableFormatterOptions.h>
+#include <timeseries/OptionParsers.h>
 #include <timeseries/ParameterKeywords.h>
+#include <timeseries/RequestLimits.h>
+#include <timeseries/TimeSeriesGeneratorCache.h>
 #include <algorithm>
 #include <array>
-#include <iostream>
+#include <chrono>
+#include <cstddef>
+#include <functional>
+#include <libconfig.h++>
+#include <list>
+#include <optional>
+#include <strings.h>
+#include <utility>
+
+namespace Fmi
+{
+class TimeZones;
+}  // namespace Fmi
 
 // #define MYDEBUG ON
 

@@ -6,12 +6,14 @@
 
 #pragma once
 
+#include <engines/avi/Engine.h>
+#include <sys/types.h>
+#include <map>
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
-
-#include <engines/avi/Engine.h>
 
 namespace SmartMet
 {

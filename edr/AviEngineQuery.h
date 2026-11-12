@@ -8,8 +8,18 @@
 
 #include "Json.h"
 #include "Links.h"
-#include "PluginImpl.h"
-#include <engines/avi/Engine.h>
+#include <timeseries/TimeSeriesInclude.h>
+#include <timeseries/TimeSeriesUtility.h>
+#include <string>
+
+namespace SmartMet::Plugin::EDR
+{
+class Config;
+class PluginImpl;
+class Query;
+class State;
+struct EDRQuery;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

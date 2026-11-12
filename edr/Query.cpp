@@ -5,7 +5,14 @@
 // ======================================================================
 
 #include "Query.h"
-#include "Config.h"
+#include "State.h"
+#include <functional>
+#include <string>
+
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
 
 namespace SmartMet
 {

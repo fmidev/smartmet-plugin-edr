@@ -6,10 +6,23 @@
 
 #pragma once
 
-#include "CommonQuery.h"
 #include "Json.h"
-#include "ObsParameter.h"
+#include <spine/Location.h>
+#include <timeseries/TimeSeries.h>
+#include <timeseries/TimeSeriesGenerator.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <string>
+#include <vector>
+
+namespace Fmi
+{
+class TimeZones;
+}  // namespace Fmi
+namespace SmartMet::Plugin::EDR
+{
+class CommonQuery;
+class State;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

@@ -5,13 +5,26 @@
 // ======================================================================
 
 #include "Plugin.h"
+#include "Config.h"
+#include "PluginImpl.h"
 #include <macgyver/Exception.h>
 #include <macgyver/ThreadName.h>
+#include <spine/ContentHandlerMap.h>
 #include <spine/Convenience.h>
+#include <spine/OpenApi.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMet.h>
+#include <chrono>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
+#include <vector>
+
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+class Response;
+}  // namespace SmartMet::Spine::HTTP
 
 namespace SmartMet
 {

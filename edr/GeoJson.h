@@ -1,9 +1,21 @@
-#include "CoordinateFilter.h"
-#include "EDRMetaData.h"
-#include "EDRQuery.h"
+#include "EDRDefs.h"
 #include "Json.h"
-#include <spine/Parameter.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <timeseries/TimeSeriesUtility.h>
+#include <set>
+#include <string>
+#include <vector>
+
+namespace SmartMet::Plugin::EDR
+{
+class CoordinateFilter;
+enum class EDRQueryType;
+struct EDRMetaData;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine
+{
+class Parameter;
+}  // namespace SmartMet::Spine
 
 namespace SmartMet
 {

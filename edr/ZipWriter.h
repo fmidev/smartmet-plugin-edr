@@ -5,6 +5,7 @@
 
 #include <fstream>
 #include <string>
+#include <unistd.h>
 #include <vector>
 #include <zip.h>
 

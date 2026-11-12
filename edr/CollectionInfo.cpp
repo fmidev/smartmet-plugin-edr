@@ -1,5 +1,9 @@
 #include "CollectionInfo.h"
-#include <iostream>
+
+namespace SmartMet::Plugin::EDR
+{
+enum class SourceEngine;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

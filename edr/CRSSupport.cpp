@@ -4,9 +4,11 @@
 #include <gis/SpatialReference.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
-#include <ogr_geometry.h>
-#include <ogr_spatialref.h>
+#include <algorithm>
 #include <cstring>
+#include <initializer_list>
+#include <ogr_geometry.h>
+#include <optional>
 #include <set>
 
 namespace SmartMet

@@ -6,6 +6,7 @@
 
 #include "AviMetaData.h"
 #include <macgyver/StringConversion.h>
+#include <stdexcept>
 
 namespace SmartMet
 {

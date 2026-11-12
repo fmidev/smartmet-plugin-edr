@@ -8,31 +8,54 @@
 
 #include "Config.h"
 #include "EDRMetaData.h"
+#include "EDRQueryParams.h"
 #include "Engines.h"
 #include "LocationInfo.h"
 #include "ParameterInfo.h"
 #include "ProducerDetails.h"
-#include "Query.h"
-#include "State.h"
 #include <engines/gis/GeometryStorage.h>
-#include <macgyver/AsyncTask.h>
+#include <json/value.h>
 #include <macgyver/AtomicSharedPtr.h>
 #include <macgyver/CacheStats.h>
 #include <macgyver/DateTime.h>
-#include <macgyver/TimeZones.h>
-#include <spine/ConfigTools.h>
-#include <spine/HTTP.h>
-#include <spine/OpenApi.h>
 #include <spine/Table.h>
 #include <timeseries/TimeSeriesInclude.h>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
+#include <vector>
 
-#ifndef WITHOUT_OBSERVATION
-#include <engines/observation/ObservableProperty.h>
-#endif
+namespace Fmi
+{
+class AsyncTask;
+class TimeZones;
+}  // namespace Fmi
+namespace SmartMet::Engine::Observation
+{
+struct ObservableProperty;
+}  // namespace SmartMet::Engine::Observation
+namespace SmartMet::Plugin::EDR::ProducerDetails
+{
+class Cache;
+}  // namespace SmartMet::Plugin::EDR::ProducerDetails
+namespace SmartMet::Plugin::EDR
+{
+enum class SourceEngine;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+class Response;
+}  // namespace SmartMet::Spine::HTTP
+namespace SmartMet::Spine::OpenAPI
+{
+class Publisher;
+}  // namespace SmartMet::Spine::OpenAPI
+namespace SmartMet::TimeSeries
+{
+class TimeSeriesGeneratorCache;
+}  // namespace SmartMet::TimeSeries
 
 namespace SmartMet
 {
@@ -47,11 +70,6 @@ namespace EDR
 {
 
 class State;
-class QEngineQuery;
-class ObsEngineQuery;
-class GridEngineQuery;
-class AviEngineQuery;
-class QueryProcessingHub;
 
 class PluginImpl
 {

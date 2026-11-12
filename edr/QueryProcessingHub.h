@@ -9,12 +9,43 @@
 #include "AviEngineQuery.h"
 #include "GridEngineQuery.h"
 #include "Json.h"
+#include "Links.h"
 #include "ObsEngineQuery.h"
-#include "PluginImpl.h"
+#include "Producers.h"
 #include "QEngineQuery.h"
-#include "TimeSeriesQuery.h"
-#include "ZipWriter.h"
-#include <spine/HTTP.h>
+#include <grid-content/queryServer/definition/QueryStreamer.h>
+#include <macgyver/LocalDateTime.h>
+#include <timeseries/TimeSeries.h>
+#include <timeseries/TimeSeriesInclude.h>
+#include <timeseries/TimeSeriesUtility.h>
+#include <cstddef>
+#include <memory>
+#include <set>
+#include <string>
+#include <vector>
+
+class ZipWriter;
+namespace SmartMet::Plugin::EDR
+{
+class CommonQuery;
+class Config;
+class PluginImpl;
+class ProducerDataPeriod;
+class Query;
+class State;
+class TimeSeriesQuery;
+struct EDRMetaData;
+struct EDRQuery;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
+namespace SmartMet::Spine
+{
+class Location;
+class Table;
+}  // namespace SmartMet::Spine
 
 namespace SmartMet
 {

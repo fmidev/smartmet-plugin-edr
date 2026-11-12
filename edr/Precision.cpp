@@ -3,6 +3,8 @@
 #include <macgyver/StringConversion.h>
 #include <spine/ConfigBase.h>
 #include <spine/Exceptions.h>
+#include <sstream>
+#include <utility>
 
 using SmartMet::Plugin::EDR::Precision;
 

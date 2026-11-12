@@ -1,10 +1,27 @@
 #include "UtilityFunctions.h"
+#include "CommonQuery.h"
+#include "EDRDefs.h"
 #include "State.h"
 #include <boost/algorithm/string.hpp>
 #include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/observation/Keywords.h>
+#include <macgyver/Exception.h>
+#include <macgyver/StringConversion.h>
+#include <newbase/NFmiGlobals.h>
+#include <spine/LonLat.h>
+#include <timeseries/LocationParameters.h>
 #include <timeseries/ParameterKeywords.h>
 #include <timeseries/ParameterTools.h>
+#include <timeseries/TimeParameters.h>
+#include <cctype>
+#include <list>
+#include <memory>
+#include <variant>
+
+namespace Fmi
+{
+class TimeZones;
+}  // namespace Fmi
 
 namespace SmartMet
 {

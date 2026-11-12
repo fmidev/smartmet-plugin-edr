@@ -6,10 +6,14 @@
 
 #pragma once
 
-#include "EDRDefs.h"
 #include <map>
 #include <set>
 #include <string>
+
+namespace SmartMet::Plugin::EDR
+{
+enum class SourceEngine;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

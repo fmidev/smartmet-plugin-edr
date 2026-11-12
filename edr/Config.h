@@ -6,23 +6,32 @@
 
 #pragma once
 
-#include "AviCollection.h"
 #include "CRSSupport.h"
 #include "CollectionInfo.h"
 #include "EDRDefs.h"
-#include "Precision.h"
 #include "ProducerParameters.h"
-
 #include <boost/utility.hpp>
 #include <engines/gis/GeometryStorage.h>
-#include <engines/grid/Engine.h>
+#include <grid-content/queryServer/definition/AliasFileCollection.h>
+#include <grid-files/common/Typedefs.h>
 #include <json/json.h>
 #include <spine/OpenApi.h>
-#include <spine/Parameter.h>
 #include <spine/TableFormatterOptions.h>
 #include <timeseries/RequestLimits.h>
+#include <ctime>
 #include <libconfig.h++>
+#include <locale>
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
+#include <vector>
+
+namespace SmartMet::Plugin::EDR
+{
+class AviCollection;
+class Precision;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

@@ -6,19 +6,29 @@
 
 #pragma once
 
-#include "CommonQuery.h"
 #include "GridInterface.h"
-#include "PluginImpl.h"
+#include "Producers.h"
+#include <grid-content/queryServer/definition/QueryStreamer.h>
+#include <spine/Location.h>
+#include <timeseries/TimeSeriesInclude.h>
+#include <timeseries/TimeSeriesUtility.h>
+#include <memory>
+#include <vector>
+
+namespace SmartMet::Plugin::EDR
+{
+class CommonQuery;
+class PluginImpl;
+class ProducerDataPeriod;
+class State;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::T
+{
+class Coordinate;
+}  // namespace SmartMet::T
 
 namespace SmartMet
 {
-namespace Engine
-{
-namespace Grid
-{
-class Engine;
-}
-}  // namespace Engine
 
 namespace Plugin
 {

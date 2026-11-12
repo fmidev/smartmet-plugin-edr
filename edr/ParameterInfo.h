@@ -1,11 +1,13 @@
 #pragma once
 
 #include "Json.h"
-#include "ProducerParameters.h"
-#include <macgyver/StringConversion.h>
-#include <spine/Location.h>
 #include <map>
 #include <string>
+
+namespace SmartMet::Plugin::EDR
+{
+class ProducerParameters;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

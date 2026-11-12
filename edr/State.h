@@ -17,13 +17,33 @@
 
 #pragma once
 #include "EDRMetaData.h"
-#include "Engines.h"
 #include <engines/querydata/OriginTime.h>
 #include <engines/querydata/Producer.h>
 #include <engines/querydata/Q.h>
 #include <macgyver/DateTime.h>
-#include <macgyver/TimeZones.h>
-#include <timeseries/TimeSeriesInclude.h>
+#include <map>
+#include <string>
+
+namespace SmartMet::Engine::Avi
+{
+class Engine;
+}  // namespace SmartMet::Engine::Avi
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Engine::Grid
+{
+class Engine;
+}  // namespace SmartMet::Engine::Grid
+namespace SmartMet::Engine::Observation
+{
+class Engine;
+}  // namespace SmartMet::Engine::Observation
+namespace SmartMet::Engine::Querydata
+{
+class Engine;
+}  // namespace SmartMet::Engine::Querydata
 
 namespace Fmi
 {

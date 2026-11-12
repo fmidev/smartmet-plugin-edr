@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "PluginImpl.h"
 #include <macgyver/AtomicSharedPtr.h>
+#include <macgyver/CacheStats.h>
 #include <spine/SmartMetPlugin.h>
 #include <atomic>
 #include <condition_variable>
@@ -15,6 +15,15 @@
 #include <mutex>
 #include <string>
 #include <thread>
+
+namespace SmartMet::Plugin::EDR
+{
+class PluginImpl;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine
+{
+class Reactor;
+}  // namespace SmartMet::Spine
 
 namespace SmartMet
 {

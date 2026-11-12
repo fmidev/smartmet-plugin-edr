@@ -1,13 +1,20 @@
 #include "ProducerCatalog.h"
+#include "CollectionInfo.h"
+#include "EDRDefs.h"
+#include "EDRMetaData.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <fmt/format.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <algorithm>
+#include <cstddef>
+#include <initializer_list>
 #include <limits>
 #include <map>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace SmartMet

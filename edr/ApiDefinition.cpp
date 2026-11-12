@@ -1,18 +1,23 @@
 #include "ApiDefinition.h"
+#include "CRSSupport.h"
+#include "CollectionInfo.h"
 #include "Config.h"
 #include "EDRDefs.h"
 #include "EDRMetaData.h"
 #include "UtilityFunctions.h"
 #include "VerticalReference.h"
 #include <boost/algorithm/string/join.hpp>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
-#include <macgyver/StringConversion.h>
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <initializer_list>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace SmartMet

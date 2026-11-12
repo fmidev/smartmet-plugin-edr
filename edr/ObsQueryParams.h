@@ -1,8 +1,20 @@
 
 #pragma once
 
-#include "State.h"
-#include <spine/HTTP.h>
+#include <timeseries/DataFilter.h>
+#include <timeseries/TimeSeriesInclude.h>
+#include <map>
+#include <set>
+#include <string>
+
+namespace SmartMet::Plugin::EDR
+{
+class State;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
 
 namespace SmartMet
 {

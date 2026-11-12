@@ -7,6 +7,16 @@
 #pragma once
 
 #include "CommonQuery.h"
+#include <string>
+
+namespace SmartMet::Plugin::EDR
+{
+class State;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
 
 namespace SmartMet
 {

@@ -1,11 +1,40 @@
 #include "AviEngineQuery.h"
-#include "LocationTools.h"
+#include "AviCollection.h"
+#include "Config.h"
+#include "EDRDefs.h"
 #include "EDRException.h"
+#include "EDRMetaData.h"
+#include "EDRQuery.h"
+#include "Engines.h"
+#include "LocationTools.h"
+#include "PluginImpl.h"
+#include "Query.h"
+#include "State.h"
 #include "UtilityFunctions.h"
+#include <boost/algorithm/string.hpp>
+#include <engines/avi/Engine.h>
+#include <macgyver/DateTime.h>
+#include <macgyver/Exception.h>
+#include <macgyver/LocalDateTime.h>
+#include <macgyver/StringConversion.h>
 #include <macgyver/TimeParser.h>
 #include <spine/HTTP.h>
+#include <spine/LonLat.h>
+#include <timeseries/TimeSeries.h>
+#include <timeseries/TimeSeriesGeneratorOptions.h>
+#include <algorithm>
+#include <cstddef>
+#include <list>
+#include <map>
+#include <memory>
+#include <ogr_geometry.h>
 #include <optional>
+#include <set>
+#include <stdexcept>
 #include <tuple>
+#include <utility>
+#include <variant>
+#include <vector>
 
 using namespace boost::algorithm;
 

@@ -6,8 +6,13 @@
 
 #pragma once
 
-#include <libconfig.h++>
 #include <map>
+#include <string>
+
+namespace libconfig
+{
+class Config;
+}  // namespace libconfig
 
 namespace SmartMet
 {

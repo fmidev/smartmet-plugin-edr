@@ -7,15 +7,8 @@
 #pragma once
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
-
-namespace Fmi
-{
-class SpatialReference;
-class CoordinateTransformation;
-}  // namespace Fmi
 
 namespace SmartMet
 {

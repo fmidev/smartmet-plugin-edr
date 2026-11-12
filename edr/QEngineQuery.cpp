@@ -1,19 +1,55 @@
 #include "QEngineQuery.h"
+#include "AggregationInterval.h"
+#include "CommonQuery.h"
+#include "Config.h"
+#include "Engines.h"
 #include "LocationTools.h"
+#include "PluginImpl.h"
 #include "PostProcessing.h"
+#include "ProducerDataPeriod.h"
+#include "QueryLevelDataCache.h"
 #include "State.h"
 #include "UtilityFunctions.h"
+#include <boost/algorithm/string.hpp>
+#include <engines/geonames/Engine.h>
+#include <engines/geonames/WktGeometry.h>
+#include <engines/querydata/Engine.h>
+#include <engines/querydata/ParameterOptions.h>
+#include <engines/querydata/ValidTimeList.h>
 #include <fmt/format.h>
 #include <macgyver/Cancellation.h>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
+#include <macgyver/LocalDateTime.h>
+#include <macgyver/StringConversion.h>
+#include <macgyver/TimeZones.h>
+#include <newbase/NFmiFastQueryInfo.h>
+#include <newbase/NFmiIndexMask.h>
 #include <newbase/NFmiIndexMaskTools.h>
 #include <newbase/NFmiLocation.h>
+#include <newbase/NFmiString.h>
+#include <newbase/NFmiSvgPath.h>
 #include <newbase/NFmiSvgTools.h>
+#include <spine/LonLat.h>
+#include <spine/Parameter.h>
+#include <timeseries/OptionParsers.h>
+#include <timeseries/ParameterFactory.h>
 #include <timeseries/ParameterKeywords.h>
 #include <timeseries/ParameterTools.h>
-#include <timeseries/TableFeeder.h>
+#include <timeseries/RequestLimits.h>
+#include <timeseries/TimeSeriesGeneratorCache.h>
+#include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <timeseries/TimeSeriesInclude.h>
-#include <timeseries/TimeSeriesOutput.h>
+#include <cstddef>
+#include <list>
+#include <memory>
+#include <ogr_geometry.h>
+#include <set>
+
+namespace SmartMet::Engine::Gis
+{
+class GeometryStorage;
+}  // namespace SmartMet::Engine::Gis
 
 namespace SmartMet
 {

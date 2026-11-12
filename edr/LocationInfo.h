@@ -1,11 +1,14 @@
 #pragma once
 
+#include <macgyver/DateTime.h>
 #include <macgyver/StringConversion.h>
 #include <spine/Location.h>
 #include <spine/Station.h>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 
 namespace SmartMet
 {

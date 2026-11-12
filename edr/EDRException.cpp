@@ -2,6 +2,7 @@
 #include <macgyver/Cancellation.h>
 #include <macgyver/StringConversion.h>
 #include <cstring>
+#include <string>
 
 namespace SmartMet
 {

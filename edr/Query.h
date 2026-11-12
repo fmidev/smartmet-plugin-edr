@@ -11,6 +11,15 @@
 #include "CommonQuery.h"
 #include "EDRQueryParams.h"
 
+namespace SmartMet::Plugin::EDR
+{
+class State;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
+
 namespace SmartMet
 {
 namespace Plugin

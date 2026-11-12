@@ -1,10 +1,29 @@
 #include "State.h"
+#include "EDRQueryParams.h"
+#include "Engines.h"
 #include "PluginImpl.h"
-#include <engines/observation/ExternalAndMobileProducerId.h>
 #include <engines/querydata/Engine.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
-#include <ogr_geometry.h>
+#include <memory>
+#include <utility>
+
+namespace SmartMet::Engine::Avi
+{
+class Engine;
+}  // namespace SmartMet::Engine::Avi
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Engine::Grid
+{
+class Engine;
+}  // namespace SmartMet::Engine::Grid
+namespace SmartMet::Engine::Observation
+{
+class Engine;
+}  // namespace SmartMet::Engine::Observation
 
 namespace SmartMet
 {

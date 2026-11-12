@@ -1,22 +1,45 @@
 #pragma once
 
-#include "CollectionInfo.h"
 #include "CRSSupport.h"
+#include "CollectionInfo.h"
 #include "EDRDefs.h"
-#include "Engines.h"
 #include "LocationInfo.h"
-#include "ParameterInfo.h"
+#include <engines/grid/Engine.h>
 #include <macgyver/DateTime.h>
-#include <list>
+#include <ctime>
+#include <initializer_list>
 #include <map>
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
+#include <vector>
+
+namespace SmartMet::Engine::Avi
+{
+class Engine;
+}  // namespace SmartMet::Engine::Avi
+namespace SmartMet::Engine::Observation
+{
+class Engine;
+struct ObservableProperty;
+}  // namespace SmartMet::Engine::Observation
+namespace SmartMet::Engine::Querydata
+{
+class Engine;
+}  // namespace SmartMet::Engine::Querydata
+namespace SmartMet::Plugin::EDR::Json
+{
+class Value;
+}  // namespace SmartMet::Plugin::EDR::Json
+namespace SmartMet::Plugin::EDR
+{
+class ParameterInfo;
+class ProducerParameters;
+}  // namespace SmartMet::Plugin::EDR
 #ifndef WITHOUT_OBSERVATION
 #include <engines/observation/MetaData.h>
-#include <engines/observation/ObservableProperty.h>
 #endif
-#include "Json.h"
 
 namespace SmartMet
 {
@@ -175,6 +198,7 @@ EDRProducerMetaData get_edr_metadata_obs(
 #endif
 #ifndef WITHOUT_AVI
 class Config;
+
 EDRProducerMetaData get_edr_metadata_avi(const Engine::Avi::Engine& aviEngine,
                                          const Config& config,
                                          const ProducerLicenses& licenses,

@@ -22,10 +22,14 @@
 
 #pragma once
 
-#include "EDRMetaData.h"
 #include <json/json.h>
 #include <string>
 #include <vector>
+
+namespace SmartMet::Plugin::EDR
+{
+class EngineMetaData;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {

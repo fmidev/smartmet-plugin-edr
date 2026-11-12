@@ -1,13 +1,22 @@
 #pragma once
 
-#include "Config.h"
 #include "CoordinateFilter.h"
 #include "EDRQuery.h"
 #include "Links.h"
-#include "State.h"
 #include <macgyver/DateTime.h>
 #include <spine/HTTP.h>
+#include <cstddef>
+#include <map>
 #include <set>
+#include <string>
+#include <vector>
+
+namespace SmartMet::Plugin::EDR
+{
+class Config;
+class ParameterInfo;
+class State;
+}  // namespace SmartMet::Plugin::EDR
 
 namespace SmartMet
 {
@@ -17,6 +26,7 @@ namespace EDR
 {
 
 struct EDRMetaData;
+
 using EDRProducerMetaData = std::map<std::string, std::vector<EDRMetaData>>;
 
 class EDRQueryParams

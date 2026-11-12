@@ -6,9 +6,20 @@
 
 #pragma once
 
-#include "CommonQuery.h"
 #include "ObsParameter.h"
+#include <timeseries/TimeSeries.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <timeseries/TimeSeriesUtility.h>
+#include <vector>
+
+namespace SmartMet::Plugin::EDR
+{
+class CommonQuery;
+}  // namespace SmartMet::Plugin::EDR
+namespace SmartMet::Spine
+{
+class Table;
+}  // namespace SmartMet::Spine
 
 namespace SmartMet
 {
