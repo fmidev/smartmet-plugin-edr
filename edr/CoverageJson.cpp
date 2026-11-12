@@ -235,8 +235,8 @@ Json::Value parse_temporal_extent(const edr_temporal_extent &temporal_extent)
   return temporal;
 }
 
-// CRS84 and the configured CRSs
-Json::Value crs_details(const CRSRegistry *crs_registry)
+// CRS84, the configured CRSs and the native CRS of gridded data
+Json::Value crs_details(const CRSRegistry *crs_registry, const CRSInfoPtr &native_crs)
 {
   auto details = Json::Value(Json::ValueType::arrayValue);
   auto crs84 = Json::Value(Json::ValueType::objectValue);
@@ -255,16 +255,25 @@ Json::Value crs_details(const CRSRegistry *crs_registry)
       detail["wkt"] = Json::Value(info->wkt);
       details.append(detail);
     }
+  if (native_crs)
+  {
+    auto detail = Json::Value(Json::ValueType::objectValue);
+    detail["crs"] = Json::Value(native_crs->id);
+    detail["wkt"] = Json::Value(native_crs->wkt);
+    details.append(detail);
+  }
   return details;
 }
 
-Json::Value crs_list(const CRSRegistry *crs_registry)
+Json::Value crs_list(const CRSRegistry *crs_registry, const CRSInfoPtr &native_crs)
 {
   auto crs = Json::Value(Json::ValueType::arrayValue);
   crs.append(Json::Value("OGC:CRS84"));
   if (crs_registry)
     for (const auto &info : crs_registry->all())
       crs.append(Json::Value(info->id));
+  if (native_crs)
+    crs.append(Json::Value(native_crs->id));
   return crs;
 }
 
@@ -418,7 +427,8 @@ Json::Value get_data_queries(const std::string &host,
                              const std::string &instance_id = "",
                              const std::string &level_type = "",
                              Json::Value *query_links = nullptr,
-                             const CRSRegistry *crs_registry = nullptr)
+                             const CRSRegistry *crs_registry = nullptr,
+                             const CRSInfoPtr &native_crs = nullptr)
 {
   auto data_queries = Json::Value(Json::ValueType::objectValue);
 
@@ -483,7 +493,7 @@ Json::Value get_data_queries(const std::string &host,
     // OGC API-EDR /req/core/rc-md-query-links: links to the query end points
     append_query_link(query_links, query_info_link);
 
-    query_info_variables["crs_details"] = crs_details(crs_registry);
+    query_info_variables["crs_details"] = crs_details(crs_registry, native_crs);
 
     query_info_link["variables"] = query_info_variables;
     query_info["link"] = query_info_link;
@@ -515,7 +525,7 @@ Json::Value get_data_queries(const std::string &host,
     append_query_link(query_links, query_info_link);
 
     query_info_variables["output_formats"] = query_info_output_formats;
-    query_info_variables["crs_details"] = crs_details(crs_registry);
+    query_info_variables["crs_details"] = crs_details(crs_registry, native_crs);
     query_info_link["variables"] = query_info_variables;
     query_info["link"] = query_info_link;
     data_queries["instances"] = query_info;
@@ -960,6 +970,9 @@ Json::Value xy_referencing(const CRSInfoPtr &crs)
         Json::Value(crs->geographic ? "GeographicCRS" : "ProjectedCRS");
     referencing_xy["system"]["id"] =
         Json::Value(crs->request_name.empty() ? crs->id : crs->request_name);
+    // The native CRS of gridded data has no identifier outside the collection
+    if (crs->isNative())
+      referencing_xy["system"]["wkt"] = Json::Value(crs->wkt);
   }
   return referencing_xy;
 }
@@ -1626,9 +1639,10 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                                   instance_id,
                                                   emd.vertical_extent.level_type,
                                                   &instance_links,
-                                                  edr_query.crs_registry);
+                                                  edr_query.crs_registry,
+                                                  emd.native_crs);
       // Optional: crs
-      auto crs = crs_list(edr_query.crs_registry);
+      auto crs = crs_list(edr_query.crs_registry, emd.native_crs);
       instance["crs"] = crs;
 
       auto output_formats = Json::Value(Json::ValueType::arrayValue);
@@ -1867,11 +1881,12 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                "",
                                                collection_emd.vertical_extent.level_type,
                                                &links,
-                                               edr_query.crs_registry);
+                                               edr_query.crs_registry,
+                                               collection_emd.native_crs);
       value["links"] = links;
 
       // Optional: crs
-      auto crs = crs_list(edr_query.crs_registry);
+      auto crs = crs_list(edr_query.crs_registry, collection_emd.native_crs);
       value["crs"] = crs;
 
       // Custom dimensions
@@ -4257,6 +4272,326 @@ Json::Value corridor_range(const std::vector<std::optional<TS::Value>>& array,
   return range;
 }
 
+// Grid index of a position: the positions must be within 1% of a grid step from the grid
+// positions
+class GridIndex
+{
+ public:
+  explicit GridIndex(const EDRGrid& theGrid)
+      : grid(theGrid),
+        dx((grid.x1 - grid.x0) / double(grid.nx - 1)),
+        dy((grid.y1 - grid.y0) / double(grid.ny - 1))
+  {
+  }
+
+  std::optional<std::size_t> operator()(double x, double y) const
+  {
+    const double fi = (dx != 0 ? (x - grid.x0) / dx : 0);
+    const double fj = (dy != 0 ? (y - grid.y0) / dy : 0);
+    if (!std::isfinite(fi) || !std::isfinite(fj))
+      return {};
+    const auto i = std::lround(fi);
+    const auto j = std::lround(fj);
+    if (i < 0 || j < 0 || i >= long(grid.nx) || j >= long(grid.ny) ||
+        std::abs(fi - double(i)) > 0.01 || std::abs(fj - double(j)) > 0.01)
+      return {};
+    return std::size_t(j) * grid.nx + std::size_t(i);
+  }
+
+ private:
+  const EDRGrid& grid;
+  double dx;
+  double dy;
+};
+
+// The regular axis of the coordinates: the smallest distance between the distinct coordinates
+// is the step, and every coordinate must be a multiple of it from the minimum. At least two and
+// at most max_num positions.
+bool regular_axis(std::vector<double> values,
+                  std::size_t max_num,
+                  double& start,
+                  double& stop,
+                  std::size_t& num)
+{
+  std::sort(values.begin(), values.end());
+  // The same position computed for different parameters, levels or times may differ in the
+  // last bits
+  std::vector<double> distinct;
+  for (auto v : values)
+    if (distinct.empty() || v - distinct.back() > 1e-9 * std::max(1.0, std::abs(v)))
+      distinct.push_back(v);
+  if (distinct.size() < 2)
+    return false;
+
+  double step = std::numeric_limits<double>::max();
+  for (std::size_t k = 1; k < distinct.size(); k++)
+    step = std::min(step, distinct[k] - distinct[k - 1]);
+
+  const double steps = (distinct.back() - distinct.front()) / step;
+  if (!std::isfinite(steps) || steps + 1 > double(max_num))
+    return false;
+  for (auto v : distinct)
+  {
+    const double f = (v - distinct.front()) / step;
+    if (std::abs(f - std::round(f)) > 0.01)
+      return false;
+  }
+
+  start = distinct.front();
+  stop = distinct.back();
+  num = std::size_t(std::lround(steps)) + 1;
+  return true;
+}
+
+// The grid of the data if its positions are on a regular grid in the output CRS. The grid may
+// have positions without data (an area which isn't a rectangle), but at least a quarter of the
+// positions must have data, and the grid must have at least 2 x 2 positions.
+std::optional<EDRGrid> data_grid(const DataPerParameter& dpp)
+{
+  std::vector<std::pair<double, double>> positions;
+  for (const auto& dpp_item : dpp)
+    for (const auto& dpl_item : dpp_item.second)
+      for (const auto& tcv : dpl_item.second)
+        positions.emplace_back(tcv.lon, tcv.lat);
+  std::sort(positions.begin(), positions.end());
+  positions.erase(std::unique(positions.begin(), positions.end()), positions.end());
+
+  const std::size_t max_cells = 4 * positions.size();
+  std::vector<double> xs;
+  std::vector<double> ys;
+  for (const auto& xy : positions)
+  {
+    xs.push_back(xy.first);
+    ys.push_back(xy.second);
+  }
+
+  EDRGrid grid;
+  if (!regular_axis(xs, max_cells / 2, grid.x0, grid.x1, grid.nx) ||
+      !regular_axis(ys, max_cells / 2, grid.y0, grid.y1, grid.ny) ||
+      grid.nx * grid.ny > max_cells)
+    return {};
+
+  // Every position must be at a grid position
+  const GridIndex grid_index(grid);
+  std::set<std::size_t> cells;
+  for (const auto& xy : positions)
+  {
+    auto cell = grid_index(xy.first, xy.second);
+    if (!cell)
+      return {};
+    cells.insert(*cell);
+  }
+
+  // The positions must share their coordinates as on a grid: any two positions with different x
+  // and y would make a grid of 2x2 positions, any n such positions one of n x n positions. On a
+  // full grid of nx x ny positions there are min(nx,ny) positions for each x or y coordinate,
+  // require at least two on average.
+  if (cells.size() < 2 * std::max(grid.nx, grid.ny))
+    return {};
+
+  return grid;
+}
+
+// A Coverage with a Grid domain
+Json::Value grid_coverage(const DataPerParameter& dpp,
+                          const ParameterNames& dpn,
+                          const EDRMetaData& emd,
+                          const EDRGrid& grid,
+                          const std::vector<Spine::Parameter>& query_parameters,
+                          const CustomDimReferences& custom_dim_refs,
+                          const std::string& language)
+{
+  // The times and levels of all parameters
+  std::vector<std::string> times;
+  std::vector<double> zs;
+  data_times_and_levels(dpp, times, zs);
+  const bool has_z = !zs.empty();
+  const std::size_t nt = times.size();
+  const std::size_t nz = (has_z ? zs.size() : 1);
+  const std::size_t nxy = grid.nx * grid.ny;
+
+  // Use the collection prologue for the parameters and the referencing
+  auto prologue = add_prologue_coverage_collection(
+      emd, query_parameters, has_z, "Grid", custom_dim_refs, language);
+
+  auto domain = grid_domain(emd, grid, times, zs, prologue);
+
+  const GridIndex grid_index(grid);
+
+  auto ranges = Json::Value(Json::ValueType::objectValue);
+  for (const auto& dpp_item : dpp)
+  {
+    Fmi::check_cancelled();
+
+    const auto& parameter_name = dpp_item.first;
+    const auto precision = emd.getPrecision(parameter_name);
+
+    // t, z, y, x in row-major order
+    std::vector<std::optional<TS::Value>> values(nt * nz * nxy);
+    place_parameter_values(dpp_item.second, times, zs, nxy, grid_index, values);
+
+    ranges[dpn.at(parameter_name)] = grid_range(values, grid, nt, nz, has_z, precision);
+  }
+
+  auto coverage = Json::Value(Json::ValueType::objectValue);
+  coverage["type"] = Json::Value("Coverage");
+  coverage["domain"] = domain;
+  coverage["parameters"] = prologue["parameters"];
+  coverage["ranges"] = ranges;
+  return coverage;
+}
+
+// Position index of the output coordinates of gridded data which are not on a grid: the
+// positions in the order of their first occurrence. Coordinates which are the same at the
+// output precision are the same position.
+class MultiPointPositions
+{
+ public:
+  MultiPointPositions(const DataPerParameter& dpp, int x_precision, int y_precision)
+      : x_scale(std::pow(10.0, x_precision)), y_scale(std::pow(10.0, y_precision))
+  {
+    for (const auto& dpp_item : dpp)
+      for (const auto& dpl_item : dpp_item.second)
+        for (const auto& tcv : dpl_item.second)
+          if (index.emplace(key(tcv.lon, tcv.lat), xs.size()).second)
+          {
+            xs.push_back(tcv.lon);
+            ys.push_back(tcv.lat);
+          }
+  }
+
+  std::optional<std::size_t> operator()(double x, double y) const
+  {
+    auto it = index.find(key(x, y));
+    if (it == index.end())
+      return {};
+    return it->second;
+  }
+
+  std::size_t size() const { return xs.size(); }
+
+  std::vector<double> xs;
+  std::vector<double> ys;
+
+ private:
+  std::pair<long, long> key(double x, double y) const
+  {
+    return std::make_pair(std::lround(x * x_scale), std::lround(y * y_scale));
+  }
+
+  double x_scale;
+  double y_scale;
+  std::map<std::pair<long, long>, std::size_t> index;
+};
+
+// A Coverage with a MultiPoint domain (one time) or a MultiPointSeries domain (several times)
+// for gridded data whose positions are not on a regular grid in the output CRS. The composite
+// axis lists the positions, for each level if there are levels: (x, y) or (x, y, z) tuples.
+Json::Value multipoint_coverage(const DataPerParameter& dpp,
+                                const ParameterNames& dpn,
+                                const EDRMetaData& emd,
+                                const std::vector<Spine::Parameter>& query_parameters,
+                                const CustomDimReferences& custom_dim_refs,
+                                const std::string& language)
+{
+  const auto longitude_precision = emd.getPrecision("longitude");
+  const auto latitude_precision = emd.getPrecision("latitude");
+
+  // The times and levels of all parameters
+  std::vector<std::string> times;
+  std::vector<double> zs;
+  data_times_and_levels(dpp, times, zs);
+  const bool has_z = !zs.empty();
+  const std::size_t nt = times.size();
+  const std::size_t nz = (has_z ? zs.size() : 1);
+
+  const MultiPointPositions positions(dpp, longitude_precision, latitude_precision);
+  const std::size_t npos = positions.size();
+
+  // CoverageJSON: a MultiPoint domain has at most one time, a MultiPointSeries any number
+  const std::string domain_type = (nt > 1 ? "MultiPointSeries" : "MultiPoint");
+
+  // Use the collection prologue for the parameters and the referencing
+  auto prologue = add_prologue_coverage_collection(
+      emd, query_parameters, has_z, domain_type, custom_dim_refs, language);
+
+  auto composite = Json::Value(Json::ValueType::objectValue);
+  composite["dataType"] = Json::Value("tuple");
+  composite["coordinates"] = Json::Value(Json::ValueType::arrayValue);
+  composite["coordinates"].append(Json::Value("x"));
+  composite["coordinates"].append(Json::Value("y"));
+  if (has_z)
+    composite["coordinates"].append(Json::Value("z"));
+  // Note: Json::Value::append would concatenate the tuples into one array
+  composite["values"] = Json::Value(Json::ValueType::arrayValue);
+  std::size_t n = 0;
+  for (std::size_t k = 0; k < nz; k++)
+    for (std::size_t i = 0; i < npos; i++)
+    {
+      auto tuple = Json::Value(Json::ValueType::arrayValue);
+      tuple[0] = Json::Value(positions.xs[i], longitude_precision);
+      tuple[1] = Json::Value(positions.ys[i], latitude_precision);
+      if (has_z)
+        tuple[2] = Json::Value(zs[k], 0);
+      composite["values"][n++] = tuple;
+    }
+
+  auto axes = Json::Value(Json::ValueType::objectValue);
+  axes["t"] = Json::Value(Json::ValueType::objectValue);
+  axes["t"]["values"] = Json::Value(Json::ValueType::arrayValue);
+  for (const auto& t : times)
+    axes["t"]["values"].append(Json::Value(t));
+  axes["composite"] = composite;
+
+  auto domain = Json::Value(Json::ValueType::objectValue);
+  domain["type"] = Json::Value("Domain");
+  domain["domainType"] = Json::Value(domain_type);
+  domain["axes"] = axes;
+  domain["referencing"] = prologue["referencing"];
+
+  auto ranges = Json::Value(Json::ValueType::objectValue);
+  for (const auto& dpp_item : dpp)
+  {
+    Fmi::check_cancelled();
+
+    const auto& parameter_name = dpp_item.first;
+    const auto precision = emd.getPrecision(parameter_name);
+
+    // t, z, position in row-major order, which is t, composite
+    std::vector<std::optional<TS::Value>> values(nt * nz * npos);
+    place_parameter_values(dpp_item.second, times, zs, npos, positions, values);
+
+    auto range = Json::Value(Json::ValueType::objectValue);
+    range["type"] = Json::Value("NdArray");
+    range["dataType"] = Json::Value("float");
+    auto axis_names = Json::Value(Json::ValueType::arrayValue);
+    auto shape = Json::Value(Json::ValueType::arrayValue);
+    if (nt > 1)
+    {
+      axis_names.append(Json::Value("t"));
+      shape.append(Json::Value(nt));
+    }
+    axis_names.append(Json::Value("composite"));
+    shape.append(Json::Value(nz * npos));
+    range["axisNames"] = axis_names;
+    range["shape"] = shape;
+
+    auto data_values = Json::Value(Json::ValueType::arrayValue);
+    for (std::size_t m = 0; m < values.size(); m++)
+      data_values[m] = numeric_json_value(values[m], precision);
+    range["values"] = data_values;
+
+    ranges[dpn.at(parameter_name)] = range;
+  }
+
+  auto coverage = Json::Value(Json::ValueType::objectValue);
+  coverage["type"] = Json::Value("Coverage");
+  coverage["domain"] = domain;
+  coverage["parameters"] = prologue["parameters"];
+  coverage["ranges"] = ranges;
+  return coverage;
+}
+
 }  // namespace
 
 Json::Value formatGridOutputData(const TS::OutputData &outputData,
@@ -4276,57 +4611,7 @@ Json::Value formatGridOutputData(const TS::OutputData &outputData,
     if (dpp.empty())
       return {};
 
-    // The times and levels of all parameters
-    std::vector<std::string> times;
-    std::vector<double> zs;
-    data_times_and_levels(dpp, times, zs);
-    const bool has_z = !zs.empty();
-    const std::size_t nt = times.size();
-    const std::size_t nz = (has_z ? zs.size() : 1);
-    const std::size_t nxy = grid.nx * grid.ny;
-
-    // Use the collection prologue for the parameters and the referencing
-    auto prologue = add_prologue_coverage_collection(
-        emd, query_parameters, has_z, "Grid", custom_dim_refs, language);
-
-    auto domain = grid_domain(emd, grid, times, zs, prologue);
-
-    // Grid index of a position, the positions are the requested grid positions
-    const double dx = (grid.x1 - grid.x0) / double(grid.nx - 1);
-    const double dy = (grid.y1 - grid.y0) / double(grid.ny - 1);
-    auto grid_index = [&](double lon, double lat) -> std::optional<std::size_t>
-    {
-      const double fi = (dx != 0 ? (lon - grid.x0) / dx : 0);
-      const double fj = (dy != 0 ? (lat - grid.y0) / dy : 0);
-      const auto i = std::lround(fi);
-      const auto j = std::lround(fj);
-      if (i < 0 || j < 0 || i >= long(grid.nx) || j >= long(grid.ny) ||
-          std::abs(fi - double(i)) > 0.01 || std::abs(fj - double(j)) > 0.01)
-        return {};
-      return std::size_t(j) * grid.nx + std::size_t(i);
-    };
-
-    auto ranges = Json::Value(Json::ValueType::objectValue);
-    for (const auto &dpp_item : dpp)
-    {
-      Fmi::check_cancelled();
-
-      const auto &parameter_name = dpp_item.first;
-      const auto precision = emd.getPrecision(parameter_name);
-
-      // t, z, y, x in row-major order
-      std::vector<std::optional<TS::Value>> values(nt * nz * nxy);
-      place_parameter_values(dpp_item.second, times, zs, nxy, grid_index, values);
-
-      ranges[dpn.at(parameter_name)] = grid_range(values, grid, nt, nz, has_z, precision);
-    }
-
-    auto coverage = Json::Value(Json::ValueType::objectValue);
-    coverage["type"] = Json::Value("Coverage");
-    coverage["domain"] = domain;
-    coverage["parameters"] = prologue["parameters"];
-    coverage["ranges"] = ranges;
-    return coverage;
+    return grid_coverage(dpp, dpn, emd, grid, query_parameters, custom_dim_refs, language);
   }
   catch (...)
   {
@@ -4475,6 +4760,24 @@ Json::Value formatOutputData(const TS::OutputData &outputData,
         coordinate_groups = true;
         break;
       }
+    }
+
+    // Area, cube and radius queries on gridded data: one Grid coverage if the positions are on
+    // a regular grid in the output CRS, otherwise one MultiPoint(Series) coverage
+    if (coordinate_groups &&
+        (query_type == EDRQueryType::Area || query_type == EDRQueryType::Cube ||
+         query_type == EDRQueryType::Radius) &&
+        !emd.isPointData())
+    {
+      ParameterNames dpn;
+      auto dpp = get_data_per_parameter(
+          outputData, levels, coordinate_filter, query_parameters, emd.isGridProducer(), dpn);
+      if (auto grid = data_grid(dpp))
+        return grid_coverage(dpp, dpn, emd, *grid, query_parameters, custom_dim_refs, language);
+      if (dpp.empty())
+        return format_coverage_collection_point(
+            dpp, dpn, emd, query_parameters, custom_dim_refs, language);
+      return multipoint_coverage(dpp, dpn, emd, query_parameters, custom_dim_refs, language);
     }
 
     if (coordinate_groups)

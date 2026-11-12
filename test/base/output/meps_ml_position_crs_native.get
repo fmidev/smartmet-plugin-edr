@@ -1,0 +1,143 @@
+{
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "PointSeries",
+		"referencing" : 
+		[
+			{
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
+				{
+					"id" : "native",
+					"type" : "ProjectedCRS",
+					"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371000,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Lambert Conic Conformal (2SP)\",ID[\"EPSG\",9802]],PARAMETER[\"Latitude of false origin\",63.3,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8821]],PARAMETER[\"Longitude of false origin\",15,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8822]],PARAMETER[\"Latitude of 1st standard parallel\",63.3,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8823]],PARAMETER[\"Latitude of 2nd standard parallel\",63.3,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8824]],PARAMETER[\"Easting at false origin\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8826]],PARAMETER[\"Northing at false origin\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8827]]],CS[Cartesian,2],AXIS[\"(E)\",east,ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",north,ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"z"
+				],
+				"system" : 
+				{
+					"type" : "VerticalCRS",
+					"description" : 
+					{
+						"en" : "Hybrid model level number"
+					}
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
+				{
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
+				}
+			}
+		],
+		"type" : "Domain",
+		"axes" : 
+		{
+			"t" : 
+			{
+				"values" : 
+				[
+					"2026-10-15T00:00:00Z"
+				]
+			},
+			"x" : 
+			{
+				"values" : 
+				[
+					554874.44
+				]
+			},
+			"y" : 
+			{
+				"values" : 
+				[
+					-314754.15
+				]
+			},
+			"z" : 
+			{
+				"values" : 
+				[
+					65
+				]
+			}
+		}
+	},
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "Temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"z",
+				"y",
+				"x"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				1,
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				10.7
+			]
+		}
+	}
+}

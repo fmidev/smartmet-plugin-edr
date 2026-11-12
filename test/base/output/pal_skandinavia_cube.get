@@ -1,1465 +1,162 @@
 {
-	"coverages" : 
-	[
-		{
-			"type" : "Coverage",
-			"domain" : 
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "MultiPoint",
+		"referencing" : 
+		[
 			{
-				"type" : "Domain",
-				"axes" : 
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
 				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.12310
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.06624
-						]
-					}
+					"id" : "OGC:CRS84",
+					"type" : "GeographicCRS"
 				}
 			},
-			"ranges" : 
 			{
-				"temperature" : 
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
 				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						14.7
-					]
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
 				}
 			}
-		},
+		],
+		"type" : "Domain",
+		"axes" : 
 		{
-			"type" : "Coverage",
-			"domain" : 
+			"composite" : 
 			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.39311
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.05383
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"dataType" : "tuple",
+				"values" : 
+				[
 					[
-						"t",
-						"y",
-						"x"
+						25.12310,
+						60.06624
 					],
-					"dataType" : "float",
-					"shape" : 
 					[
-						1,
-						1,
-						1
+						25.39311,
+						60.05383
 					],
-					"type" : "NdArray",
-					"values" : 
 					[
-						14.8
+						25.66289,
+						60.04080
+					],
+					[
+						25.93242,
+						60.02713
+					],
+					[
+						25.14737,
+						60.20075
+					],
+					[
+						25.41865,
+						60.18828
+					],
+					[
+						25.68969,
+						60.17517
+					],
+					[
+						25.96048,
+						60.16143
+					],
+					[
+						25.17188,
+						60.33534
+					],
+					[
+						25.44443,
+						60.32280
+					],
+					[
+						25.71675,
+						60.30963
+					],
+					[
+						25.98880,
+						60.29581
+					],
+					[
+						25.19661,
+						60.47001
+					],
+					[
+						25.47046,
+						60.45741
+					],
+					[
+						25.74406,
+						60.44416
+					],
+					[
+						25.22159,
+						60.60476
+					],
+					[
+						25.49674,
+						60.59208
+					],
+					[
+						25.77163,
+						60.57877
+					],
+					[
+						25.24681,
+						60.73958
+					],
+					[
+						25.52327,
+						60.72684
+					],
+					[
+						25.79947,
+						60.71345
+					],
+					[
+						25.27227,
+						60.87449
+					],
+					[
+						25.55005,
+						60.86168
+					],
+					[
+						25.82758,
+						60.84821
+					],
+					[
+						25.57710,
+						60.99659
+					],
+					[
+						25.85596,
+						60.98305
 					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.66289
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.04080
-						]
-					}
-				}
+				]
 			},
-			"ranges" : 
+			"t" : 
 			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						14.9
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.93242
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.02713
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						14.9
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.14737
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.20075
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.1
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.41865
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.18828
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.3
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.68969
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.17517
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.4
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.96048
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.16143
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.4
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.17188
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.33534
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.6
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.44443
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.32280
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.8
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.71675
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.30963
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.8
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.98880
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.29581
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.8
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.19661
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.47001
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.1
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.47046
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.45741
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.3
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.74406
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.44416
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.2
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.22159
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.60476
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.6
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.49674
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.59208
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.7
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.77163
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.57877
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.6
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.24681
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.73958
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.8
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.52327
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.72684
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.9
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.79947
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.71345
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						16.9
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.27227
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.87449
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						17.0
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.55005
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.86168
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						17.1
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.82758
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.84821
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						17.2
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.57710
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.99659
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						17.2
-					]
-				}
-			}
-		},
-		{
-			"type" : "Coverage",
-			"domain" : 
-			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.85596
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.98305
-						]
-					}
-				}
-			},
-			"ranges" : 
-			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						17.2
-					]
-				}
+				"values" : 
+				[
+					"2008-08-05T12:00:00Z"
+				]
 			}
 		}
-	],
-	"domainType" : "Point",
-	"referencing" : 
-	[
-		{
-			"coordinates" : 
-			[
-				"x",
-				"y"
-			],
-			"system" : 
-			{
-				"id" : "OGC:CRS84",
-				"type" : "GeographicCRS"
-			}
-		},
-		{
-			"coordinates" : 
-			[
-				"t"
-			],
-			"system" : 
-			{
-				"calendar" : "Gregorian",
-				"type" : "TemporalRS"
-			}
-		}
-	],
-	"type" : "CoverageCollection",
+	},
 	"parameters" : 
 	{
 		"temperature" : 
@@ -1495,6 +192,51 @@
 					"value" : "°C"
 				}
 			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"composite"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				26
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				14.7,
+				14.8,
+				14.9,
+				14.9,
+				15.1,
+				15.3,
+				15.4,
+				15.4,
+				15.6,
+				15.8,
+				15.8,
+				15.8,
+				16.1,
+				16.3,
+				16.2,
+				16.6,
+				16.7,
+				16.6,
+				16.8,
+				16.9,
+				16.9,
+				17.0,
+				17.1,
+				17.2,
+				17.2,
+				17.2
+			]
 		}
 	}
 }

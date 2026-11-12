@@ -1,0 +1,162 @@
+{
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "Grid",
+		"referencing" : 
+		[
+			{
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
+				{
+					"id" : "OGC:CRS84",
+					"type" : "GeographicCRS"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"z"
+				],
+				"system" : 
+				{
+					"type" : "VerticalCRS",
+					"description" : 
+					{
+						"en" : "Depth below surface in metres"
+					}
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
+				{
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
+				}
+			}
+		],
+		"type" : "Domain",
+		"axes" : 
+		{
+			"t" : 
+			{
+				"values" : 
+				[
+					"2014-07-28T01:00:00Z"
+				]
+			},
+			"x" : 
+			{
+				"num" : 6,
+				"start" : 24.29100,
+				"stop" : 24.70767
+			},
+			"y" : 
+			{
+				"num" : 6,
+				"start" : 59.67500,
+				"stop" : 59.92500
+			},
+			"z" : 
+			{
+				"values" : 
+				[
+					0
+				]
+			}
+		}
+	},
+	"parameters" : 
+	{
+		"temperaturesea" : 
+		{
+			"id" : "TemperatureSea",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "TemperatureSea"
+			},
+			"label" : 
+			{
+				"fi" : "TemperatureSea"
+			},
+			"observedProperty" : 
+			{
+				"id" : "TemperatureSea",
+				"label" : 
+				{
+					"fi" : "TemperatureSea"
+				}
+			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperaturesea" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"z",
+				"y",
+				"x"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1,
+				1,
+				6,
+				6
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				null,
+				null,
+				19,
+				19,
+				null,
+				null,
+				20,
+				20,
+				20,
+				20,
+				19,
+				19,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				20,
+				null,
+				null,
+				null,
+				20,
+				null,
+				null
+			]
+		}
+	}
+}

@@ -1,0 +1,1 @@
+GET /edr/collections/harmonie_hybrid/radius?coords=POINT(25.5+60.5)&within=10&within-units=km&z=60,65&datetime=2017-05-12T01:00:00Z&parameter-name=Temperature HTTP/1.0

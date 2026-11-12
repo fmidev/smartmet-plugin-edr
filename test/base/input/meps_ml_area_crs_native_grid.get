@@ -1,0 +1,1 @@
+GET /edr/collections/meps_ml/area?coords=POLYGON((24.52+59.89,24.79+59.87,24.56+60.02,24.52+59.89))&crs=native&z=65&datetime=2026-10-15T00:00:00Z&parameter-name=Temperature HTTP/1.0

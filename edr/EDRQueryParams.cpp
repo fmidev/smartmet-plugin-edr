@@ -524,12 +524,16 @@ void EDRQueryParams::parseMetaDataQueryOptions()
  */
 // ----------------------------------------------------------------------
 
-void EDRQueryParams::parseCRS(const Config& config)
+void EDRQueryParams::parseCRS(const Config& config, const EDRMetaData& emd)
 {
   auto crs = Spine::optional_string(req.getParameter("crs"), "OGC:CRS84");
   if (!is_crs84(crs))
   {
-    itsEDRQuery.crs = config.getCRSRegistry().find(crs);
+    // The native CRS of gridded data, listed in the metadata of the collection
+    if (crs == NATIVE_CRS)
+      itsEDRQuery.crs = emd.native_crs;
+    else
+      itsEDRQuery.crs = config.getCRSRegistry().find(crs);
     if (itsEDRQuery.crs)
     {
       // MetOcean profile: the output referencing system id is the requested crs value
@@ -542,6 +546,8 @@ void EDRQueryParams::parseCRS(const Config& config)
       std::string supported = "OGC:CRS84";
       for (const auto& info : config.getCRSRegistry().all())
         supported += ", " + info->id;
+      if (emd.native_crs)
+        supported += std::string(", ") + NATIVE_CRS;
       throw EDRException("Invalid crs: " + crs + ". Supported values are " + supported);
     }
     // Output coordinates of projected CRSs are compared with the requested ones in metres
@@ -771,7 +777,7 @@ EDRQueryParams::EDRQueryParams(const State& state,
       req.addParameter("producer", itsEDRQuery.collection_id);
 
     // OGC API-EDR: crs must be one of the CRSs listed in the collection metadata
-    parseCRS(config);
+    parseCRS(config, emd);
 
     // If query_type is position, radius, trajectory -> coords is required
     parseLocationOptions(emd);
@@ -1046,7 +1052,13 @@ std::string EDRQueryParams::parsePosition(const std::string& coords)
           throw EDRException(
               "Invalid MULTIPOINTZ definition, longitude, latitude, level expected: " + coords);
         wkt.append(parts[0] + " " + parts[1] + ",");
-        itsCoordinateFilter.add(Fmi::stod(parts[0]), Fmi::stod(parts[1]), Fmi::stod(parts[2]));
+        // The filter compares the output coordinates, with crs=native they are in the native
+        // CRS but the requested ones in longitude/latitude
+        std::vector<double> x{Fmi::stod(parts[0])};
+        std::vector<double> y{Fmi::stod(parts[1])};
+        if (itsEDRQuery.crs && itsEDRQuery.crs->isNative())
+          itsEDRQuery.crs->fromWGS84(x, y);
+        itsCoordinateFilter.add(x[0], y[0], Fmi::stod(parts[2]));
       }
       wkt.resize(wkt.size() - 1);
       wkt.append(")");
@@ -1529,8 +1541,10 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
   try
   {
     // Coordinates in a CRS whose axis order is latitude/longitude or northing/easting are
-    // handled in the x/y order
-    auto coords = (itsEDRQuery.crs ? itsEDRQuery.crs->toXY(coordinates) : coordinates);
+    // handled in the x/y order. With crs=native the coordinates are longitude/latitude.
+    const bool native = (itsEDRQuery.crs && itsEDRQuery.crs->isNative());
+    auto coords =
+        (itsEDRQuery.crs && !native ? itsEDRQuery.crs->toXY(coordinates) : coordinates);
     parseWithin(coords);
 
     auto wkt = coordsToWkt(coords);
@@ -1548,8 +1562,12 @@ void EDRQueryParams::parseCoords(const EDRMetaData& emd, const std::string& coor
           }
     */
     // Coordinates in another CRS are transformed to WGS84, the coordinate filter keeps the
-    // requested coordinates since the output coordinates are transformed back
-    if (itsEDRQuery.crs)
+    // requested coordinates since the output coordinates are transformed back. The
+    // longitude/latitude coordinates of crs=native are transformed to the native CRS for the
+    // output grid of resolution-x/y.
+    if (native)
+      itsRequestXYWkt = itsEDRQuery.crs->fromWGS84(wkt);
+    else if (itsEDRQuery.crs)
     {
       itsRequestXYWkt = wkt;
       wkt = itsEDRQuery.crs->toWGS84(wkt);
@@ -1753,7 +1771,10 @@ void EDRQueryParams::parseCube(const EDRMetaData& emd)
     auto wkt = ("POLYGON((" + lower_left_x + " " + lower_left_y + "," + lower_left_x + " " +
                 upper_right_y + "," + upper_right_x + " " + upper_right_y + "," + upper_right_x +
                 " " + lower_left_y + "," + lower_left_x + " " + lower_left_y + "))");
-    if (itsEDRQuery.crs)
+    // With crs=native the bbox is in longitude/latitude
+    if (itsEDRQuery.crs && itsEDRQuery.crs->isNative())
+      itsRequestXYWkt = itsEDRQuery.crs->fromWGS84(wkt);
+    else if (itsEDRQuery.crs)
     {
       itsRequestXYWkt = itsEDRQuery.crs->toXY(wkt);
       wkt = itsEDRQuery.crs->toWGS84(itsRequestXYWkt);
@@ -2231,16 +2252,6 @@ std::size_t parse_resolution_positions(const std::optional<std::string>& value,
                      " for the number of positions including the minimum and maximum");
 }
 
-// True if the collection contains point data
-bool is_point_data(const EDRMetaData& emd)
-{
-  bool point_data = (emd.isObsProducer() || emd.isAviProducer());
-  if (emd.locations)
-    for (const auto& item : *emd.locations)
-      point_data = (point_data || item.second.type == "qdstation");
-  return point_data;
-}
-
 // The positions of the grid, for areas only the positions inside the area (cube positions
 // are always inside the bounding box)
 void grid_positions(const EDRGrid& grid,
@@ -2307,7 +2318,7 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
           "resolution) or both positive");
 
     // Interpolation to a regular grid is possible for gridded data only
-    if (is_point_data(emd))
+    if (emd.isPointData())
       throw EDRException("Collection '" + itsEDRQuery.collection_id +
                          "' contains point data, resolution-x and resolution-y can be used "
                          "with gridded data only");
@@ -2354,7 +2365,11 @@ void EDRQueryParams::parseResolution(const EDRMetaData& emd, const Config& confi
 
     std::vector<double> xs;
     std::vector<double> ys;
-    grid_positions(grid, *geometry, itsEDRQuery.query_type == EDRQueryType::Area, xs, ys);
+    // The longitude/latitude bbox of crs=native isn't a rectangle in the native CRS, only the
+    // positions inside it are used as for areas
+    const bool inside_only = (itsEDRQuery.query_type == EDRQueryType::Area ||
+                              (itsEDRQuery.crs && itsEDRQuery.crs->isNative()));
+    grid_positions(grid, *geometry, inside_only, xs, ys);
 
     if (itsEDRQuery.crs)
       itsEDRQuery.crs->toWGS84(xs, ys);

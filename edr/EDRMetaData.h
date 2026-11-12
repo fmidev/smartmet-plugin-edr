@@ -123,10 +123,14 @@ struct EDRMetaData
   SourceEngine metadata_source = SourceEngine::Undefined;
   Fmi::DateTime latest_data_update_time;
   CRSInfoPtr output_crs;  // CRS of the output coordinates of a data query, CRS84 if not set
+  CRSInfoPtr native_crs;  // CRS of the grid of gridded querydata, crs=native
   int getPrecision(const std::string& parameter_name) const;
   bool isObsProducer() const { return metadata_source == SourceEngine::Observation; }
   bool isGridProducer() const { return metadata_source == SourceEngine::Grid; }
   bool isAviProducer() const { return metadata_source == SourceEngine::Avi; }
+  // True if the collection contains point data (observations, aviation messages or querydata
+  // stations) instead of gridded data
+  bool isPointData() const;
   bool sourceHasInstances() const
   {
     return !(data_queries.empty() || isObsProducer() || isAviProducer());

@@ -329,14 +329,16 @@ type silently changes the output document type.
 
 ## 8. CoverageJSON output
 
-`CoverageJson::formatOutputData` in `edr/CoverageJson.cpp` picks one of four
+`CoverageJson::formatOutputData` in `edr/CoverageJson.cpp` picks one of six
 producers:
 
 | Data shape | Levels | Document | Function |
 |---|---|---|---|
 | `TimeSeriesPtr` or `TimeSeriesVectorPtr` | 0 or 1 | `Coverage`, `domainType: PointSeries` | `format_output_data_one_point` |
 | `TimeSeriesPtr` or `TimeSeriesVectorPtr` | more than 1 | `CoverageCollection` of `VerticalProfile`, one per time step | `format_output_data_vertical_profile` |
-| any `TimeSeriesGroupPtr` column, non-trajectory | any | `CoverageCollection` of `Point`, one Coverage per coordinate and level | `format_coverage_collection_point` |
+| any `TimeSeriesGroupPtr` column, area, cube or radius on gridded data, positions on a regular grid in the output CRS (`data_grid`) | any | `Coverage`, `domainType: Grid` with axes `t`, `z`, `y`, `x` | `grid_coverage` |
+| any `TimeSeriesGroupPtr` column, area, cube or radius on gridded data, positions not on a regular grid | any | `Coverage`, `domainType: MultiPoint` (one time) or `MultiPointSeries`, composite `[x,y(,z)]` axis | `multipoint_coverage` |
+| any `TimeSeriesGroupPtr` column, other non-trajectory | any | `CoverageCollection` of `Point`, one Coverage per coordinate and level | `format_coverage_collection_point` |
 | any `TimeSeriesGroupPtr` column, trajectory | any | `CoverageCollection` of `Trajectory` with a composite `[t,x,y(,z)]` axis, one per level | `format_coverage_collection_trajectory` |
 
 The example request yields the first case. The expected output begins:

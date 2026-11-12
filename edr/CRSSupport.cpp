@@ -1,5 +1,6 @@
 #include "CRSSupport.h"
 #include <boost/algorithm/string.hpp>
+#include <cpl_conv.h>
 #include <gis/CoordinateTransformation.h>
 #include <gis/SpatialReference.h>
 #include <macgyver/Exception.h>
@@ -56,6 +57,96 @@ std::string compact_wkt(std::string wkt)
 }
 
 }  // namespace
+
+const char* const NATIVE_CRS = "native";
+
+namespace
+{
+// The value of a PROJ string option, empty if not set
+std::string proj_option(const std::string& proj, const std::string& name)
+{
+  std::vector<std::string> items;
+  boost::algorithm::split(items, proj, boost::algorithm::is_any_of(" "));
+  for (const auto& item : items)
+  {
+    if (item == "+" + name)
+      return "true";
+    if (boost::algorithm::starts_with(item, "+" + name + "="))
+      return item.substr(name.size() + 2);
+  }
+  return {};
+}
+
+bool zero_or_unset(const std::string& value)
+{
+  return value.empty() || Fmi::stod(value) == 0;
+}
+
+// Newbase defines latitude-longitude areas as equidistant cylindrical projections in metres,
+// and rotated latitude-longitude areas as rotated ones. The grids are regular in degrees too,
+// which are the usual coordinates of such grids.
+std::string native_definition(const std::string& proj)
+{
+  const auto projection = proj_option(proj, "proj");
+  const auto radius = proj_option(proj, "R");
+  if (radius.empty())
+    return proj;
+
+  // Plain eqc with standard parallel 0 and no false origin: longitude-latitude on the sphere
+  if (projection == "eqc" && zero_or_unset(proj_option(proj, "lat_ts")) &&
+      zero_or_unset(proj_option(proj, "lat_0")) && zero_or_unset(proj_option(proj, "lon_0")) &&
+      zero_or_unset(proj_option(proj, "x_0")) && zero_or_unset(proj_option(proj, "y_0")))
+    return "+proj=longlat +R=" + radius + " +no_defs +type=crs";
+
+  // Rotated eqc: rotated longitude-latitude on the sphere
+  if (projection == "ob_tran" && proj_option(proj, "o_proj") == "eqc" &&
+      zero_or_unset(proj_option(proj, "lat_ts")) && zero_or_unset(proj_option(proj, "x_0")) &&
+      zero_or_unset(proj_option(proj, "y_0")))
+  {
+    std::string ret = "+proj=ob_tran +o_proj=longlat";
+    for (const auto* name : {"o_lon_p", "o_lat_p", "lon_0"})
+    {
+      auto value = proj_option(proj, name);
+      if (!value.empty())
+        ret += std::string(" +") + name + "=" + value;
+    }
+    return ret + " +R=" + radius + " +no_defs +type=crs";
+  }
+
+  return proj;
+}
+}  // namespace
+
+CRSInfoPtr make_native_crs(const std::string& definition)
+{
+  try
+  {
+    if (definition.empty())
+      return {};
+    Fmi::SpatialReference srs(native_definition(Fmi::SpatialReference(definition).projStr()));
+    auto info = std::make_shared<CRSInfo>();
+    info->id = NATIVE_CRS;
+    // PROJ objects can't be shared by threads, the transformations are created from the PROJ
+    // string. The gis library caches the spatial references by it.
+    info->definition = srs.projStr();
+    // WKT2 since WKT1 has no rotated latitude-longitude projection
+    char* wkt = nullptr;
+    const char* const options[] = {"FORMAT=WKT2_2019", "MULTILINE=NO", nullptr};
+    if (srs.get()->exportToWkt(&wkt, options) == OGRERR_NONE && wkt != nullptr)
+      info->wkt = wkt;
+    CPLFree(wkt);
+    if (info->wkt.empty())
+      info->wkt = srs.WKT();
+    info->geographic = srs.isGeographic();
+    info->swapped = false;
+    return info;
+  }
+  catch (...)
+  {
+    // Native CRS is not available for a projection PROJ can't handle
+    return {};
+  }
+}
 
 bool is_crs84(const std::string& crs)
 {
@@ -175,7 +266,7 @@ std::string CRSInfo::toWGS84(const std::string& wkt) const
         geometry->segmentize(size / 50);
     }
 
-    Fmi::CoordinateTransformation to_wgs84(id, "WGS84");
+    Fmi::CoordinateTransformation to_wgs84(transformationCRS(), "WGS84");
     if (!to_wgs84.transform(*geometry))
       throw Fmi::Exception(BCP, "Failed to transform coordinates '" + wkt + "' from " + id);
 
@@ -187,16 +278,46 @@ std::string CRSInfo::toWGS84(const std::string& wkt) const
   }
 }
 
+std::string CRSInfo::fromWGS84(const std::string& wkt) const
+{
+  try
+  {
+    std::string suffix;
+    auto geometry = parse_wkt(wkt, suffix);
+
+    // Keep the shape of long area edges in longitude/latitude, paths are not densified since
+    // their vertices define the trajectory
+    if (geometry->getDimension() == 2)
+    {
+      OGREnvelope envelope;
+      geometry->getEnvelope(&envelope);
+      const double size = std::max(envelope.MaxX - envelope.MinX, envelope.MaxY - envelope.MinY);
+      if (size > 0)
+        geometry->segmentize(size / 50);
+    }
+
+    Fmi::CoordinateTransformation from_wgs84("WGS84", transformationCRS());
+    if (!from_wgs84.transform(*geometry))
+      throw Fmi::Exception(BCP, "Failed to transform coordinates '" + wkt + "' to " + id);
+
+    return compact_wkt(geometry->exportToWkt()) + suffix;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 void CRSInfo::fromWGS84(std::vector<double>& x, std::vector<double>& y) const
 {
-  Fmi::CoordinateTransformation from_wgs84("WGS84", id);
+  Fmi::CoordinateTransformation from_wgs84("WGS84", transformationCRS());
   if (!from_wgs84.transform(x, y))
     throw Fmi::Exception(BCP, "Failed to transform coordinates to " + id);
 }
 
 void CRSInfo::toWGS84(std::vector<double>& x, std::vector<double>& y) const
 {
-  Fmi::CoordinateTransformation to_wgs84(id, "WGS84");
+  Fmi::CoordinateTransformation to_wgs84(transformationCRS(), "WGS84");
   if (!to_wgs84.transform(x, y))
     throw Fmi::Exception(BCP, "Failed to transform coordinates from " + id);
 }

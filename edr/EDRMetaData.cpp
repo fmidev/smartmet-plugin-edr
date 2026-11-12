@@ -1383,6 +1383,7 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
 
     std::map<std::string, Fmi::DateTime> latest_update_times;
     std::map<std::string, SupportedLocationsPtr> producer_locations;
+    std::map<std::string, CRSInfoPtr> native_crss;  // by the WKT of the grid
     // Iterate QEngine metadata and add items into collection
     for (const auto &qmd : qd_meta_data)
     {
@@ -1433,6 +1434,16 @@ EDRProducerMetaData get_edr_metadata_qd(const Engine::Querydata::Engine &qEngine
       if (auto locations =
               qd_producer_locations(qEngine, qmd, qmdproducer, spl, producer_locations))
         producer_emd.locations = locations;
+
+      // crs=native: the CRS of the grid
+      if (qmd.xNumber > 1 && qmd.yNumber > 1 && !qmd.WKT.empty() && !producer_emd.isPointData())
+      {
+        auto pos = native_crss.find(qmd.WKT);
+        if (pos == native_crss.end())
+          pos = native_crss.emplace(qmd.WKT, make_native_crs(qmd.WKT)).first;
+        producer_emd.native_crs = pos->second;
+      }
+
       epmd[qmdproducer].push_back(producer_emd);
       // Update latest data update time
       update_latest_update_time(latest_update_times, qmdproducer, qmd.originTime);
@@ -2077,6 +2088,17 @@ int EDRMetaData::getPrecision(const std::string &parameter_name) const
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+bool EDRMetaData::isPointData() const
+{
+  if (isObsProducer() || isAviProducer())
+    return true;
+  if (locations)
+    for (const auto &item : *locations)
+      if (item.second.type == "qdstation")
+        return true;
+  return false;
 }
 
 bool EDRMetaData::getGeometry(const std::string &item, Json::Value &geometry) const

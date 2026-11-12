@@ -1,90 +1,62 @@
 {
-	"coverages" : 
-	[
-		{
-			"type" : "Coverage",
-			"domain" : 
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "MultiPoint",
+		"referencing" : 
+		[
 			{
-				"type" : "Domain",
-				"axes" : 
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
 				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							25.12310
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							60.06624
-						]
-					}
+					"id" : "OGC:CRS84",
+					"type" : "GeographicCRS"
 				}
 			},
-			"ranges" : 
 			{
-				"temperature" : 
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
 				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						14.7
-					]
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
 				}
 			}
-		}
-	],
-	"domainType" : "Point",
-	"referencing" : 
-	[
+		],
+		"type" : "Domain",
+		"axes" : 
 		{
-			"coordinates" : 
-			[
-				"x",
-				"y"
-			],
-			"system" : 
+			"composite" : 
 			{
-				"id" : "OGC:CRS84",
-				"type" : "GeographicCRS"
-			}
-		},
-		{
-			"coordinates" : 
-			[
-				"t"
-			],
-			"system" : 
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"dataType" : "tuple",
+				"values" : 
+				[
+					[
+						25.12310,
+						60.06624
+					]
+				]
+			},
+			"t" : 
 			{
-				"calendar" : "Gregorian",
-				"type" : "TemporalRS"
+				"values" : 
+				[
+					"2008-08-05T12:00:00Z"
+				]
 			}
 		}
-	],
-	"type" : "CoverageCollection",
+	},
 	"parameters" : 
 	{
 		"temperature" : 
@@ -120,6 +92,26 @@
 					"value" : "°C"
 				}
 			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"composite"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				1
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				14.7
+			]
 		}
 	}
 }

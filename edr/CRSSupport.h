@@ -32,6 +32,14 @@ struct CRSInfo
   bool geographic = false;
   bool swapped = false;  // authority axis order is latitude/longitude or northing/easting
   std::string request_name;  // the crs parameter value of the request, if set
+  // Definition of the CRS for the transformations (PROJ string or WKT) if the id isn't one,
+  // set for the native CRS of gridded data
+  std::string definition;
+
+  // True for the native CRS of the data of a collection. Unlike for the other CRSs, the
+  // coordinates of coords and bbox are WGS84 longitude/latitude with crs=native, only the
+  // output is in the native CRS: clients need not know the projection of the data.
+  bool isNative() const { return !definition.empty(); }
 
   // Transformations are created for each use since PROJ objects must not be shared by
   // threads, the gis library caches the spatial references. Internally the coordinates are
@@ -43,12 +51,25 @@ struct CRSInfo
   // Transforms a WKT geometry in this CRS (x/y order) to WGS84 longitude/latitude
   std::string toWGS84(const std::string& wkt) const;
 
+  // Transforms a WKT geometry in WGS84 longitude/latitude to this CRS (x/y order)
+  std::string fromWGS84(const std::string& wkt) const;
+
   // Transforms coordinates between WGS84 longitude/latitude and this CRS (x/y order)
   void fromWGS84(std::vector<double>& x, std::vector<double>& y) const;
   void toWGS84(std::vector<double>& x, std::vector<double>& y) const;
+
+  // The CRS of the transformations
+  const std::string& transformationCRS() const { return definition.empty() ? id : definition; }
 };
 
 using CRSInfoPtr = std::shared_ptr<const CRSInfo>;
+
+// The crs parameter value for the native CRS of gridded data
+extern const char* const NATIVE_CRS;
+
+// The native CRS of gridded data whose projection is given as a PROJ string or WKT, nullptr if
+// the definition can't be parsed
+CRSInfoPtr make_native_crs(const std::string& definition);
 
 class CRSRegistry
 {

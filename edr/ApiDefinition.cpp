@@ -417,7 +417,10 @@ void add_edr_parameters(OA::Document& doc,
                              "query",
                              "Coordinate reference system of the coordinates: WGS84 "
                              "longitude/latitude (the default) or one of the CRSs listed in the "
-                             "crs setting of the server.",
+                             "crs setting of the server. 'native' is the CRS of the grid of "
+                             "gridded querydata, listed in crs_details of the collection: area, "
+                             "cube and radius queries give a Grid at the grid points of the data. "
+                             "With crs=native coords and bbox are WGS84 longitude/latitude.",
                              OA::enumSchema(crs_values, maxEnum)));
   doc.addComponent(
       "parameters",
@@ -489,7 +492,10 @@ void add_edr_parameters(OA::Document& doc,
   const std::string grid_resolution =
       " of the bounding box, including the minimum and the maximum. Requires the other "
       "resolution parameter too. The data is interpolated to a regular longitude/latitude grid "
-      "and the CoverageJSON output has a Grid domain. 0 means the native resolution (default). "
+      "and the CoverageJSON output has a Grid domain. 0 means the native resolution (default): "
+      "the CoverageJSON output has a Grid domain at the grid points of the data if they are "
+      "regular in the output CRS (with crs=native always), otherwise a MultiPoint or "
+      "MultiPointSeries domain listing the grid points. "
       "Valid values: 0 or 2-1000.";
   doc.addComponent("parameters",
                    "resolution-x",
@@ -1322,6 +1328,14 @@ Spine::OpenAPI::Document edr(const Config& config, const EngineMetaData& metadat
       crs_values.push_back(crs->id);
       crs_values.push_back(crs->uri);
     }
+    // The native CRS of gridded querydata
+    bool native_crs = false;
+    for (const auto& engine_item : metadata.getMetaData())
+      for (const auto& producer_item : engine_item.second)
+        for (const auto& emd : producer_item.second)
+          native_crs = (native_crs || emd.native_crs);
+    if (native_crs)
+      crs_values.push_back(NATIVE_CRS);
     add_edr_parameters(doc, collections, crs_values, max_enum);
 
     doc.addCoreOperations(TAG_CAPABILITIES, JsonValue());

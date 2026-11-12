@@ -121,6 +121,22 @@ def check_domain(fname, path, domain, domain_type, has_referencing):
     if dt == "MultiPointSeries":
         if "composite" not in sizes or "t" not in sizes:
             error(fname, path, "MultiPointSeries domain must have 'composite' and 't' axes")
+    if dt == "MultiPoint":
+        if "composite" not in sizes:
+            error(fname, path, "MultiPoint domain must have a 'composite' axis")
+        if "t" in sizes and not single("t"):
+            error(fname, path, "MultiPoint domain axis 't' must be single-valued")
+    if dt in ("MultiPoint", "MultiPointSeries"):
+        # 21-069r2 9.10.5 and 9.10.6
+        comp = axes.get("composite", {})
+        if comp.get("dataType") != "tuple" or comp.get("coordinates") not in (
+            ["x", "y"],
+            ["x", "y", "z"],
+        ):
+            error(fname, path, f"{dt} composite axis must be a (x,y[,z]) tuple")
+        for a in sizes:
+            if a not in ("composite", "t"):
+                error(fname, path, f"{dt} domain must not have the axis '{a}'")
     if dt == "Grid":
         for a in ("x", "y"):
             if a not in sizes:

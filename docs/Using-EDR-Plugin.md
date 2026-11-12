@@ -268,6 +268,17 @@ systems are listed in the `crs` and `crs_details` metadata of the collections, a
 as `EPSG:3067`, `http://www.opengis.net/def/crs/EPSG/0/3067` or `urn:ogc:def:crs:EPSG::3067`.
 Unsupported values are rejected with status 400.
 
+Gridded querydata collections also list `native`, the CRS of the grid of the data, with its
+definition as WKT2 in `crs_details`. It has no EPSG code: the projections of the models use a
+sphere, and rotated latitude-longitude grids are rotated. Its coordinates are metres for
+projected grids (for example Lambert conformal conic or polar stereographic) and degrees for
+latitude-longitude and rotated latitude-longitude grids, the CoverageJSON referencing of the
+output gives the WKT along with the id `native`. With `crs=native` the grid points of the data
+are regular in the output CRS, so that area and cube queries give a `Grid` coverage at the
+grid points of the data, and radius queries likewise (see [Parameters resolution-x and
+resolution-y](#parameters-resolution-x-and-resolution-y)). The coordinates of `coords` and
+`bbox` are then given in the native CRS too.
+
 The coordinates of `coords` and `bbox` are given in the requested CRS in the axis order of the
 CRS, except that `EPSG:4326` uses the longitude/latitude order like `OGC:CRS84`, as the OGC API
 EDR examples and test suite do. The CoverageJSON output
@@ -278,6 +289,10 @@ WGS84 longitude/latitude, as required by RFC 7946, and cannot be combined with a
 
 ```
 /collections/pal_skandinavia/position?coords=POINT(385700 6672000)&crs=EPSG:3067&parameter-name=Temperature
+```
+
+```
+/collections/pal_skandinavia/cube?bbox=200000,-3400000,300000,-3300000&crs=native&parameter-name=Temperature
 ```
 
 ### **Parameter f**
@@ -300,6 +315,26 @@ with a `Grid` domain whose axes are `t`, `z` (if the collection has levels), `y`
 Positions outside an area polygon have null values. The value 0 for both parameters means
 the native resolution, which is also the default. The parameters are not available for point
 data such as observations.
+
+At the native resolution the data is not interpolated. If the grid points of the data inside
+the area are on a regular grid in the output CRS (for example a longitude/latitude model grid
+in the default CRS), the CoverageJSON output is likewise a single coverage with a `Grid`
+domain at the grid points of the data: the axes `x` and `y` are given with `start`, `stop` and
+`num`, and the positions without data, such as those outside an area polygon, have null
+values. With `crs=native` this is always the case. Otherwise, for example for a projected
+model grid in longitude/latitude or for an area with fewer than 2 x 2 grid points, the output
+is a single coverage with a `MultiPoint` domain (one time) or a `MultiPointSeries` domain
+(several times). Its `composite` axis lists the grid points as `[x, y]` tuples, or as
+`[x, y, z]` tuples for each level if the collection has levels, and the ranges have the axes
+`composite` or `t` and `composite`.
+
+```
+/collections/hbm/cube?bbox=24,59.6,25,60&z=0&parameter-name=TemperatureSea
+```
+
+```
+/collections/pal_skandinavia/cube?bbox=24,60,25,61&parameter-name=Temperature
+```
 
 ```
 /collections/pal_skandinavia/area?coords=POLYGON((24 60,25 60,25 61,24 60))&parameter-name=Temperature&resolution-x=5&resolution-y=4
@@ -427,6 +462,16 @@ For example define a radius of 20 Km from the position defined by the coords que
 within=20&within-units=km
 ```
 Within-units 'm', 'km' and 'mi' are supported.
+
+On gridded data the CoverageJSON output of a radius query is a single coverage like that of an
+area query: a `Grid` domain if the grid points inside the circle are on a regular grid in the
+output CRS (always with `crs=native`), the positions outside the circle having null values,
+otherwise a `MultiPoint` or `MultiPointSeries` domain listing the grid points (see [Parameters
+resolution-x and resolution-y](#parameters-resolution-x-and-resolution-y)).
+
+```
+/collections/pal_skandinavia/radius?coords=POINT(250000 -3350000)&within=50&within-units=km&crs=native&parameter-name=Temperature
+```
 
 ## Area query
 

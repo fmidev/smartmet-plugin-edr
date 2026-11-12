@@ -1,0 +1,1 @@
+GET /edr/collections/pal_skandinavia/radius?coords=POINT(24.27+58.44)&within=50&within-units=km&crs=native&datetime=2008-08-05T12:00:00Z&parameter-name=Temperature HTTP/1.0

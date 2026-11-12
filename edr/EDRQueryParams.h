@@ -88,7 +88,7 @@ class EDRQueryParams
   bool parseDocumentQuery(const std::string& resource, const Config& config);
   void checkQueryType(const std::string& invalid_query_type, const Config& config) const;
   void parseMetaDataQueryOptions();
-  void parseCRS(const Config& config);
+  void parseCRS(const Config& config, const EDRMetaData& emd);
   void parseLocationOptions(const EDRMetaData& emd);
   void parseOutputFormat(const Config& config, const EDRMetaData& emd);
   void setFormatUrls(const std::string& resource,
