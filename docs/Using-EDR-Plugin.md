@@ -276,11 +276,14 @@ latitude-longitude and rotated latitude-longitude grids, the CoverageJSON refere
 output gives the WKT along with the id `native`. With `crs=native` the grid points of the data
 are regular in the output CRS, so that area and cube queries give a `Grid` coverage at the
 grid points of the data, and radius queries likewise (see [Parameters resolution-x and
-resolution-y](#parameters-resolution-x-and-resolution-y)). The coordinates of `coords` and
-`bbox` are then given in the native CRS too.
+resolution-y](#parameters-resolution-x-and-resolution-y)). Unlike with the other CRSs, the
+coordinates of `coords` and `bbox` are WGS84 longitude/latitude with `crs=native`, so that
+clients need not know the projection of the data: only the output is in the native CRS. For
+`resolution-x` and `resolution-y` the grid covers the bounding box of the area in the native
+CRS, and for a cube only the positions inside the longitude/latitude `bbox` have values.
 
-The coordinates of `coords` and `bbox` are given in the requested CRS in the axis order of the
-CRS, except that `EPSG:4326` uses the longitude/latitude order like `OGC:CRS84`, as the OGC API
+With the other CRSs the coordinates of `coords` and `bbox` are given in the requested CRS in
+the axis order of the CRS, except that `EPSG:4326` uses the longitude/latitude order like `OGC:CRS84`, as the OGC API
 EDR examples and test suite do. The CoverageJSON output
 coordinates are in the requested CRS too: the `x` axis is always the longitude or easting, and
 the referencing lists the coordinates in the axis order of the CRS. The grids of
@@ -292,7 +295,7 @@ WGS84 longitude/latitude, as required by RFC 7946, and cannot be combined with a
 ```
 
 ```
-/collections/pal_skandinavia/cube?bbox=200000,-3400000,300000,-3300000&crs=native&parameter-name=Temperature
+/collections/pal_skandinavia/cube?bbox=23.4,58.0,25.1,58.9&crs=native&parameter-name=Temperature
 ```
 
 ### **Parameter f**
@@ -470,7 +473,7 @@ otherwise a `MultiPoint` or `MultiPointSeries` domain listing the grid points (s
 resolution-x and resolution-y](#parameters-resolution-x-and-resolution-y)).
 
 ```
-/collections/pal_skandinavia/radius?coords=POINT(250000 -3350000)&within=50&within-units=km&crs=native&parameter-name=Temperature
+/collections/pal_skandinavia/radius?coords=POINT(24.27 58.44)&within=50&within-units=km&crs=native&parameter-name=Temperature
 ```
 
 ## Area query
