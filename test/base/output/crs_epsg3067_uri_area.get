@@ -1,145 +1,66 @@
 {
-	"coverages" : 
-	[
-		{
-			"type" : "Coverage",
-			"domain" : 
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "MultiPoint",
+		"referencing" : 
+		[
 			{
-				"type" : "Domain",
-				"axes" : 
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
 				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							382294.70
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							6676979.82
-						]
-					}
+					"id" : "http://www.opengis.net/def/crs/EPSG/0/3067",
+					"type" : "ProjectedCRS"
 				}
 			},
-			"ranges" : 
 			{
-				"temperature" : 
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
 				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						14.6
-					]
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
 				}
 			}
-		},
+		],
+		"type" : "Domain",
+		"axes" : 
 		{
-			"type" : "Coverage",
-			"domain" : 
+			"composite" : 
 			{
-				"type" : "Domain",
-				"axes" : 
-				{
-					"t" : 
-					{
-						"values" : 
-						[
-							"2008-08-05T12:00:00Z"
-						]
-					},
-					"x" : 
-					{
-						"values" : 
-						[
-							397300.33
-						]
-					},
-					"y" : 
-					{
-						"values" : 
-						[
-							6675209.34
-						]
-					}
-				}
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"dataType" : "tuple",
+				"values" : 
+				[
+					[
+						382294.70,
+						6676979.82
+					],
+					[
+						397300.33,
+						6675209.34
+					]
+				]
 			},
-			"ranges" : 
+			"t" : 
 			{
-				"temperature" : 
-				{
-					"axisNames" : 
-					[
-						"t",
-						"y",
-						"x"
-					],
-					"dataType" : "float",
-					"shape" : 
-					[
-						1,
-						1,
-						1
-					],
-					"type" : "NdArray",
-					"values" : 
-					[
-						15.1
-					]
-				}
+				"values" : 
+				[
+					"2008-08-05T12:00:00Z"
+				]
 			}
 		}
-	],
-	"domainType" : "Point",
-	"referencing" : 
-	[
-		{
-			"coordinates" : 
-			[
-				"x",
-				"y"
-			],
-			"system" : 
-			{
-				"id" : "http://www.opengis.net/def/crs/EPSG/0/3067",
-				"type" : "ProjectedCRS"
-			}
-		},
-		{
-			"coordinates" : 
-			[
-				"t"
-			],
-			"system" : 
-			{
-				"calendar" : "Gregorian",
-				"type" : "TemporalRS"
-			}
-		}
-	],
-	"type" : "CoverageCollection",
+	},
 	"parameters" : 
 	{
 		"temperature" : 
@@ -175,6 +96,27 @@
 					"value" : "°C"
 				}
 			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"composite"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				2
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				14.6,
+				15.1
+			]
 		}
 	}
 }

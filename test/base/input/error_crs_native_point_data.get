@@ -1,0 +1,2 @@
+GET /edr/collections/synop/area?coords=POLYGON((24+60,26+60,26+61,24+61,24+60))&crs=native&parameter-name=Temperature HTTP/1.0
+X-Test-Headers: Content-Type

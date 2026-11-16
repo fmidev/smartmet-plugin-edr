@@ -139,8 +139,11 @@ def check_collection_core(cid, coll):
             check(any(d.get("crs") == "OGC:CRS84" for d in details),
                   "/req/core/collection_spatial_extent C", f"{target}/{name}",
                   "crs_details does not include OGC:CRS84")
-    others = [c for c in crs if c != "OGC:CRS84"]
-    check(all(re.match(r"^EPSG:\d+$", c) for c in others),
+    # D applies "if an epsg code is available", e.g. not to the native CRS of a model grid:
+    # flag only the values which refer to an EPSG code in another form (URI, URN)
+    others = [c for c in crs if c != "OGC:CRS84" and "EPSG" in c.upper()
+              and not re.match(r"^EPSG:\d+$", c)]
+    check(not others,
           "/req/core/collection_spatial_extent D", target,
           f"CRSs not in the EPSG:<code> form: {others}", level="WARN")
     # temporal extent

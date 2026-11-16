@@ -1,0 +1,214 @@
+{
+	"type" : "Coverage",
+	"domain" : 
+	{
+		"domainType" : "MultiPointSeries",
+		"referencing" : 
+		[
+			{
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"system" : 
+				{
+					"id" : "OGC:CRS84",
+					"type" : "GeographicCRS"
+				}
+			},
+			{
+				"coordinates" : 
+				[
+					"t"
+				],
+				"system" : 
+				{
+					"calendar" : "Gregorian",
+					"type" : "TemporalRS"
+				}
+			}
+		],
+		"type" : "Domain",
+		"axes" : 
+		{
+			"composite" : 
+			{
+				"coordinates" : 
+				[
+					"x",
+					"y"
+				],
+				"dataType" : "tuple",
+				"values" : 
+				[
+					[
+						24.04086,
+						60.10949
+					],
+					[
+						24.31172,
+						60.09963
+					],
+					[
+						24.58238,
+						60.08913
+					],
+					[
+						24.85285,
+						60.07800
+					],
+					[
+						24.06004,
+						60.24423
+					],
+					[
+						24.33218,
+						60.23432
+					],
+					[
+						24.60412,
+						60.22377
+					],
+					[
+						24.87586,
+						60.21258
+					],
+					[
+						24.07941,
+						60.37906
+					],
+					[
+						24.35284,
+						60.36909
+					],
+					[
+						24.62606,
+						60.35848
+					],
+					[
+						24.89908,
+						60.34723
+					],
+					[
+						24.64822,
+						60.49328
+					],
+					[
+						24.92253,
+						60.48197
+					]
+				]
+			},
+			"t" : 
+			{
+				"values" : 
+				[
+					"2008-08-05T03:00:00Z",
+					"2008-08-05T04:00:00Z",
+					"2008-08-05T05:00:00Z"
+				]
+			}
+		}
+	},
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "Temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	},
+	"ranges" : 
+	{
+		"temperature" : 
+		{
+			"axisNames" : 
+			[
+				"t",
+				"composite"
+			],
+			"dataType" : "float",
+			"shape" : 
+			[
+				3,
+				14
+			],
+			"type" : "NdArray",
+			"values" : 
+			[
+				13.5,
+				13.8,
+				14.5,
+				15.0,
+				12.2,
+				12.6,
+				12.9,
+				13.5,
+				11.2,
+				11.2,
+				11.2,
+				11.2,
+				10.3,
+				10.3,
+				12.9,
+				13.2,
+				14.3,
+				14.6,
+				11.7,
+				11.8,
+				12.3,
+				13.0,
+				10.6,
+				10.7,
+				10.8,
+				11.0,
+				9.9,
+				10.2,
+				12.7,
+				13.1,
+				14.0,
+				14.3,
+				11.4,
+				11.7,
+				12.3,
+				13.1,
+				10.4,
+				10.6,
+				10.9,
+				11.3,
+				10.1,
+				10.6
+			]
+		}
+	}
+}

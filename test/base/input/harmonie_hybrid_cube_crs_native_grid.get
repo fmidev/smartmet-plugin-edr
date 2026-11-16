@@ -1,0 +1,1 @@
+GET /edr/collections/harmonie_hybrid/cube?bbox=25.05,60.1,25.9,60.85&crs=native&z=60,65&datetime=2017-05-12T01:00:00Z&parameter-name=Temperature HTTP/1.0

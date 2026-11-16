@@ -1,0 +1,277 @@
+{
+	"coverages" : 
+	[
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							272606.43
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							-3154969.38
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							500
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						-13.3
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							259331.18
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							-3052383.55
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							700
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						0.8
+					]
+				}
+			}
+		},
+		{
+			"type" : "Coverage",
+			"domain" : 
+			{
+				"type" : "Domain",
+				"axes" : 
+				{
+					"t" : 
+					{
+						"values" : 
+						[
+							"2008-09-09T12:00:00Z"
+						]
+					},
+					"x" : 
+					{
+						"values" : 
+						[
+							269721.13
+						]
+					},
+					"y" : 
+					{
+						"values" : 
+						[
+							-3070827.31
+						]
+					},
+					"z" : 
+					{
+						"values" : 
+						[
+							925
+						]
+					}
+				}
+			},
+			"ranges" : 
+			{
+				"temperature" : 
+				{
+					"axisNames" : 
+					[
+						"t",
+						"z",
+						"y",
+						"x"
+					],
+					"dataType" : "float",
+					"shape" : 
+					[
+						1,
+						1,
+						1,
+						1
+					],
+					"type" : "NdArray",
+					"values" : 
+					[
+						7.3
+					]
+				}
+			}
+		}
+	],
+	"domainType" : "Point",
+	"referencing" : 
+	[
+		{
+			"coordinates" : 
+			[
+				"x",
+				"y"
+			],
+			"system" : 
+			{
+				"id" : "native",
+				"type" : "ProjectedCRS",
+				"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"z"
+			],
+			"system" : 
+			{
+				"type" : "VerticalCRS",
+				"description" : 
+				{
+					"en" : "Pressure level in hPa"
+				}
+			}
+		},
+		{
+			"coordinates" : 
+			[
+				"t"
+			],
+			"system" : 
+			{
+				"calendar" : "Gregorian",
+				"type" : "TemporalRS"
+			}
+		}
+	],
+	"type" : "CoverageCollection",
+	"parameters" : 
+	{
+		"temperature" : 
+		{
+			"id" : "Temperature",
+			"type" : "Parameter",
+			"description" : 
+			{
+				"fi" : "Ilman lämpötila"
+			},
+			"label" : 
+			{
+				"fi" : "Temperature"
+			},
+			"observedProperty" : 
+			{
+				"id" : "Temperature",
+				"label" : 
+				{
+					"fi" : "Temperature"
+				}
+			},
+			"unit" : 
+			{
+				"id" : "http://codes.wmo.int/common/unit/_degC",
+				"label" : 
+				{
+					"fi" : "Celsius"
+				},
+				"symbol" : 
+				{
+					"type" : "https://qudt.org/vocab/unit/DEG_C",
+					"value" : "°C"
+				}
+			}
+		}
+	}
+}
