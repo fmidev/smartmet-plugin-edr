@@ -1,0 +1,1 @@
+GET /edr/collections/meps_ml.5910.3/area?coords=POLYGON((24.6+59.9,25.4+59.9,25.4+60.3,24.6+60.3,24.6+59.9))&crs=native&datetime=2026-10-15T06:00:00Z&parameter-name=t-k&z=64/65 HTTP/1.0

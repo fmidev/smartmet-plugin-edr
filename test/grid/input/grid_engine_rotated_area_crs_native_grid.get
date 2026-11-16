@@ -1,0 +1,1 @@
+GET /edr/collections/hirlam.5201.0/area?coords=POLYGON((24+60,26+60,26+62,24+62,24+60))&crs=native&datetime=2013-03-18T12:00:00Z&parameter-name=ff-ms HTTP/1.0

@@ -268,7 +268,7 @@ systems are listed in the `crs` and `crs_details` metadata of the collections, a
 as `EPSG:3067`, `http://www.opengis.net/def/crs/EPSG/0/3067` or `urn:ogc:def:crs:EPSG::3067`.
 Unsupported values are rejected with status 400.
 
-Gridded querydata collections also list `native`, the CRS of the grid of the data, with its
+Gridded querydata and grid engine collections also list `native`, the CRS of the grid of the data, with its
 definition as WKT2 in `crs_details`. It has no EPSG code: the projections of the models use a
 sphere, and rotated latitude-longitude grids are rotated. Its coordinates are metres for
 projected grids (for example Lambert conformal conic or polar stereographic) and degrees for

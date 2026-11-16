@@ -22,6 +22,8 @@
 #include <engines/querydata/Q.h>
 #include <grid-files/common/Coordinate.h>
 #include <grid-files/common/Typedefs.h>
+#include <grid-files/grib1/GridDefinition.h>
+#include <grid-files/grib2/GridDefinition.h>
 #include <grid-files/identification/GridDef.h>
 #include <macgyver/AnsiEscapeCodes.h>
 #include <macgyver/Exception.h>
@@ -46,6 +48,8 @@ class ParameterInfo;
 #include <engines/observation/ObservableProperty.h>
 #endif
 #include <fmt/format.h>
+#include <cpl_conv.h>
+#include <ogr_spatialref.h>
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
@@ -1655,6 +1659,27 @@ SupportedLocationsPtr grid_producer_locations(
   }
   return pos->second;
 }
+
+// The native CRS of a grid geometry, nullptr if the geometry or its projection is unknown.
+// The PROJ string gives rotated latitude-longitude grids as ob_tran like querydata, whereas
+// the WKT of grid-files uses the GRIB convention of the pole rotation.
+CRSInfoPtr grid_native_crs(int geometryId)
+{
+  std::shared_ptr<OGRSpatialReference> srs;
+  if (auto def2 = Identification::gridDef.getGrib2DefinitionByGeometryId(geometryId))
+    srs = def2->getSpatialReference();
+  else if (auto def1 = Identification::gridDef.getGrib1DefinitionByGeometryId(geometryId))
+    srs = def1->getSpatialReference();
+  if (!srs)
+    return {};
+
+  std::string proj;
+  char* str = nullptr;
+  if (srs->exportToProj4(&str) == OGRERR_NONE && str != nullptr)
+    proj = str;
+  CPLFree(str);
+  return make_native_crs(proj);
+}
 }  // namespace
 
 EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
@@ -1671,6 +1696,7 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
   {
     EDRProducerMetaData epmd;
     std::map<std::string, SupportedLocationsPtr> producer_locations;
+    std::map<int, CRSInfoPtr> native_crss;  // by geometry id
 
     auto grid_meta_data = gEngine.getEngineMetadata("");
 
@@ -1767,6 +1793,12 @@ EDRProducerMetaData get_edr_metadata_grid(const Engine::Grid::Engine &gEngine,
                               defs);
       if (auto locations = grid_producer_locations(gmd, producerId, spl, producer_locations))
         producer_emd.locations = locations;
+
+      // One geometry per collection, the CRS of its grid is the native CRS
+      auto crs_pos = native_crss.find(gmd.geometryId);
+      if (crs_pos == native_crss.end())
+        crs_pos = native_crss.emplace(gmd.geometryId, grid_native_crs(gmd.geometryId)).first;
+      producer_emd.native_crs = crs_pos->second;
 
       epmd[producerId].push_back(producer_emd);
       // Update latest data update time

@@ -423,8 +423,9 @@ void add_edr_parameters(OA::Document& doc,
                              "Coordinate reference system of the coordinates: WGS84 "
                              "longitude/latitude (the default) or one of the CRSs listed in the "
                              "crs setting of the server. 'native' is the CRS of the grid of "
-                             "gridded querydata, listed in crs_details of the collection: area, "
-                             "cube and radius queries give a Grid at the grid points of the data. "
+                             "gridded querydata and grid engine collections, listed in "
+                             "crs_details of the collection: area, cube and radius queries give "
+                             "a Grid at the grid points of the data. "
                              "With crs=native coords and bbox are WGS84 longitude/latitude.",
                              OA::enumSchema(crs_values, maxEnum)));
   doc.addComponent(
@@ -1333,7 +1334,7 @@ Spine::OpenAPI::Document edr(const Config& config, const EngineMetaData& metadat
       crs_values.push_back(crs->id);
       crs_values.push_back(crs->uri);
     }
-    // The native CRS of gridded querydata
+    // The native CRS of gridded querydata and grid engine collections
     bool native_crs = false;
     for (const auto& engine_item : metadata.getMetaData())
       for (const auto& producer_item : engine_item.second)

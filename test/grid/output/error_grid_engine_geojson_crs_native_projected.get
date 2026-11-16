@@ -1,0 +1,5 @@
+{
+  "title" : "An error occurred",
+  "status" : 400,
+  "detail" : "GeoJSON output is available in geographic coordinates only, crs 'native' can be used with CoverageJSON"
+}

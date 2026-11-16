@@ -146,7 +146,7 @@ struct EDRMetaData
   SourceEngine metadata_source = SourceEngine::Undefined;
   Fmi::DateTime latest_data_update_time;
   CRSInfoPtr output_crs;  // CRS of the output coordinates of a data query, CRS84 if not set
-  CRSInfoPtr native_crs;  // CRS of the grid of gridded querydata, crs=native
+  CRSInfoPtr native_crs;  // CRS of the grid of gridded querydata or grid engine data, crs=native
   int getPrecision(const std::string& parameter_name) const;
   bool isObsProducer() const { return metadata_source == SourceEngine::Observation; }
   bool isGridProducer() const { return metadata_source == SourceEngine::Grid; }
