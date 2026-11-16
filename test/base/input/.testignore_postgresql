@@ -17,3 +17,10 @@ timeseries/sounding_observations_selected_sounding_type.get
 #  against the observation database
 #
 opendata_locations_101004_derived_geojson.get
+#
+#  The expected outputs are those of the SQLite run of CI: an observation database adds
+#  parameter units from its measurand table
+#
+timeseries/producer_point_stations.get
+timeseries/producer_querydata.get
+timeseries/producers.get
