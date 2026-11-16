@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.11.13
+Version: 26.11.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Mon Nov 16 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.16-1.fmi
+- Return area/cube/radius queries on gridded data as one coverage (BRAINSTORM-3575)
+
 * Fri Nov 13 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.11.13-1.fmi
 - Include cleanup: files include what they use, unnecessary includes removed. No functional changes
 
