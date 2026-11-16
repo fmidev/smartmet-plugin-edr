@@ -4467,13 +4467,15 @@ Json::Value grid_coverage(const DataPerParameter& dpp,
 }
 
 // Position index of the output coordinates of gridded data which are not on a grid: the
-// positions in the order of their first occurrence. Coordinates which are the same at the
-// output precision are the same position.
+// positions in the order of their first occurrence. Coordinates which are the same when rounded
+// to 1e-7 output CRS units (about 1 cm in degrees) are the same position: the same position
+// computed for different parameters, levels or times may differ in the last bits. The output
+// precision must not be used here: a low precision (0 or the unconfigured default -1) would
+// merge distinct grid points into one position.
 class MultiPointPositions
 {
  public:
-  MultiPointPositions(const DataPerParameter& dpp, int x_precision, int y_precision)
-      : x_scale(std::pow(10.0, x_precision)), y_scale(std::pow(10.0, y_precision))
+  explicit MultiPointPositions(const DataPerParameter& dpp)
   {
     for (const auto& dpp_item : dpp)
       for (const auto& dpl_item : dpp_item.second)
@@ -4499,14 +4501,13 @@ class MultiPointPositions
   std::vector<double> ys;
 
  private:
-  std::pair<long, long> key(double x, double y) const
+  static std::pair<long long, long long> key(double x, double y)
   {
-    return std::make_pair(std::lround(x * x_scale), std::lround(y * y_scale));
+    constexpr double scale = 1e7;
+    return std::make_pair(std::llround(x * scale), std::llround(y * scale));
   }
 
-  double x_scale;
-  double y_scale;
-  std::map<std::pair<long, long>, std::size_t> index;
+  std::map<std::pair<long long, long long>, std::size_t> index;
 };
 
 // A Coverage with a MultiPoint domain (one time) or a MultiPointSeries domain (several times)
@@ -4530,7 +4531,7 @@ Json::Value multipoint_coverage(const DataPerParameter& dpp,
   const std::size_t nt = times.size();
   const std::size_t nz = (has_z ? zs.size() : 1);
 
-  const MultiPointPositions positions(dpp, longitude_precision, latitude_precision);
+  const MultiPointPositions positions(dpp);
   const std::size_t npos = positions.size();
 
   // CoverageJSON: a MultiPoint domain has at most one time, a MultiPointSeries any number
