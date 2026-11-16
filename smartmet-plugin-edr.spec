@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.11.16
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Mon Nov 16 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.16-2.fmi
+- crs=native for grid-engine collections (BRAINSTORM-3575)
+
 * Mon Nov 16 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.16-1.fmi
 - Return area/cube/radius queries on gridded data as one coverage (BRAINSTORM-3575)
 
