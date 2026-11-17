@@ -11,6 +11,7 @@
 #include <timeseries/TimeSeries.h>
 #include <timeseries/TimeSeriesGenerator.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <timeseries/TimeSeriesUtility.h>
 #include <optional>
 #include <set>
 #include <string>
