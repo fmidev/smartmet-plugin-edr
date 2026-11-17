@@ -330,6 +330,8 @@ void add_edr_schemas(OA::Document& doc)
 void add_edr_parameters(OA::Document& doc,
                         const std::vector<Collection>& collections,
                         const std::vector<std::string>& crs_values,
+                        const std::vector<std::string>& precision_values,
+                        const std::string& default_precision,
                         std::size_t maxEnum)
 {
   using OA::parameter;
@@ -612,6 +614,15 @@ void add_edr_parameters(OA::Document& doc,
       "lang",
       extension(parameter(
           "lang", "query", "Language of the location names and metadata", stringSchema())));
+  JsonValue precision = OA::enumSchema(precision_values, maxEnum);
+  precision["default"] = default_precision;
+  doc.addComponent("parameters",
+                   "precision",
+                   extension(parameter("precision",
+                                       "query",
+                                       "Name of the configured precision setting, which gives "
+                                       "the number of decimals of the values and coordinates",
+                                       precision)));
   doc.addComponent(
       "parameters",
       "pretty",
@@ -657,6 +668,7 @@ void add_common_data_parameters(JsonValue& op)
                            "level",
                            "timestep",
                            "lang",
+                           "precision",
                            "pretty"})
     op["parameters"].append(OA::ref("parameters", name));
 }
@@ -1342,7 +1354,12 @@ Spine::OpenAPI::Document edr(const Config& config, const EngineMetaData& metadat
           native_crs = (native_crs || emd.native_crs);
     if (native_crs)
       crs_values.push_back(NATIVE_CRS);
-    add_edr_parameters(doc, collections, crs_values, max_enum);
+    // The names the precision option accepts
+    std::vector<std::string> precision_values;
+    for (const auto& item : config.allPrecisions())
+      precision_values.push_back(item.first);
+    add_edr_parameters(
+        doc, collections, crs_values, precision_values, config.defaultPrecision(), max_enum);
 
     doc.addCoreOperations(TAG_CAPABILITIES, JsonValue());
 
