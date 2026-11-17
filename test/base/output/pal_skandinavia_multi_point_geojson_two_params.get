@@ -32,36 +32,6 @@
 			{
 				"coordinates" : 
 				[
-					25.66530,
-					60.39320
-				],
-				"type" : "Point"
-			},
-			"properties" : 
-			{
-				"pressure" : 
-				[
-					1006,
-					1006
-				],
-				"temperature" : 
-				[
-					16.1,
-					15.9
-				],
-				"time" : 
-				[
-					"2008-08-05T12:00:00Z",
-					"2008-08-05T13:00:00Z"
-				]
-			}
-		},
-		{
-			"type" : "Feature",
-			"geometry" : 
-			{
-				"coordinates" : 
-				[
 					24.93840,
 					60.16990
 				],
@@ -78,6 +48,36 @@
 				[
 					14.7,
 					14.7
+				],
+				"time" : 
+				[
+					"2008-08-05T12:00:00Z",
+					"2008-08-05T13:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					25.66530,
+					60.39320
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"pressure" : 
+				[
+					1006,
+					1006
+				],
+				"temperature" : 
+				[
+					16.1,
+					15.9
 				],
 				"time" : 
 				[

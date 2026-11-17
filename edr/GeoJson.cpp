@@ -715,6 +715,8 @@ void add_position_features(PointFeatures &point_features,
 {
   try
   {
+    // Features are output in the order of the data, not in the (hash) order of the keys
+    std::vector<size_t> coordinate_order;
     std::map<size_t, coordinate_xyz> coordinates;
     std::map<size_t, std::vector<std::string>> timesteps_per_coordinate;
     std::map<size_t, std::vector<Json::Value>> parameter_values_per_coordinate;
@@ -735,13 +737,13 @@ void add_position_features(PointFeatures &point_features,
           std::holds_alternative<Spine::None>(value)
               ? Json::Value()
               : UtilityFunctions::json_value(value, parameter_precision));
-      coordinates[key] = coord;
+      if (coordinates.emplace(key, coord).second)
+        coordinate_order.push_back(key);
     }
 
-    for (const auto &item : coordinates)
+    for (const auto key : coordinate_order)
     {
-      auto key = item.first;
-      const auto &coord = item.second;
+      const auto &coord = coordinates.at(key);
       auto point_coordinates = Json::Value(Json::ValueType::arrayValue);
       point_coordinates[0] = Json::Value(coord.x, lon_precision);
       point_coordinates[1] = Json::Value(coord.y, lat_precision);
@@ -1057,6 +1059,8 @@ void add_collection_level_features(PointFeatures &point_features,
 {
   try
   {
+    // Features are output in the order of the data, not in the (hash) order of the keys
+    std::vector<size_t> coordinate_order;
     std::map<size_t, coordinate_xyz> coordinates;
     std::map<size_t, std::vector<std::string>> timestamps_per_coordinate;
     std::map<size_t, std::vector<std::optional<TS::Value>>> values_per_coordinate;
@@ -1066,13 +1070,13 @@ void add_collection_level_features(PointFeatures &point_features,
       auto key = hash_value(coord);
       timestamps_per_coordinate[key].push_back(item3.time);
       values_per_coordinate[key].push_back(item3.value);
-      coordinates[key] = coord;
+      if (coordinates.emplace(key, coord).second)
+        coordinate_order.push_back(key);
     }
 
-    for (const auto &item : coordinates)
+    for (const auto key : coordinate_order)
     {
-      auto key = item.first;
-      const auto &coord = item.second;
+      const auto &coord = coordinates.at(key);
       const auto &timeseries = timestamps_per_coordinate.at(key);
       const auto &values = values_per_coordinate.at(key);
 

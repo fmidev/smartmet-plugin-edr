@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.11.17
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -126,6 +126,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Tue Nov 17 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.17-2.fmi
+- Output GeoJSON features in data order instead of coordinate hash order (BRAINSTORM-3575)
+
 * Tue Nov 17 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.17-1.fmi
 - Fix output CRS reprojection on grid-engine data with missing levels (BRAINSTORM-3575)
 - Declare the precision option of the EDR data queries in the OpenAPI definition (BRAINSTORM-3575)

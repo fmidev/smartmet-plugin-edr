@@ -32,29 +32,6 @@
 			{
 				"coordinates" : 
 				[
-					27.40000,
-					64.40000
-				],
-				"type" : "Point"
-			},
-			"properties" : 
-			{
-				"temperature" : 
-				[
-					14.3
-				],
-				"time" : 
-				[
-					"2008-08-05T12:00:00Z"
-				]
-			}
-		},
-		{
-			"type" : "Feature",
-			"geometry" : 
-			{
-				"coordinates" : 
-				[
 					24.10000,
 					61.10000
 				],
@@ -111,6 +88,29 @@
 				"temperature" : 
 				[
 					16.0
+				],
+				"time" : 
+				[
+					"2008-08-05T12:00:00Z"
+				]
+			}
+		},
+		{
+			"type" : "Feature",
+			"geometry" : 
+			{
+				"coordinates" : 
+				[
+					27.40000,
+					64.40000
+				],
+				"type" : "Point"
+			},
+			"properties" : 
+			{
+				"temperature" : 
+				[
+					14.3
 				],
 				"time" : 
 				[
