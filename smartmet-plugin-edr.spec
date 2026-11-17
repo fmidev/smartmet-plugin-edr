@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.11.16
-Release: 3%{?dist}.fmi
+Version: 26.11.17
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -126,6 +126,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Tue Nov 17 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.17-1.fmi
+- Fix output CRS reprojection on grid-engine data with missing levels (BRAINSTORM-3575)
+- Declare the precision option of the EDR data queries in the OpenAPI definition (BRAINSTORM-3575)
+- GeoJSON area bug for grid-engine collections with levels fixed (BRAINSTORM-3581)
+- Two separate problems in the grid-engine data: 1) Coordinates: grid-engine lon/lat values are formatted strings ("25.00000"), but to_double() only accepted doubles. It returned DBL_MAX instead, which came out as Infinity. 2) Levels: the grid engine returns each level as its own column, but the separate level column only holds the first level. Every level column therefore got the same z and was merged into one feature, where the last column's value overwrote the others (BRAINSTORM-3581)
+- Fix CoverageJSON vertical profiles of grid-engine data with several levels (BRAINSTORM-3581)
+- Output missing values of multi-level GeoJSON positions as null instead of "" (BRAINSTORM-3581)
+
 * Mon Nov 16 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.16-3.fmi
 - Fix MultiPoint coverage merging distinct grid points (BRAINSTORM-3575)
 
