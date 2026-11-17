@@ -855,13 +855,15 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
                                 const TS::TimeSeriesGroupPtr &tsg_lat,
                                 const TS::TimeSeriesGroupPtr &tsg_level,
                                 bool levels_present,
+                                const std::optional<double> &parameter_level,
                                 const CoordinateFilter &coordinate_filter)
 {
   try
   {
     DataPerLevel dpl;
-    unsigned int levels_index = 0;
-    for (unsigned int k = 0; k < tsg_data->size(); k++)
+    // Location independent data has values for the first coordinate only
+    auto coordinate_count = std::min(tsg_data->size(), std::min(tsg_lon->size(), tsg_lat->size()));
+    for (unsigned int k = 0; k < coordinate_count; k++)
     {
       const auto &llts_data = tsg_data->at(k);
       const auto &llts_lon = tsg_lon->at(k);
@@ -879,17 +881,24 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
         tcv.time = (Fmi::date_time::to_iso_extended_string(data_value.time.utc_time()) + "Z");
 
         double level = std::numeric_limits<double>::max();
-        if (levels_present)
+        if (parameter_level)
+          level = *parameter_level;
+        else if (levels_present && tsg_level && !tsg_level->empty())
         {
-          const auto &llts_level = tsg_level->at(k);
-          const auto &level_value = llts_level.timeseries.at(lev_idx);
-          if (const auto *ptr = std::get_if<double>(&level_value.value))
+          // Location independent level data (grid engine) has values for the first coordinate
+          // only
+          const auto &llts_level = tsg_level->at(k < tsg_level->size() ? k : 0);
+          if (lev_idx < llts_level.timeseries.size())
           {
-            level = *ptr;
-          }
-          else if (const auto *ptr = std::get_if<int>(&level_value.value))
-          {
-            level = *ptr;
+            const auto &level_value = llts_level.timeseries.at(lev_idx);
+            if (const auto *ptr = std::get_if<double>(&level_value.value))
+            {
+              level = *ptr;
+            }
+            else if (const auto *ptr = std::get_if<int>(&level_value.value))
+            {
+              level = *ptr;
+            }
           }
         }
 
@@ -902,13 +911,6 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
 
         if (accept)
           dpl[level].push_back(tcv);
-
-        if (levels_present)
-        {
-          levels_index++;
-          if (levels_index >= tsg_level->size())
-            levels_index = 0;
-        }
       }
     }
     return dpl;
@@ -920,7 +922,7 @@ DataPerLevel get_parameter_data(const TS::TimeSeriesGroupPtr &tsg_data,
 }
 
 DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
-                                        const EDRMetaData & /* emd */,
+                                        const EDRMetaData &emd,
                                         const std::set<int> &levels,
                                         const CoordinateFilter &coordinate_filter,
                                         const std::vector<Spine::Parameter> &query_parameters,
@@ -968,21 +970,33 @@ DataPerParameter get_data_per_parameter(const TS::OutputData &outputData,
         if (lon_lat_level_param(parameter_name))
           continue;
 
-        auto tsdata = outdata.at(j);
-        auto tslon = outdata.at(longitude_index);
-        auto tslat = outdata.at(latitude_index);
-        TS::TimeSeriesGroupPtr tsg_data = std::get<TS::TimeSeriesGroupPtr>(tsdata);
-        TS::TimeSeriesGroupPtr tsg_lon = std::get<TS::TimeSeriesGroupPtr>(tslon);
-        TS::TimeSeriesGroupPtr tsg_lat = std::get<TS::TimeSeriesGroupPtr>(tslat);
+        auto tsg_data = UtilityFunctions::as_timeseries_group(outdata.at(j));
+        auto tsg_lon = UtilityFunctions::as_timeseries_group(outdata.at(longitude_index));
+        auto tsg_lat = UtilityFunctions::as_timeseries_group(outdata.at(latitude_index));
+        if (!tsg_data || !tsg_lon || !tsg_lat)
+          continue;
+
         TS::TimeSeriesGroupPtr tsg_level = nullptr;
+        std::optional<double> parameter_level;
         if (levels_present)
         {
-          auto tslevel = outdata.at(level_index);
-          tsg_level = std::get<TS::TimeSeriesGroupPtr>(tslevel);
+          // Grid engine fetches each level of a parameter as a separate parameter, the level of
+          // the column is known from the parameter name only
+          if (emd.isGridProducer())
+            parameter_level =
+                UtilityFunctions::parse_parameter_level(query_parameters[j].name(), levels);
+
+          if (!parameter_level)
+            tsg_level = UtilityFunctions::as_timeseries_group(outdata.at(level_index));
         }
 
-        DataPerLevel dpl = get_parameter_data(
-            tsg_data, tsg_lon, tsg_lat, tsg_level, levels_present, coordinate_filter);
+        DataPerLevel dpl = get_parameter_data(tsg_data,
+                                              tsg_lon,
+                                              tsg_lat,
+                                              tsg_level,
+                                              levels_present,
+                                              parameter_level,
+                                              coordinate_filter);
 
         // Append, since several locations (e.g. MULTILINESTRING segments) may contribute
         auto &parameter_data = dpp[parameter_name];

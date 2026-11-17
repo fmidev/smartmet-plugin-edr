@@ -11,6 +11,8 @@
 #include <timeseries/TimeSeries.h>
 #include <timeseries/TimeSeriesGenerator.h>
 #include <timeseries/TimeSeriesInclude.h>
+#include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -65,6 +67,17 @@ std::vector<std::string> parseBBox(const std::string& bbox, bool parse2d = false
 
 // Media type of an EDR output format (CoverageJSON, GeoJSON, IWXXM, IWXXMZIP, TAC)
 std::string output_format_mime_type(const std::string& output_format);
+
+// Grid engine parameters carry the level in the last field of the parameter name
+// (<param>:<producer>[:<geometry>[:<levelid>]][:<level>]) and each level of a parameter is
+// fetched as a separate parameter. The level of such a column can only be told from its name,
+// the separate 'level' column has no per parameter values.
+std::optional<double> parse_parameter_level(const std::string& name, const std::set<int>& levels);
+
+// Data of location independent parameters (e.g. the grid engine 'level' column) is returned as
+// a plain time series even when the other columns of the same query are per coordinate groups.
+// Such a column is handled as a group having data for the first coordinate only.
+TS::TimeSeriesGroupPtr as_timeseries_group(const TS::TimeSeriesData& tsdata);
 
 }  // namespace UtilityFunctions
 }  // namespace EDR

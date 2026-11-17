@@ -1,0 +1,1 @@
+GET /edr/collections/ecmwf_skandinavia_painepinta.5901.2/area?coords=POLYGON((24+60,26+60,26+62,24+62,24+60))&datetime=2008-09-09T12:00:00Z&parameter-name=t-k&z=85000,70000&f=GeoJSON HTTP/1.0

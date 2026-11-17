@@ -578,6 +578,45 @@ std::string output_format_mime_type(const std::string& output_format)
   return "application/json";
 }
 
+
+std::optional<double> parse_parameter_level(const std::string& name, const std::set<int>& levels)
+{
+  auto pos = name.rfind(':');
+  if (pos == std::string::npos || (pos + 1) >= name.size())
+    return {};
+
+  try
+  {
+    auto level = Fmi::stod(name.substr(pos + 1));
+
+    // The name has no level if the last field is something else (e.g. the level type identifier)
+    if (levels.find(static_cast<int>(level)) == levels.end())
+      return {};
+
+    return level;
+  }
+  catch (...)
+  {
+    return {};
+  }
+}
+
+TS::TimeSeriesGroupPtr as_timeseries_group(const TS::TimeSeriesData& tsdata)
+{
+  if (const auto* ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
+    return *ptr;
+
+  if (const auto* ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
+  {
+    auto tsg = std::make_shared<TS::TimeSeriesGroup>();
+    if (*ptr)
+      tsg->emplace_back(TS::LonLat(0, 0), **ptr);
+    return tsg;
+  }
+
+  return nullptr;
+}
+
 }  // namespace UtilityFunctions
 }  // namespace EDR
 }  // namespace Plugin

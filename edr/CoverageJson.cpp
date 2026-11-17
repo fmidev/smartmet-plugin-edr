@@ -80,52 +80,7 @@ std::string parse_parameter_name(const std::string &name)
   return parameter_name;
 }
 
-// Grid engine parameters carry the level in the last field of the parameter name
-// (<param>:<producer>[:<geometry>[:<levelid>]][:<level>]) and each level of a parameter is
-// fetched as a separate parameter. The level of such a column can only be told from its name,
-// the separate 'level' column has no per parameter values.
-std::optional<double> parse_parameter_level(const std::string &name, const std::set<int> &levels)
-{
-  auto pos = name.rfind(':');
-  if (pos == std::string::npos || (pos + 1) >= name.size())
-    return {};
-
-  try
-  {
-    auto level = Fmi::stod(name.substr(pos + 1));
-
-    // The name has no level if the last field is something else (e.g. the level type identifier)
-    if (levels.find(static_cast<int>(level)) == levels.end())
-      return {};
-
-    return level;
-  }
-  catch (...)
-  {
-    return {};
-  }
-}
-
-// Data of location independent parameters (e.g. the grid engine 'level' column) is returned as
-// a plain time series even when the other columns of the same query are per coordinate groups.
-// Such a column is handled as a group having data for the first coordinate only.
-TS::TimeSeriesGroupPtr as_timeseries_group(const TS::TimeSeriesData &tsdata)
-{
-  if (const auto *ptr = std::get_if<TS::TimeSeriesGroupPtr>(&tsdata))
-    return *ptr;
-
-  if (const auto *ptr = std::get_if<TS::TimeSeriesPtr>(&tsdata))
-  {
-    auto tsg = std::make_shared<TS::TimeSeriesGroup>();
-    if (*ptr)
-      tsg->emplace_back(TS::LonLat(0, 0), **ptr);
-    return tsg;
-  }
-
-  return nullptr;
-}
-
-// The counterpart of as_timeseries_group: data of a coordinate group is handled as a plain
+// The counterpart of UtilityFunctions::as_timeseries_group: data of a coordinate group is handled as a plain
 // time series by using the data of the first coordinate.
 TS::TimeSeriesPtr as_timeseries(const TS::TimeSeriesData &tsdata)
 {
@@ -3195,9 +3150,9 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
       if (lon_lat_level_param(parameter_name))
         continue;
 
-      TS::TimeSeriesGroupPtr tsg_data = as_timeseries_group(outdata.at(j));
-      TS::TimeSeriesGroupPtr tsg_lon = as_timeseries_group(outdata.at(longitude_index));
-      TS::TimeSeriesGroupPtr tsg_lat = as_timeseries_group(outdata.at(latitude_index));
+      TS::TimeSeriesGroupPtr tsg_data = UtilityFunctions::as_timeseries_group(outdata.at(j));
+      TS::TimeSeriesGroupPtr tsg_lon = UtilityFunctions::as_timeseries_group(outdata.at(longitude_index));
+      TS::TimeSeriesGroupPtr tsg_lat = UtilityFunctions::as_timeseries_group(outdata.at(latitude_index));
 
       if (!tsg_data || !tsg_lon || !tsg_lat)
         continue;
@@ -3209,10 +3164,10 @@ void process_parameter_data(const std::vector<TS::TimeSeriesData> &outdata,
         // Grid engine fetches each level of a parameter as a separate parameter, the level of
         // the column is known from the parameter name only
         if (isGridProducer)
-          parameter_level = parse_parameter_level(query_parameters[j].name(), levels);
+          parameter_level = UtilityFunctions::parse_parameter_level(query_parameters[j].name(), levels);
 
         if (!parameter_level)
-          tsg_level = as_timeseries_group(outdata.at(level_index));
+          tsg_level = UtilityFunctions::as_timeseries_group(outdata.at(level_index));
       }
 
       DataPerLevel dpl = get_data_per_level(tsg_data,
