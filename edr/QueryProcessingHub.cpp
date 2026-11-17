@@ -614,7 +614,9 @@ void reproject_to_requested_crs(TS::OutputData& outputData,
                                 const CRSInfoPtr& crs,
                                 EDRMetaData& emd)
 {
-  reproject_output(outputData, masterquery.poptions.parameters(), *crs);
+  // The columns of the grid parameters without data have been dropped from the output, thus
+  // the column of a parameter is its index in the effective parameter list
+  reproject_output(outputData, effective_query_parameters(masterquery), *crs);
   emd.output_crs = crs;
   if (!crs->geographic)
   {
