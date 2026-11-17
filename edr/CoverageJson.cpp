@@ -3338,17 +3338,23 @@ void add_parameter(const std::string &parameter_name,
   }
 }
 
+// The levels of the columns of grid producer parameters, in the order the columns' data is
+// appended into the parameter's values. A level is unset if the column name has no level.
+using GridColumnLevels = std::map<std::string, std::vector<std::optional<double>>>;
+
 // The values of the vertical profile per parameter, their data types and the level values.
 // Parameters' levels of grid producers are fetched as separate parameters, their data is
 // appended into single parameter.
 void collect_vertical_profile_values(const std::vector<TS::TimeSeriesData>& outdata,
                                      const EDRMetaData& emd,
                                      const std::vector<Spine::Parameter>& query_parameters,
+                                     const std::set<int>& levels,
                                      unsigned int level_index,
                                      int level_precision,
                                      std::map<std::string, Json::Value>& parameter_data_values,
                                      std::map<std::string, Json::Value>& parameter_data_type,
-                                     Json::Value& level_values)
+                                     Json::Value& level_values,
+                                     GridColumnLevels& grid_column_levels)
 {
   auto values_array = Json::Value(Json::ValueType::arrayValue);
   std::string prev_param;
@@ -3395,6 +3401,11 @@ void collect_vertical_profile_values(const std::vector<TS::TimeSeriesData>& outd
       values_array = Json::Value(Json::ValueType::arrayValue);
       data_index = 0;
     }
+
+    // The level of each appended column of a grid producer parameter, in column order
+    if (isGridProducer)
+      grid_column_levels[parameter_name].push_back(
+          UtilityFunctions::parse_parameter_level(query_parameters[j].name(), levels));
 
     add_parameter(parameter_name,
                   parameter_precision,
@@ -3608,6 +3619,82 @@ Json::Value vertical_profile_ranges(std::map<std::string, Json::Value>& paramete
   return ranges;
 }
 
+// The levels of a grid producer vertical profile: the requested levels in the order
+// vertical_profile_levels() lists them, but only those which have data for some parameter
+// (the columns of (parameter, level) pairs without data have been dropped). Unset if the
+// level of some column is not known from its name.
+std::optional<std::vector<int>> grid_vertical_profile_levels(
+    const EDRMetaData& emd, const std::set<int>& levels, const GridColumnLevels& grid_column_levels)
+{
+  if (grid_column_levels.empty())
+    return {};
+
+  std::set<double> data_levels;
+  for (const auto& item : grid_column_levels)
+    for (const auto& level : item.second)
+    {
+      if (!level)
+        return {};
+      data_levels.insert(*level);
+    }
+
+  std::vector<int> requested(levels.begin(), levels.end());
+  if (emd.vertical_extent.level_type == "PressureLevel")
+    std::reverse(requested.begin(), requested.end());
+
+  std::vector<int> result;
+  for (auto level : requested)
+    if (data_levels.count(level) > 0)
+      result.push_back(level);
+  return result;
+}
+
+// The ranges of the parameters of a grid producer vertical profile timestep. The values of a
+// parameter are in the order of its columns (the requested level order), they are output in
+// the order of the z axis, with null for the levels the parameter has no data for.
+Json::Value grid_vertical_profile_ranges(
+    std::map<std::string, Json::Value>& parameter_data_values,
+    const std::map<std::string, Json::Value>& parameter_data_type,
+    const GridColumnLevels& grid_column_levels,
+    const std::vector<int>& z_levels,
+    const Json::Value& axis_names,
+    std::size_t timeSteps,
+    std::size_t tStep)
+{
+  auto ranges = Json::Value(Json::ValueType::objectValue);
+  for (auto& item : parameter_data_values)
+  {
+    const auto& param_name = item.first;
+    const auto& column_levels = grid_column_levels.at(param_name);
+
+    auto valueArray = Json::Value(Json::ValueType::arrayValue);
+    for (auto level : z_levels)
+    {
+      Json::Value value;  // null
+      auto pos = std::find(column_levels.begin(), column_levels.end(), std::optional<double>(level));
+      if (pos != column_levels.end())
+      {
+        auto itemIdx = tStep + (static_cast<std::size_t>(pos - column_levels.begin()) * timeSteps);
+        if (itemIdx < item.second.size())
+          value = item.second[itemIdx];
+      }
+      valueArray[valueArray.size()] = value;
+    }
+
+    auto shape = Json::Value(Json::ValueType::arrayValue);
+    shape[0] = valueArray.size();
+
+    auto param_range = Json::Value(Json::ValueType::objectValue);
+    param_range["type"] = Json::Value("NdArray");
+    param_range["dataType"] = parameter_data_type.at(param_name);
+    param_range["axisNames"] = axis_names;
+    param_range["shape"] = shape;
+    param_range["values"] = valueArray;
+    ranges[param_name] = param_range;
+  }
+  return ranges;
+}
+
 Json::Value format_output_data_vertical_profile(
     const TS::OutputData &outputData,
     const EDRMetaData &emd,
@@ -3643,14 +3730,17 @@ Json::Value format_output_data_vertical_profile(
     //	std::map<std::string, Json::Value> parameter_level_values;
     auto level_values = Json::Value(Json::ValueType::arrayValue);
     auto isGridProducer = emd.isGridProducer();
+    GridColumnLevels grid_column_levels;
     collect_vertical_profile_values(outdata,
                                     emd,
                                     query_parameters,
+                                    levels,
                                     level_index,
                                     level_precision,
                                     parameter_data_values,
                                     parameter_data_type,
-                                    level_values);
+                                    level_values,
+                                    grid_column_levels);
 
     if (parameter_data_values.empty())
       return coverageCollection;
@@ -3694,6 +3784,11 @@ Json::Value format_output_data_vertical_profile(
     bool useLevelColumn = (!useDataLevels && !isGridProducer && timeSteps > 0 &&
                            level_values.size() == ts_lon->size());
 
+    // Grid producer levels from the column names, unset if not known
+    std::optional<std::vector<int>> gridLevels;
+    if (isGridProducer && !useDataLevels)
+      gridLevels = grid_vertical_profile_levels(emd, levels, grid_column_levels);
+
     for (std::size_t coverageIdx = 0; (step.tStep < timeSteps);)
     {
       auto domain = vertical_profile_domain(lon_timed_value,
@@ -3703,22 +3798,39 @@ Json::Value format_output_data_vertical_profile(
                                             *step.timeIter);
 
       std::size_t levelIdx = 0;
-      auto levelArray =
-          (useLevelColumn
-               ? data_row_levels(level_values, step.tStep, timeSteps, levelIdx)
-               : vertical_profile_levels(emd, levels, useDataLevels, levelIdx));
+      Json::Value levelArray;
+      Json::Value ranges;
+      if (gridLevels)
+      {
+        levelArray = Json::Value(Json::ValueType::arrayValue);
+        for (auto level : *gridLevels)
+          levelArray[levelArray.size()] = Json::Value(level);
+        ranges = grid_vertical_profile_ranges(parameter_data_values,
+                                              parameter_data_type,
+                                              grid_column_levels,
+                                              *gridLevels,
+                                              axis_names,
+                                              timeSteps,
+                                              step.tStep);
+      }
+      else
+      {
+        levelArray = (useLevelColumn
+                          ? data_row_levels(level_values, step.tStep, timeSteps, levelIdx)
+                          : vertical_profile_levels(emd, levels, useDataLevels, levelIdx));
 
-      auto ranges = vertical_profile_ranges(parameter_data_values,
-                                            parameter_data_type,
-                                            level_values,
-                                            axis_names,
-                                            useDataLevels,
-                                            isGridProducer,
-                                            ts_lon->size(),
-                                            timeSteps,
-                                            step,
-                                            levelArray,
-                                            levelIdx);
+        ranges = vertical_profile_ranges(parameter_data_values,
+                                         parameter_data_type,
+                                         level_values,
+                                         axis_names,
+                                         useDataLevels,
+                                         isGridProducer,
+                                         ts_lon->size(),
+                                         timeSteps,
+                                         step,
+                                         levelArray,
+                                         levelIdx);
+      }
 
       domain["axes"]["z"] = Json::Value(Json::ValueType::objectValue);
       domain["axes"]["z"]["values"] = levelArray;
