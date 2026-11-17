@@ -729,8 +729,12 @@ void add_position_features(PointFeatures &point_features,
       auto key = hash_value(coord);
       timesteps_per_coordinate[key].push_back(
           Fmi::date_time::to_iso_extended_string(ts_data->at(k).time.utc_time()) + "Z");
+      // Missing values are null as in the other GeoJSON outputs, json_value() would give ""
+      const auto &value = ts_data->at(k).value;
       parameter_values_per_coordinate[key].push_back(
-          UtilityFunctions::json_value(ts_data->at(k).value, parameter_precision));
+          std::holds_alternative<Spine::None>(value)
+              ? Json::Value()
+              : UtilityFunctions::json_value(value, parameter_precision));
       coordinates[key] = coord;
     }
 
