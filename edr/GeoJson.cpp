@@ -467,10 +467,23 @@ int to_int(const TS::TimedValue &tv)
   return ret;
 }
 
+// Coordinates of grid engine data are formatted strings, those of querydata doubles
 double to_double(const TS::TimedValue &tv)
 {
   if (const auto *ptr = std::get_if<double>(&tv.value))
     return *ptr;
+  if (const auto *ptr = std::get_if<int>(&tv.value))
+    return *ptr;
+  if (const auto *ptr = std::get_if<std::string>(&tv.value))
+  {
+    try
+    {
+      return Fmi::stod(*ptr);
+    }
+    catch (...)
+    {
+    }
+  }
 
   return std::numeric_limits<double>::max();
 }
@@ -693,6 +706,7 @@ void add_position_features(PointFeatures &point_features,
                            const TS::TimeSeriesPtr &ts_lon,
                            const TS::TimeSeriesPtr &ts_lat,
                            const TS::TimeSeriesPtr &ts_level,
+                           const std::optional<double> &parameter_level,
                            const std::string &parameter_name,
                            int parameter_precision,
                            int lon_precision,
@@ -708,8 +722,8 @@ void add_position_features(PointFeatures &point_features,
     {
       auto lon_value = to_double(ts_lon->at(k));
       auto lat_value = to_double(ts_lat->at(k));
-      std::optional<double> level_value;
-      if (ts_level)
+      std::optional<double> level_value = parameter_level;
+      if (!level_value && ts_level)
         level_value = to_int(ts_level->at(k));
       coordinate_xyz coord(lon_value, lat_value, level_value);
       auto key = hash_value(coord);
@@ -760,6 +774,7 @@ void add_position_features(PointFeatures &point_features,
 
 Json::Value format_output_data_position(const TS::OutputData &outputData,
                                         const EDRMetaData &emd,
+                                        const std::set<int> &levels,
                                         const std::vector<Spine::Parameter> &query_parameters,
                                         const CustomDimReferences &custom_dim_refs,
                                         const std::string &language)
@@ -819,8 +834,16 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
         TS::TimeSeriesPtr ts_data = std::get<TS::TimeSeriesPtr>(tsdata);
         TS::TimeSeriesPtr ts_lon = std::get<TS::TimeSeriesPtr>(tslon);
         TS::TimeSeriesPtr ts_lat = std::get<TS::TimeSeriesPtr>(tslat);
+        // Grid engine fetches each level of a parameter as a separate parameter, the level of
+        // the column is known from the parameter name only; the level column has the first
+        // level only
+        std::optional<double> parameter_level;
+        if (emd.isGridProducer())
+          parameter_level =
+              UtilityFunctions::parse_parameter_level(query_parameters[j].name(), levels);
+
         TS::TimeSeriesPtr ts_level = nullptr;
-        if (level_index)
+        if (level_index && !parameter_level)
         {
           auto tslevel = outdata.at(*level_index);
           ts_level = std::get<TS::TimeSeriesPtr>(tslevel);
@@ -831,6 +854,7 @@ Json::Value format_output_data_position(const TS::OutputData &outputData,
                               ts_lon,
                               ts_lat,
                               ts_level,
+                              parameter_level,
                               parse_parameter_name(query_parameters[j].originalName()),
                               parameter_precision,
                               lon_precision,
@@ -1223,7 +1247,7 @@ Json::Value formatOutputData(const TS::OutputData& outputData,
 
       // More than one level
       return format_output_data_position(
-          outputData, emd, query_parameters, custom_dim_refs, language);
+          outputData, emd, levels, query_parameters, custom_dim_refs, language);
     }
 
     if (const auto *ptr = std::get_if<TS::TimeSeriesVectorPtr>(&tsdata_first))
@@ -1244,7 +1268,8 @@ Json::Value formatOutputData(const TS::OutputData& outputData,
       if (levels.size() <= 1)
         return format_output_data_one_point(od, emd, query_parameters, custom_dim_refs, language);
       // More than one level
-      return format_output_data_position(od, emd, query_parameters, custom_dim_refs, language);
+      return format_output_data_position(
+          od, emd, levels, query_parameters, custom_dim_refs, language);
     }
 
     if (std::get_if<TS::TimeSeriesGroupPtr>(&tsdata_first))
