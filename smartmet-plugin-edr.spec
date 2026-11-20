@@ -3,8 +3,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
-Version: 26.11.17
-Release: 2%{?dist}.fmi
+Version: 26.11.20
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -126,6 +126,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Fri Nov 20 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.11.20-1.fmi
+- Added tests for road queries with parameters not available for road stations, which failed
+  with 'No available parameters found for weather data query' before
+  smartmet-engine-observation 26.11.20-2
+
 * Tue Nov 17 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> 26.11.17-2.fmi
 - Output GeoJSON features in data order instead of coordinate hash order (BRAINSTORM-3575)
 
