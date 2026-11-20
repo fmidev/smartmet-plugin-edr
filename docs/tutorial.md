@@ -241,13 +241,17 @@ being served keeps its lists alive while new ones are published.
 `CoverageJson::parseEDRMetaData` and its helpers produce the collection documents. The
 expected output for `/edr/collections/pal_skandinavia` shows the structure: `id`,
 `title` and `description` from `collection_info`, `links` including the license,
-`output_formats`, `keywords` (configured keywords **plus every parameter name**),
-`crs`, `extent` with spatial, temporal and vertical parts, `data_queries` with one
-entry per supported query type carrying a `link` whose `variables` describe the
-accepted `coords` and `crs_details`, and `parameter_names` with unit and description
-resolved in the order configuration, engine, bare name. The instance list gives each
-origin time a title of the form `Origintime: ... Starttime: ... Endtime: ...`, and the
-`instances` link only appears when a collection has more than one origin time.
+`output_formats`, `keywords` (the configured keywords), `crs`, `extent` with spatial,
+temporal and vertical parts, `data_queries` with one entry per supported query type
+carrying a `link` whose `variables` give the query type and the units of the query
+options, and `parameter_names` with unit and description resolved in the order
+configuration, engine, bare name; `observedProperty.id` is left out when it equals the
+parameter id. The instance list gives each origin time the title `Origin time ...`, and
+the `instances` link only appears when a collection has more than one origin time.
+`details=full` (`EDRQuery::full_metadata`) restores the verbose form of earlier versions:
+title, description, `coords`, output formats and `crs_details` with the WKT of each CRS
+in every query's `variables`, every parameter name in `keywords`, all observed property
+ids and instance titles of the form `Origintime: ... Starttime: ... Endtime: ...`.
 
 `/locations` renders a GeoJSON FeatureCollection with one feature per known location,
 including its temporal validity where available. Observation stations with a WIGOS

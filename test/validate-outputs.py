@@ -343,9 +343,11 @@ def check_collection(fname, path, coll):
         ppath = f"{path}.parameter_names.{name}"
         if p.get("type") != "Parameter":
             error(fname, ppath, "type must be 'Parameter'")
+        # EDR 1.1 parameterNames.yaml: the id of the observed property is optional, the
+        # compact metadata omits it when it equals the parameter id
         op = p.get("observedProperty", {})
-        if "label" not in op or "id" not in op:
-            error(fname, ppath, "observedProperty must have id and label")
+        if "label" not in op:
+            error(fname, ppath, "observedProperty must have a label")
 
 
 def check_edr_json(fname, doc, status):

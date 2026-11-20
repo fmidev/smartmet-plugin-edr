@@ -69,33 +69,7 @@ Link: (none)
 	],
 	"keywords" : 
 	[
-		"pal_skandinavia",
-		"dewpoint",
-		"fogintensity",
-		"highcloudcover",
-		"hourlymaximumgust",
-		"humidity",
-		"kindex",
-		"lowcloudcover",
-		"mediumcloudcover",
-		"middleandlowcloudcover",
-		"pop",
-		"precipitation1h",
-		"precipitationform",
-		"precipitationtype",
-		"pressure",
-		"probabilitythunderstorm",
-		"radiationglobal",
-		"radiationlw",
-		"temperature",
-		"totalcloudcover",
-		"weathersymbol1",
-		"weathersymbol3",
-		"winddirection",
-		"windspeedms",
-		"windums",
-		"windvectorms",
-		"windvms"
+		"pal_skandinavia"
 	],
 	"crs" : 
 	[
@@ -117,34 +91,6 @@ Link: (none)
 				"type" : "application/vnd.cov+json",
 				"variables" : 
 				{
-					"title" : "Area query",
-					"description" : "Data at the requested area",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"coords" : "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))",
-					"crs_details" : 
-					[
-						{
-							"crs" : "OGC:CRS84",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "EPSG:3067",
-							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
-						},
-						{
-							"crs" : "EPSG:4326",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "native",
-							"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
-						}
-					],
-					"default_output_format" : "CoverageJSON",
 					"query_type" : "area"
 				}
 			}
@@ -160,34 +106,6 @@ Link: (none)
 				"type" : "application/vnd.cov+json",
 				"variables" : 
 				{
-					"title" : "Corridor query",
-					"description" : "Data within corridor",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
-					"crs_details" : 
-					[
-						{
-							"crs" : "OGC:CRS84",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "EPSG:3067",
-							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
-						},
-						{
-							"crs" : "EPSG:4326",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "native",
-							"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
-						}
-					],
-					"default_output_format" : "CoverageJSON",
 					"height_units" : [],
 					"query_type" : "corridor",
 					"width_units" : 
@@ -210,33 +128,6 @@ Link: (none)
 				"type" : "application/vnd.cov+json",
 				"variables" : 
 				{
-					"title" : "Cube query",
-					"description" : "Data inside requested bounding box",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"crs_details" : 
-					[
-						{
-							"crs" : "OGC:CRS84",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "EPSG:3067",
-							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
-						},
-						{
-							"crs" : "EPSG:4326",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "native",
-							"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
-						}
-					],
-					"default_output_format" : "CoverageJSON",
 					"height_units" : [],
 					"query_type" : "cube"
 				}
@@ -253,33 +144,6 @@ Link: (none)
 				"type" : "application/vnd.cov+json",
 				"variables" : 
 				{
-					"title" : "Locations query",
-					"description" : "Data at point location defined by a unique identifier",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"crs_details" : 
-					[
-						{
-							"crs" : "OGC:CRS84",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "EPSG:3067",
-							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
-						},
-						{
-							"crs" : "EPSG:4326",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "native",
-							"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
-						}
-					],
-					"default_output_format" : "CoverageJSON",
 					"multiple_locations" : false,
 					"query_type" : "locations"
 				}
@@ -296,34 +160,6 @@ Link: (none)
 				"type" : "application/vnd.cov+json",
 				"variables" : 
 				{
-					"title" : "Position query",
-					"description" : "Data at point location",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
-					"crs_details" : 
-					[
-						{
-							"crs" : "OGC:CRS84",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "EPSG:3067",
-							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
-						},
-						{
-							"crs" : "EPSG:4326",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "native",
-							"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
-						}
-					],
-					"default_output_format" : "CoverageJSON",
 					"query_type" : "position"
 				}
 			}
@@ -339,34 +175,6 @@ Link: (none)
 				"type" : "application/vnd.cov+json",
 				"variables" : 
 				{
-					"title" : "Radius query",
-					"description" : "Data at the area specified with a geographic position and radial distance",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"coords" : "Well Known Text POINT value i.e. POINT(24.9384 60.1699)",
-					"crs_details" : 
-					[
-						{
-							"crs" : "OGC:CRS84",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "EPSG:3067",
-							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
-						},
-						{
-							"crs" : "EPSG:4326",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "native",
-							"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
-						}
-					],
-					"default_output_format" : "CoverageJSON",
 					"query_type" : "radius",
 					"within_units" : 
 					[
@@ -388,34 +196,6 @@ Link: (none)
 				"type" : "application/vnd.cov+json",
 				"variables" : 
 				{
-					"title" : "Trajectory query",
-					"description" : "Data along trajectory",
-					"output_formats" : 
-					[
-						"CoverageJSON",
-						"GeoJSON"
-					],
-					"coords" : "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 61.2,24.3 61.3)",
-					"crs_details" : 
-					[
-						{
-							"crs" : "OGC:CRS84",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "EPSG:3067",
-							"wkt" : "PROJCS[\"EUREF-FIN / TM35FIN(E,N)\",GEOGCS[\"EUREF-FIN\",DATUM[\"EUREF-FIN\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"1391\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"10690\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"3067\"]]"
-						},
-						{
-							"crs" : "EPSG:4326",
-							"wkt" : "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-						},
-						{
-							"crs" : "native",
-							"wkt" : "PROJCRS[\"unknown\",BASEGEOGCRS[\"unknown\",DATUM[\"unknown\",ELLIPSOID[\"unknown\",6371220,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8901]]],CONVERSION[\"unknown\",METHOD[\"Polar Stereographic (variant B)\",ID[\"EPSG\",9829]],PARAMETER[\"Latitude of standard parallel\",60,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8832]],PARAMETER[\"Longitude of origin\",20,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8833]],PARAMETER[\"False easting\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"(E)\",south,MERIDIAN[90,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[1],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]],AXIS[\"(N)\",south,MERIDIAN[180,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],ORDER[2],LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]]"
-						}
-					],
-					"default_output_format" : "CoverageJSON",
 					"query_type" : "trajectory"
 				}
 			}
@@ -487,7 +267,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "DewPoint",
 				"label" : "DewPoint"
 			}
 		},
@@ -499,7 +278,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "FogIntensity",
 				"label" : "FogIntensity"
 			}
 		},
@@ -511,7 +289,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "HighCloudCover",
 				"label" : "HighCloudCover"
 			}
 		},
@@ -523,7 +300,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "HourlyMaximumGust",
 				"label" : "HourlyMaximumGust"
 			}
 		},
@@ -535,7 +311,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "Humidity",
 				"label" : "Humidity"
 			}
 		},
@@ -547,7 +322,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "KIndex",
 				"label" : "KIndex"
 			}
 		},
@@ -559,7 +333,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "LowCloudCover",
 				"label" : "LowCloudCover"
 			}
 		},
@@ -571,7 +344,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "MediumCloudCover",
 				"label" : "MediumCloudCover"
 			}
 		},
@@ -583,7 +355,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "MiddleAndLowCloudCover",
 				"label" : "MiddleAndLowCloudCover"
 			}
 		},
@@ -595,7 +366,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "PoP",
 				"label" : "PoP"
 			}
 		},
@@ -607,7 +377,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "Precipitation1h",
 				"label" : "Precipitation1h"
 			}
 		},
@@ -619,7 +388,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "PrecipitationForm",
 				"label" : "PrecipitationForm"
 			}
 		},
@@ -631,7 +399,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "PrecipitationType",
 				"label" : "PrecipitationType"
 			}
 		},
@@ -643,7 +410,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "Pressure",
 				"label" : "Pressure"
 			},
 			"unit" : 
@@ -660,7 +426,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "ProbabilityThunderstorm",
 				"label" : "ProbabilityThunderstorm"
 			}
 		},
@@ -672,7 +437,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "RadiationGlobal",
 				"label" : "RadiationGlobal"
 			}
 		},
@@ -684,7 +448,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "RadiationLW",
 				"label" : "RadiationLW"
 			}
 		},
@@ -696,7 +459,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "Temperature",
 				"label" : "Temperature"
 			},
 			"unit" : 
@@ -718,7 +480,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "TotalCloudCover",
 				"label" : "TotalCloudCover"
 			}
 		},
@@ -730,7 +491,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "WeatherSymbol1",
 				"label" : "WeatherSymbol1"
 			}
 		},
@@ -742,7 +502,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "WeatherSymbol3",
 				"label" : "WeatherSymbol3"
 			}
 		},
@@ -754,7 +513,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "WindDirection",
 				"label" : "WindDirection"
 			}
 		},
@@ -766,7 +524,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "WindSpeedMS",
 				"label" : "WindSpeedMS"
 			}
 		},
@@ -778,7 +535,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "WindUMS",
 				"label" : "WindUMS"
 			}
 		},
@@ -790,7 +546,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "WindVectorMS",
 				"label" : "WindVectorMS"
 			}
 		},
@@ -802,7 +557,6 @@ Link: (none)
 			"type" : "Parameter",
 			"observedProperty" : 
 			{
-				"id" : "WindVMS",
 				"label" : "WindVMS"
 			}
 		}

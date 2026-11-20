@@ -265,123 +265,127 @@ Json::Value height_units_json(const std::string &level_type)
   return ret;
 }
 
+// The title, description and coords prose of a query type, given only in the full metadata
+// (details=full) since the OpenAPI definition describes the queries (BRAINSTORM-3408)
+struct QueryTypeText
+{
+  const char *name;
+  const char *title;
+  const char *description;
+  const char *coords;
+};
+
+const QueryTypeText *query_type_text(EDRQueryType query_type)
+{
+  static const char *point = "Well Known Text POINT value i.e. POINT(24.9384 60.1699)";
+  static const char *line =
+      "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 61,24.2 "
+      "61.2,24.3 61.3)";
+  static const QueryTypeText position{
+      "position", "Position query", "Data at point location", point};
+  static const QueryTypeText radius{
+      "radius",
+      "Radius query",
+      "Data at the area specified with a geographic position and radial distance",
+      point};
+  static const QueryTypeText area{
+      "area",
+      "Area query",
+      "Data at the requested area",
+      "Well Known Text POLYGON value i.e. POLYGON((24 61,24 61.5,24.5 61.5,24.5 61,24 61))"};
+  static const QueryTypeText cube{
+      "cube", "Cube query", "Data inside requested bounding box", nullptr};
+  static const QueryTypeText locations{
+      "locations",
+      "Locations query",
+      "Data at point location defined by a unique identifier",
+      nullptr};
+  static const QueryTypeText trajectory{
+      "trajectory", "Trajectory query", "Data along trajectory", line};
+  static const QueryTypeText corridor{"corridor", "Corridor query", "Data within corridor", line};
+
+  switch (query_type)
+  {
+    case EDRQueryType::Position:
+      return &position;
+    case EDRQueryType::Radius:
+      return &radius;
+    case EDRQueryType::Area:
+      return &area;
+    case EDRQueryType::Cube:
+      return &cube;
+    case EDRQueryType::Locations:
+      return &locations;
+    case EDRQueryType::Trajectory:
+      return &trajectory;
+    case EDRQueryType::Corridor:
+      return &corridor;
+    default:
+      return nullptr;
+  }
+}
+
+Json::Value distance_units_json()
+{
+  auto units = Json::Value(Json::ValueType::arrayValue);
+  units.append(Json::Value("m"));
+  units.append(Json::Value("km"));
+  units.append(Json::Value("mi"));
+  return units;
+}
+
 // Describe the query type in the query link and its variables. Returns the name of the
-// query type, or an empty string for an unknown type.
+// query type, or an empty string for an unknown type. The variables hold the query type and
+// the units of the query options; the title, description and coords prose only with
+// full_metadata.
 std::string describe_query_type(EDRQueryType query_type,
                                 const std::string &base_url,
                                 bool levels_exist,
                                 const std::string &level_type,
+                                bool full_metadata,
                                 Json::Value &query_info_link,
                                 Json::Value &query_info_variables)
 {
-  if (query_type == EDRQueryType::Position)
+  const auto *text = query_type_text(query_type);
+  if (!text)
+    return "";
+
+  query_info_link["title"] = Json::Value(text->title);
+  query_info_link["href"] = Json::Value(base_url + "/" + text->name);
+  if (full_metadata)
   {
-    query_info_link["title"] = Json::Value("Position query");
-    query_info_link["href"] =
-        Json::Value((base_url + "/position"));
-    query_info_variables["title"] = Json::Value("Position query");
-    query_info_variables["description"] = Json::Value("Data at point location");
-    query_info_variables["query_type"] = Json::Value("position");
-    query_info_variables["coords"] =
-        Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
-    return "position";
+    query_info_variables["title"] = Json::Value(text->title);
+    query_info_variables["description"] = Json::Value(text->description);
   }
+  query_info_variables["query_type"] = Json::Value(text->name);
+  if (full_metadata && text->coords)
+    query_info_variables["coords"] = Json::Value(text->coords);
+
   if (query_type == EDRQueryType::Radius)
   {
-    query_info_link["title"] = Json::Value("Radius query");
-    query_info_link["href"] =
-        Json::Value((base_url + "/radius"));
-    query_info_variables["title"] = Json::Value("Radius query");
-    query_info_variables["description"] = Json::Value(
-        "Data at the area specified with a geographic position "
-        "and radial distance");
-    query_info_variables["query_type"] = Json::Value("radius");
-    query_info_variables["coords"] =
-        Json::Value("Well Known Text POINT value i.e. POINT(24.9384 60.1699)");
-    auto within_units = Json::Value(Json::ValueType::arrayValue);
-    within_units[0] = Json::Value("m");
-    within_units[1] = Json::Value("km");
-    within_units[2] = Json::Value("mi");
-    query_info_variables["within_units"] = within_units;
-    return "radius";
+    query_info_variables["within_units"] = distance_units_json();
   }
-  if (query_type == EDRQueryType::Area)
+  else if (query_type == EDRQueryType::Cube)
   {
-    query_info_link["title"] = Json::Value("Area query");
-    query_info_link["href"] =
-        Json::Value((base_url + "/area"));
-    query_info_variables["title"] = Json::Value("Area query");
-    query_info_variables["description"] = Json::Value("Data at the requested area");
-    query_info_variables["query_type"] = Json::Value("area");
-    query_info_variables["coords"] = Json::Value(
-        "Well Known Text POLYGON value i.e. POLYGON((24 61,24 "
-        "61.5,24.5 61.5,24.5 61,24 61))");
-    return "area";
-  }
-  if (query_type == EDRQueryType::Cube)
-  {
-    query_info_link["title"] = Json::Value("Cube query");
-    query_info_link["href"] =
-        Json::Value((base_url + "/cube"));
-    query_info_variables["title"] = Json::Value("Cube query");
-    query_info_variables["description"] = Json::Value("Data inside requested bounding box");
-    query_info_variables["query_type"] = Json::Value("cube");
     // Cube z values are not converted, they must be in the unit of the levels
     query_info_variables["height_units"] = Json::Value(Json::ValueType::arrayValue);
     if (levels_exist)
       query_info_variables["height_units"].append(
           Json::Value(VerticalReference::native_height_unit(level_type)));
-    return "cube";
   }
-  if (query_type == EDRQueryType::Locations)
+  else if (query_type == EDRQueryType::Locations)
   {
-    query_info_link["title"] = Json::Value("Locations query");
-    query_info_link["href"] =
-        Json::Value((base_url + "/locations"));
-    query_info_variables["title"] = Json::Value("Locations query");
-    query_info_variables["description"] =
-        Json::Value("Data at point location defined by a unique identifier");
-    query_info_variables["query_type"] = Json::Value("locations");
     // A comma separated list of location ids is not supported
     query_info_variables["multiple_locations"] = Json::Value(false);
-    return "locations";
   }
-  if (query_type == EDRQueryType::Trajectory)
+  else if (query_type == EDRQueryType::Corridor)
   {
-    query_info_link["title"] = Json::Value("Trajectory query");
-    query_info_link["href"] =
-        Json::Value((base_url + "/trajectory"));
-    query_info_variables["title"] = Json::Value("Trajectory query");
-    query_info_variables["description"] = Json::Value("Data along trajectory");
-    query_info_variables["query_type"] = Json::Value("trajectory");
-    query_info_variables["coords"] = Json::Value(
-        "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
-        "61,24.2 61.2,24.3 61.3)");
-    return "trajectory";
-  }
-  if (query_type == EDRQueryType::Corridor)
-  {
-    query_info_link["title"] = Json::Value("Corridor query");
-    query_info_link["href"] =
-        Json::Value((base_url + "/corridor"));
-    query_info_variables["title"] = Json::Value("Corridor query");
-    query_info_variables["description"] = Json::Value("Data within corridor");
-    query_info_variables["query_type"] = Json::Value("corridor");
-    auto width_units = Json::Value(Json::ValueType::arrayValue);
-    width_units[0] = Json::Value("m");
-    width_units[1] = Json::Value("km");
-    width_units[2] = Json::Value("mi");
-    query_info_variables["width_units"] = width_units;
+    query_info_variables["width_units"] = distance_units_json();
     // Mandatory, but corridor-height can be used only if the collection has levels
     query_info_variables["height_units"] =
-        (levels_exist ? height_units_json(level_type)
-                      : Json::Value(Json::ValueType::arrayValue));
-    query_info_variables["coords"] = Json::Value(
-        "Well Known Text LINESTRING or MULTILINESTRING value i.e. LINESTRING(24 "
-        "61,24.2 61.2,24.3 61.3)");
-    return "corridor";
+        (levels_exist ? height_units_json(level_type) : Json::Value(Json::ValueType::arrayValue));
   }
-  return "";
+  return text->name;
 }
 
 // OGC API-EDR /req/core/rc-md-query-links: append a link to the query end point
@@ -397,6 +401,11 @@ void append_query_link(Json::Value *query_links, Json::Value &query_info_link)
   query_links->append(query_link);
 }
 
+// The data queries of a collection or an instance. The variables of the query links hold
+// the query type and the units of the query options. The output formats and the CRSs are
+// listed in the collection; the per query output formats, default output format, crs_details
+// with the WKT of each CRS, title, description and coords prose are given only in the full
+// metadata (details=full, BRAINSTORM-3408).
 Json::Value get_data_queries(const std::string &host,
                              const std::string &producer,
                              const std::set<std::string> &data_query_set,
@@ -404,6 +413,7 @@ Json::Value get_data_queries(const std::string &host,
                              const std::string &default_output_format,
                              bool levels_exist,
                              bool instances_exist,
+                             bool full_metadata,
                              const std::string &instance_id = "",
                              const std::string &level_type = "",
                              Json::Value *query_links = nullptr,
@@ -413,6 +423,22 @@ Json::Value get_data_queries(const std::string &host,
   auto data_queries = Json::Value(Json::ValueType::objectValue);
 
   auto instance_str = (!instance_id.empty() ? ("/instances/" + instance_id) : "");
+
+  auto output_formats = Json::Value(Json::ValueType::arrayValue);
+  for (const auto &f : output_format_set)
+    output_formats.append(Json::Value(f));
+  const auto default_type =
+      Json::Value(UtilityFunctions::output_format_mime_type(default_output_format));
+
+  // The verbose variables of the full metadata
+  auto add_full_variables = [&](Json::Value &variables)
+  {
+    if (!full_metadata)
+      return;
+    variables["output_formats"] = output_formats;
+    variables["default_output_format"] = Json::Value(default_output_format);
+    variables["crs_details"] = crs_details(crs_registry, native_crs);
+  };
 
   for (const auto &qt_str : data_query_set)
   {
@@ -426,7 +452,6 @@ Json::Value get_data_queries(const std::string &host,
     auto query_info_link = Json::Value(Json::ValueType::objectValue);
     query_info_link["rel"] = Json::Value("data");
     query_info_link["hreflang"] = Json::Value("en");
-    //      query_info_link["templated"] = Json::Value(true);
 
     if (query_type == EDRQueryType::Items)
     {
@@ -435,8 +460,11 @@ Json::Value get_data_queries(const std::string &host,
       query_info_link["href"] =
           Json::Value((host + "/collections/" + producer + instance_str + "/items"));
       query_info_link["type"] = Json::Value("application/geo+json");
-      query_info_variables["title"] = Json::Value("Items query");
-      query_info_variables["description"] = Json::Value("Messages of the collection");
+      if (full_metadata)
+      {
+        query_info_variables["title"] = Json::Value("Items query");
+        query_info_variables["description"] = Json::Value("Messages of the collection");
+      }
       query_info_variables["query_type"] = Json::Value("items");
       query_info_link["variables"] = query_info_variables;
       query_info["link"] = query_info_link;
@@ -457,23 +485,16 @@ Json::Value get_data_queries(const std::string &host,
                             host + "/collections/" + producer + instance_str,
                             levels_exist,
                             level_type,
+                            full_metadata,
                             query_info_link,
                             query_info_variables);
 
-    auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
-    query_info_output_formats[0] = Json::Value("CoverageJSON");
-    unsigned int i = 0;
-    for (const auto &f : output_format_set)
-      query_info_output_formats[i++] = Json::Value(f);
-    query_info_variables["output_formats"] = query_info_output_formats;
-    query_info_variables["default_output_format"] = Json::Value(default_output_format);
-    query_info_link["type"] =
-        Json::Value(UtilityFunctions::output_format_mime_type(default_output_format));
+    query_info_link["type"] = default_type;
 
     // OGC API-EDR /req/core/rc-md-query-links: links to the query end points
     append_query_link(query_links, query_info_link);
 
-    query_info_variables["crs_details"] = crs_details(crs_registry, native_crs);
+    add_full_variables(query_info_variables);
 
     query_info_link["variables"] = query_info_variables;
     query_info["link"] = query_info_link;
@@ -489,23 +510,16 @@ Json::Value get_data_queries(const std::string &host,
     query_info_link["href"] = Json::Value((host + "/collections/" + producer + "/instances"));
     query_info_link["hreflang"] = Json::Value("en");
     query_info_link["rel"] = Json::Value("collection");
-    query_info_link["type"] = Json::Value("application/json");
+    query_info_link["type"] = default_type;
 
-    query_info_variables["title"] = Json::Value("Instances query");
+    if (full_metadata)
+      query_info_variables["title"] = Json::Value("Instances query");
     query_info_variables["query_type"] = Json::Value("instances");
-    auto query_info_output_formats = Json::Value(Json::ValueType::arrayValue);
-    unsigned int i = 0;
-    for (const auto &f : output_format_set)
-      query_info_output_formats[i++] = Json::Value(f);
-    query_info_variables["default_output_format"] = Json::Value(default_output_format);
-    query_info_link["type"] =
-        Json::Value(UtilityFunctions::output_format_mime_type(default_output_format));
 
     // OGC API-EDR /req/core/rc-md-query-links: links to the query end points
     append_query_link(query_links, query_info_link);
 
-    query_info_variables["output_formats"] = query_info_output_formats;
-    query_info_variables["crs_details"] = crs_details(crs_registry, native_crs);
+    add_full_variables(query_info_variables);
     query_info_link["variables"] = query_info_variables;
     query_info["link"] = query_info_link;
     data_queries["instances"] = query_info;
@@ -726,7 +740,8 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
                                std::optional<std::set<std::string>> &durations,
                                std::optional<std::set<float>> &levels,
                                const CustomDimReferences &custom_dim_refs,
-                               const std::string &language = "")
+                               const std::string &language = "",
+                               bool full_metadata = true)
 {
   try
   {
@@ -785,7 +800,10 @@ Json::Value parameter_metadata(const EDRMetaData &metadata,
       parameter["unit"] = pinfo.unit(unit_label, language.empty() ? std::string() : lang);
     parameter["label"] = language_value(language, lang, label);
     parameter["observedProperty"] = Json::Value(Json::ValueType::objectValue);
-    parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
+    // The id of the observed property is optional, in the collection metadata it is given
+    // only if it differs from the parameter id (BRAINSTORM-3408)
+    if (full_metadata || observed_property_id != edr_parameter_name)
+      parameter["observedProperty"]["id"] = Json::Value(observed_property_id);
     parameter["observedProperty"]["label"] =
         language_value(language, lang, observed_property_label);
 
@@ -1194,6 +1212,7 @@ Json::Value add_prologue_coverage_collection(const EDRMetaData &emd,
 
 Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
                                   const CustomDimReferences &custom_dim_refs,
+                                  bool full_metadata,
                                   Json::Value &custom_dims)
 {
   try
@@ -1209,8 +1228,15 @@ Json::Value parse_parameter_names(const EDRMetaData &collection_emd,
     for (const auto &name : collection_emd.parameter_names)
     {
       if (! name.empty())
-        parameter_names[name] = parameter_metadata(
-            collection_emd, name, stdnames, methods, durations, levels, custom_dim_refs);
+        parameter_names[name] = parameter_metadata(collection_emd,
+                                                   name,
+                                                   stdnames,
+                                                   methods,
+                                                   durations,
+                                                   levels,
+                                                   custom_dim_refs,
+                                                   "",
+                                                   full_metadata);
     }
 
     if (!stdnames->empty())
@@ -1398,28 +1424,30 @@ bool process_instance(const EDRQuery &edr_query,
   }
 }
 
-void parse_title(const EDRMetaData &emd, Json::Value &instance)
+// The title of an instance: the origin time, and with full metadata also the time period
+// and the timestep of the data (BRAINSTORM-3408)
+void parse_title(const EDRMetaData &emd, bool full_metadata, Json::Value &instance)
 {
   try
   {
-    if (!emd.temporal_extent.time_periods.empty())
+    if (emd.temporal_extent.time_periods.empty())
+      return;
+
+    const auto origintime =
+        Fmi::date_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z";
+    if (!full_metadata)
     {
-      std::string title =
-          ("Origintime: " +
-           Fmi::date_time::to_iso_extended_string(emd.temporal_extent.origin_time) + "Z");
-      title += (" Starttime: " +
-                Fmi::date_time::to_iso_extended_string(
-                    emd.temporal_extent.time_periods.front().start_time) +
-                "Z");
-      title += (" Endtime: " +
-                Fmi::date_time::to_iso_extended_string(
-                    emd.temporal_extent.time_periods.front().end_time) +
-                "Z");
-      if (emd.temporal_extent.time_periods.front().timestep)
-        title +=
-            (" Timestep: " + Fmi::to_string(emd.temporal_extent.time_periods.front().timestep));
-      instance["title"] = Json::Value(title);
+      instance["title"] = Json::Value("Origin time " + origintime);
+      return;
     }
+
+    const auto &period = emd.temporal_extent.time_periods.front();
+    std::string title = "Origintime: " + origintime;
+    title += " Starttime: " + Fmi::date_time::to_iso_extended_string(period.start_time) + "Z";
+    title += " Endtime: " + Fmi::date_time::to_iso_extended_string(period.end_time) + "Z";
+    if (period.timestep)
+      title += " Timestep: " + Fmi::to_string(period.timestep);
+    instance["title"] = Json::Value(title);
   }
   catch (...)
   {
@@ -1570,7 +1598,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       auto instance = Json::Value(Json::ValueType::objectValue);
       instance["id"] = Json::Value(instance_id);
 
-      parse_title(emd, instance);
+      parse_title(emd, edr_query.full_metadata, instance);
 
       // Links
       /*
@@ -1616,6 +1644,7 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
                                                   emd.default_output_format,
                                                   !emd.vertical_extent.levels.empty(),
                                                   false,
+                                                  edr_query.full_metadata,
                                                   instance_id,
                                                   emd.vertical_extent.level_type,
                                                   &instance_links,
@@ -1634,7 +1663,8 @@ Json::Value parse_edr_metadata_instances(const EDRProducerMetaData &epmd,
       auto custom_dims = Json::Value(Json::ValueType::arrayValue);
 
       // Parameter names (mandatory)
-      auto parameter_names = parse_parameter_names(emd, custom_dim_refs, custom_dims);
+      auto parameter_names =
+          parse_parameter_names(emd, custom_dim_refs, edr_query.full_metadata, custom_dims);
       instance["parameter_names"] = parameter_names;
 
       // Timestep dimension (allowed timesteps for &timestep=n)
@@ -1718,30 +1748,19 @@ void get_collection_info_from_configuration_file(const EDRMetaData &collection_e
   }
 }
 
-void add_parameter_names_into_keywords(const EDRMetaData &collection_emd, Json::Value &keywords)
-{
-  try
-  {
-    // Add parameter names into keywords
-    for (const auto &name : collection_emd.parameter_names)
-      keywords[keywords.size()] = name;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// Keywords of a collection: the configured keywords followed by the parameter names
+// Keywords of a collection: the configured keywords. With full metadata the parameter names
+// follow, they are listed in parameter_names anyway (BRAINSTORM-3408).
 Json::Value collection_keywords(const EDRMetaData &collection_emd,
-                                const std::set<std::string> &keyword_set)
+                                const std::set<std::string> &keyword_set,
+                                bool full_metadata)
 {
   auto keywords = Json::Value(Json::ValueType::arrayValue);
   for (const auto &kword : keyword_set)
-    keywords[keywords.size()] = kword;
+    keywords.append(Json::Value(kword));
 
-  // Add parameter names into keywords
-  add_parameter_names_into_keywords(collection_emd, keywords);
+  if (full_metadata)
+    for (const auto &name : collection_emd.parameter_names)
+      keywords.append(Json::Value(name));
   return keywords;
 }
 
@@ -1831,7 +1850,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       value["title"] = Json::Value(title.empty() ? producer : title);
       if (! description.empty())
         value["description"] = Json::Value(description);
-      auto keywords = collection_keywords(collection_emd, keyword_set);
+      auto keywords = collection_keywords(collection_emd, keyword_set, edr_query.full_metadata);
 
       if (keywords.size() > 0)
         value["keywords"] = keywords;
@@ -1858,6 +1877,7 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
                                                collection_emd.default_output_format,
                                                !collection_emd.vertical_extent.levels.empty(),
                                                instances_exist,
+                                               edr_query.full_metadata,
                                                "",
                                                collection_emd.vertical_extent.level_type,
                                                &links,
@@ -1873,7 +1893,8 @@ Json::Value parse_edr_metadata_collections(const EDRProducerMetaData &epmd,
       auto custom_dims = Json::Value(Json::ValueType::arrayValue);
 
       // Parameter names (mandatory)
-      auto parameter_names = parse_parameter_names(collection_emd, custom_dim_refs, custom_dims);
+      auto parameter_names = parse_parameter_names(
+          collection_emd, custom_dim_refs, edr_query.full_metadata, custom_dims);
 
       value["parameter_names"] = parameter_names;
       auto output_formats = Json::Value(Json::ValueType::arrayValue);

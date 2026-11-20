@@ -425,8 +425,9 @@ void add_edr_parameters(OA::Document& doc,
                              "Coordinate reference system of the coordinates: WGS84 "
                              "longitude/latitude (the default) or one of the CRSs listed in the "
                              "crs setting of the server. 'native' is the CRS of the grid of "
-                             "gridded querydata and grid engine collections, listed in "
-                             "crs_details of the collection: area, cube and radius queries give "
+                             "gridded querydata and grid engine collections, defined as WKT in "
+                             "crs_details of the collection metadata with details=full: area, "
+                             "cube and radius queries give "
                              "a Grid at the grid points of the data. "
                              "With crs=native coords and bbox are WGS84 longitude/latitude.",
                              OA::enumSchema(crs_values, maxEnum)));
@@ -614,6 +615,20 @@ void add_edr_parameters(OA::Document& doc,
       "lang",
       extension(parameter(
           "lang", "query", "Language of the location names and metadata", stringSchema())));
+  JsonValue details = OA::enumSchema({"compact", "full"}, 10);
+  details["default"] = "compact";
+  doc.addComponent(
+      "parameters",
+      "details",
+      extension(parameter("details",
+                          "query",
+                          "Amount of collection metadata. 'full' adds the verbose metadata of "
+                          "earlier versions: the title, description, coords, output formats and "
+                          "crs_details with the WKT of each CRS in the variables of each data "
+                          "query, the parameter names in the keywords, the ids of observed "
+                          "properties equal to the parameter ids and the time period in the "
+                          "titles of instances.",
+                          details)));
   JsonValue precision = OA::enumSchema(precision_values, maxEnum);
   precision["default"] = default_precision;
   doc.addComponent("parameters",
@@ -884,6 +899,7 @@ void add_metadata_operation(OA::Document& doc,
   op["operationId"] = operationId;
   op["parameters"] = parameters;
   op["parameters"].append(OA::ref("parameters", "lang"));
+  op["parameters"].append(OA::ref("parameters", "details"));
   op["parameters"].append(OA::ref("parameters", "pretty"));
   auto& ok = op["responses"]["200"];
   ok["description"] = summary;

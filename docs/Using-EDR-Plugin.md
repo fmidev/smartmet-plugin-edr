@@ -9,6 +9,7 @@ This page describes more indepth EDR API
   - [Metadata of specified collection](#metadata-of-specified-collection)
   - [Metadata of all instances of specified collection](#metadata-of-all-instances-of-specified-collection)
   - [Metadata of specified instance of specified collection](#metadata-of-specified-instance-of-specified-collection)
+  - [Compact and full metadata](#compact-and-full-metadata)
 - [EDR data queries](#edr-data-queries)
   - [Query types](#query-types)
   - [Query parameters](#query-parameters)
@@ -107,6 +108,26 @@ In data provided by FMI the {instanceId} is a timestamp, so the actual request c
 
 ```
 {host}/edr/collections/ecmwf_eurooppa_painepinta/instances/20221103T000000
+```
+
+## Compact and full metadata
+
+The metadata is compact by default. The `variables` of each data query give the query type
+and the units of the query options (`within_units`, `width_units`, `height_units`); the output
+formats and the coordinate reference systems are listed once in `output_formats` and `crs` of
+the collection, and the query parameters are described in the API definition (`/edr/api`).
+The keywords are the configured keywords of the collection, the `observedProperty` of a
+parameter has an `id` only if it differs from the id of the parameter (a standard name URI),
+and the title of an instance is its origin time.
+
+The parameter `details=full` gives the verbose metadata of earlier versions: the `title`,
+`description`, `coords`, `output_formats`, `default_output_format` and `crs_details` (the
+definition of each CRS as WKT) in the `variables` of each data query, the parameter names in
+the keywords, the ids of all observed properties and the time period and timestep in the titles
+of instances. `details=compact` is the default.
+
+```
+{host}/edr/collections/pal_skandinavia?details=full
 ```
 
 # EDR data queries
@@ -264,12 +285,13 @@ together with LINESTRINGZ or LINESTRINGZM coordinates, which already define the 
 
 WGS84 longitude/latitude is the default and can be given for example as `OGC:CRS84`, `CRS84`
 or `http://www.opengis.net/def/crs/OGC/1.3/CRS84`. The other supported coordinate reference
-systems are listed in the `crs` and `crs_details` metadata of the collections, and can be given
+systems are listed in the `crs` metadata of the collections, and can be given
 as `EPSG:3067`, `http://www.opengis.net/def/crs/EPSG/0/3067` or `urn:ogc:def:crs:EPSG::3067`.
 Unsupported values are rejected with status 400.
 
 Gridded querydata and grid engine collections also list `native`, the CRS of the grid of the data, with its
-definition as WKT2 in `crs_details`. It has no EPSG code: the projections of the models use a
+definition as WKT2 in `crs_details` of the full metadata (`details=full`, see [Compact and full
+metadata](#compact-and-full-metadata)). It has no EPSG code: the projections of the models use a
 sphere, and rotated latitude-longitude grids are rotated. Its coordinates are metres for
 projected grids (for example Lambert conformal conic or polar stereographic) and degrees for
 latitude-longitude and rotated latitude-longitude grids, the CoverageJSON referencing of the

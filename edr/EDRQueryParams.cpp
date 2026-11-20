@@ -525,6 +525,14 @@ void EDRQueryParams::parseMetaDataQueryOptions()
   if (itsEDRQuery.query_type == EDRQueryType::Locations)
     parseLimitAndOffset();
 
+  // The collection metadata is compact by default, details=full gives the verbose metadata
+  // of earlier versions (BRAINSTORM-3408)
+  auto details = Spine::optional_string(req.getParameter("details"), "compact");
+  if (details == "full")
+    itsEDRQuery.full_metadata = true;
+  else if (details != "compact")
+    throw EDRException("Invalid details: " + details + ". Supported values are compact and full");
+
   // BRAINSTORM-3267; if mime_type is left empty, plugin sets the type usíng output format
   //
   if (itsEDRQuery.query_type == EDRQueryType::Locations)

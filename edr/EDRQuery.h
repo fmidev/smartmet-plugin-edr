@@ -95,6 +95,8 @@ struct EDRQuery
   CRSInfoPtr crs;
   // The supported CRSs for the metadata
   const CRSRegistry *crs_registry = nullptr;
+  // details=full: the verbose collection metadata of earlier versions (BRAINSTORM-3408)
+  bool full_metadata = false;
 
   // Area and cube queries on a regular grid (resolution-x, resolution-y)
   EDRGrid grid;

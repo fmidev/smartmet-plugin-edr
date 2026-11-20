@@ -1,0 +1,1 @@
+GET /edr/collections/pal_skandinavia/instances?details=full HTTP/1.0
