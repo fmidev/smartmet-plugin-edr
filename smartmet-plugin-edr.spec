@@ -4,7 +4,7 @@
 Summary: SmartMet edr plugin
 Name: %{SPECNAME}
 Version: 26.11.20
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-edr
@@ -126,6 +126,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/edr.so
 
 %changelog
+* Fri Nov 20 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.11.20-2.fmi
+- Collection metadata is compact by default, details=full gives the old verbose form
+  (BRAINSTORM-3408): the data query variables give only the query type and option units,
+  keywords no longer list the parameter names, observedProperty.id is omitted when equal
+  to the parameter id and instance titles give only the origin time
+
 * Fri Nov 20 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.11.20-1.fmi
 - Added tests for road queries with parameters not available for road stations, which failed
   with 'No available parameters found for weather data query' before
